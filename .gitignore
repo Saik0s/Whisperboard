@@ -91,3 +91,4 @@ iOSInjectionProject/
 
 .DS_Store
 .idea/
+Whisperboard/Resources/*.bin

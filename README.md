@@ -20,7 +20,7 @@ A powerful iOS app for recording and transcribing audio on the go, based on Open
 
 ## Installation
 
-To install the Whisperboard, simply clone the repository and open the project in Xcode.
+To install the Whisperboard, simply clone the repository, run `make` to download the model and open the project in Xcode.
 
 ## Contribution
 

@@ -28,7 +28,7 @@ struct KeyboardView: View {
             .foregroundColor(.white)
             .padding(rowHeight * 0.15)
             .background {
-              Circle().fill(Color(UIColor.systemBlue))
+              Circle().fill(Color(red: 251/255, green: 61/255, blue: 2/255))
             }
             .padding(4)
             .frame(width: rowHeight, height: rowHeight)
