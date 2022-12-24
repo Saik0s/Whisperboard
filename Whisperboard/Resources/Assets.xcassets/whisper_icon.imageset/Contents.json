@@ -1,0 +1,15 @@
+{
+  "images" : [
+    {
+      "filename" : "whisper_icon~iphone.pdf",
+      "idiom" : "iphone"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "properties" : {
+    "template-rendering-intent" : "template"
+  }
+}
