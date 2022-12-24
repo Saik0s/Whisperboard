@@ -16,23 +16,23 @@
 		49EE27F029573EAF00B11803 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 49EE27EF29573EAF00B11803 /* ComposableArchitecture */; };
 		49EE27F229573EAF00B11803 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = 49EE27F129573EAF00B11803 /* Dependencies */; };
 		5F8250009D77A13D60D33FBC /* URLOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825DF89B2E37923C143168 /* URLOpener.swift */; };
-		5F8250195594D0AD696884EE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5F8250C70B658B79923777F3 /* Preview Assets.xcassets */; };
+		5F82503696D4673F06073C0C /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825204A779CC78F80D7350 /* Player.swift */; };
+		5F8251B058C90802B9486F5C /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825D243F6709ECDC7DF019 /* Recorder.swift */; };
+		5F82527846F020B4E3B7532E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825C55561DADEE306C1428 /* ContentView.swift */; };
 		5F825377B187F764AABE65EC /* whisper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5F825FAD3DC6795B6139E2FC /* whisper.cpp */; };
 		5F8253A99195B1A4E20F184A /* ggml-tiny.en.bin in Resources */ = {isa = PBXBuildFile; fileRef = 5F825C81685817A9304E5994 /* ggml-tiny.en.bin */; };
-		5F8253EAA19FCA6575223B0C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825FC041DBF778DAC0A72F /* ContentView.swift */; };
 		5F825458774967C62642D833 /* Create.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825478309A68B0DAD0AC65 /* Create.swift */; };
-		5F82554B96FF627B00B1A05E /* WhisperContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8256BCF5B6B51833A45C1B /* WhisperContext.swift */; };
+		5F825558C0253878870E7906 /* WhisperContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8253D55B87720E72867E03 /* WhisperContext.swift */; };
 		5F82558957207CB2C98B5816 /* Styles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8253A0263AB07C07F528B2 /* Styles.swift */; };
-		5F82564D853201A597179527 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825663096346E05E28062C /* AppModel.swift */; };
+		5F8255E11796C8C17376AE07 /* Transcriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825F5D4C54E15579D23F4E /* Transcriber.swift */; };
 		5F8256CA066B2A024735093D /* ggml.c in Sources */ = {isa = PBXBuildFile; fileRef = 5F825E70301206DD0409F8A5 /* ggml.c */; settings = {COMPILER_FLAGS = "-DGGML_USE_ACCELERATE"; }; };
+		5F8257DE9D33005235E194E4 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8258A1113155C7A30DA1BD /* Storage.swift */; };
 		5F8257E6122012C2E3D3AB67 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5F8253A221D1711208F56196 /* Assets.xcassets */; };
-		5F825869DC3B32B30589402F /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8257F99A1678B5A913CB0B /* Recorder.swift */; };
-		5F82586CB0485960480DD6BA /* Transcriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8250C73498AEFEC7E319D1 /* Transcriber.swift */; };
+		5F825852D0A5D0E16F734759 /* ColorPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8258AF0D544EA7B11CFD3E /* ColorPalette.swift */; };
 		5F825929EE9F737BEAF7BE48 /* ActivityIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8257FE9255B9FA04EE2FBD /* ActivityIndicator.swift */; };
 		5F82596C88162ABC980988C7 /* WhisperboardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8253D8484681298BD8ECE3 /* WhisperboardApp.swift */; };
+		5F8259A697FDF74D91E6C637 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F82557D195F2DFD829CECCD /* AppModel.swift */; };
 		5F825C11BEB34D65E3D4FE06 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8256EAA25028E4D5D4FA39 /* Logging.swift */; };
-		5F825CD222195F0EF44377F3 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825326E971511DEABBBD98 /* Player.swift */; };
-		5F825EC5048A25432CC3C630 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825029DEF5F59A789BC9E4 /* Storage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,27 +66,27 @@
 		49EE27A9295679E100B11803 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		49EE27E22956BDD000B11803 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		49EE27E729572A8300B11803 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		5F825029DEF5F59A789BC9E4 /* Storage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
 		5F8250A9DFB9DB76DCB6FB21 /* Whisperboard-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Whisperboard-Bridging-Header.h"; sourceTree = "<group>"; };
-		5F8250C70B658B79923777F3 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		5F8250C73498AEFEC7E319D1 /* Transcriber.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Transcriber.swift; sourceTree = "<group>"; };
-		5F825326E971511DEABBBD98 /* Player.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
+		5F825204A779CC78F80D7350 /* Player.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		5F8253A0263AB07C07F528B2 /* Styles.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
 		5F8253A221D1711208F56196 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5F8253D55B87720E72867E03 /* WhisperContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WhisperContext.swift; sourceTree = "<group>"; };
 		5F8253D8484681298BD8ECE3 /* WhisperboardApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WhisperboardApp.swift; sourceTree = "<group>"; };
 		5F825478309A68B0DAD0AC65 /* Create.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Create.swift; sourceTree = "<group>"; };
-		5F825663096346E05E28062C /* AppModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		5F82557D195F2DFD829CECCD /* AppModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		5F82569ED01D1ABC869D001A /* whisper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = whisper.h; sourceTree = "<group>"; };
-		5F8256BCF5B6B51833A45C1B /* WhisperContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WhisperContext.swift; sourceTree = "<group>"; };
 		5F8256EAA25028E4D5D4FA39 /* Logging.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
-		5F8257F99A1678B5A913CB0B /* Recorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
 		5F8257FE9255B9FA04EE2FBD /* ActivityIndicator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActivityIndicator.swift; sourceTree = "<group>"; };
+		5F8258A1113155C7A30DA1BD /* Storage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		5F8258AF0D544EA7B11CFD3E /* ColorPalette.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorPalette.swift; sourceTree = "<group>"; };
 		5F825B71BCD13018E43D3671 /* ggml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ggml.h; sourceTree = "<group>"; };
+		5F825C55561DADEE306C1428 /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		5F825C81685817A9304E5994 /* ggml-tiny.en.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = "ggml-tiny.en.bin"; sourceTree = "<group>"; };
+		5F825D243F6709ECDC7DF019 /* Recorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
 		5F825DF89B2E37923C143168 /* URLOpener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URLOpener.swift; sourceTree = "<group>"; };
 		5F825E70301206DD0409F8A5 /* ggml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ggml.c; sourceTree = "<group>"; };
+		5F825F5D4C54E15579D23F4E /* Transcriber.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Transcriber.swift; sourceTree = "<group>"; };
 		5F825FAD3DC6795B6139E2FC /* whisper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = whisper.cpp; sourceTree = "<group>"; };
-		5F825FC041DBF778DAC0A72F /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -177,13 +177,8 @@
 		5F82530F77ABB28F7816E0D0 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				5F825FC041DBF778DAC0A72F /* ContentView.swift */,
-				5F825663096346E05E28062C /* AppModel.swift */,
-				5F8257F99A1678B5A913CB0B /* Recorder.swift */,
-				5F825326E971511DEABBBD98 /* Player.swift */,
-				5F8250C73498AEFEC7E319D1 /* Transcriber.swift */,
-				5F8256BCF5B6B51833A45C1B /* WhisperContext.swift */,
-				5F825029DEF5F59A789BC9E4 /* Storage.swift */,
+				5F8258B2350B3616C3F6DD29 /* Services */,
+				5F8257C266BFE7AFF8258B1E /* Old */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -191,19 +186,31 @@
 		5F825311CFF886139B69DCF4 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				5F825B8B596D7981C9F18356 /* Preview Content */,
 				5F8253A221D1711208F56196 /* Assets.xcassets */,
 				5F825C81685817A9304E5994 /* ggml-tiny.en.bin */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		5F825B8B596D7981C9F18356 /* Preview Content */ = {
+		5F8257C266BFE7AFF8258B1E /* Old */ = {
 			isa = PBXGroup;
 			children = (
-				5F8250C70B658B79923777F3 /* Preview Assets.xcassets */,
+				5F82557D195F2DFD829CECCD /* AppModel.swift */,
+				5F825C55561DADEE306C1428 /* ContentView.swift */,
 			);
-			path = "Preview Content";
+			path = Old;
+			sourceTree = "<group>";
+		};
+		5F8258B2350B3616C3F6DD29 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				5F825D243F6709ECDC7DF019 /* Recorder.swift */,
+				5F8258A1113155C7A30DA1BD /* Storage.swift */,
+				5F825204A779CC78F80D7350 /* Player.swift */,
+				5F825F5D4C54E15579D23F4E /* Transcriber.swift */,
+				5F8253D55B87720E72867E03 /* WhisperContext.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 		5F825C21496D669F46C46161 /* Common */ = {
@@ -213,6 +220,7 @@
 				5F8256EAA25028E4D5D4FA39 /* Logging.swift */,
 				5F825478309A68B0DAD0AC65 /* Create.swift */,
 				5F8253A0263AB07C07F528B2 /* Styles.swift */,
+				5F8258AF0D544EA7B11CFD3E /* ColorPalette.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -313,7 +321,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5F8250195594D0AD696884EE /* Preview Assets.xcassets in Resources */,
 				5F8257E6122012C2E3D3AB67 /* Assets.xcassets in Resources */,
 				5F8253A99195B1A4E20F184A /* ggml-tiny.en.bin in Resources */,
 			);
@@ -334,20 +341,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5F8253EAA19FCA6575223B0C /* ContentView.swift in Sources */,
 				5F8256CA066B2A024735093D /* ggml.c in Sources */,
 				5F825377B187F764AABE65EC /* whisper.cpp in Sources */,
 				5F82596C88162ABC980988C7 /* WhisperboardApp.swift in Sources */,
-				5F82564D853201A597179527 /* AppModel.swift in Sources */,
 				5F825929EE9F737BEAF7BE48 /* ActivityIndicator.swift in Sources */,
-				5F825869DC3B32B30589402F /* Recorder.swift in Sources */,
-				5F825CD222195F0EF44377F3 /* Player.swift in Sources */,
-				5F82586CB0485960480DD6BA /* Transcriber.swift in Sources */,
 				5F825C11BEB34D65E3D4FE06 /* Logging.swift in Sources */,
-				5F82554B96FF627B00B1A05E /* WhisperContext.swift in Sources */,
 				5F825458774967C62642D833 /* Create.swift in Sources */,
-				5F825EC5048A25432CC3C630 /* Storage.swift in Sources */,
 				5F82558957207CB2C98B5816 /* Styles.swift in Sources */,
+				5F825852D0A5D0E16F734759 /* ColorPalette.swift in Sources */,
+				5F8251B058C90802B9486F5C /* Recorder.swift in Sources */,
+				5F8257DE9D33005235E194E4 /* Storage.swift in Sources */,
+				5F82503696D4673F06073C0C /* Player.swift in Sources */,
+				5F8255E11796C8C17376AE07 /* Transcriber.swift in Sources */,
+				5F825558C0253878870E7906 /* WhisperContext.swift in Sources */,
+				5F8259A697FDF74D91E6C637 /* AppModel.swift in Sources */,
+				5F82527846F020B4E3B7532E /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -493,7 +501,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Whisperboard/Resources/Preview Content\"";
 				DEVELOPMENT_TEAM = 8A76N862C8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -526,7 +533,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Whisperboard/Resources/Preview Content\"";
 				DEVELOPMENT_TEAM = 8A76N862C8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
