@@ -1,0 +1,696 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		49EE27A8295679E100B11803 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49EE27A7295679E100B11803 /* KeyboardViewController.swift */; };
+		49EE27AC295679E100B11803 /* Keyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 49EE27A5295679E100B11803 /* Keyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		49EE27E12956B2F300B11803 /* KeyboardKit in Frameworks */ = {isa = PBXBuildFile; productRef = 49EE27E02956B2F300B11803 /* KeyboardKit */; };
+		49EE27E829572A8300B11803 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 49EE27E729572A8300B11803 /* Assets.xcassets */; };
+		49EE27EB295736CA00B11803 /* DSWaveformImage in Frameworks */ = {isa = PBXBuildFile; productRef = 49EE27EA295736CA00B11803 /* DSWaveformImage */; };
+		49EE27ED295736CA00B11803 /* DSWaveformImageViews in Frameworks */ = {isa = PBXBuildFile; productRef = 49EE27EC295736CA00B11803 /* DSWaveformImageViews */; };
+		49EE27F029573EAF00B11803 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 49EE27EF29573EAF00B11803 /* ComposableArchitecture */; };
+		49EE27F229573EAF00B11803 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = 49EE27F129573EAF00B11803 /* Dependencies */; };
+		5F8250009D77A13D60D33FBC /* URLOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825DF89B2E37923C143168 /* URLOpener.swift */; };
+		5F8250195594D0AD696884EE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5F8250C70B658B79923777F3 /* Preview Assets.xcassets */; };
+		5F825377B187F764AABE65EC /* whisper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5F825FAD3DC6795B6139E2FC /* whisper.cpp */; };
+		5F8253A99195B1A4E20F184A /* ggml-tiny.en.bin in Resources */ = {isa = PBXBuildFile; fileRef = 5F825C81685817A9304E5994 /* ggml-tiny.en.bin */; };
+		5F8253EAA19FCA6575223B0C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825FC041DBF778DAC0A72F /* ContentView.swift */; };
+		5F825458774967C62642D833 /* Create.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825478309A68B0DAD0AC65 /* Create.swift */; };
+		5F82554B96FF627B00B1A05E /* WhisperContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8256BCF5B6B51833A45C1B /* WhisperContext.swift */; };
+		5F82558957207CB2C98B5816 /* Styles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8253A0263AB07C07F528B2 /* Styles.swift */; };
+		5F82564D853201A597179527 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825663096346E05E28062C /* AppModel.swift */; };
+		5F8256CA066B2A024735093D /* ggml.c in Sources */ = {isa = PBXBuildFile; fileRef = 5F825E70301206DD0409F8A5 /* ggml.c */; settings = {COMPILER_FLAGS = "-DGGML_USE_ACCELERATE"; }; };
+		5F8257E6122012C2E3D3AB67 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5F8253A221D1711208F56196 /* Assets.xcassets */; };
+		5F825869DC3B32B30589402F /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8257F99A1678B5A913CB0B /* Recorder.swift */; };
+		5F82586CB0485960480DD6BA /* Transcriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8250C73498AEFEC7E319D1 /* Transcriber.swift */; };
+		5F825929EE9F737BEAF7BE48 /* ActivityIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8257FE9255B9FA04EE2FBD /* ActivityIndicator.swift */; };
+		5F82596C88162ABC980988C7 /* WhisperboardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8253D8484681298BD8ECE3 /* WhisperboardApp.swift */; };
+		5F825C11BEB34D65E3D4FE06 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8256EAA25028E4D5D4FA39 /* Logging.swift */; };
+		5F825CD222195F0EF44377F3 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825326E971511DEABBBD98 /* Player.swift */; };
+		5F825EC5048A25432CC3C630 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825029DEF5F59A789BC9E4 /* Storage.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		49EE27AA295679E100B11803 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 49EE27882956799A00B11803 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 49EE27A4295679E100B11803;
+			remoteInfo = Keyboard;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		49EE27B0295679E100B11803 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				49EE27AC295679E100B11803 /* Keyboard.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		49EE27902956799A00B11803 /* Whisperboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Whisperboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		49EE27A5295679E100B11803 /* Keyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Keyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		49EE27A7295679E100B11803 /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
+		49EE27A9295679E100B11803 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		49EE27E22956BDD000B11803 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		49EE27E729572A8300B11803 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5F825029DEF5F59A789BC9E4 /* Storage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		5F8250A9DFB9DB76DCB6FB21 /* Whisperboard-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Whisperboard-Bridging-Header.h"; sourceTree = "<group>"; };
+		5F8250C70B658B79923777F3 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		5F8250C73498AEFEC7E319D1 /* Transcriber.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Transcriber.swift; sourceTree = "<group>"; };
+		5F825326E971511DEABBBD98 /* Player.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
+		5F8253A0263AB07C07F528B2 /* Styles.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
+		5F8253A221D1711208F56196 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5F8253D8484681298BD8ECE3 /* WhisperboardApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WhisperboardApp.swift; sourceTree = "<group>"; };
+		5F825478309A68B0DAD0AC65 /* Create.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Create.swift; sourceTree = "<group>"; };
+		5F825663096346E05E28062C /* AppModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		5F82569ED01D1ABC869D001A /* whisper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = whisper.h; sourceTree = "<group>"; };
+		5F8256BCF5B6B51833A45C1B /* WhisperContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WhisperContext.swift; sourceTree = "<group>"; };
+		5F8256EAA25028E4D5D4FA39 /* Logging.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
+		5F8257F99A1678B5A913CB0B /* Recorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
+		5F8257FE9255B9FA04EE2FBD /* ActivityIndicator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActivityIndicator.swift; sourceTree = "<group>"; };
+		5F825B71BCD13018E43D3671 /* ggml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ggml.h; sourceTree = "<group>"; };
+		5F825C81685817A9304E5994 /* ggml-tiny.en.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = "ggml-tiny.en.bin"; sourceTree = "<group>"; };
+		5F825DF89B2E37923C143168 /* URLOpener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URLOpener.swift; sourceTree = "<group>"; };
+		5F825E70301206DD0409F8A5 /* ggml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ggml.c; sourceTree = "<group>"; };
+		5F825FAD3DC6795B6139E2FC /* whisper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = whisper.cpp; sourceTree = "<group>"; };
+		5F825FC041DBF778DAC0A72F /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		49EE278D2956799A00B11803 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49EE27EB295736CA00B11803 /* DSWaveformImage in Frameworks */,
+				49EE27ED295736CA00B11803 /* DSWaveformImageViews in Frameworks */,
+				49EE27F029573EAF00B11803 /* ComposableArchitecture in Frameworks */,
+				49EE27F229573EAF00B11803 /* Dependencies in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49EE27A2295679E100B11803 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49EE27E12956B2F300B11803 /* KeyboardKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		49EE27872956799A00B11803 = {
+			isa = PBXGroup;
+			children = (
+				49EE27922956799A00B11803 /* Whisperboard */,
+				49EE27A6295679E100B11803 /* Keyboard */,
+				49EE27912956799A00B11803 /* Products */,
+				49EE27DF2956B2F300B11803 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		49EE27912956799A00B11803 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				49EE27902956799A00B11803 /* Whisperboard.app */,
+				49EE27A5295679E100B11803 /* Keyboard.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		49EE27922956799A00B11803 /* Whisperboard */ = {
+			isa = PBXGroup;
+			children = (
+				49EE27E22956BDD000B11803 /* Info.plist */,
+				5F82530F77ABB28F7816E0D0 /* App */,
+				5F825311CFF886139B69DCF4 /* Resources */,
+				5F8251A85E6324329AE6AD38 /* whisper */,
+				5F8253D8484681298BD8ECE3 /* WhisperboardApp.swift */,
+				5F825C21496D669F46C46161 /* Common */,
+			);
+			path = Whisperboard;
+			sourceTree = "<group>";
+		};
+		49EE27A6295679E100B11803 /* Keyboard */ = {
+			isa = PBXGroup;
+			children = (
+				49EE27A7295679E100B11803 /* KeyboardViewController.swift */,
+				49EE27A9295679E100B11803 /* Info.plist */,
+				5F825DF89B2E37923C143168 /* URLOpener.swift */,
+				49EE27E729572A8300B11803 /* Assets.xcassets */,
+			);
+			path = Keyboard;
+			sourceTree = "<group>";
+		};
+		49EE27DF2956B2F300B11803 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		5F8251A85E6324329AE6AD38 /* whisper */ = {
+			isa = PBXGroup;
+			children = (
+				5F82569ED01D1ABC869D001A /* whisper.h */,
+				5F8250A9DFB9DB76DCB6FB21 /* Whisperboard-Bridging-Header.h */,
+				5F825E70301206DD0409F8A5 /* ggml.c */,
+				5F825FAD3DC6795B6139E2FC /* whisper.cpp */,
+				5F825B71BCD13018E43D3671 /* ggml.h */,
+			);
+			path = whisper;
+			sourceTree = "<group>";
+		};
+		5F82530F77ABB28F7816E0D0 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				5F825FC041DBF778DAC0A72F /* ContentView.swift */,
+				5F825663096346E05E28062C /* AppModel.swift */,
+				5F8257F99A1678B5A913CB0B /* Recorder.swift */,
+				5F825326E971511DEABBBD98 /* Player.swift */,
+				5F8250C73498AEFEC7E319D1 /* Transcriber.swift */,
+				5F8256BCF5B6B51833A45C1B /* WhisperContext.swift */,
+				5F825029DEF5F59A789BC9E4 /* Storage.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		5F825311CFF886139B69DCF4 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				5F825B8B596D7981C9F18356 /* Preview Content */,
+				5F8253A221D1711208F56196 /* Assets.xcassets */,
+				5F825C81685817A9304E5994 /* ggml-tiny.en.bin */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		5F825B8B596D7981C9F18356 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				5F8250C70B658B79923777F3 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		5F825C21496D669F46C46161 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				5F8257FE9255B9FA04EE2FBD /* ActivityIndicator.swift */,
+				5F8256EAA25028E4D5D4FA39 /* Logging.swift */,
+				5F825478309A68B0DAD0AC65 /* Create.swift */,
+				5F8253A0263AB07C07F528B2 /* Styles.swift */,
+			);
+			path = Common;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		49EE278F2956799A00B11803 /* Whisperboard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 49EE279E2956799B00B11803 /* Build configuration list for PBXNativeTarget "Whisperboard" */;
+			buildPhases = (
+				49EE278C2956799A00B11803 /* Sources */,
+				49EE278D2956799A00B11803 /* Frameworks */,
+				49EE278E2956799A00B11803 /* Resources */,
+				49EE27B0295679E100B11803 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				49EE27AB295679E100B11803 /* PBXTargetDependency */,
+			);
+			name = Whisperboard;
+			packageProductDependencies = (
+				49EE27EA295736CA00B11803 /* DSWaveformImage */,
+				49EE27EC295736CA00B11803 /* DSWaveformImageViews */,
+				49EE27EF29573EAF00B11803 /* ComposableArchitecture */,
+				49EE27F129573EAF00B11803 /* Dependencies */,
+			);
+			productName = Whisperboard;
+			productReference = 49EE27902956799A00B11803 /* Whisperboard.app */;
+			productType = "com.apple.product-type.application";
+		};
+		49EE27A4295679E100B11803 /* Keyboard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 49EE27AD295679E100B11803 /* Build configuration list for PBXNativeTarget "Keyboard" */;
+			buildPhases = (
+				49EE27A1295679E100B11803 /* Sources */,
+				49EE27A2295679E100B11803 /* Frameworks */,
+				49EE27A3295679E100B11803 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Keyboard;
+			packageProductDependencies = (
+				49EE27E02956B2F300B11803 /* KeyboardKit */,
+			);
+			productName = Keyboard;
+			productReference = 49EE27A5295679E100B11803 /* Keyboard.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		49EE27882956799A00B11803 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1420;
+				LastUpgradeCheck = 1420;
+				TargetAttributes = {
+					49EE278F2956799A00B11803 = {
+						CreatedOnToolsVersion = 14.2;
+					};
+					49EE27A4295679E100B11803 = {
+						CreatedOnToolsVersion = 14.2;
+						LastSwiftMigration = 1420;
+					};
+				};
+			};
+			buildConfigurationList = 49EE278B2956799A00B11803 /* Build configuration list for PBXProject "Whisperboard" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 49EE27872956799A00B11803;
+			packageReferences = (
+				49EE27DC2956B20400B11803 /* XCRemoteSwiftPackageReference "KeyboardKit" */,
+				49EE27E9295736CA00B11803 /* XCRemoteSwiftPackageReference "DSWaveformImage" */,
+				49EE27EE29573EAF00B11803 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+			);
+			productRefGroup = 49EE27912956799A00B11803 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				49EE278F2956799A00B11803 /* Whisperboard */,
+				49EE27A4295679E100B11803 /* Keyboard */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		49EE278E2956799A00B11803 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5F8250195594D0AD696884EE /* Preview Assets.xcassets in Resources */,
+				5F8257E6122012C2E3D3AB67 /* Assets.xcassets in Resources */,
+				5F8253A99195B1A4E20F184A /* ggml-tiny.en.bin in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49EE27A3295679E100B11803 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49EE27E829572A8300B11803 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		49EE278C2956799A00B11803 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5F8253EAA19FCA6575223B0C /* ContentView.swift in Sources */,
+				5F8256CA066B2A024735093D /* ggml.c in Sources */,
+				5F825377B187F764AABE65EC /* whisper.cpp in Sources */,
+				5F82596C88162ABC980988C7 /* WhisperboardApp.swift in Sources */,
+				5F82564D853201A597179527 /* AppModel.swift in Sources */,
+				5F825929EE9F737BEAF7BE48 /* ActivityIndicator.swift in Sources */,
+				5F825869DC3B32B30589402F /* Recorder.swift in Sources */,
+				5F825CD222195F0EF44377F3 /* Player.swift in Sources */,
+				5F82586CB0485960480DD6BA /* Transcriber.swift in Sources */,
+				5F825C11BEB34D65E3D4FE06 /* Logging.swift in Sources */,
+				5F82554B96FF627B00B1A05E /* WhisperContext.swift in Sources */,
+				5F825458774967C62642D833 /* Create.swift in Sources */,
+				5F825EC5048A25432CC3C630 /* Storage.swift in Sources */,
+				5F82558957207CB2C98B5816 /* Styles.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49EE27A1295679E100B11803 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49EE27A8295679E100B11803 /* KeyboardViewController.swift in Sources */,
+				5F8250009D77A13D60D33FBC /* URLOpener.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		49EE27AB295679E100B11803 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 49EE27A4295679E100B11803 /* Keyboard */;
+			targetProxy = 49EE27AA295679E100B11803 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		49EE279C2956799B00B11803 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		49EE279D2956799B00B11803 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		49EE279F2956799B00B11803 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Whisperboard/Resources/Preview Content\"";
+				DEVELOPMENT_TEAM = 8A76N862C8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Whisperboard/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Needed to transcribe audio";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.igortarasenko.Whisperboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Whisperboard/whisper/Whisperboard-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		49EE27A02956799B00B11803 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Whisperboard/Resources/Preview Content\"";
+				DEVELOPMENT_TEAM = 8A76N862C8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Whisperboard/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Needed to transcribe audio";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.igortarasenko.Whisperboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Whisperboard/whisper/Whisperboard-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		49EE27AE295679E100B11803 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8A76N862C8;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Keyboard/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Keyboard;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.igortarasenko.Whisperboard.Keyboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		49EE27AF295679E100B11803 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8A76N862C8;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Keyboard/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Keyboard;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LLVM_LTO = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.igortarasenko.Whisperboard.Keyboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		49EE278B2956799A00B11803 /* Build configuration list for PBXProject "Whisperboard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49EE279C2956799B00B11803 /* Debug */,
+				49EE279D2956799B00B11803 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		49EE279E2956799B00B11803 /* Build configuration list for PBXNativeTarget "Whisperboard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49EE279F2956799B00B11803 /* Debug */,
+				49EE27A02956799B00B11803 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		49EE27AD295679E100B11803 /* Build configuration list for PBXNativeTarget "Keyboard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49EE27AE295679E100B11803 /* Debug */,
+				49EE27AF295679E100B11803 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		49EE27DC2956B20400B11803 /* XCRemoteSwiftPackageReference "KeyboardKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/KeyboardKit/KeyboardKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.0.0;
+			};
+		};
+		49EE27E9295736CA00B11803 /* XCRemoteSwiftPackageReference "DSWaveformImage" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dmrschmidt/DSWaveformImage";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+		49EE27EE29573EAF00B11803 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.47.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		49EE27E02956B2F300B11803 /* KeyboardKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 49EE27DC2956B20400B11803 /* XCRemoteSwiftPackageReference "KeyboardKit" */;
+			productName = KeyboardKit;
+		};
+		49EE27EA295736CA00B11803 /* DSWaveformImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 49EE27E9295736CA00B11803 /* XCRemoteSwiftPackageReference "DSWaveformImage" */;
+			productName = DSWaveformImage;
+		};
+		49EE27EC295736CA00B11803 /* DSWaveformImageViews */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 49EE27E9295736CA00B11803 /* XCRemoteSwiftPackageReference "DSWaveformImage" */;
+			productName = DSWaveformImageViews;
+		};
+		49EE27EF29573EAF00B11803 /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 49EE27EE29573EAF00B11803 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
+		};
+		49EE27F129573EAF00B11803 /* Dependencies */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 49EE27EE29573EAF00B11803 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = Dependencies;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 49EE27882956799A00B11803 /* Project object */;
+}
