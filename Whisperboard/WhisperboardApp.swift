@@ -6,12 +6,18 @@
 //
 
 import SwiftUI
+import ComposableArchitecture
 
 @main
 struct WhisperboardApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            WhispersView(
+              store: Store(
+                initialState: Whispers.State(),
+                reducer: Whispers()._printChanges()
+              )
+            )
         }
     }
 }
