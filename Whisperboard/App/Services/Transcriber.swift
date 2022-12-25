@@ -3,8 +3,29 @@
 //
 
 import Foundation
+import Dependencies
 
-final class Transcriber {
+struct Transcriber {
+  var loadModel: @Sendable () async throws -> Void
+  var transcribeAudio: @Sendable (_ url: URL) async throws -> String
+}
+
+extension Transcriber: DependencyKey {
+  static let liveValue: Transcriber = {
+    let impl = TranscriberImpl()
+
+    return Transcriber(
+      loadModel: {
+        try await impl.loadModel()
+      },
+      transcribeAudio: { url in
+        try await impl.transcribeAudio(url)
+      }
+    )
+  }()
+}
+
+final class TranscriberImpl {
   var isLoadingModel = false
   var isModelLoaded = false
   var isTranscribing = false
@@ -42,6 +63,10 @@ final class Transcriber {
   }
 
   func transcribeAudio(_ url: URL) async throws -> String {
+    if !isModelLoaded || whisperContext == nil {
+      try await loadModel()
+    }
+
     guard isModelLoaded, let whisperContext else {
       throw LoadError.somethingWrong
     }
@@ -62,6 +87,13 @@ final class Transcriber {
     // stopPlayback()
     // try startPlayback(url)
     return try decodeWaveFile(url)
+  }
+}
+
+extension DependencyValues {
+  var transcriber: Transcriber {
+    get { self[Transcriber.self] }
+    set { self[Transcriber.self] = newValue }
   }
 }
 
