@@ -70,6 +70,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4977E48A2957D73E001EAFB7 /* ci_post_clone.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = ci_post_clone.sh; sourceTree = "<group>"; };
 		49EE27902956799A00B11803 /* Whisperboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Whisperboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		49EE27A5295679E100B11803 /* Keyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Keyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		49EE27A7295679E100B11803 /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
@@ -132,9 +133,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4977E4892957D70A001EAFB7 /* ci_scripts */ = {
+			isa = PBXGroup;
+			children = (
+				4977E48A2957D73E001EAFB7 /* ci_post_clone.sh */,
+			);
+			path = ci_scripts;
+			sourceTree = "<group>";
+		};
 		49EE27872956799A00B11803 = {
 			isa = PBXGroup;
 			children = (
+				4977E4892957D70A001EAFB7 /* ci_scripts */,
 				49EE27922956799A00B11803 /* Whisperboard */,
 				49EE27A6295679E100B11803 /* Keyboard */,
 				49EE27912956799A00B11803 /* Products */,
