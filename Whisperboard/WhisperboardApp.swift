@@ -15,7 +15,7 @@ struct WhisperboardApp: App {
             WhispersView(
               store: Store(
                 initialState: Whispers.State(),
-                reducer: Whispers()._printChanges()
+                reducer: Whispers()
               )
             )
         }

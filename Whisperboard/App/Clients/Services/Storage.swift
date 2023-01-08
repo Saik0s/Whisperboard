@@ -96,7 +96,6 @@ extension Storage: DependencyKey {
     }
 
     @Sendable func write(_ whispers: IdentifiedArrayOf<WhisperInfo>) async throws {
-      log("writing \(whispers.count) whispers to storage")
       let filtered = whispers.filter { whisper in
         FileManager.default.fileExists(atPath: docURL.appending(path: whisper.fileName).path)
       }

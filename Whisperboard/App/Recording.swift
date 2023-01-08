@@ -54,6 +54,8 @@ struct Recording: ReducerProtocol {
 
     case .stopButtonTapped:
       state.mode = .encoding
+      UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
       return .run { send in
         if let currentTime = await self.audioRecorder.currentTime() {
           await send(.finalRecordingTime(currentTime))
@@ -92,15 +94,7 @@ struct RecordingView: View {
   }
 
   var body: some View {
-    ZStack {
-      Button { viewStore.send(.stopButtonTapped, animation: .default) } label: {
-        RoundedRectangle(cornerRadius: 4)
-          .fill(ColorPalette.orangeRed)
-      }
-        .frame(width: 70, height: 70)
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .padding(.grid(3))
-
+    VStack {
       HStack {
         VStack(spacing: 12) {
           Text("Recording")
@@ -119,6 +113,14 @@ struct RecordingView: View {
       .padding(.horizontal, .grid(13))
       .padding(.vertical, .grid(6))
       .background { Color.black.opacity(0.8).blur(radius: 40) }
+
+      Button { viewStore.send(.stopButtonTapped, animation: .default) } label: {
+        RoundedRectangle(cornerRadius: 4)
+          .fill(ColorPalette.orangeRed)
+      }
+        .frame(width: 70, height: 70)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.grid(3))
     }
       .task {
         viewStore.send(.task)
@@ -128,15 +130,7 @@ struct RecordingView: View {
 
 struct Whispers_Previews: PreviewProvider {
   static var previews: some View {
-    ZStack {
-      Button {  } label: {
-        RoundedRectangle(cornerRadius: 4)
-          .fill(ColorPalette.orangeRed)
-      }
-      .frame(width: 70, height: 70)
-      .frame(maxWidth: .infinity, alignment: .trailing)
-      .padding(.grid(3))
-
+    VStack {
       HStack {
         VStack(spacing: 12) {
           Text("Recording")
@@ -155,6 +149,14 @@ struct Whispers_Previews: PreviewProvider {
       .padding(.horizontal, .grid(13))
       .padding(.vertical, .grid(6))
         .background { Color.black.opacity(0.7).blur(radius: 40) }
+
+      Button {  } label: {
+        RoundedRectangle(cornerRadius: 4)
+          .fill(ColorPalette.orangeRed)
+      }
+        .frame(width: 70, height: 70)
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding(.grid(3))
     }
   }
 }

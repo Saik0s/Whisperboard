@@ -6,8 +6,8 @@ import Foundation
 import Dependencies
 
 struct Transcriber {
-  var loadModel: @Sendable () async throws -> Void
-  var transcribeAudio: @Sendable (_ url: URL) async throws -> String
+  var loadModel: @Sendable (_ modelUrl: URL) async throws -> Void
+  var transcribeAudio: @Sendable (_ audioURL: URL, _ modelUrl: URL) async throws -> String
 }
 
 extension Transcriber: DependencyKey {
@@ -15,11 +15,11 @@ extension Transcriber: DependencyKey {
     let impl = TranscriberImpl()
 
     return Transcriber(
-      loadModel: {
-        try await impl.loadModel()
+      loadModel: { url in
+        try await impl.loadModel(modelUrl: url)
       },
-      transcribeAudio: { url in
-        try await impl.transcribeAudio(url)
+      transcribeAudio: { audioURL, modelURL in
+        try await impl.transcribeAudio(audioURL, modelURL)
       }
     )
   }()
@@ -41,13 +41,8 @@ final class TranscriberImpl {
 
   private var whisperContext: WhisperContext?
 
-  func loadModel() async throws {
-    guard let modelUrl else {
-      log("Could not locate model")
-      throw LoadError.couldNotLocateModel
-    }
-
-    return try await withCheckedThrowingContinuation { continuation in
+  func loadModel(modelUrl: URL) async throws {
+    try await withCheckedThrowingContinuation { continuation in
       isLoadingModel = true
       do {
         log("Loading model...")
@@ -62,9 +57,9 @@ final class TranscriberImpl {
     }
   }
 
-  func transcribeAudio(_ url: URL) async throws -> String {
+  func transcribeAudio(_ audioURL: URL, _ modelUrl: URL) async throws -> String {
     if !isModelLoaded || whisperContext == nil {
-      try await loadModel()
+      try await loadModel(modelUrl: modelUrl)
     }
 
     guard isModelLoaded, let whisperContext else {
@@ -75,7 +70,7 @@ final class TranscriberImpl {
     defer { isTranscribing = false }
 
     log("Reading wave samples...")
-    let data = try readAudioSamples(url)
+    let data = try readAudioSamples(audioURL)
     log("Transcribing data...")
     await whisperContext.fullTranscribe(samples: data)
     let text = await whisperContext.getTranscription()
