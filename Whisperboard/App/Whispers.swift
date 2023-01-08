@@ -1,6 +1,12 @@
+//
+// Whispers.swift
+//
+
 import AVFoundation
 import ComposableArchitecture
 import SwiftUI
+
+// MARK: - Whispers
 
 struct Whispers: ReducerProtocol {
   struct State: Equatable {
@@ -48,7 +54,7 @@ struct Whispers: ReducerProtocol {
           try? await self.storage.cleanup()
           return await .setWhispers(TaskResult { try await self.storage.read() })
         }
-          .animation()
+        .animation()
 
       case let .setWhispers(result):
         switch result {
@@ -146,7 +152,7 @@ struct Whispers: ReducerProtocol {
             TaskResult { try await self.transcriber.transcribeAudio(self.storage.fileURLWithName(id)) }
           )
         }
-          .animation()
+        .animation()
 
       case let .whisper(id, .bodyTapped):
         guard !state.isTranscribing else { return .none }
@@ -181,27 +187,29 @@ struct Whispers: ReducerProtocol {
         return .none
       }
     }
-      .ifLet(\.recording, action: /Action.recording) {
-        Recording()
+    .ifLet(\.recording, action: /Action.recording) {
+      Recording()
+    }
+    .forEach(\.whispers, action: /Action.whisper(id:action:)) {
+      Whisper()
+    }
+    .onChange(of: \.whispers) { whispers, _, _ -> Effect<Action, Never> in
+      log("whispers changed")
+      return .fireAndForget {
+        try await self.storage.write(whispers)
       }
-      .forEach(\.whispers, action: /Action.whisper(id:action:)) {
-        Whisper()
-      }
-      .onChange(of: \.whispers) { whispers, state, _ -> Effect<Action, Never> in
-        log("whispers changed")
-        return .fireAndForget {
-          try await self.storage.write(whispers)
-        }
-      }
+    }
   }
 
   private var newRecording: Recording.State {
     Recording.State(
-      date: self.date.now,
+      date: date.now,
       url: storage.createNewWhisperURL()
     )
   }
 }
+
+// MARK: - WhispersView
 
 struct WhispersView: View {
   let store: StoreOf<Whispers>
@@ -221,19 +229,19 @@ struct WhispersView: View {
         recordingControls()
           .frame(maxHeight: .infinity, alignment: .bottom)
       }
-        .background(ColorPalette.darkness)
-        .alert(
-          self.store.scope(state: \.alert),
-          dismiss: .alertDismissed
-        )
-        .navigationTitle("Whispers")
+      .background(ColorPalette.darkness)
+      .alert(
+        self.store.scope(state: \.alert),
+        dismiss: .alertDismissed
+      )
+      .navigationTitle("Whispers")
       // .navigationBarItems(
       //   trailing: Button { viewStore.send(.gearButtonTapped) }
       //   label: { Image(systemName: "gearshape") }
       // )
     }
-      .navigationViewStyle(.stack)
-      .task { await viewStore.send(.readStoredWhispers).finish() }
+    .navigationViewStyle(.stack)
+    .task { await viewStore.send(.readStoredWhispers).finish() }
   }
 
   func whisperList() -> some View {
@@ -245,18 +253,18 @@ struct WhispersView: View {
           .listRowBackground(Color.clear)
           .listRowSeparator(.hidden)
       }
-        .onDelete { indexSet in
-          for index in indexSet {
-            viewStore.send(.whisper(id: viewStore.whispers[index].id, action: .delete))
-          }
+      .onDelete { indexSet in
+        for index in indexSet {
+          viewStore.send(.whisper(id: viewStore.whispers[index].id, action: .delete))
         }
-        .buttonStyle(PlainButtonStyle())
+      }
+      .buttonStyle(PlainButtonStyle())
     }
   }
 
   func recordingControls() -> some View {
     IfLetStore(
-      self.store.scope(state: \.recording, action: { .recording($0) })
+      store.scope(state: \.recording, action: { .recording($0) })
     ) { store in
       RecordingView(store: store)
     } else: {
@@ -266,8 +274,8 @@ struct WhispersView: View {
         viewStore.send(.openSettingsButtonTapped)
       }
     }
-      .padding()
-      .frame(maxWidth: .infinity)
+    .padding()
+    .frame(maxWidth: .infinity)
   }
 
   func whisperRowView(_ childStore: StoreOf<Whisper>) -> some View {
@@ -282,7 +290,7 @@ struct WhispersView: View {
                 .frame(width: 20, height: 20)
             }
           }
-            .frame(height: 50)
+          .frame(height: 50)
         }
 
       ZStack {
@@ -296,89 +304,36 @@ struct WhispersView: View {
             Text(childState.text)
               .textSelection(.enabled)
           }
-            .padding(.grid(1))
-            .transition(
-              AnyTransition.move(edge: .top)
-                .combined(with: AnyTransition.scale)
-            )
+          .padding(.grid(1))
+          .transition(
+            AnyTransition.move(edge: .top)
+              .combined(with: AnyTransition.scale)
+          )
         }
       }
-        .animation(.easeInOut(duration: 0.3), value: viewStore.isTranscribing)
-        .animation(.easeInOut(duration: 0.3), value: viewStore.expandedWhisperId)
+      .animation(.easeInOut(duration: 0.3), value: viewStore.isTranscribing)
+      .animation(.easeInOut(duration: 0.3), value: viewStore.expandedWhisperId)
     }
-      .background {
-        ZStack {
-          if viewStore.expandedWhisperId == childState.id {
-            ColorPalette.background
-              .cornerRadius(.grid(2), corners: [.bottomLeft, .bottomRight])
-          }
+    .background {
+      ZStack {
+        if viewStore.expandedWhisperId == childState.id {
+          ColorPalette.background
+            .cornerRadius(.grid(2), corners: [.bottomLeft, .bottomRight])
         }
       }
-  }
-}
-
-struct CopyButton: View {
-  var text: String
-
-  var body: some View {
-    Button {
-      UIPasteboard.general.string = text
-    } label: {
-      Image(systemName: "doc.on.clipboard")
-        .foregroundColor(ColorPalette.orangeRed)
-        .padding(.grid(1))
     }
   }
 }
 
-struct ShareButton: View {
-  var text: String
+// MARK: - WhispersView_Previews
 
-  var body: some View {
-    Button {
-      let text = text
-      let activityController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
-
-      UIApplication.shared.windows.first?.rootViewController?.present(activityController, animated: true, completion: nil)
-    } label: {
-      Image(systemName: "paperplane")
-        .foregroundColor(ColorPalette.orangeRed)
-        .padding(.grid(1))
-    }
-  }
-}
-
-struct RecordButton: View {
-  let permission: Whispers.State.RecorderPermission
-  let action: () -> Void
-  let settingsAction: () -> Void
-
-  var body: some View {
-    ZStack {
-      Button(action: self.action) {
-        Circle()
-          .fill(ColorPalette.orangeRed)
-          .overlay {
-            Image(systemName: "mic")
-              .resizable()
-              .scaledToFit()
-              .frame(width: 30, height: 30)
-              .foregroundColor(ColorPalette.darkness)
-          }
-      }
-        .frame(width: 70, height: 70)
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .padding(.grid(3))
-        .opacity(self.permission == .denied ? 0.1 : 1)
-
-      if self.permission == .denied {
-        VStack(spacing: 10) {
-          Text("Recording requires microphone access.")
-            .multilineTextAlignment(.center)
-          Button("Open Settings", action: self.settingsAction)
-        }
-          .frame(maxWidth: .infinity, maxHeight: 74)
-      }
-    }
+struct WhispersView_Previews: PreviewProvider {
+  static var previews: some View {
+    WhispersView(
+      store: Store(
+        initialState: Whispers.State(),
+        reducer: Whispers()._printChanges()
+      )
+    )
   }
 }

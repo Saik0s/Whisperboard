@@ -1,0 +1,37 @@
+# file options
+
+--exclude .build
+--swiftversion 5.7
+
+# format options
+
+--indent 2
+--maxwidth 150
+--funcattributes prev-line
+--typeattributes prev-line
+--varattributes same-line
+--wraparguments preserve
+--wrapcollections before-first
+--wrapconditions after-first
+--wrapparameters preserve
+--wrapternary before-operators
+
+--header "\n{file}\n"
+
+# rules
+
+--disable                               \
+    andOperator,                        \
+    sortedSwitchCases,                  \
+    wrapMultilineStatementBraces,       \
+    wrapSwitchCases,                    \
+    organizeDeclarations,               \
+    wrapEnumCases,                      \
+    redundantNilInit
+
+--enable                                \
+    blankLinesBetweenImports,           \
+    blankLineAfterImports,              \
+    markTypes,                          \
+    blockComments,                      \
+    isEmpty
