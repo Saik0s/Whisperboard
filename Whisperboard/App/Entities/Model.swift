@@ -21,10 +21,10 @@ enum ModelType: String, CaseIterable {
   case base = "base"
   case smallEN = "small.en"
   case small = "small"
-  case mediumEN = "medium.en"
-  case medium = "medium"
-  case largeV1 = "large-v1"
-  case large = "large"
+  // case mediumEN = "medium.en"
+  // case medium = "medium"
+  // case largeV1 = "large-v1"
+  // case large = "large"
 
   var name: String { "ggml-\(rawValue).bin" }
 
@@ -33,8 +33,8 @@ enum ModelType: String, CaseIterable {
     case .tinyEN, .tiny: return "75 MB"
     case .baseEN, .base: return "142 MB"
     case .smallEN, .small: return "466 MB"
-    case .mediumEN, .medium: return "1.5 GB"
-    case .largeV1, .large: return "2.9 GB"
+    // case .mediumEN, .medium: return "1.5 GB"
+    // case .largeV1, .large: return "2.9 GB"
     }
   }
 
