@@ -17,6 +17,8 @@ struct Whispers: ReducerProtocol {
     var isTranscribing = false
     var transcribingIdInProgress: Whisper.State.ID?
     var expandedWhisperId: Whisper.State.ID?
+    var settings = Settings.State()
+    @BindableState var isSettingsPresented = false
 
     enum RecorderPermission {
       case allowed
@@ -25,7 +27,8 @@ struct Whispers: ReducerProtocol {
     }
   }
 
-  enum Action: Equatable {
+  enum Action: BindableAction, Equatable {
+    case binding(BindingAction<State>)
     case readStoredWhispers
     case setWhispers(TaskResult<IdentifiedArrayOf<Whisper.State>>)
     case alertDismissed
@@ -37,6 +40,7 @@ struct Whispers: ReducerProtocol {
     case gearButtonTapped
     case transcribeWhisper(id: Whisper.State.ID)
     case transcriptionFinished(id: Whisper.State.ID, TaskResult<String>)
+    case settings(Settings.Action)
   }
 
   @Dependency(\.audioRecorder.requestRecordPermission) var requestRecordPermission
@@ -47,8 +51,17 @@ struct Whispers: ReducerProtocol {
   @Dependency(\.transcriber) var transcriber
 
   var body: some ReducerProtocol<State, Action> {
+    Scope(state: \.settings, action: /Action.settings) {
+      Settings()
+    }
+
+    BindingReducer()
+
     Reduce { state, action in
       switch action {
+      case .binding:
+        return .none
+
       case .readStoredWhispers:
         return .task {
           try? await self.storage.cleanup()
@@ -77,6 +90,7 @@ struct Whispers: ReducerProtocol {
       case .recordButtonTapped:
         switch state.audioRecorderPermission {
         case .undetermined:
+          UIImpactFeedbackGenerator(style: .light).impactOccurred()
           return .task {
             await .recordPermissionResponse(self.requestRecordPermission())
           }
@@ -139,17 +153,19 @@ struct Whispers: ReducerProtocol {
         return .none
 
       case .gearButtonTapped:
+        state.isSettingsPresented = true
         return .none
 
       case let .transcribeWhisper(id):
-        guard !state.isTranscribing else { return .none }
+        guard !state.isTranscribing,
+              let modelURL = state.settings.modelSelector.selectedModel?.type.localURL else { return .none }
 
         state.isTranscribing = true
         state.transcribingIdInProgress = id
         return .task {
           await .transcriptionFinished(
             id: id,
-            TaskResult { try await self.transcriber.transcribeAudio(self.storage.fileURLWithName(id)) }
+            TaskResult { try await self.transcriber.transcribeAudio(self.storage.fileURLWithName(id), modelURL) }
           )
         }
         .animation()
@@ -174,6 +190,8 @@ struct Whispers: ReducerProtocol {
         return .none
 
       case let .transcriptionFinished(id, result):
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
         state.isTranscribing = false
         switch result {
         case let .success(text):
@@ -185,6 +203,9 @@ struct Whispers: ReducerProtocol {
           state.alert = AlertState(title: TextState("Error while transcribing voice recording"), message: TextState(error.localizedDescription))
         }
         return .none
+
+      case .settings:
+        return .none
       }
     }
     .ifLet(\.recording, action: /Action.recording) {
@@ -194,9 +215,8 @@ struct Whispers: ReducerProtocol {
       Whisper()
     }
     .onChange(of: \.whispers) { whispers, _, _ -> Effect<Action, Never> in
-      log("whispers changed")
-      return .fireAndForget {
-        try await self.storage.write(whispers)
+      .fireAndForget {
+        try await storage.write(whispers)
       }
     }
   }
@@ -221,26 +241,42 @@ struct WhispersView: View {
   }
 
   var body: some View {
-    NavigationView {
+    NavigationStack {
       ZStack {
-        whisperList()
-          .frame(maxHeight: .infinity, alignment: .top)
+        if viewStore.settings.modelSelector.selectedModel == nil {
+          Text(viewStore.settings.modelSelector.isLoading
+            ? "Loading model..."
+            : "No model selected\nPlease select a model in the settings")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay {
+              ZStack {
+                if viewStore.settings.modelSelector.isLoading {
+                  ColorPalette.darkness.opacity(0.5).ignoresSafeArea()
+                  ProgressView()
+                }
+              }
+            }
 
-        recordingControls()
-          .frame(maxHeight: .infinity, alignment: .bottom)
+        } else {
+          whisperList()
+            .frame(maxHeight: .infinity, alignment: .top)
+
+          recordingControls()
+            .frame(maxHeight: .infinity, alignment: .bottom)
+        }
       }
       .background(ColorPalette.darkness)
-      .alert(
-        self.store.scope(state: \.alert),
-        dismiss: .alertDismissed
-      )
+      .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
       .navigationTitle("Whispers")
-      // .navigationBarItems(
-      //   trailing: Button { viewStore.send(.gearButtonTapped) }
-      //   label: { Image(systemName: "gearshape") }
-      // )
+      .navigationBarItems(
+        trailing: Button { viewStore.send(.gearButtonTapped) }
+          label: { Image(systemName: "gearshape") }
+      )
+      .navigationDestination(isPresented: viewStore.binding(\.$isSettingsPresented)) {
+        SettingsView(store: store.scope(state: \.settings, action: Whispers.Action.settings))
+      }
+      .task { viewStore.send(.settings(.modelSelector(.task))) }
     }
-    .navigationViewStyle(.stack)
     .task { await viewStore.send(.readStoredWhispers).finish() }
   }
 
@@ -299,6 +335,12 @@ struct WhispersView: View {
             HStack {
               CopyButton(text: childState.text)
               ShareButton(text: childState.text)
+              Button { viewStore.send(.transcribeWhisper(id: childState.id)) }
+               label: {
+                Image(systemName: "arrow.clockwise")
+                  .foregroundColor(ColorPalette.orangeRed)
+                  .padding(.grid(1))
+              }
             }
 
             Text(childState.text)
@@ -316,10 +358,8 @@ struct WhispersView: View {
     }
     .background {
       ZStack {
-        if viewStore.expandedWhisperId == childState.id {
-          ColorPalette.background
-            .cornerRadius(.grid(2), corners: [.bottomLeft, .bottomRight])
-        }
+        ColorPalette.background
+          .cornerRadius(.grid(2), corners: [.bottomLeft, .bottomRight])
       }
     }
   }

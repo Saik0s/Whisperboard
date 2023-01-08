@@ -24,7 +24,7 @@ struct RecordButton: View {
           }
       }
         .frame(width: 70, height: 70)
-        .frame(maxWidth: .infinity, alignment: .trailing)
+        .frame(maxWidth: .infinity)
         .padding(.grid(3))
         .opacity(self.permission == .denied ? 0.1 : 1)
 
