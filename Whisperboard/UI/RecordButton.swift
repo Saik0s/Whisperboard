@@ -1,12 +1,12 @@
 //
-// Created by Igor Tarasenko on 08/01/2023.
+// RecordButton.swift
 //
 
 import SwiftUI
 import UIKit
 
 struct RecordButton: View {
-  let permission: Whispers.State.RecorderPermission
+  let permission: WhisperList.State.RecorderPermission
   let action: () -> Void
   let settingsAction: () -> Void
 
@@ -14,19 +14,19 @@ struct RecordButton: View {
     ZStack {
       Button(action: self.action) {
         Circle()
-          .fill(ColorPalette.orangeRed)
+          .fill(Color.Palette.secondary)
           .overlay {
             Image(systemName: "mic")
               .resizable()
               .scaledToFit()
               .frame(width: 30, height: 30)
-              .foregroundColor(ColorPalette.darkness)
+              .foregroundColor(Color.Palette.text)
           }
       }
-        .frame(width: 70, height: 70)
-        .frame(maxWidth: .infinity)
-        .padding(.grid(3))
-        .opacity(self.permission == .denied ? 0.1 : 1)
+      .frame(width: 70, height: 70)
+      .frame(maxWidth: .infinity)
+      .padding(.grid(3))
+      .opacity(self.permission == .denied ? 0.1 : 1)
 
       if self.permission == .denied {
         VStack(spacing: 10) {
@@ -34,7 +34,7 @@ struct RecordButton: View {
             .multilineTextAlignment(.center)
           Button("Open Settings", action: self.settingsAction)
         }
-          .frame(maxWidth: .infinity, maxHeight: 74)
+        .frame(maxWidth: .infinity, maxHeight: 74)
       }
     }
   }

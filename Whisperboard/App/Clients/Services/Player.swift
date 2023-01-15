@@ -1,9 +1,9 @@
 //
-// Created by Igor Tarasenko on 24/12/2022.
+// Player.swift
 //
 
-import Foundation
 import AVFoundation
+import Foundation
 
 class Player {
   private var audioPlayer: AVAudioPlayer?

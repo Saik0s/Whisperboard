@@ -1,8 +1,10 @@
 //
-// Created by Igor Tarasenko on 24/12/2022.
+// Styles.swift
 //
 
 import SwiftUI
+
+// MARK: - MyButtonStyle
 
 struct MyButtonStyle: ButtonStyle {
   func makeBody(configuration: Self.Configuration) -> some View {
@@ -19,5 +21,29 @@ struct MyButtonStyle: ButtonStyle {
           }
         }
       }
+  }
+}
+
+// MARK: - PrimaryCardStyle
+
+public struct PrimaryCardStyle: ViewModifier {
+  public func body(content: Content) -> some View {
+    content.background {
+      ZStack {
+        RoundedRectangle(cornerRadius: .grid(3))
+          .fill(LinearGradient.cardBackground)
+
+        RoundedRectangle(cornerRadius: .grid(3))
+          .strokeBorder(LinearGradient.cardBorder, lineWidth: 1)
+      }
+      .compositingGroup()
+      .shadow(color: .Palette.shadow, radius: 15, x: 0, y: 5)
+    }
+  }
+}
+
+public extension View {
+  func primaryCardStyle() -> some View {
+    modifier(PrimaryCardStyle())
   }
 }

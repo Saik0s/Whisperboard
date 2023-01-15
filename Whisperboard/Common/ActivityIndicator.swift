@@ -1,8 +1,10 @@
 //
-// Created by Igor Tarasenko on 24/12/2022.
+// ActivityIndicator.swift
 //
 
 import SwiftUI
+
+// MARK: - ActivityIndicator
 
 struct ActivityIndicator: View {
   var body: some View {
@@ -10,22 +12,24 @@ struct ActivityIndicator: View {
   }
 }
 
-struct DefaultIndicatorView: View {
+// MARK: - DefaultIndicatorView
 
+struct DefaultIndicatorView: View {
   let count: Int
 
   public var body: some View {
     GeometryReader { geometry in
-      ForEach(0..<count, id: \.self) { index in
+      ForEach(0 ..< count, id: \.self) { index in
         DefaultIndicatorItemView(index: index, count: count, size: geometry.size)
       }
-        .frame(width: geometry.size.width, height: geometry.size.height)
+      .frame(width: geometry.size.width, height: geometry.size.height)
     }
   }
 }
 
-struct DefaultIndicatorItemView: View {
+// MARK: - DefaultIndicatorItemView
 
+struct DefaultIndicatorItemView: View {
   let index: Int
   let count: Int
   let size: CGSize

@@ -1,5 +1,11 @@
+//
+// Recording.swift
+//
+
 import ComposableArchitecture
 import SwiftUI
+
+// MARK: - Recording
 
 struct Recording: ReducerProtocol {
   struct CancelID: Hashable {}
@@ -75,7 +81,7 @@ struct Recording: ReducerProtocol {
         }
         await startRecording
       }
-        .cancellable(id: CancelID())
+      .cancellable(id: CancelID())
 
     case .timerUpdated:
       state.duration += 1
@@ -83,6 +89,8 @@ struct Recording: ReducerProtocol {
     }
   }
 }
+
+// MARK: - RecordingView
 
 struct RecordingView: View {
   let store: StoreOf<Recording>
@@ -99,14 +107,14 @@ struct RecordingView: View {
         VStack(spacing: 12) {
           Text("Recording")
             .font(.title)
-            // .foregroundColor(ColorPalette.orangeRed)
-            .colorMultiply(Int(viewStore.duration).isMultiple(of: 2) ? ColorPalette.orangeRed : ColorPalette.white)
+            // .foregroundColor(Color.Palette.orangeRed)
+            .colorMultiply(Int(viewStore.duration).isMultiple(of: 2) ? Color.Palette.secondary : Color.Palette.text)
             .animation(.easeInOut(duration: 0.5), value: viewStore.duration)
 
           if let formattedDuration = dateComponentsFormatter.string(from: viewStore.duration) {
             Text(formattedDuration)
               .font(.body.monospacedDigit().bold())
-              .foregroundColor(ColorPalette.lightGray)
+              .foregroundColor(Color.Palette.separator)
           }
         }
       }
@@ -116,17 +124,19 @@ struct RecordingView: View {
 
       Button { viewStore.send(.stopButtonTapped, animation: .default) } label: {
         RoundedRectangle(cornerRadius: 4)
-          .fill(ColorPalette.orangeRed)
+          .fill(Color.Palette.secondary)
       }
-        .frame(width: 70, height: 70)
-        .frame(maxWidth: .infinity, alignment: .center)
-        .padding(.grid(3))
+      .frame(width: 70, height: 70)
+      .frame(maxWidth: .infinity, alignment: .center)
+      .padding(.grid(3))
     }
-      .task {
-        viewStore.send(.task)
-      }
+    .task {
+      viewStore.send(.task)
+    }
   }
 }
+
+// MARK: - Whispers_Previews
 
 struct Whispers_Previews: PreviewProvider {
   static var previews: some View {
@@ -135,28 +145,28 @@ struct Whispers_Previews: PreviewProvider {
         VStack(spacing: 12) {
           Text("Recording")
             .font(.title)
-            // .foregroundColor(ColorPalette.orangeRed)
-            .colorMultiply(Int(5).isMultiple(of: 2) ? ColorPalette.orangeRed : ColorPalette.white)
+            // .foregroundColor(Color.Palette.orangeRed)
+            .colorMultiply(Int(5).isMultiple(of: 2) ? Color.Palette.secondary : Color.Palette.text)
             .animation(.easeInOut(duration: 0.5), value: 5)
 
           if let formattedDuration = dateComponentsFormatter.string(from: 5) {
             Text(formattedDuration)
               .font(.body.monospacedDigit().bold())
-              .foregroundColor(ColorPalette.lightGray)
+              .foregroundColor(Color.Palette.separator)
           }
         }
       }
       .padding(.horizontal, .grid(13))
       .padding(.vertical, .grid(6))
-        .background { Color.black.opacity(0.7).blur(radius: 40) }
+      .background { Color.black.opacity(0.7).blur(radius: 40) }
 
-      Button {  } label: {
+      Button {} label: {
         RoundedRectangle(cornerRadius: 4)
-          .fill(ColorPalette.orangeRed)
+          .fill(Color.Palette.secondary)
       }
-        .frame(width: 70, height: 70)
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .padding(.grid(3))
+      .frame(width: 70, height: 70)
+      .frame(maxWidth: .infinity, alignment: .trailing)
+      .padding(.grid(3))
     }
   }
 }

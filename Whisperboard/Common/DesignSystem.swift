@@ -1,5 +1,5 @@
 //
-// Created by Igor Tarasenko on 24/12/2022.
+// DesignSystem.swift
 //
 
 import CoreGraphics

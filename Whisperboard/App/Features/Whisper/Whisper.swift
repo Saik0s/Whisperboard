@@ -1,7 +1,13 @@
+//
+// Whisper.swift
+//
+
 import ComposableArchitecture
-import SwiftUI
-import DSWaveformImageViews
 import DSWaveformImage
+import DSWaveformImageViews
+import SwiftUI
+
+// MARK: - Whisper
 
 struct Whisper: ReducerProtocol {
   struct State: Equatable, Identifiable, Codable {
@@ -63,18 +69,18 @@ struct Whisper: ReducerProtocol {
         return .run { [fileName = state.fileName] send in
           let url = storage.fileURLWithName(fileName)
           async let playAudio: Void = send(
-            .audioPlayerClient(TaskResult { try await self.audioPlayer.play(url) })
+            .audioPlayerClient(TaskResult { try await audioPlayer.play(url) })
           )
 
           var start: TimeInterval = 0
-          for await _ in self.clock.timer(interval: .milliseconds(500)) {
+          for await _ in clock.timer(interval: .milliseconds(500)) {
             start += 0.5
             await send(.timerUpdated(start))
           }
 
           await playAudio
         }
-          .cancellable(id: PlayID.self, cancelInFlight: true)
+        .cancellable(id: PlayID.self, cancelInFlight: true)
 
       case .playing:
         state.mode = .notPlaying
@@ -106,17 +112,19 @@ extension ViewStore where ViewState == Whisper.State {
   }
 }
 
+// MARK: - WhisperView
+
 struct WhisperView: View {
   let store: StoreOf<Whisper>
 
   var body: some View {
-    WithViewStore(self.store) { viewStore in
+    WithViewStore(store) { viewStore in
       VStack {
         TextField(
           "Untitled, \(viewStore.date.formatted(date: .numeric, time: .shortened))",
           text: viewStore.binding(get: \.title, send: { .titleTextFieldChanged($0) })
         )
-          .foregroundColor(ColorPalette.grayish)
+        .foregroundColor(Color.Palette.placeholder)
 
         HStack(spacing: .grid(4)) {
           PlayButton(isPlaying: viewStore.mode.isPlaying) {
@@ -128,32 +136,37 @@ struct WhisperView: View {
             progress: viewStore.mode.progress ?? 0,
             isPlaying: viewStore.mode.isPlaying
           )
-            .onTapGesture { viewStore.send(.bodyTapped) }
+          .onTapGesture { viewStore.send(.bodyTapped) }
 
           dateComponentsFormatter.string(from: viewStore.currentTime).map {
             Text($0)
               .font(.footnote.monospacedDigit())
               .foregroundColor(viewStore.mode.isPlaying
-                                 ? ColorPalette.white
-                                 : ColorPalette.lightGray)
-              .onTapGesture { viewStore.send(.bodyTapped) }
+                ? Color.Palette.text
+                : Color.Palette.separator)
+                .onTapGesture { viewStore.send(.bodyTapped) }
           }
         }
-          .padding(.trailing, .grid(4))
-          .padding(.grid(1))
-          .background(viewStore.mode.isPlaying
-                        ? ColorPalette.itemHighlightedBackground
-                        : ColorPalette.itemBackground)
+        .padding(.trailing, .grid(4))
+        .padding(.grid(1))
+        .background(viewStore.mode.isPlaying
+          ? Color.Palette.accent
+          : Color.Palette.primary)
           .frame(height: 50)
           .cornerRadius(25, antialiased: true)
       }
-        .background(ColorPalette.darkness.cornerRadius(25, corners: [.bottomLeft, .bottomRight]))
+      .background(Color.Palette.background.cornerRadius(25, corners: [.bottomLeft, .bottomRight]))
     }
   }
 }
 
+// MARK: - WaveformProgressView
+
 struct WaveformProgressView: View {
   var audioURL: URL
+  var progress = 0.0
+  var isPlaying = false
+
   var configuration = Waveform.Configuration(
     size: .zero,
     backgroundColor: .clear,
@@ -164,31 +177,37 @@ struct WaveformProgressView: View {
     verticalScalingFactor: 0.95,
     shouldAntialias: true
   )
-  var progress = 0.0
-  var isPlaying = false
-
   var notPlayedConfiguration: Waveform.Configuration {
     configuration
-      .with(style: .striped(.init(color: UIColor(ColorPalette.grayish), width: 3, spacing: 3, lineCap: .round)))
+      .with(style: .striped(.init(color: UIColor(Color.Palette.placeholder), width: 3, spacing: 3, lineCap: .round)))
+  }
+
+  var fileExists: Bool {
+    FileManager.default.fileExists(atPath: audioURL.path)
   }
 
   var body: some View {
     ZStack(alignment: .leading) {
-      WaveformView(audioURL: audioURL, configuration: notPlayedConfiguration)
-      WaveformView(audioURL: audioURL, configuration: configuration)
-        .mask(alignment: .leading) {
-          GeometryReader { geometry in
-            if isPlaying {
-              Rectangle().frame(width: geometry.size.width * progress)
-            } else {
-              Rectangle()
+      if fileExists {
+        WaveformView(audioURL: audioURL, configuration: notPlayedConfiguration)
+        WaveformView(audioURL: audioURL, configuration: configuration)
+          .mask(alignment: .leading) {
+            GeometryReader { geometry in
+              if isPlaying {
+                Rectangle().frame(width: geometry.size.width * progress)
+              } else {
+                Rectangle()
+              }
             }
           }
-        }
+      }
     }
-      .animation(.linear(duration: 0.5), value: progress)
+    .frame(maxWidth: .infinity)
+    .animation(.linear(duration: 0.5), value: progress)
   }
 }
+
+// MARK: - PlayButton
 
 struct PlayButton: View {
   var isPlaying: Bool
@@ -204,6 +223,6 @@ struct PlayButton: View {
         .foregroundColor(.white)
         .animation(.easeInOut(duration: 0.15), value: isPlaying)
     }
-      .aspectRatio(1, contentMode: .fit)
+    .aspectRatio(1, contentMode: .fit)
   }
 }

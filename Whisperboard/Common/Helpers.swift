@@ -1,5 +1,9 @@
-import Foundation
+//
+// Helpers.swift
+//
+
 import ComposableArchitecture
+import Foundation
 
 let dateComponentsFormatter: DateComponentsFormatter = {
   let formatter = DateComponentsFormatter()
@@ -13,7 +17,7 @@ let fileNameDateFormatter: DateFormatter = create {
 }
 
 extension Array {
-  func deduplicatedArray<Value: Hashable>(_ keyPath: KeyPath<Element, Value>) -> Self {
+  func deduplicatedArray(_ keyPath: KeyPath<Element, some Hashable>) -> Self {
     let set = Set(map { $0[keyPath: keyPath] })
     return filter { set.contains($0[keyPath: keyPath]) }
   }

@@ -1,5 +1,11 @@
+//
+// LiveAudioPlayerClient.swift
+//
+
 @preconcurrency import AVFoundation
 import Dependencies
+
+// MARK: - AudioPlayerClient + DependencyKey
 
 extension AudioPlayerClient: DependencyKey {
   static let liveValue = Self { url in
@@ -29,6 +35,8 @@ extension AudioPlayerClient: DependencyKey {
   }
 }
 
+// MARK: - Delegate
+
 private final class Delegate: NSObject, AVAudioPlayerDelegate, Sendable {
   let didFinishPlaying: @Sendable (Bool) -> Void
   let decodeErrorDidOccur: @Sendable (Error?) -> Void
@@ -41,16 +49,16 @@ private final class Delegate: NSObject, AVAudioPlayerDelegate, Sendable {
   ) throws {
     self.didFinishPlaying = didFinishPlaying
     self.decodeErrorDidOccur = decodeErrorDidOccur
-    self.player = try AVAudioPlayer(contentsOf: url)
+    player = try AVAudioPlayer(contentsOf: url)
     super.init()
-    self.player.delegate = self
+    player.delegate = self
   }
 
-  func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-    self.didFinishPlaying(flag)
+  func audioPlayerDidFinishPlaying(_: AVAudioPlayer, successfully flag: Bool) {
+    didFinishPlaying(flag)
   }
 
-  func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
-    self.decodeErrorDidOccur(error)
+  func audioPlayerDecodeErrorDidOccur(_: AVAudioPlayer, error: Error?) {
+    decodeErrorDidOccur(error)
   }
 }

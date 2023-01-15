@@ -1,9 +1,14 @@
+//
+// Dependencies.swift
+//
+
 import Dependencies
 import SwiftUI
 import XCTestDynamicOverlay
 
 extension DependencyValues {
-  var openSettings: @Sendable () async -> Void {
+  var openSettings: @Sendable ()
+    async -> Void {
     get { self[OpenSettingsKey.self] }
     set { self[OpenSettingsKey.self] = newValue }
   }
@@ -16,6 +21,7 @@ extension DependencyValues {
         UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
       }
     }
+
     static let testValue: @Sendable () async -> Void = unimplemented(
       #"@Dependency(\.openSettings)"#
     )

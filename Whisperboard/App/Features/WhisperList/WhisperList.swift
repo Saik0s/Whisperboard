@@ -1,14 +1,14 @@
 //
-// Whispers.swift
+// WhisperList.swift
 //
 
 import AVFoundation
 import ComposableArchitecture
 import SwiftUI
 
-// MARK: - Whispers
+// MARK: - WhisperList
 
-struct Whispers: ReducerProtocol {
+struct WhisperList: ReducerProtocol {
   struct State: Equatable {
     var alert: AlertState<Action>?
     var audioRecorderPermission = RecorderPermission.undetermined
@@ -64,8 +64,8 @@ struct Whispers: ReducerProtocol {
 
       case .readStoredWhispers:
         return .task {
-          try? await self.storage.cleanup()
-          return await .setWhispers(TaskResult { try await self.storage.read() })
+          try? await storage.cleanup()
+          return await .setWhispers(TaskResult { try await storage.read() })
         }
         .animation()
 
@@ -165,7 +165,7 @@ struct Whispers: ReducerProtocol {
         return .task {
           await .transcriptionFinished(
             id: id,
-            TaskResult { try await self.transcriber.transcribeAudio(self.storage.fileURLWithName(id), modelURL) }
+            TaskResult { try await transcriber.transcribeAudio(storage.fileURLWithName(id), modelURL) }
           )
         }
         .animation()
@@ -229,13 +229,13 @@ struct Whispers: ReducerProtocol {
   }
 }
 
-// MARK: - WhispersView
+// MARK: - WhisperListView
 
-struct WhispersView: View {
-  let store: StoreOf<Whispers>
-  @ObservedObject var viewStore: ViewStoreOf<Whispers>
+struct WhisperListView: View {
+  let store: StoreOf<WhisperList>
+  @ObservedObject var viewStore: ViewStoreOf<WhisperList>
 
-  init(store: StoreOf<Whispers>) {
+  init(store: StoreOf<WhisperList>) {
     self.store = store
     viewStore = ViewStore(store)
   }
@@ -251,12 +251,11 @@ struct WhispersView: View {
             .overlay {
               ZStack {
                 if viewStore.settings.modelSelector.isLoading {
-                  ColorPalette.darkness.opacity(0.5).ignoresSafeArea()
+                  Color.Palette.shadow.ignoresSafeArea()
                   ProgressView()
                 }
               }
             }
-
         } else {
           whisperList()
             .frame(maxHeight: .infinity, alignment: .top)
@@ -265,25 +264,31 @@ struct WhispersView: View {
             .frame(maxHeight: .infinity, alignment: .bottom)
         }
       }
-      .background(ColorPalette.darkness)
       .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
       .navigationTitle("Whispers")
-      .navigationBarItems(
-        trailing: Button { viewStore.send(.gearButtonTapped) }
-          label: { Image(systemName: "gearshape") }
-      )
-      .navigationDestination(isPresented: viewStore.binding(\.$isSettingsPresented)) {
-        SettingsView(store: store.scope(state: \.settings, action: Whispers.Action.settings))
+      .toolbar {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button { viewStore.send(.gearButtonTapped) } label: {
+            Image(systemName: "gearshape")
+              .font(.headline)
+          }
+        }
       }
-      .task { viewStore.send(.settings(.modelSelector(.task))) }
+      .navigationDestination(isPresented: viewStore.binding(\.$isSettingsPresented)) {
+        SettingsView(store: store.scope(state: \.settings, action: WhisperList.Action.settings))
+      }
+      .background(Color.Palette.background)
+      .accentColor(Color.Palette.secondary)
     }
+    .task { viewStore.send(.settings(.modelSelector(.task))) }
     .task { await viewStore.send(.readStoredWhispers).finish() }
+    .accentColor(Color.Palette.secondary)
   }
 
   func whisperList() -> some View {
     List {
       ForEachStore(
-        self.store.scope(state: \.whispers, action: { .whisper(id: $0, action: $1) })
+        store.scope(state: \.whispers, action: { .whisper(id: $0, action: $1) })
       ) { childStore in
         whisperRowView(childStore)
           .listRowBackground(Color.clear)
@@ -296,6 +301,7 @@ struct WhispersView: View {
       }
       .buttonStyle(PlainButtonStyle())
     }
+    .listStyle(.plain)
   }
 
   func recordingControls() -> some View {
@@ -337,10 +343,10 @@ struct WhispersView: View {
               ShareButton(text: childState.text)
               Button { viewStore.send(.transcribeWhisper(id: childState.id)) }
                label: {
-                Image(systemName: "arrow.clockwise")
-                  .foregroundColor(ColorPalette.orangeRed)
-                  .padding(.grid(1))
-              }
+                  Image(systemName: "arrow.clockwise")
+                    .foregroundColor(Color.Palette.secondary)
+                    .padding(.grid(1))
+                }
             }
 
             Text(childState.text)
@@ -358,21 +364,21 @@ struct WhispersView: View {
     }
     .background {
       ZStack {
-        ColorPalette.background
+        Color.Palette.background
           .cornerRadius(.grid(2), corners: [.bottomLeft, .bottomRight])
       }
     }
   }
 }
 
-// MARK: - WhispersView_Previews
+// MARK: - WhisperListView_Previews
 
-struct WhispersView_Previews: PreviewProvider {
+struct WhisperListView_Previews: PreviewProvider {
   static var previews: some View {
-    WhispersView(
+    WhisperListView(
       store: Store(
-        initialState: Whispers.State(),
-        reducer: Whispers()._printChanges()
+        initialState: WhisperList.State(),
+        reducer: WhisperList()
       )
     )
   }

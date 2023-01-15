@@ -1,17 +1,15 @@
 //
-//  KeyboardViewController.swift
-//  Keyboard
-//
-//  Created by Igor Tarasenko on 24/12/2022.
+// KeyboardViewController.swift
 //
 
+import KeyboardKit
 import SwiftUI
 import UIKit
-import KeyboardKit
+
+// MARK: - KeyboardView
 
 struct KeyboardView: View {
-  @EnvironmentObject
-  private var keyboardContext: KeyboardContext
+  @EnvironmentObject  private var keyboardContext: KeyboardContext
 
   private var rowHeight: CGFloat { KeyboardLayoutConfiguration.standard(for: keyboardContext).rowHeight }
 
@@ -28,7 +26,7 @@ struct KeyboardView: View {
             .foregroundColor(.white)
             .padding(rowHeight * 0.15)
             .background {
-              Circle().fill(Color(red: 251/255, green: 61/255, blue: 2/255))
+              Circle().fill(Color(red: 251 / 255, green: 61 / 255, blue: 2 / 255))
             }
             .padding(4)
             .frame(width: rowHeight, height: rowHeight)
@@ -36,12 +34,14 @@ struct KeyboardView: View {
 
         Spacer()
       }
-        .frame(height: rowHeight)
+      .frame(height: rowHeight)
 
       SystemKeyboard()
     }
   }
 }
+
+// MARK: - KeyboardViewController
 
 class KeyboardViewController: KeyboardInputViewController {
   override func viewDidLoad() {

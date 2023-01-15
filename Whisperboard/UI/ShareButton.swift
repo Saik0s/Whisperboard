@@ -1,5 +1,5 @@
 //
-// Created by Igor Tarasenko on 08/01/2023.
+// ShareButton.swift
 //
 
 import SwiftUI
@@ -16,9 +16,8 @@ struct ShareButton: View {
       UIApplication.shared.topViewController?.present(activityController, animated: true, completion: nil)
     } label: {
       Image(systemName: "paperplane")
-        .foregroundColor(ColorPalette.orangeRed)
+        .foregroundColor(Color.Palette.secondary)
         .padding(.grid(1))
     }
   }
 }
-

@@ -1,9 +1,9 @@
 //
-// Created by Igor Tarasenko on 24/12/2022.
+// Recorder.swift
 //
 
-import Foundation
 import AVFoundation
+import Foundation
 
 actor Recorder: NSObject, AVAudioRecorderDelegate {
   enum RecorderError: Error {
@@ -19,9 +19,9 @@ actor Recorder: NSObject, AVAudioRecorderDelegate {
     try await withCheckedThrowingContinuation { continuation in
       startRecording(toOutputFile: url) { result in
         switch result {
-        case .success(let outputFile):
+        case let .success(outputFile):
           continuation.resume(returning: outputFile)
-        case .failure(let error):
+        case let .failure(error):
           continuation.resume(throwing: error)
         }
       }
@@ -36,7 +36,7 @@ actor Recorder: NSObject, AVAudioRecorderDelegate {
         AVFormatIDKey: Int(kAudioFormatLinearPCM),
         AVSampleRateKey: 16000.0,
         AVNumberOfChannelsKey: 1,
-        AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+        AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
       ]
       let session = AVAudioSession.sharedInstance()
       try session.setCategory(.playAndRecord, mode: .default)
@@ -59,7 +59,7 @@ actor Recorder: NSObject, AVAudioRecorderDelegate {
 
   // MARK: AVAudioRecorderDelegate
 
-  nonisolated func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
+  nonisolated func audioRecorderEncodeErrorDidOccur(_: AVAudioRecorder, error: Error?) {
     if let error {
       log(error)
       Task {

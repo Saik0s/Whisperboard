@@ -1,7 +1,13 @@
-import ComposableArchitecture  // Required for `ActorIsolated`
+//
+// AudioRecorderClient.swift
+//
+
+import ComposableArchitecture // Required for `ActorIsolated`
 import Dependencies
 import Foundation
 import XCTestDynamicOverlay
+
+// MARK: - AudioRecorderClient
 
 struct AudioRecorderClient {
   var currentTime: @Sendable () async -> TimeInterval?
@@ -9,6 +15,8 @@ struct AudioRecorderClient {
   var startRecording: @Sendable (URL) async throws -> Bool
   var stopRecording: @Sendable () async -> Void
 }
+
+// MARK: TestDependencyKey
 
 extension AudioRecorderClient: TestDependencyKey {
   static var previewValue: Self {

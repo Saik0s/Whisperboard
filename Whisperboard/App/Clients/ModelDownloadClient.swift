@@ -7,7 +7,7 @@ import Foundation
 // MARK: - ModelDownloadClient
 
 struct ModelDownloadClient {
-  var downloadModel: (_ model: Model) async -> AsyncStream<DownloadState>
+  var downloadModel: (_ model: VoiceModel) async -> AsyncStream<DownloadState>
 }
 
 extension ModelDownloadClient {
@@ -20,7 +20,7 @@ extension ModelDownloadClient {
               continuation.yield(.inProgress(Double(current) / Double(total)))
             }
 
-            try FileManager.default.createDirectory(at: ModelType.localFolderURL, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: VoiceModelType.localFolderURL, withIntermediateDirectories: true)
             let destination = model.type.localURL
 
             let (url, _) = try await URLSession.shared.download(from: model.type.remoteURL, progress: progress)
@@ -114,6 +114,8 @@ extension URLSession {
     return (fileURL, response)
   }
 }
+
+// MARK: - OutputStreamError
 
 enum OutputStreamError: Error {
   case bufferFailure

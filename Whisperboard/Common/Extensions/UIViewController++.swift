@@ -1,12 +1,12 @@
 //
-// Created by Igor Tarasenko on 06/01/2023.
+// UIViewController++.swift
 //
 
 import UIKit
 
 extension UIViewController {
   var topViewController: UIViewController {
-    if let presentedViewController = presentedViewController {
+    if let presentedViewController {
       return presentedViewController.topViewController
     }
 

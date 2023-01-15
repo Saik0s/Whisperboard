@@ -1,23 +1,20 @@
 //
-//  WhisperboardApp.swift
-//  Whisperboard
-//
-//  Created by Igor Tarasenko on 24/12/2022.
+// WhisperboardApp.swift
 //
 
-import SwiftUI
 import ComposableArchitecture
+import SwiftUI
 
 @main
 struct WhisperboardApp: App {
-    var body: some Scene {
-        WindowGroup {
-            WhispersView(
-              store: Store(
-                initialState: Whispers.State(),
-                reducer: Whispers()
-              )
-            )
-        }
+  var body: some Scene {
+    WindowGroup {
+      RootView(
+        store: Store(
+          initialState: Root.State(),
+          reducer: Root()
+        )
+      )
     }
+  }
 }

@@ -1,12 +1,12 @@
 //
-// Created by Igor Tarasenko on 24/12/2022.
+// Storage.swift
 //
 
-import Foundation
-import Dependencies
-import XCTestDynamicOverlay
 import AVFoundation
 import ComposableArchitecture
+import Dependencies
+import Foundation
+import XCTestDynamicOverlay
 
 // struct WhisperInfo: Identifiable, Codable, Hashable {
 //   var id: URL { fileURL }
@@ -51,6 +51,8 @@ import ComposableArchitecture
 
 typealias WhisperInfo = Whisper.State
 
+// MARK: - Storage
+
 struct Storage {
   var read: @Sendable () async throws -> IdentifiedArrayOf<WhisperInfo>
   var write: @Sendable (IdentifiedArrayOf<WhisperInfo>) async throws -> Void
@@ -59,16 +61,36 @@ struct Storage {
   var fileURLWithName: (String) -> URL
 }
 
+// MARK: TestDependencyKey
+
 extension Storage: TestDependencyKey {
   static let previewValue = Self(
     read: {
-      try await Task.sleep(nanoseconds: NSEC_PER_SEC * 5)
-      return []
+      [
+        Whisper.State(
+          date: Date(),
+          duration: .random(in: 1 ... 10),
+          mode: .notPlaying,
+          title: "",
+          fileName: "test1",
+          text: "Lorem ipsum",
+          isTranscribed: true
+        ),
+        Whisper.State(
+          date: Date(),
+          duration: .random(in: 1 ... 10),
+          mode: .notPlaying,
+          title: "",
+          fileName: "test2",
+          text: "Lorem ipsum",
+          isTranscribed: true
+        ),
+      ]
     },
     write: { _ in },
     cleanup: {},
-    createNewWhisperURL: { URL(filePath: "") },
-    fileURLWithName: { _ in URL(filePath: "") }
+    createNewWhisperURL: { URL(filePath: "~/Downloads/1.wav") },
+    fileURLWithName: { _ in URL(filePath: "~/Downloads/1.wav") }
   )
 
   static let testValue = Self(
@@ -80,11 +102,14 @@ extension Storage: TestDependencyKey {
   )
 }
 
+// MARK: DependencyKey
+
 extension Storage: DependencyKey {
   static let liveValue: Self = {
     let docURL = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
 
-    @Sendable func read() async throws -> IdentifiedArrayOf<WhisperInfo> {
+    @Sendable
+    func read() async throws -> IdentifiedArrayOf<WhisperInfo> {
       log("Reading stored whispers")
       guard let data = UserDefaults.standard.object(forKey: "whispers") as? Data else { return [] }
       let whispers = try JSONDecoder().decode([WhisperInfo].self, from: data).identifiedArray
@@ -95,7 +120,8 @@ extension Storage: DependencyKey {
       return filtered
     }
 
-    @Sendable func write(_ whispers: IdentifiedArrayOf<WhisperInfo>) async throws {
+    @Sendable
+    func write(_ whispers: IdentifiedArrayOf<WhisperInfo>) async throws {
       let filtered = whispers.filter { whisper in
         FileManager.default.fileExists(atPath: docURL.appending(path: whisper.fileName).path)
       }
