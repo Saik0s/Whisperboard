@@ -1,5 +1,5 @@
 //
-// Created by Igor Tarasenko on 24/12/2022.
+// Create.swift
 //
 
 import Foundation
@@ -10,7 +10,7 @@ func create<T: AnyObject>(_ object: T, configure: (T) -> Void) -> T {
 }
 
 func create<T: NSObject>(configure: (T) -> Void) -> T {
-  let object = T.init()
+  let object = T()
   configure(object)
   return object
 }

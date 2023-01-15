@@ -1,5 +1,11 @@
+//
+// LiveAudioRecorderClient.swift
+//
+
 import AVFoundation
-import ComposableArchitecture  // TODO: Should `UncheckedSendable` live in `Dependencies`?
+import ComposableArchitecture // TODO: Should `UncheckedSendable` live in `Dependencies`?
+
+// MARK: - AudioRecorderClient + DependencyKey
 
 extension AudioRecorderClient: DependencyKey {
   static var liveValue: Self {
@@ -13,14 +19,15 @@ extension AudioRecorderClient: DependencyKey {
   }
 }
 
+// MARK: - AudioRecorder
+
 private actor AudioRecorder {
   var delegate: Delegate?
   var recorder: AVAudioRecorder?
 
   var currentTime: TimeInterval? {
-    guard
-      let recorder = self.recorder,
-      recorder.isRecording
+    guard let recorder,
+          recorder.isRecording
     else { return nil }
     return recorder.currentTime
   }
@@ -39,12 +46,12 @@ private actor AudioRecorder {
   }
 
   func stop() {
-    self.recorder?.stop()
+    recorder?.stop()
     try? AVAudioSession.sharedInstance().setActive(false)
   }
 
   func start(url: URL) async throws -> Bool {
-    self.stop()
+    stop()
 
     let stream = AsyncThrowingStream<Bool, Error> { continuation in
       do {
@@ -65,8 +72,9 @@ private actor AudioRecorder {
             AVFormatIDKey: Int(kAudioFormatLinearPCM),
             AVSampleRateKey: 16000.0,
             AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-          ])
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
+          ]
+        )
         self.recorder = recorder
         recorder.delegate = self.delegate
 
@@ -86,12 +94,14 @@ private actor AudioRecorder {
     }
     throw CancellationError()
   }
-
 }
+
+// MARK: - Delegate
 
 private final class Delegate: NSObject, AVAudioRecorderDelegate, Sendable {
   let didFinishRecording: @Sendable (Bool) -> Void
-  let encodeErrorDidOccur: @Sendable (Error?) -> Void
+  let encodeErrorDidOccur: @Sendable (Error?)
+    -> Void
 
   init(
     didFinishRecording: @escaping @Sendable (Bool) -> Void,
@@ -101,11 +111,11 @@ private final class Delegate: NSObject, AVAudioRecorderDelegate, Sendable {
     self.encodeErrorDidOccur = encodeErrorDidOccur
   }
 
-  func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
-    self.didFinishRecording(flag)
+  func audioRecorderDidFinishRecording(_: AVAudioRecorder, successfully flag: Bool) {
+    didFinishRecording(flag)
   }
 
-  func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
-    self.encodeErrorDidOccur(error)
+  func audioRecorderEncodeErrorDidOccur(_: AVAudioRecorder, error: Error?) {
+    encodeErrorDidOccur(error)
   }
 }

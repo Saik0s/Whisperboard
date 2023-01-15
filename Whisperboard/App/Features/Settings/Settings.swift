@@ -1,9 +1,11 @@
 //
-// Created by Igor Tarasenko on 08/01/2023.
+// Settings.swift
 //
 
 import ComposableArchitecture
 import SwiftUI
+
+// MARK: - Settings
 
 struct Settings: ReducerProtocol {
   struct State: Equatable {
@@ -19,11 +21,13 @@ struct Settings: ReducerProtocol {
       ModelSelector()
     }
 
-    Reduce { state, action in
+    Reduce { _, _ in
       .none
     }
   }
 }
+
+// MARK: - SettingsView
 
 struct SettingsView: View {
   let store: StoreOf<Settings>
@@ -35,10 +39,11 @@ struct SettingsView: View {
   }
 
   var body: some View {
-    Text("Settings feature")
     ModelSelectorView(store: store.scope(state: \.modelSelector, action: Settings.Action.modelSelector))
   }
 }
+
+// MARK: - Settings_Previews
 
 struct Settings_Previews: PreviewProvider {
   struct ContentView: View {

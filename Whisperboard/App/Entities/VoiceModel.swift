@@ -1,11 +1,13 @@
 //
-// Created by Igor Tarasenko on 08/01/2023.
+// VoiceModel.swift
 //
 
 import Foundation
 
-struct Model: Equatable, Identifiable, Then {
-  var type: ModelType
+// MARK: - VoiceModel
+
+struct VoiceModel: Equatable, Identifiable, Then {
+  var type: VoiceModelType
   var isDownloading: Bool = false
   var downloadProgress: Double = 0
 
@@ -14,13 +16,15 @@ struct Model: Equatable, Identifiable, Then {
   var isDownloaded: Bool { downloadProgress >= 1 }
 }
 
-enum ModelType: String, CaseIterable {
+// MARK: - VoiceModelType
+
+enum VoiceModelType: String, CaseIterable {
   case tinyEN = "tiny.en"
-  case tiny = "tiny"
+  case tiny
   case baseEN = "base.en"
-  case base = "base"
+  case base
   case smallEN = "small.en"
-  case small = "small"
+  case small
   // case mediumEN = "medium.en"
   // case medium = "medium"
   // case largeV1 = "large-v1"
@@ -33,17 +37,17 @@ enum ModelType: String, CaseIterable {
     case .tinyEN, .tiny: return "75 MB"
     case .baseEN, .base: return "142 MB"
     case .smallEN, .small: return "466 MB"
-    // case .mediumEN, .medium: return "1.5 GB"
-    // case .largeV1, .large: return "2.9 GB"
+      // case .mediumEN, .medium: return "1.5 GB"
+      // case .largeV1, .large: return "2.9 GB"
     }
   }
 
   var remoteURL: URL {
-    ModelType.srcURL.appending(component: name)
+    VoiceModelType.srcURL.appending(component: name)
   }
 
   var localURL: URL {
-    ModelType.localFolderURL.appending(component: name)
+    VoiceModelType.localFolderURL.appending(component: name)
   }
 
   private static var srcURL: URL {

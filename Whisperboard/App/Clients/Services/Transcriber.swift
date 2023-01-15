@@ -1,14 +1,18 @@
 //
-// Created by Igor Tarasenko on 24/12/2022.
+// Transcriber.swift
 //
 
-import Foundation
 import Dependencies
+import Foundation
+
+// MARK: - Transcriber
 
 struct Transcriber {
   var loadModel: @Sendable (_ modelUrl: URL) async throws -> Void
   var transcribeAudio: @Sendable (_ audioURL: URL, _ modelUrl: URL) async throws -> String
 }
+
+// MARK: DependencyKey
 
 extension Transcriber: DependencyKey {
   static let liveValue: Transcriber = {
@@ -24,6 +28,8 @@ extension Transcriber: DependencyKey {
     )
   }()
 }
+
+// MARK: - TranscriberImpl
 
 final class TranscriberImpl {
   var isLoadingModel = false
@@ -81,7 +87,7 @@ final class TranscriberImpl {
   private func readAudioSamples(_ url: URL) throws -> [Float] {
     // stopPlayback()
     // try startPlayback(url)
-    return try decodeWaveFile(url)
+    try decodeWaveFile(url)
   }
 }
 
@@ -95,7 +101,7 @@ extension DependencyValues {
 func decodeWaveFile(_ url: URL) throws -> [Float] {
   let data = try Data(contentsOf: url)
   let floats = stride(from: 44, to: data.count, by: 2).map {
-    return data[$0..<$0 + 2].withUnsafeBytes {
+    data[$0 ..< $0 + 2].withUnsafeBytes {
       let short = Int16(littleEndian: $0.load(as: Int16.self))
       return max(-1.0, min(Float(short) / 32767.0, 1.0))
     }

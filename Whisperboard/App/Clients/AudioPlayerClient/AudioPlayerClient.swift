@@ -1,10 +1,18 @@
+//
+// AudioPlayerClient.swift
+//
+
 import Dependencies
 import Foundation
 import XCTestDynamicOverlay
 
+// MARK: - AudioPlayerClient
+
 struct AudioPlayerClient {
   var play: @Sendable (URL) async throws -> Bool
 }
+
+// MARK: TestDependencyKey
 
 extension AudioPlayerClient: TestDependencyKey {
   static let previewValue = Self(

@@ -1,6 +1,6 @@
 # file options
 
---exclude .build
+--exclude .build,whispercpp
 --swiftversion 5.7
 
 # format options

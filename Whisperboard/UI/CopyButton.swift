@@ -1,5 +1,5 @@
 //
-// Created by Igor Tarasenko on 08/01/2023.
+// CopyButton.swift
 //
 
 import SwiftUI
@@ -13,7 +13,7 @@ struct CopyButton: View {
       UIPasteboard.general.string = text
     } label: {
       Image(systemName: "doc.on.clipboard")
-        .foregroundColor(ColorPalette.orangeRed)
+        .foregroundColor(Color.Palette.secondary)
         .padding(.grid(1))
     }
   }

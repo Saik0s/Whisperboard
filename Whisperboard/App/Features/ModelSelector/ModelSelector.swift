@@ -17,18 +17,18 @@ extension UserDefaults {
 
 struct ModelSelector: ReducerProtocol {
   struct State: Equatable {
-    var models: [Model] = []
-    var selectedModel: Model?
+    var models: [VoiceModel] = []
+    var selectedModel: VoiceModel?
     var isLoading = false
   }
 
   enum Action: Equatable {
     case task
-    case setModels([Model])
-    case modelSelected(Model)
-    case setSelectedModel(Model)
-    case downloadModel(Model)
-    case modelUpdated(Model)
+    case setModels([VoiceModel])
+    case modelSelected(VoiceModel)
+    case setSelectedModel(VoiceModel)
+    case downloadModel(VoiceModel)
+    case modelUpdated(VoiceModel)
     case loadError(String)
   }
 
@@ -40,9 +40,9 @@ struct ModelSelector: ReducerProtocol {
       switch action {
       case .task:
         return .run { send in
-          let models = ModelType.allCases
+          let models = VoiceModelType.allCases
             .map {
-              Model(
+              VoiceModel(
                 type: $0,
                 downloadProgress: FileManager.default.fileExists(atPath: $0.localURL.path) ? 1 : 0
               )
@@ -143,7 +143,7 @@ struct ModelSelectorView: View {
         HStack {
           Text(model.name)
           Text(model.type.sizeLabel)
-            .foregroundColor(ColorPalette.grayish)
+            .foregroundColor(Color.Palette.placeholder)
           Spacer()
           if model.isDownloaded {
             Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
@@ -156,15 +156,18 @@ struct ModelSelectorView: View {
               .cornerRadius(.grid(1))
           }
         }
-        .foregroundColor(model == viewStore.selectedModel ? .green : .white)
-        .frame(height: 50)
-        .onTapGesture { viewStore.send(.modelSelected(model)) }
+          .foregroundColor(model == viewStore.selectedModel ? .green : .white)
+          .frame(height: 50)
+          .onTapGesture { viewStore.send(.modelSelected(model)) }
+          .listRowBackground(Color.Palette.primary)
       }
     }
+    .listStyle(.plain)
+    .background(Color.Palette.background)
     .overlay {
       ZStack {
         if viewStore.isLoading {
-          ColorPalette.darkness.opacity(0.5).ignoresSafeArea()
+          Color.Palette.shadow.ignoresSafeArea()
           ProgressView()
         }
       }
@@ -181,8 +184,8 @@ struct ModelSelector_Previews: PreviewProvider {
       store: Store(
         initialState: ModelSelector.State(
           models: [
-            Model(type: .base),
-            Model(type: .baseEN),
+            VoiceModel(type: .base),
+            VoiceModel(type: .baseEN),
           ],
           selectedModel: nil
         ),

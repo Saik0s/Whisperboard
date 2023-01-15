@@ -1,36 +1,37 @@
 //
-// Created by Igor Tarasenko on 24/12/2022.
+// ColorPalette.swift
 //
 
+import DynamicColor
 import SwiftUI
 
-struct ColorPalette {
-  // Darkness - #020202
-  static let darkness = Color(red: 2/255, green: 2/255, blue: 2/255)
+// MARK: - Color.Palette
 
-  // Background - #111111
-  static let background = Color(red: 0.07, green: 0.07, blue: 0.07)
+public extension Color {
+  enum Palette {
+    public static let primary = Color(DynamicColor(hexString: "#231942"))
+    public static let secondary = Color(DynamicColor(hexString: "#fb3d02"))
+    public static let accent = primary.lighten(by: 0.4)
+    public static let background = primary.darken(by: 0.1)
+    public static let text = primary.lighten(by: 0.8)
+    public static let error = Color(UIColor.systemRed)
+    public static let success = Color(UIColor.systemGreen)
+    public static let warning = Color(UIColor.systemOrange)
+    public static let link = Color(UIColor.systemBlue)
+    public static let disabled = primary.darken(by: 0.6)
+    public static let placeholder = primary.lighten(by: 0.6)
+    public static let separator = primary.lighten(by: 0.8)
+    public static let shadow = primary.darken(by: 0.4).opacity(0.5)
+    public static let transparent = Color.clear
+  }
+}
 
-  // Item Background - #1f1f1f
-  static let itemBackground = Color(red: 0.12, green: 0.12, blue: 0.12)
+public extension Color {
+  func lighten(by amount: CGFloat = 0.2) -> Color {
+    Color(UIColor(self).lighter(amount: amount))
+  }
 
-  // Item Highlighted Background - #2f2f2f
-  static let itemHighlightedBackground = Color(red: 0.18, green: 0.18, blue: 0.18)
-
-  // Grayish - #5f5f5f
-  static let grayish = Color(red: 95/255, green: 95/255, blue: 95/255)
-
-  // Light Gray - #888888
-  static let lightGray = Color(red: 136/255, green: 136/255, blue: 136/255)
-
-  // Orange Red - #fb3d02
-  static let orangeRed = Color(red: 251/255, green: 61/255, blue: 2/255)
-
-  // Dark Brown - #5e1902
-  static let darkBrown = Color(red: 94/255, green: 25/255, blue: 2/255)
-
-  // Bright Red - #ce3605
-  static let brightRed = Color(red: 206/255, green: 54/255, blue: 5/255)
-
-  static let white = Color.white
+  func darken(by amount: CGFloat = 0.2) -> Color {
+    Color(UIColor(self).darkened(amount: amount))
+  }
 }
