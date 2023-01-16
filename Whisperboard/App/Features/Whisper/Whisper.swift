@@ -42,6 +42,7 @@ struct Whisper: ReducerProtocol {
     case timerUpdated(TimeInterval)
     case titleTextFieldChanged(String)
     case bodyTapped
+    case retryTranscription
   }
 
   @Dependency(\.audioPlayer) var audioPlayer
@@ -100,6 +101,9 @@ struct Whisper: ReducerProtocol {
 
     case .bodyTapped:
       return .none
+
+    case .retryTranscription:
+      return .none
     }
   }
 }
@@ -114,19 +118,36 @@ extension ViewStore where ViewState == Whisper.State {
 
 struct WhisperView: View {
   let store: StoreOf<Whisper>
+  var isTranscribing = false
+
+  @State var isExpanded = false
 
   var body: some View {
     WithViewStore(store) { viewStore in
-      VStack {
-        TextField(
-          "Untitled, \(viewStore.date.formatted(date: .numeric, time: .shortened))",
-          text: viewStore.binding(get: \.title, send: { .titleTextFieldChanged($0) })
-        )
-        .foregroundColor(Color.Palette.Text.subdued)
+      VStack(spacing: 0) {
+        VStack(spacing: .grid(1)) {
+          HStack(spacing: .grid(3)) {
+            PlayButton(isPlaying: viewStore.mode.isPlaying) {
+              viewStore.send(.playButtonTapped)
+            }
 
-        HStack(spacing: .grid(4)) {
-          PlayButton(isPlaying: viewStore.mode.isPlaying) {
-            viewStore.send(.playButtonTapped)
+            VStack(alignment: .leading, spacing: 0) {
+              TextField("Untitled",
+                        text: viewStore.binding(get: \.title, send: { .titleTextFieldChanged($0) }))
+                .font(.DS.bodyM)
+                .foregroundColor(Color.Palette.Text.base)
+              Text(viewStore.date.formatted(date: .abbreviated, time: .shortened))
+                .font(.DS.date)
+                .foregroundColor(Color.Palette.Text.subdued)
+            }
+
+            dateComponentsFormatter.string(from: viewStore.currentTime).map {
+              Text($0)
+                .font(.DS.date)
+                .foregroundColor(viewStore.mode.isPlaying
+                                   ? Color.Palette.Text.base
+                                   : Color.Palette.Text.subdued)
+            }
           }
 
           WaveformProgressView(
@@ -134,26 +155,52 @@ struct WhisperView: View {
             progress: viewStore.mode.progress ?? 0,
             isPlaying: viewStore.mode.isPlaying
           )
-          .onTapGesture { viewStore.send(.bodyTapped) }
-
-          dateComponentsFormatter.string(from: viewStore.currentTime).map {
-            Text($0)
-              .font(.footnote.monospacedDigit())
-              .foregroundColor(viewStore.mode.isPlaying
-                ? Color.Palette.Text.base
-                : Color.Palette.Text.subdued)
-                .onTapGesture { viewStore.send(.bodyTapped) }
-          }
         }
-        .padding(.trailing, .grid(4))
-        .padding(.grid(1))
-        .background(viewStore.mode.isPlaying
-          ? Color.Palette.Background.secondary
-          : Color.Palette.Background.tertiary)
-          .frame(height: 50)
-          .cornerRadius(25, antialiased: true)
+          .padding(.grid(4))
+          .background {
+            Rectangle()
+              .fill(Color.Palette.Background.secondary)
+              .opacity(0.7)
+          }
+
+        VStack(spacing: .grid(1)) {
+          HStack {
+            CopyButton(text: viewStore.text)
+            ShareButton(text: viewStore.text)
+            Button { viewStore.send(.retryTranscription) }
+            label: {
+              Image(systemName: "arrow.clockwise")
+                .foregroundColor(Color.Palette.Background.accent)
+                .padding(.grid(1))
+            }
+            Spacer()
+            Button { viewStore.send(.delete) }
+            label: {
+              Image(systemName: "trash")
+                .foregroundColor(Color.Palette.Background.accent)
+                .padding(.grid(1))
+            }
+          }
+
+          ExpandableText(viewStore.text, lineLimit: 2, font: .DS.bodyM, isExpanded: $isExpanded)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+        }
+          .padding(.grid(4))
+          .mask {
+            LinearGradient.easedGradient(colors: [.black, isExpanded ? .black : .clear], steps: 2)
+          }
+          .blur(radius: isTranscribing ? 5 : 0)
+          .overlay {
+            ActivityIndicator()
+              .frame(width: 20, height: 20)
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+              .background(.ultraThinMaterial.opacity(0.7))
+              .hidden(isTranscribing == false)
+          }
       }
-      .background(Color.Palette.Background.primary.cornerRadius(25, corners: [.bottomLeft, .bottomRight]))
+      .cardStyle(isPrimary: viewStore.mode.isPlaying)
+      .animation(.easeIn(duration: 0.3), value: viewStore.mode.isPlaying)
     }
   }
 }
@@ -175,5 +222,6 @@ struct PlayButton: View {
         .animation(.easeInOut(duration: 0.15), value: isPlaying)
     }
     .aspectRatio(1, contentMode: .fit)
+    .frame(width: 35, height: 35)
   }
 }

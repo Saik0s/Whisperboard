@@ -167,7 +167,7 @@ struct ModelSelectorView: View {
     .overlay {
       ZStack {
         if viewStore.isLoading {
-          Color.Palette.Shadow.base.ignoresSafeArea()
+          Color.Palette.Shadow.primary.ignoresSafeArea()
           ProgressView()
         }
       }

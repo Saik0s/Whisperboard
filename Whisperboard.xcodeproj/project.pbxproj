@@ -18,7 +18,11 @@
 		49EE27F029573EAF00B11803 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 49EE27EF29573EAF00B11803 /* ComposableArchitecture */; };
 		49EE27F229573EAF00B11803 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = 49EE27F129573EAF00B11803 /* Dependencies */; };
 		5F8250009D77A13D60D33FBC /* URLOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825DF89B2E37923C143168 /* URLOpener.swift */; };
+		5F825047BEF570BC44F4F459 /* ExpandableText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8258B6FA5154FDBC51DE1F /* ExpandableText.swift */; };
+		5F82505293F116C0CBF0BE17 /* Binding++.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825F61443579B9811B6451 /* Binding++.swift */; };
+		5F8251F16FD811D79399A3CC /* WithInlineState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825C79B3CDEE8D30F17E21 /* WithInlineState.swift */; };
 		5F8252831E8555506F8693C1 /* Dependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825107B81C7C3D431EE940 /* Dependencies.swift */; };
+		5F82528F282DD7DE6760B76D /* View++.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825CADDF8E159033CAF46B /* View++.swift */; };
 		5F8252D6032B831C00A37D7D /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825945FB393C7479D4ADE8 /* Player.swift */; };
 		5F825390542375940C1C9BA8 /* RecordButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825AC6E37CBB827EDCCE5E /* RecordButton.swift */; };
 		5F8253B03AD7D0714C3B30C0 /* UIApplication++.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8254272315AD2B6C7CF4BF /* UIApplication++.swift */; };
@@ -114,6 +118,7 @@
 		5F8257FE9255B9FA04EE2FBD /* ActivityIndicator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActivityIndicator.swift; sourceTree = "<group>"; };
 		5F82585C4E9EBC6A47167215 /* WhisperList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WhisperList.swift; sourceTree = "<group>"; };
 		5F8258AF0D544EA7B11CFD3E /* ColorPalette.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorPalette.swift; sourceTree = "<group>"; };
+		5F8258B6FA5154FDBC51DE1F /* ExpandableText.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExpandableText.swift; sourceTree = "<group>"; };
 		5F825916EE4D131AF979839F /* DownloadState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DownloadState.swift; sourceTree = "<group>"; };
 		5F825945FB393C7479D4ADE8 /* Player.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		5F825995B7B02440C6EBDA26 /* Recording.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Recording.swift; sourceTree = "<group>"; };
@@ -121,8 +126,10 @@
 		5F8259EF347228095729D6ED /* Storage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
 		5F825A91B180BDD11167C9F8 /* ModelDownloadClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ModelDownloadClient.swift; sourceTree = "<group>"; };
 		5F825AC6E37CBB827EDCCE5E /* RecordButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecordButton.swift; sourceTree = "<group>"; };
+		5F825C79B3CDEE8D30F17E21 /* WithInlineState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WithInlineState.swift; sourceTree = "<group>"; };
 		5F825C936C490D44B10CC6DC /* WhisperContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WhisperContext.swift; sourceTree = "<group>"; };
 		5F825C9EA6B6703FFD6039A0 /* CopyButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CopyButton.swift; sourceTree = "<group>"; };
+		5F825CADDF8E159033CAF46B /* View++.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "View++.swift"; sourceTree = "<group>"; };
 		5F825CFC600CDA534C73B630 /* AudioRecorderClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioRecorderClient.swift; sourceTree = "<group>"; };
 		5F825D09D4DA0C1FBD39FB52 /* UIViewController++.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIViewController++.swift"; sourceTree = "<group>"; };
 		5F825D64E29FE4C1A46B6BBA /* Gradients.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Gradients.swift; sourceTree = "<group>"; };
@@ -130,6 +137,7 @@
 		5F825EADE4E37B5CD7406B99 /* Recorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
 		5F825EDF2C334A9BED9D417B /* DesignSystem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		5F825EF611DC9BB89836585C /* ModelSelector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ModelSelector.swift; sourceTree = "<group>"; };
+		5F825F61443579B9811B6451 /* Binding++.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Binding++.swift"; sourceTree = "<group>"; };
 		5F825FAA449ED3A07B26F80B /* Fonts.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Fonts.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -259,6 +267,7 @@
 				5F825AC6E37CBB827EDCCE5E /* RecordButton.swift */,
 				5F825C9EA6B6703FFD6039A0 /* CopyButton.swift */,
 				5F82508AF77096FE967FCE1B /* WaveformProgressView.swift */,
+				5F8258B6FA5154FDBC51DE1F /* ExpandableText.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -366,6 +375,7 @@
 				5F8257AE45CAEBF86098DE01 /* Then.swift */,
 				5F825D64E29FE4C1A46B6BBA /* Gradients.swift */,
 				5F825FAA449ED3A07B26F80B /* Fonts.swift */,
+				5F825C79B3CDEE8D30F17E21 /* WithInlineState.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -375,6 +385,8 @@
 			children = (
 				5F8254272315AD2B6C7CF4BF /* UIApplication++.swift */,
 				5F825D09D4DA0C1FBD39FB52 /* UIViewController++.swift */,
+				5F825F61443579B9811B6451 /* Binding++.swift */,
+				5F825CADDF8E159033CAF46B /* View++.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -544,6 +556,10 @@
 				5F825A760D7DC57FD9294727 /* RootView.swift in Sources */,
 				5F82580206A0ADCFF93FE9DB /* Fonts.swift in Sources */,
 				5F825985077FBDC340E587D6 /* WaveformProgressView.swift in Sources */,
+				5F825047BEF570BC44F4F459 /* ExpandableText.swift in Sources */,
+				5F8251F16FD811D79399A3CC /* WithInlineState.swift in Sources */,
+				5F82505293F116C0CBF0BE17 /* Binding++.swift in Sources */,
+				5F82528F282DD7DE6760B76D /* View++.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

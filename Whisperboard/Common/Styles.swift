@@ -24,26 +24,50 @@ struct MyButtonStyle: ButtonStyle {
   }
 }
 
-// MARK: - PrimaryCardStyle
+// MARK: - CardStyle
 
-public struct PrimaryCardStyle: ViewModifier {
+public struct CardStyle: ViewModifier {
+  var isPrimary: Bool
+
   public func body(content: Content) -> some View {
-    content.background {
+    content
+      .cornerRadius(.grid(4))
+      .background {
       ZStack {
-        RoundedRectangle(cornerRadius: .grid(3))
-          .fill(LinearGradient.cardBackground)
+        Group {
+          RoundedRectangle(cornerRadius: .grid(4))
+            .fill(isPrimary
+              ? LinearGradient.cardPrimaryBackground
+              : LinearGradient.cardSecondaryBackground)
 
-        RoundedRectangle(cornerRadius: .grid(3))
-          .strokeBorder(LinearGradient.cardBorder, lineWidth: 1)
+          RoundedRectangle(cornerRadius: .grid(4))
+            .strokeBorder(
+              isPrimary
+                ? LinearGradient.cardPrimaryBorder
+                : LinearGradient.cardSecondaryBorder,
+              lineWidth: 1
+            )
+        }
+        .compositingGroup()
       }
-      .compositingGroup()
-      .shadow(color: .Palette.Shadow.base, radius: 15, x: 0, y: 5)
+      .shadow(color: isPrimary ? .Palette.Shadow.primary : .Palette.Shadow.secondary,
+              radius: isPrimary ? 25 : 5,
+              x: 0,
+              y: isPrimary ? 10 : 5)
     }
   }
 }
 
 public extension View {
   func primaryCardStyle() -> some View {
-    modifier(PrimaryCardStyle())
+    modifier(CardStyle(isPrimary: true))
+  }
+
+  func secondaryCardStyle() -> some View {
+    modifier(CardStyle(isPrimary: false))
+  }
+
+  func cardStyle(isPrimary: Bool = true) -> some View {
+    modifier(CardStyle(isPrimary: isPrimary))
   }
 }

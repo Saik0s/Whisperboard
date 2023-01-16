@@ -43,7 +43,7 @@ actor WhisperContext {
       params.no_context = true
       params.single_segment = false
       params.new_segment_callback = { context, number, userData in
-        log(String(cString: whisper_full_get_segment_text(context, number)))
+        log(String(cString: whisper_full_get_segment_text(context, whisper_full_n_segments(context) - 1)))
       }
 
       whisper_reset_timings(context)

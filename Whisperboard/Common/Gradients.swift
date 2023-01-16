@@ -6,18 +6,28 @@ import DynamicColor
 import SwiftUI
 
 public extension LinearGradient {
-  static let cardBackground: Self = .easedGradient(colors: [
+  static let cardPrimaryBackground: Self = .easedGradient(colors: [
     .Palette.Background.tertiary.lighten(by: 0.1),
-    .Palette.Background.tertiary.darken(by: 0.1),
+    .Palette.Background.tertiary,
   ])
 
-  static let cardBorder: Self = .easedGradient(colors: [
-    .Palette.Background.tertiary.lighten(by: 0.3),
-    .Palette.Background.tertiary.lighten(by: 0.1),
+  static let cardPrimaryBorder: Self = .easedGradient(colors: [
+    .Palette.Stroke.subdued.lighten(by: 0.1),
+    .Palette.Stroke.subdued,
+  ])
+
+  static let cardSecondaryBackground: Self = .easedGradient(colors: [
+    .Palette.Background.tertiary.lighten(by: 0.05),
+    .Palette.Background.tertiary,
+  ])
+
+  static let cardSecondaryBorder: Self = .easedGradient(colors: [
+    .Palette.Stroke.subdued.lighten(by: 0.05),
+    .Palette.Stroke.subdued,
   ])
 
   static let screenBackground: Self = .easedGradient(colors: [
-    .Palette.Background.primary.lighten(by: 0.3),
+    .Palette.Background.primary.lighten(by: 0.05),
     .Palette.Background.primary,
   ])
 }
@@ -27,7 +37,7 @@ public extension LinearGradient {
     colors: [Color],
     steps: UInt = 8,
     startPoint: UnitPoint = UnitPoint(x: 0.5, y: 0),
-    endPoint: UnitPoint = UnitPoint(x: 0.5, y: 0.930)
+    endPoint: UnitPoint = UnitPoint(x: 0.5, y: 1)
   ) -> Self {
     let palette = colors
       .map { UIColor($0) }
