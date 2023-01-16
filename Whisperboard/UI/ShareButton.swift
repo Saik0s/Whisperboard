@@ -16,7 +16,7 @@ struct ShareButton: View {
       UIApplication.shared.topViewController?.present(activityController, animated: true, completion: nil)
     } label: {
       Image(systemName: "paperplane")
-        .foregroundColor(Color.Palette.secondary)
+        .foregroundColor(Color.Palette.Background.accent)
         .padding(.grid(1))
     }
   }

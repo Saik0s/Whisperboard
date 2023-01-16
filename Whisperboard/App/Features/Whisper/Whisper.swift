@@ -3,8 +3,6 @@
 //
 
 import ComposableArchitecture
-import DSWaveformImage
-import DSWaveformImageViews
 import SwiftUI
 
 // MARK: - Whisper
@@ -124,7 +122,7 @@ struct WhisperView: View {
           "Untitled, \(viewStore.date.formatted(date: .numeric, time: .shortened))",
           text: viewStore.binding(get: \.title, send: { .titleTextFieldChanged($0) })
         )
-        .foregroundColor(Color.Palette.placeholder)
+        .foregroundColor(Color.Palette.Text.subdued)
 
         HStack(spacing: .grid(4)) {
           PlayButton(isPlaying: viewStore.mode.isPlaying) {
@@ -142,68 +140,21 @@ struct WhisperView: View {
             Text($0)
               .font(.footnote.monospacedDigit())
               .foregroundColor(viewStore.mode.isPlaying
-                ? Color.Palette.text
-                : Color.Palette.separator)
+                ? Color.Palette.Text.base
+                : Color.Palette.Text.subdued)
                 .onTapGesture { viewStore.send(.bodyTapped) }
           }
         }
         .padding(.trailing, .grid(4))
         .padding(.grid(1))
         .background(viewStore.mode.isPlaying
-          ? Color.Palette.accent
-          : Color.Palette.primary)
+          ? Color.Palette.Background.secondary
+          : Color.Palette.Background.tertiary)
           .frame(height: 50)
           .cornerRadius(25, antialiased: true)
       }
-      .background(Color.Palette.background.cornerRadius(25, corners: [.bottomLeft, .bottomRight]))
+      .background(Color.Palette.Background.primary.cornerRadius(25, corners: [.bottomLeft, .bottomRight]))
     }
-  }
-}
-
-// MARK: - WaveformProgressView
-
-struct WaveformProgressView: View {
-  var audioURL: URL
-  var progress = 0.0
-  var isPlaying = false
-
-  var configuration = Waveform.Configuration(
-    size: .zero,
-    backgroundColor: .clear,
-    style: .striped(.init(color: .white, width: 3, spacing: 3, lineCap: .round)),
-    dampening: Waveform.Dampening(),
-    position: .middle,
-    scale: DSScreen.scale,
-    verticalScalingFactor: 0.95,
-    shouldAntialias: true
-  )
-  var notPlayedConfiguration: Waveform.Configuration {
-    configuration
-      .with(style: .striped(.init(color: UIColor(Color.Palette.placeholder), width: 3, spacing: 3, lineCap: .round)))
-  }
-
-  var fileExists: Bool {
-    FileManager.default.fileExists(atPath: audioURL.path)
-  }
-
-  var body: some View {
-    ZStack(alignment: .leading) {
-      if fileExists {
-        WaveformView(audioURL: audioURL, configuration: notPlayedConfiguration)
-        WaveformView(audioURL: audioURL, configuration: configuration)
-          .mask(alignment: .leading) {
-            GeometryReader { geometry in
-              if isPlaying {
-                Rectangle().frame(width: geometry.size.width * progress)
-              } else {
-                Rectangle()
-              }
-            }
-          }
-      }
-    }
-    .frame(maxWidth: .infinity)
-    .animation(.linear(duration: 0.5), value: progress)
   }
 }
 

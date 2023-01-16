@@ -143,7 +143,7 @@ struct ModelSelectorView: View {
         HStack {
           Text(model.name)
           Text(model.type.sizeLabel)
-            .foregroundColor(Color.Palette.placeholder)
+            .foregroundColor(Color.Palette.Text.subdued)
           Spacer()
           if model.isDownloaded {
             Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
@@ -159,15 +159,15 @@ struct ModelSelectorView: View {
           .foregroundColor(model == viewStore.selectedModel ? .green : .white)
           .frame(height: 50)
           .onTapGesture { viewStore.send(.modelSelected(model)) }
-          .listRowBackground(Color.Palette.primary)
+          .listRowBackground(Color.Palette.Background.secondary)
       }
     }
     .listStyle(.plain)
-    .background(Color.Palette.background)
+    .background(Color.Palette.Background.primary)
     .overlay {
       ZStack {
         if viewStore.isLoading {
-          Color.Palette.shadow.ignoresSafeArea()
+          Color.Palette.Shadow.base.ignoresSafeArea()
           ProgressView()
         }
       }
