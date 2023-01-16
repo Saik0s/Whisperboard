@@ -107,14 +107,13 @@ struct RecordingView: View {
         VStack(spacing: 12) {
           Text("Recording")
             .font(.title)
-            // .foregroundColor(Color.Palette.orangeRed)
-            .colorMultiply(Int(viewStore.duration).isMultiple(of: 2) ? Color.Palette.secondary : Color.Palette.text)
+            .colorMultiply(Int(viewStore.duration).isMultiple(of: 2) ? Color.Palette.Background.accent : Color.Palette.Text.base)
             .animation(.easeInOut(duration: 0.5), value: viewStore.duration)
 
           if let formattedDuration = dateComponentsFormatter.string(from: viewStore.duration) {
             Text(formattedDuration)
               .font(.body.monospacedDigit().bold())
-              .foregroundColor(Color.Palette.separator)
+              .foregroundColor(Color.Palette.Stroke.base)
           }
         }
       }
@@ -124,7 +123,7 @@ struct RecordingView: View {
 
       Button { viewStore.send(.stopButtonTapped, animation: .default) } label: {
         RoundedRectangle(cornerRadius: 4)
-          .fill(Color.Palette.secondary)
+          .fill(Color.Palette.Background.accent)
       }
       .frame(width: 70, height: 70)
       .frame(maxWidth: .infinity, alignment: .center)
@@ -145,14 +144,13 @@ struct Whispers_Previews: PreviewProvider {
         VStack(spacing: 12) {
           Text("Recording")
             .font(.title)
-            // .foregroundColor(Color.Palette.orangeRed)
-            .colorMultiply(Int(5).isMultiple(of: 2) ? Color.Palette.secondary : Color.Palette.text)
+            .colorMultiply(Int(5).isMultiple(of: 2) ? Color.Palette.Background.accent : Color.Palette.Text.base)
             .animation(.easeInOut(duration: 0.5), value: 5)
 
           if let formattedDuration = dateComponentsFormatter.string(from: 5) {
             Text(formattedDuration)
               .font(.body.monospacedDigit().bold())
-              .foregroundColor(Color.Palette.separator)
+              .foregroundColor(Color.Palette.Stroke.base)
           }
         }
       }
@@ -162,7 +160,7 @@ struct Whispers_Previews: PreviewProvider {
 
       Button {} label: {
         RoundedRectangle(cornerRadius: 4)
-          .fill(Color.Palette.secondary)
+          .fill(Color.Palette.Background.accent)
       }
       .frame(width: 70, height: 70)
       .frame(maxWidth: .infinity, alignment: .trailing)

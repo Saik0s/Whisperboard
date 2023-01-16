@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		494203872974B57200F5EFD8 /* whisper in Frameworks */ = {isa = PBXBuildFile; productRef = 494203862974B57200F5EFD8 /* whisper */; };
 		4956F1EA29749410002072C0 /* DynamicColor in Frameworks */ = {isa = PBXBuildFile; productRef = 4956F1E929749410002072C0 /* DynamicColor */; };
 		49EE27A8295679E100B11803 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49EE27A7295679E100B11803 /* KeyboardViewController.swift */; };
 		49EE27AC295679E100B11803 /* Keyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 49EE27A5295679E100B11803 /* Keyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -39,6 +40,7 @@
 		5F825929EE9F737BEAF7BE48 /* ActivityIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8257FE9255B9FA04EE2FBD /* ActivityIndicator.swift */; };
 		5F825940D914E366F0D24789 /* WhisperContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825C936C490D44B10CC6DC /* WhisperContext.swift */; };
 		5F82596C88162ABC980988C7 /* WhisperboardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8253D8484681298BD8ECE3 /* WhisperboardApp.swift */; };
+		5F825985077FBDC340E587D6 /* WaveformProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F82508AF77096FE967FCE1B /* WaveformProgressView.swift */; };
 		5F825A63A88C5C48C1514587 /* LiveAudioRecorderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8255ECEBE20D316C215D6A /* LiveAudioRecorderClient.swift */; };
 		5F825A6BC920C89907E5A695 /* DownloadState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F825916EE4D131AF979839F /* DownloadState.swift */; };
 		5F825A760D7DC57FD9294727 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8259DE5B5FAAE63F5865CE /* RootView.swift */; };
@@ -89,6 +91,7 @@
 		49EE27A9295679E100B11803 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		49EE27E22956BDD000B11803 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		49EE27E729572A8300B11803 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5F82508AF77096FE967FCE1B /* WaveformProgressView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WaveformProgressView.swift; sourceTree = "<group>"; };
 		5F825107B81C7C3D431EE940 /* Dependencies.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Dependencies.swift; sourceTree = "<group>"; };
 		5F82518CF74E3E35FA4EC10B /* ShareButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShareButton.swift; sourceTree = "<group>"; };
 		5F825211F7F2D3B5E78E0E8D /* AudioPlayerClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioPlayerClient.swift; sourceTree = "<group>"; };
@@ -138,6 +141,7 @@
 				49EE27EB295736CA00B11803 /* DSWaveformImage in Frameworks */,
 				4956F1EA29749410002072C0 /* DynamicColor in Frameworks */,
 				49EE27ED295736CA00B11803 /* DSWaveformImageViews in Frameworks */,
+				494203872974B57200F5EFD8 /* whisper in Frameworks */,
 				49EE27F029573EAF00B11803 /* ComposableArchitecture in Frameworks */,
 				49EE27F229573EAF00B11803 /* Dependencies in Frameworks */,
 			);
@@ -254,6 +258,7 @@
 				5F82518CF74E3E35FA4EC10B /* ShareButton.swift */,
 				5F825AC6E37CBB827EDCCE5E /* RecordButton.swift */,
 				5F825C9EA6B6703FFD6039A0 /* CopyButton.swift */,
+				5F82508AF77096FE967FCE1B /* WaveformProgressView.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -406,6 +411,7 @@
 				49EE27EF29573EAF00B11803 /* ComposableArchitecture */,
 				49EE27F129573EAF00B11803 /* Dependencies */,
 				4956F1E929749410002072C0 /* DynamicColor */,
+				494203862974B57200F5EFD8 /* whisper */,
 			);
 			productName = Whisperboard;
 			productReference = 49EE27902956799A00B11803 /* Whisperboard.app */;
@@ -464,6 +470,7 @@
 				49EE27E9295736CA00B11803 /* XCRemoteSwiftPackageReference "DSWaveformImage" */,
 				49EE27EE29573EAF00B11803 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
 				4956F1E829749410002072C0 /* XCRemoteSwiftPackageReference "DynamicColor" */,
+				494203852974B57200F5EFD8 /* XCRemoteSwiftPackageReference "whisper.spm" */,
 			);
 			productRefGroup = 49EE27912956799A00B11803 /* Products */;
 			projectDirPath = "";
@@ -536,6 +543,7 @@
 				5F8252831E8555506F8693C1 /* Dependencies.swift in Sources */,
 				5F825A760D7DC57FD9294727 /* RootView.swift in Sources */,
 				5F82580206A0ADCFF93FE9DB /* Fonts.swift in Sources */,
+				5F825985077FBDC340E587D6 /* WaveformProgressView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -699,7 +707,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = me.igortarasenko.Whisperboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "Whisperboard/whisper/Whisperboard-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -730,7 +737,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = me.igortarasenko.Whisperboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "Whisperboard/whisper/Whisperboard-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -824,6 +830,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		494203852974B57200F5EFD8 /* XCRemoteSwiftPackageReference "whisper.spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ggerganov/whisper.spm";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 		4956F1E829749410002072C0 /* XCRemoteSwiftPackageReference "DynamicColor" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/yannickl/DynamicColor";
@@ -859,6 +873,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		494203862974B57200F5EFD8 /* whisper */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 494203852974B57200F5EFD8 /* XCRemoteSwiftPackageReference "whisper.spm" */;
+			productName = whisper;
+		};
 		4956F1E929749410002072C0 /* DynamicColor */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4956F1E829749410002072C0 /* XCRemoteSwiftPackageReference "DynamicColor" */;

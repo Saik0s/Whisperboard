@@ -14,13 +14,13 @@ struct RecordButton: View {
     ZStack {
       Button(action: self.action) {
         Circle()
-          .fill(Color.Palette.secondary)
+          .fill(Color.Palette.Background.accent)
           .overlay {
             Image(systemName: "mic")
               .resizable()
               .scaledToFit()
               .frame(width: 30, height: 30)
-              .foregroundColor(Color.Palette.text)
+              .foregroundColor(Color.Palette.Text.base)
           }
       }
       .frame(width: 70, height: 70)

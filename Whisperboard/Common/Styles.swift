@@ -37,7 +37,7 @@ public struct PrimaryCardStyle: ViewModifier {
           .strokeBorder(LinearGradient.cardBorder, lineWidth: 1)
       }
       .compositingGroup()
-      .shadow(color: .Palette.shadow, radius: 15, x: 0, y: 5)
+      .shadow(color: .Palette.Shadow.base, radius: 15, x: 0, y: 5)
     }
   }
 }

@@ -13,7 +13,7 @@ struct CopyButton: View {
       UIPasteboard.general.string = text
     } label: {
       Image(systemName: "doc.on.clipboard")
-        .foregroundColor(Color.Palette.secondary)
+        .foregroundColor(Color.Palette.Background.accent)
         .padding(.grid(1))
     }
   }

@@ -251,7 +251,7 @@ struct WhisperListView: View {
             .overlay {
               ZStack {
                 if viewStore.settings.modelSelector.isLoading {
-                  Color.Palette.shadow.ignoresSafeArea()
+                  Color.Palette.Shadow.base.ignoresSafeArea()
                   ProgressView()
                 }
               }
@@ -277,12 +277,12 @@ struct WhisperListView: View {
       .navigationDestination(isPresented: viewStore.binding(\.$isSettingsPresented)) {
         SettingsView(store: store.scope(state: \.settings, action: WhisperList.Action.settings))
       }
-      .background(Color.Palette.background)
-      .accentColor(Color.Palette.secondary)
+      .background(Color.Palette.Background.primary)
+      .accentColor(Color.Palette.Background.accent)
     }
     .task { viewStore.send(.settings(.modelSelector(.task))) }
     .task { await viewStore.send(.readStoredWhispers).finish() }
-    .accentColor(Color.Palette.secondary)
+    .accentColor(Color.Palette.Background.accent)
   }
 
   func whisperList() -> some View {
@@ -344,7 +344,7 @@ struct WhisperListView: View {
               Button { viewStore.send(.transcribeWhisper(id: childState.id)) }
                label: {
                   Image(systemName: "arrow.clockwise")
-                    .foregroundColor(Color.Palette.secondary)
+                    .foregroundColor(Color.Palette.Background.accent)
                     .padding(.grid(1))
                 }
             }
@@ -364,7 +364,7 @@ struct WhisperListView: View {
     }
     .background {
       ZStack {
-        Color.Palette.background
+        Color.Palette.Background.primary
           .cornerRadius(.grid(2), corners: [.bottomLeft, .bottomRight])
       }
     }

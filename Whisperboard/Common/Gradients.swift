@@ -7,18 +7,18 @@ import SwiftUI
 
 public extension LinearGradient {
   static let cardBackground: Self = .easedGradient(colors: [
-    .Palette.primary.lighten(by: 0.1),
-    .Palette.primary.darken(by: 0.1),
+    .Palette.Background.tertiary.lighten(by: 0.1),
+    .Palette.Background.tertiary.darken(by: 0.1),
   ])
 
   static let cardBorder: Self = .easedGradient(colors: [
-    .Palette.primary.lighten(by: 0.3),
-    .Palette.primary.lighten(by: 0.1),
+    .Palette.Background.tertiary.lighten(by: 0.3),
+    .Palette.Background.tertiary.lighten(by: 0.1),
   ])
 
   static let screenBackground: Self = .easedGradient(colors: [
-    .Palette.background.lighten(by: 0.3),
-    .Palette.background,
+    .Palette.Background.primary.lighten(by: 0.3),
+    .Palette.Background.primary,
   ])
 }
 
