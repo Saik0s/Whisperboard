@@ -19,7 +19,7 @@ struct ModelSelector: ReducerProtocol {
   struct State: Equatable {
     var models: [VoiceModel] = []
     var selectedModel: VoiceModel?
-    var isLoading = false
+    var isLoading = true
   }
 
   enum Action: Equatable {
@@ -163,7 +163,7 @@ struct ModelSelectorView: View {
       }
     }
     .listStyle(.plain)
-    .background(Color.Palette.Background.primary)
+    .background(LinearGradient.screenBackground)
     .overlay {
       ZStack {
         if viewStore.isLoading {

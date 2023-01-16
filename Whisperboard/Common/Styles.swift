@@ -47,13 +47,14 @@ public struct CardStyle: ViewModifier {
                 : LinearGradient.cardSecondaryBorder,
               lineWidth: 1
             )
+            .opacity(0.5)
         }
         .compositingGroup()
       }
       .shadow(color: isPrimary ? .Palette.Shadow.primary : .Palette.Shadow.secondary,
-              radius: isPrimary ? 25 : 5,
+              radius: isPrimary ? 50 : 15,
               x: 0,
-              y: isPrimary ? 10 : 5)
+              y: isPrimary ? 7 : 3)
     }
   }
 }

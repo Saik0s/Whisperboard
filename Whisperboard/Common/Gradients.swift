@@ -29,6 +29,7 @@ public extension LinearGradient {
   static let screenBackground: Self = .easedGradient(colors: [
     .Palette.Background.primary.lighten(by: 0.05),
     .Palette.Background.primary,
+    .Palette.Background.primary,
   ])
 }
 
