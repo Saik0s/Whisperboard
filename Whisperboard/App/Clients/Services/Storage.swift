@@ -82,7 +82,7 @@ extension Storage: TestDependencyKey {
           mode: .notPlaying,
           title: "",
           fileName: "test2",
-          text: "Lorem ipsum",
+          text: Array(repeating: "Lorem ipsum ", count: 30).joined(),
           isTranscribed: true
         ),
       ]

@@ -146,6 +146,9 @@ struct WhisperList: ReducerProtocol {
         state.whispers.remove(id: id)
         return .none
 
+      case let .whisper(id: id, action: .retryTranscription):
+        return .task { .transcribeWhisper(id: id) }
+
       case let .whisper(id: tappedId, action: .playButtonTapped):
         for id in state.whispers.ids where id != tappedId {
           state.whispers[id: id]?.mode = .notPlaying
@@ -251,7 +254,7 @@ struct WhisperListView: View {
             .overlay {
               ZStack {
                 if viewStore.settings.modelSelector.isLoading {
-                  Color.Palette.Shadow.base.ignoresSafeArea()
+                  Color.Palette.Shadow.primary.ignoresSafeArea()
                   ProgressView()
                 }
               }
@@ -265,7 +268,8 @@ struct WhisperListView: View {
         }
       }
       .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
-      .navigationTitle("Whispers")
+      .navigationTitle("Recordings")
+      .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .navigationBarTrailing) {
           Button { viewStore.send(.gearButtonTapped) } label: {
@@ -277,7 +281,7 @@ struct WhisperListView: View {
       .navigationDestination(isPresented: viewStore.binding(\.$isSettingsPresented)) {
         SettingsView(store: store.scope(state: \.settings, action: WhisperList.Action.settings))
       }
-      .background(Color.Palette.Background.primary)
+      .background(LinearGradient.screenBackground)
       .accentColor(Color.Palette.Background.accent)
     }
     .task { viewStore.send(.settings(.modelSelector(.task))) }
@@ -286,22 +290,16 @@ struct WhisperListView: View {
   }
 
   func whisperList() -> some View {
-    List {
-      ForEachStore(
-        store.scope(state: \.whispers, action: { .whisper(id: $0, action: $1) })
-      ) { childStore in
-        whisperRowView(childStore)
-          .listRowBackground(Color.clear)
-          .listRowSeparator(.hidden)
-      }
-      .onDelete { indexSet in
-        for index in indexSet {
-          viewStore.send(.whisper(id: viewStore.whispers[index].id, action: .delete))
+    ScrollView {
+      LazyVStack(spacing: .grid(4)) {
+        ForEachStore(
+          store.scope(state: \.whispers, action: { .whisper(id: $0, action: $1) })
+        ) { childStore in
+          whisperRowView(childStore)
         }
       }
-      .buttonStyle(PlainButtonStyle())
+        .padding(.horizontal, .grid(4))
     }
-    .listStyle(.plain)
   }
 
   func recordingControls() -> some View {
@@ -322,52 +320,8 @@ struct WhisperListView: View {
 
   func whisperRowView(_ childStore: StoreOf<Whisper>) -> some View {
     let childState = ViewStore(childStore).state
-    return VStack(spacing: 0) {
-      WhisperView(store: childStore)
-        .overlay(alignment: .bottom) {
-          ZStack {
-            if viewStore.isTranscribing, viewStore.transcribingIdInProgress == childState.id {
-              Color.black.opacity(0.5)
-              ActivityIndicator()
-                .frame(width: 20, height: 20)
-            }
-          }
-          .frame(height: 50)
-        }
-
-      ZStack {
-        if viewStore.expandedWhisperId == childState.id {
-          VStack(spacing: .grid(1)) {
-            HStack {
-              CopyButton(text: childState.text)
-              ShareButton(text: childState.text)
-              Button { viewStore.send(.transcribeWhisper(id: childState.id)) }
-               label: {
-                  Image(systemName: "arrow.clockwise")
-                    .foregroundColor(Color.Palette.Background.accent)
-                    .padding(.grid(1))
-                }
-            }
-
-            Text(childState.text)
-              .textSelection(.enabled)
-          }
-          .padding(.grid(1))
-          .transition(
-            AnyTransition.move(edge: .top)
-              .combined(with: AnyTransition.scale)
-          )
-        }
-      }
-      .animation(.easeInOut(duration: 0.3), value: viewStore.isTranscribing)
-      .animation(.easeInOut(duration: 0.3), value: viewStore.expandedWhisperId)
-    }
-    .background {
-      ZStack {
-        Color.Palette.Background.primary
-          .cornerRadius(.grid(2), corners: [.bottomLeft, .bottomRight])
-      }
-    }
+    let isTranscribing = viewStore.isTranscribing && viewStore.transcribingIdInProgress == childState.id
+    return WhisperView(store: childStore, isTranscribing: isTranscribing)
   }
 }
 

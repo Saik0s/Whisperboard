@@ -14,8 +14,8 @@ struct WaveformProgressView: View {
   var configuration = Waveform.Configuration(
     size: .zero,
     backgroundColor: .clear,
-    style: .striped(.init(color: .white, width: 3, spacing: 3, lineCap: .round)),
-    dampening: Waveform.Dampening(),
+    style: .striped(.init(color: .white, width: 2, spacing: 4, lineCap: .round)),
+    dampening: .init(percentage: 0.125, sides: .both),
     position: .middle,
     scale: DSScreen.scale,
     verticalScalingFactor: 0.95,
@@ -23,7 +23,7 @@ struct WaveformProgressView: View {
   )
   var notPlayedConfiguration: Waveform.Configuration {
     configuration
-      .with(style: .striped(.init(color: UIColor(Color.Palette.Text.subdued), width: 3, spacing: 3, lineCap: .round)))
+      .with(style: .striped(.init(color: UIColor(Color.Palette.Text.subdued), width: 2, spacing: 4, lineCap: .round)))
   }
 
   var fileExists: Bool {
@@ -31,7 +31,7 @@ struct WaveformProgressView: View {
   }
 
   var body: some View {
-    ZStack(alignment: .leading) {
+    ZStack {
       if fileExists {
         WaveformView(audioURL: audioURL, configuration: notPlayedConfiguration)
         WaveformView(audioURL: audioURL, configuration: configuration)
@@ -46,6 +46,7 @@ struct WaveformProgressView: View {
           }
       }
     }
+      .frame(height: 50)
       .frame(maxWidth: .infinity)
       .animation(.linear(duration: 0.5), value: progress)
   }

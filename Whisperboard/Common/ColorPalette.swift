@@ -33,11 +33,12 @@ public extension Color {
     typealias Icon = Text
     enum Stroke {
       public static let base = Background.primary.lighten(by: 0.1)
-      public static let subdued = base.darken(by: 0.2)
+      public static let subdued = Background.tertiary.lighten(by: 0.05)
       public static let accent = Background.accent.lighten(by: 0.1)
     }
     enum Shadow {
-      public static let base = Background.primary.darken(by: 0.2)
+      public static let primary = Background.primary.darken(by: 0.2).opacity(0.6)
+      public static let secondary = Background.primary.darken(by: 0.2).opacity(0.2)
     }
   }
 }
