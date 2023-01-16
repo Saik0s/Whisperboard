@@ -11,6 +11,7 @@ struct CopyButton: View {
   var body: some View {
     Button {
       UIPasteboard.general.string = text
+      UINotificationFeedbackGenerator().notificationOccurred(.success)
     } label: {
       Image(systemName: "doc.on.clipboard")
         .foregroundColor(Color.Palette.Background.accent)

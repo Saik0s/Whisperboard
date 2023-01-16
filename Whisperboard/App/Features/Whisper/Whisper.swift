@@ -58,6 +58,7 @@ struct Whisper: ReducerProtocol {
       return .cancel(id: PlayID.self)
 
     case .delete:
+      UINotificationFeedbackGenerator().notificationOccurred(.success)
       return .cancel(id: PlayID.self)
 
     case .playButtonTapped:
@@ -103,6 +104,7 @@ struct Whisper: ReducerProtocol {
       return .none
 
     case .retryTranscription:
+      UINotificationFeedbackGenerator().notificationOccurred(.success)
       return .none
     }
   }
@@ -145,8 +147,8 @@ struct WhisperView: View {
               Text($0)
                 .font(.DS.date)
                 .foregroundColor(viewStore.mode.isPlaying
-                                   ? Color.Palette.Text.base
-                                   : Color.Palette.Text.subdued)
+                  ? Color.Palette.Text.base
+                  : Color.Palette.Text.subdued)
             }
           }
 
@@ -156,26 +158,26 @@ struct WhisperView: View {
             isPlaying: viewStore.mode.isPlaying
           )
         }
-          .padding(.grid(4))
-          .background {
-            Rectangle()
-              .fill(Color.Palette.Background.secondary)
-              .opacity(0.7)
-          }
+        // .background {
+        //   Rectangle()
+        //     .fill(Color.Palette.Background.secondary)
+        //     .opacity(0.7)
+        // }
 
         VStack(spacing: .grid(1)) {
           HStack {
             CopyButton(text: viewStore.text)
             ShareButton(text: viewStore.text)
-            Button { viewStore.send(.retryTranscription) }
-            label: {
+
+            Button { viewStore.send(.retryTranscription) } label: {
               Image(systemName: "arrow.clockwise")
                 .foregroundColor(Color.Palette.Background.accent)
                 .padding(.grid(1))
             }
+
             Spacer()
-            Button { viewStore.send(.delete) }
-            label: {
+
+            Button { viewStore.send(.delete) } label: {
               Image(systemName: "trash")
                 .foregroundColor(Color.Palette.Background.accent)
                 .padding(.grid(1))
@@ -184,21 +186,20 @@ struct WhisperView: View {
 
           ExpandableText(viewStore.text, lineLimit: 2, font: .DS.bodyM, isExpanded: $isExpanded)
             .frame(maxWidth: .infinity, alignment: .leading)
-
         }
-          .padding(.grid(4))
-          .mask {
-            LinearGradient.easedGradient(colors: [.black, isExpanded ? .black : .clear], steps: 2)
-          }
-          .blur(radius: isTranscribing ? 5 : 0)
-          .overlay {
-            ActivityIndicator()
-              .frame(width: 20, height: 20)
-              .frame(maxWidth: .infinity, maxHeight: .infinity)
-              .background(.ultraThinMaterial.opacity(0.7))
-              .hidden(isTranscribing == false)
-          }
+        .mask {
+          LinearGradient.easedGradient(colors: [.black, isExpanded ? .black : .clear], steps: 2)
+        }
+        .blur(radius: isTranscribing ? 5 : 0)
+        .overlay {
+          ActivityIndicator()
+            .frame(width: 20, height: 20)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(.ultraThinMaterial.opacity(0.7))
+            .hidden(isTranscribing == false)
+        }
       }
+        .padding(.grid(4))
       .cardStyle(isPrimary: viewStore.mode.isPlaying)
       .animation(.easeIn(duration: 0.3), value: viewStore.mode.isPlaying)
     }

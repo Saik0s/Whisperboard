@@ -14,6 +14,7 @@ struct ShareButton: View {
       let activityController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
 
       UIApplication.shared.topViewController?.present(activityController, animated: true, completion: nil)
+      UINotificationFeedbackGenerator().notificationOccurred(.success)
     } label: {
       Image(systemName: "paperplane")
         .foregroundColor(Color.Palette.Background.accent)

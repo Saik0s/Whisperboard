@@ -255,10 +255,11 @@ struct WhisperListView: View {
               ZStack {
                 if viewStore.settings.modelSelector.isLoading {
                   Color.Palette.Shadow.primary.ignoresSafeArea()
-                  ProgressView()
+                  ProgressView().offset(y: 30)
                 }
               }
             }
+            .font(.DS.titleM)
         } else {
           whisperList()
             .frame(maxHeight: .infinity, alignment: .top)
@@ -291,7 +292,7 @@ struct WhisperListView: View {
 
   func whisperList() -> some View {
     ScrollView {
-      LazyVStack(spacing: .grid(4)) {
+      LazyVStack(spacing: .grid(8)) {
         ForEachStore(
           store.scope(state: \.whispers, action: { .whisper(id: $0, action: $1) })
         ) { childStore in
@@ -313,6 +314,7 @@ struct WhisperListView: View {
       } settingsAction: {
         viewStore.send(.openSettingsButtonTapped)
       }
+        .shadow(color: .Palette.Shadow.primary, radius: 20)
     }
     .padding()
     .frame(maxWidth: .infinity)

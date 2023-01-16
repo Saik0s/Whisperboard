@@ -150,7 +150,7 @@ struct Whispers_Previews: PreviewProvider {
           if let formattedDuration = dateComponentsFormatter.string(from: 5) {
             Text(formattedDuration)
               .font(.body.monospacedDigit().bold())
-              .foregroundColor(Color.Palette.Stroke.base)
+              .foregroundColor(Color.Palette.Text.base)
           }
         }
       }
@@ -161,6 +161,7 @@ struct Whispers_Previews: PreviewProvider {
       Button {} label: {
         RoundedRectangle(cornerRadius: 4)
           .fill(Color.Palette.Background.accent)
+          .shadow(color: .Palette.Shadow.primary, radius: 20)
       }
       .frame(width: 70, height: 70)
       .frame(maxWidth: .infinity, alignment: .trailing)
