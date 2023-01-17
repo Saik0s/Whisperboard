@@ -482,7 +482,7 @@
 				49EE27E9295736CA00B11803 /* XCRemoteSwiftPackageReference "DSWaveformImage" */,
 				49EE27EE29573EAF00B11803 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
 				4956F1E829749410002072C0 /* XCRemoteSwiftPackageReference "DynamicColor" */,
-				494203852974B57200F5EFD8 /* XCRemoteSwiftPackageReference "whisper.spm" */,
+				494203852974B57200F5EFD8 /* XCRemoteSwiftPackageReference "whisper" */,
 			);
 			productRefGroup = 49EE27912956799A00B11803 /* Products */;
 			projectDirPath = "";
@@ -719,7 +719,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = me.igortarasenko.Whisperboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -749,7 +749,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = me.igortarasenko.Whisperboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -774,7 +774,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = me.igortarasenko.Whisperboard.Keyboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -803,7 +803,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				LLVM_LTO = YES;
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = me.igortarasenko.Whisperboard.Keyboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -846,7 +846,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		494203852974B57200F5EFD8 /* XCRemoteSwiftPackageReference "whisper.spm" */ = {
+		494203852974B57200F5EFD8 /* XCRemoteSwiftPackageReference "whisper" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ggerganov/whisper.spm";
 			requirement = {
@@ -891,7 +891,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		494203862974B57200F5EFD8 /* whisper */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 494203852974B57200F5EFD8 /* XCRemoteSwiftPackageReference "whisper.spm" */;
+			package = 494203852974B57200F5EFD8 /* XCRemoteSwiftPackageReference "whisper" */;
 			productName = whisper;
 		};
 		4956F1E929749410002072C0 /* DynamicColor */ = {
