@@ -22,11 +22,11 @@
 - Automatic transcription of recorded audio using Whisper from OpenAI
 - Custom keyboard with a button to quickly access the app for recording and transcription
 - Ability to save and share your recordings
+- Experimental improver of transcription using GPT3 from OpenAI
 
 ## Future Plans
 
 - Split recorded audio into chunks separated by silence for on the fly transcription
-- Allow downloading different models for transcription
 - History of transcriptions
 - Organize recordings in folders
 - Watch app
@@ -35,9 +35,7 @@
 ## Installation
 
 1. Clone this repository
-2. Run `git submodule update --init --recursive` to clone whisper.cpp submodule
-3. Run `make` to download the model
-4. Open the project in Xcode
+2. Open the project in Xcode
 
 ## Contribution
 
