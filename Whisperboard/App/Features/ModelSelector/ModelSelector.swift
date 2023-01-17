@@ -138,50 +138,55 @@ struct ModelSelectorView: View {
   }
 
   var body: some View {
-    VStack(spacing: .grid(1)) {
-      Text("Whisper is an automatic speech recognition (ASR) model developed by OpenAI. It uses deep learning techniques to transcribe spoken language into text. It is designed to be more accurate and efficient than traditional ASR models.\n\nThere are several different Whisper models available, each with different capabilities. The main difference between them is the size of the model, which affects the accuracy and efficiency of the transcription.\n\n")
-        .font(.DS.footnote)
-        .foregroundColor(.Palette.Text.subdued)
-        .multilineTextAlignment(.leading)
-        .padding(.horizontal, .grid(2))
+    VStack(spacing: .grid(2)) {
+      Text(
+        "Whisper is an automatic speech recognition (ASR) model developed by OpenAI. It uses deep learning techniques to transcribe spoken language into text. It is designed to be more accurate and efficient than traditional ASR models.\n\nThere are several different Whisper models available, each with different capabilities. The main difference between them is the size of the model, which affects the accuracy and efficiency of the transcription."
+      )
+      .font(.DS.footnote)
+      .foregroundColor(.Palette.Text.subdued)
+      .multilineTextAlignment(.leading)
+      .padding(.horizontal, .grid(2))
 
-      List {
-        ForEach(viewStore.models) { model in
-          HStack {
-            Text(model.name)
-            Text(model.type.sizeLabel)
-              .foregroundColor(Color.Palette.Text.subdued)
-            Spacer()
-            if model.isDownloaded {
-              Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
-            } else if model.isDownloading {
-              ProgressView(value: model.downloadProgress)
-            } else {
-              Text("Download")
-                .padding(.grid(2))
-                .background(Color.black)
-                .cornerRadius(.grid(1))
-            }
+      ForEach(viewStore.models) { model in
+        HStack {
+          Text(model.name)
+          Text(model.type.sizeLabel)
+            .foregroundColor(Color.Palette.Text.subdued)
+          Spacer()
+          if model.isDownloaded {
+            Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
+          } else if model.isDownloading {
+            ProgressView(value: model.downloadProgress)
+          } else {
+            Text("Download")
+              .padding(.grid(2))
+              .background(Color.Palette.Background.accent)
+              .cornerRadius(.grid(2))
           }
-            .foregroundColor(model == viewStore.selectedModel ? .green : .white)
-            .frame(height: 50)
-            .onTapGesture { viewStore.send(.modelSelected(model)) }
-            .listRowBackground(Color.Palette.Background.secondary)
+        }
+        .foregroundColor(model == viewStore.selectedModel ? .green : .white)
+        .padding(.horizontal, .grid(2))
+        .frame(height: 50)
+        .background {
+          RoundedRectangle(cornerRadius: .grid(4))
+            .fill(Color.Palette.Background.tertiary)
+        }
+        .onTapGesture { viewStore.send(.modelSelected(model)) }
+      }
+    }
+    .padding(.grid(2))
+    .background {
+      RoundedRectangle(cornerRadius: .grid(4))
+        .fill(Color.Palette.Background.secondary)
+    }
+    .overlay {
+      ZStack {
+        if viewStore.isLoading {
+          Color.Palette.Shadow.primary.ignoresSafeArea()
+          ProgressView()
         }
       }
-        .listStyle(.plain)
-        .overlay {
-          ZStack {
-            if viewStore.isLoading {
-              Color.Palette.Shadow.primary.ignoresSafeArea()
-              ProgressView()
-            }
-          }
-        }
     }
-      .padding(.vertical, .grid(2))
-      .background(LinearGradient.screenBackground)
-      .navigationBarTitle("Models")
   }
 }
 

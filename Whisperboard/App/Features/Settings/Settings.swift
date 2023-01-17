@@ -5,24 +5,47 @@
 import ComposableArchitecture
 import SwiftUI
 
+extension UserDefaults {
+  var openAIAPIKey: String? {
+    get { string(forKey: #function) }
+    set { set(newValue, forKey: #function) }
+  }
+}
+
 // MARK: - Settings
 
 struct Settings: ReducerProtocol {
   struct State: Equatable {
     var modelSelector = ModelSelector.State()
+    @BindableState var openAIAPIKey: String = ""
   }
 
-  enum Action: Equatable {
+  enum Action: BindableAction, Equatable {
+    case binding(BindingAction<State>)
     case modelSelector(ModelSelector.Action)
+    case task
   }
 
   var body: some ReducerProtocol<State, Action> {
+    BindingReducer()
+
     Scope(state: \.modelSelector, action: /Action.modelSelector) {
       ModelSelector()
     }
 
-    Reduce { _, _ in
-      .none
+    Reduce { state, action in
+      switch action {
+      case .task:
+        state.openAIAPIKey = UserDefaults.standard.openAIAPIKey ?? ""
+        return .none
+
+      case .binding(\.$openAIAPIKey):
+        UserDefaults.standard.openAIAPIKey = state.openAIAPIKey
+        return .none
+
+      default:
+        return .none
+      }
     }
   }
 }
@@ -39,7 +62,31 @@ struct SettingsView: View {
   }
 
   var body: some View {
-    ModelSelectorView(store: store.scope(state: \.modelSelector, action: Settings.Action.modelSelector))
+    ScrollView {
+      VStack(spacing: .grid(4)) {
+        ModelSelectorView(store: store.scope(state: \.modelSelector, action: Settings.Action.modelSelector))
+
+        VStack(alignment: .leading, spacing: .grid(1)) {
+          Text("OpenAI API Key for experimental transcription improvement:")
+            .font(.DS.bodyS)
+            .foregroundColor(.Palette.Text.base)
+          TextField("OpenAI API Key", text: viewStore.binding(\.$openAIAPIKey))
+            .textFieldStyle(RoundedBorderTextFieldStyle())
+          Text("Got to OpenAI website to create your API key https://beta.openai.com/account/api-keys")
+            .font(.DS.footnote)
+            .foregroundColor(.Palette.Text.subdued)
+        }
+          .multilineTextAlignment(.leading)
+          .padding(.grid(2))
+          .background {
+            RoundedRectangle(cornerRadius: .grid(4))
+              .fill(Color.Palette.Background.secondary)
+          }
+      }
+    }
+      .padding(.grid(2))
+      .background(LinearGradient.screenBackground)
+      .navigationBarTitle("Settings")
   }
 }
 
