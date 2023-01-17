@@ -72,7 +72,11 @@ struct WhisperList: ReducerProtocol {
       case let .setWhispers(result):
         switch result {
         case let .success(value):
-          state.whispers = value
+          state.whispers = value.map { recording in
+            recording.with {
+              $0.mode = .notPlaying
+            }
+          }.identifiedArray
         case let .failure(error):
           log(error)
         }
