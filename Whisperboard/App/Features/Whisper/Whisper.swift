@@ -176,7 +176,7 @@ struct WhisperView: View {
                 .padding(.grid(1))
             }
 
-            if viewStore.text.isEmpty == false {
+            if viewStore.text.isEmpty == false && UserDefaults.standard.openAIAPIKey?.isEmpty == false {
               ImproveTranscriptionButton(text: viewStore.text) {
                 viewStore.send(.improvedTranscription($0))
               }

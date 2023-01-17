@@ -87,6 +87,7 @@ struct SettingsView: View {
       .padding(.grid(2))
       .background(LinearGradient.screenBackground)
       .navigationBarTitle("Settings")
+      .task { viewStore.send(.task) }
   }
 }
 
