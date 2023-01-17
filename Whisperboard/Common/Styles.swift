@@ -33,13 +33,26 @@ public struct CardStyle: ViewModifier {
     content
       .cornerRadius(.grid(4))
       .background {
-      ZStack {
-        Group {
-          RoundedRectangle(cornerRadius: .grid(4))
-            .fill(isPrimary
-              ? LinearGradient.cardPrimaryBackground
-              : LinearGradient.cardSecondaryBackground)
+        ZStack {
+          LinearGradient.easedGradient(colors: [
+            .Palette.Background.tertiary.lighten(by: 0.05),
+            .Palette.Background.tertiary,
+          ], startPoint: .topLeading, endPoint: .bottomTrailing)
 
+          LinearGradient.easedGradient(colors: [
+            .Palette.Background.secondary.lighten(by: 0.1),
+            .Palette.Background.secondary,
+          ], startPoint: .topLeading, endPoint: .bottomTrailing)
+            .opacity(isPrimary ? 1 : 0)
+        }
+        .cornerRadius(.grid(4))
+        .shadow(color: isPrimary ? .Palette.Shadow.primary : .Palette.Shadow.secondary,
+                radius: isPrimary ? 50 : 15,
+                x: 0,
+                y: isPrimary ? 7 : 3)
+      }
+      .background {
+        ZStack {
           RoundedRectangle(cornerRadius: .grid(4))
             .strokeBorder(
               isPrimary
@@ -49,13 +62,7 @@ public struct CardStyle: ViewModifier {
             )
             .opacity(0.5)
         }
-        .compositingGroup()
       }
-      .shadow(color: isPrimary ? .Palette.Shadow.primary : .Palette.Shadow.secondary,
-              radius: isPrimary ? 50 : 15,
-              x: 0,
-              y: isPrimary ? 7 : 3)
-    }
   }
 }
 

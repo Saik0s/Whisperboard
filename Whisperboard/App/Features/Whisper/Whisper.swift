@@ -8,7 +8,7 @@ import SwiftUI
 // MARK: - Whisper
 
 struct Whisper: ReducerProtocol {
-  struct State: Equatable, Identifiable, Codable {
+  struct State: Equatable, Identifiable, Codable, Then {
     var date: Date
     var duration: TimeInterval
     var mode = Mode.notPlaying
@@ -158,11 +158,6 @@ struct WhisperView: View {
             isPlaying: viewStore.mode.isPlaying
           )
         }
-        // .background {
-        //   Rectangle()
-        //     .fill(Color.Palette.Background.secondary)
-        //     .opacity(0.7)
-        // }
 
         VStack(spacing: .grid(1)) {
           HStack {

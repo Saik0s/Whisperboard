@@ -10,9 +10,9 @@ import SwiftUI
 public extension Color {
   enum Palette {
     enum Background {
-      public static let primary = Color(DynamicColor(hexString: "#111111"))
-      public static let secondary = Color(DynamicColor(hexString: "#2c3143"))
-      public static let tertiary = Color(DynamicColor(hexString: "#181b29"))
+      public static let primary = Color(DynamicColor(hexString: "#202437"))
+      public static let secondary = primary.lighten(by: 0.1)
+      public static let tertiary = primary.darken(by: 0.1)
       public static let accent = Color(DynamicColor(hexString: "#fb3d02"))
       public static let accentAlt = Color(DynamicColor(hexString: "#45202f"))
       public static let error = Color(UIColor.systemRed)
