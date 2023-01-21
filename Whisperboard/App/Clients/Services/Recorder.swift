@@ -1,7 +1,3 @@
-//
-// Recorder.swift
-//
-
 import AVFoundation
 import Foundation
 

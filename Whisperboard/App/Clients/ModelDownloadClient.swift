@@ -1,7 +1,3 @@
-//
-// ModelDownloadClient.swift
-//
-
 import Foundation
 
 // MARK: - ModelDownloadClient

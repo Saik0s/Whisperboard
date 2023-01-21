@@ -1,7 +1,3 @@
-//
-// UIViewController++.swift
-//
-
 import UIKit
 
 extension UIViewController {

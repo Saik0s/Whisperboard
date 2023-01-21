@@ -15,6 +15,13 @@
 <img src=".github/screenshot1.jpg" width="200">
 <img src=".github/screenshot2.jpg" width="200">
 </div>
+<p>
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg" />
+    <img src="https://img.shields.io/badge/Platforms-iOS-3876D3.svg" />
+    <a href="https://twitter.com/sa1k0s">
+        <img src="https://img.shields.io/badge/Contact-@sa1k0s-purple.svg?style=flat" alt="Twitter: @sa1k0s" />
+    </a>
+</p>
 
 ## Features
 

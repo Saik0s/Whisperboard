@@ -1,7 +1,3 @@
-//
-// ExpandableText.swift
-//
-
 import SwiftUI
 
 // MARK: - ExpandableText

@@ -1,7 +1,3 @@
-//
-// Player.swift
-//
-
 import AVFoundation
 import Foundation
 

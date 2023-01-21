@@ -1,7 +1,3 @@
-//
-// ColorPalette.swift
-//
-
 import DynamicColor
 import SwiftUI
 
@@ -20,6 +16,7 @@ public extension Color {
       public static let warning = Color(UIColor.systemOrange)
       public static let link = Color(UIColor.systemBlue)
     }
+
     enum Text {
       public static let base = Color(DynamicColor(hexString: "#FFFFFF"))
       public static let subdued = Color(DynamicColor(hexString: "#afb0b6"))
@@ -30,12 +27,14 @@ public extension Color {
       public static let warning = Color(UIColor.systemOrange)
       public static let link = Color(UIColor.systemBlue)
     }
+
     typealias Icon = Text
     enum Stroke {
       public static let base = Background.primary.lighten(by: 0.1)
       public static let subdued = Background.tertiary.lighten(by: 0.05)
       public static let accent = Background.accent.lighten(by: 0.1)
     }
+
     enum Shadow {
       public static let primary = Background.primary.darken(by: 0.2).opacity(0.6)
       public static let secondary = Background.primary.darken(by: 0.2).opacity(0.2)

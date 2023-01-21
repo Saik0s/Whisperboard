@@ -1,7 +1,3 @@
-//
-// Styles.swift
-//
-
 import SwiftUI
 
 // MARK: - MyButtonStyle

@@ -1,7 +1,3 @@
-//
-// RecordButton.swift
-//
-
 import SwiftUI
 import UIKit
 

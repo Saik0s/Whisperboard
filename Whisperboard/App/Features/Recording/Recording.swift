@@ -1,7 +1,3 @@
-//
-// Recording.swift
-//
-
 import ComposableArchitecture
 import SwiftUI
 

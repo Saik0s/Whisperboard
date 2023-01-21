@@ -1,7 +1,3 @@
-//
-// ShareButton.swift
-//
-
 import SwiftUI
 import UIKit
 

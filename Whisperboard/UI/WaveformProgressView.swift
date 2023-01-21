@@ -1,7 +1,3 @@
-//
-// Created by Igor Tarasenko on 15/01/2023.
-//
-
 import DSWaveformImage
 import DSWaveformImageViews
 import SwiftUI
@@ -46,8 +42,8 @@ struct WaveformProgressView: View {
           }
       }
     }
-      .frame(height: 50)
-      .frame(maxWidth: .infinity)
-      .animation(.linear(duration: 0.5), value: progress)
+    .frame(height: 50)
+    .frame(maxWidth: .infinity)
+    .animation(.linear(duration: 0.5), value: progress)
   }
 }

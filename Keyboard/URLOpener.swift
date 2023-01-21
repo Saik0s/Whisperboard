@@ -1,7 +1,3 @@
-//
-// URLOpener.swift
-//
-
 import UIKit
 
 struct URLOpener {

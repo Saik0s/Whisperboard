@@ -1,7 +1,3 @@
-//
-// AudioRecorderClient.swift
-//
-
 import ComposableArchitecture // Required for `ActorIsolated`
 import Dependencies
 import Foundation

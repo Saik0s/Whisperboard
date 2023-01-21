@@ -1,7 +1,3 @@
-//
-// WithInlineState.swift
-//
-
 import SwiftUI
 
 public func withInlineState<Value>(initialValue: Value, @ViewBuilder content: @escaping (Binding<Value>) -> some View) -> some View {

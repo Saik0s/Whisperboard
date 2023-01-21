@@ -1,7 +1,3 @@
-//
-// Transcriber.swift
-//
-
 import Dependencies
 import Foundation
 

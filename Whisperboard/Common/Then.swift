@@ -1,7 +1,3 @@
-//
-// Then.swift
-//
-
 import Foundation
 import SwiftUI
 

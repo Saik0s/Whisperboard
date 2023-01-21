@@ -1,7 +1,3 @@
-//
-// CopyButton.swift
-//
-
 import SwiftUI
 import UIKit
 
