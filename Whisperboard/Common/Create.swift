@@ -1,7 +1,3 @@
-//
-// Create.swift
-//
-
 import Foundation
 
 func create<T: AnyObject>(_ object: T, configure: (T) -> Void) -> T {

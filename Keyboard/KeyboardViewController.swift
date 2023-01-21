@@ -1,7 +1,3 @@
-//
-// KeyboardViewController.swift
-//
-
 import KeyboardKit
 import SwiftUI
 import UIKit
@@ -9,7 +5,7 @@ import UIKit
 // MARK: - KeyboardView
 
 struct KeyboardView: View {
-  @EnvironmentObject  private var keyboardContext: KeyboardContext
+  @EnvironmentObject private var keyboardContext: KeyboardContext
 
   private var rowHeight: CGFloat { KeyboardLayoutConfiguration.standard(for: keyboardContext).rowHeight }
 

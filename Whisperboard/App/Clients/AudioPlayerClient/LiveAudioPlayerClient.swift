@@ -1,7 +1,3 @@
-//
-// LiveAudioPlayerClient.swift
-//
-
 @preconcurrency import AVFoundation
 import Dependencies
 

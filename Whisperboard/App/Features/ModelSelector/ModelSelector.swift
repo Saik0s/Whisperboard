@@ -1,7 +1,3 @@
-//
-// ModelSelector.swift
-//
-
 import ComposableArchitecture
 import Foundation
 import SwiftUI

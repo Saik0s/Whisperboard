@@ -1,7 +1,3 @@
-//
-// AudioPlayerClient.swift
-//
-
 import Dependencies
 import Foundation
 import XCTestDynamicOverlay

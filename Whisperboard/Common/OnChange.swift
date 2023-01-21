@@ -1,7 +1,3 @@
-//
-// OnChange.swift
-//
-
 import ComposableArchitecture
 
 public extension ReducerProtocol {
@@ -30,11 +26,11 @@ public extension ReducerProtocol {
 
 @usableFromInline
 struct ChangeReducer<Base: ReducerProtocol, ChildState: Equatable>: ReducerProtocol {
-  @usableFromInline  let base: Base
+  @usableFromInline let base: Base
 
-  @usableFromInline  let toLocalState: (Base.State) -> ChildState
+  @usableFromInline let toLocalState: (Base.State) -> ChildState
 
-  @usableFromInline  let perform:
+  @usableFromInline let perform:
     (ChildState, ChildState, inout Base.State, Base.Action) -> Effect<
       Base.Action, Never
     >

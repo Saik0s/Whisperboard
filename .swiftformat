@@ -1,6 +1,6 @@
 # file options
 
---exclude .build,whispercpp
+--exclude .build
 --swiftversion 5.7
 
 # format options
@@ -16,7 +16,7 @@
 --wrapparameters preserve
 --wrapternary before-operators
 
---header "\n{file}\n"
+--header ""
 
 # rules
 

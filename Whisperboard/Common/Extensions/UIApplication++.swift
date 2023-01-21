@@ -1,7 +1,3 @@
-//
-// UIApplication++.swift
-//
-
 import UIKit
 
 extension UIApplication {

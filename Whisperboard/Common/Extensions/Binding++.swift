@@ -1,7 +1,3 @@
-//
-// Binding++.swift
-//
-
 import SwiftUI
 
 public extension Binding {

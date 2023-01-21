@@ -1,7 +1,3 @@
-//
-// Settings.swift
-//
-
 import ComposableArchitecture
 import SwiftUI
 
@@ -76,18 +72,18 @@ struct SettingsView: View {
             .font(.DS.footnote)
             .foregroundColor(.Palette.Text.subdued)
         }
-          .multilineTextAlignment(.leading)
-          .padding(.grid(2))
-          .background {
-            RoundedRectangle(cornerRadius: .grid(4))
-              .fill(Color.Palette.Background.secondary)
-          }
+        .multilineTextAlignment(.leading)
+        .padding(.grid(2))
+        .background {
+          RoundedRectangle(cornerRadius: .grid(4))
+            .fill(Color.Palette.Background.secondary)
+        }
       }
     }
-      .padding(.grid(2))
-      .background(LinearGradient.screenBackground)
-      .navigationBarTitle("Settings")
-      .task { viewStore.send(.task) }
+    .padding(.grid(2))
+    .background(LinearGradient.screenBackground)
+    .navigationBarTitle("Settings")
+    .task { viewStore.send(.task) }
   }
 }
 

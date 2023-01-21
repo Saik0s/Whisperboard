@@ -1,7 +1,3 @@
-//
-// WhisperList.swift
-//
-
 import AVFoundation
 import ComposableArchitecture
 import SwiftUI
@@ -303,7 +299,7 @@ struct WhisperListView: View {
           whisperRowView(childStore)
         }
       }
-        .padding(.horizontal, .grid(4))
+      .padding(.horizontal, .grid(4))
     }
   }
 
@@ -318,7 +314,7 @@ struct WhisperListView: View {
       } settingsAction: {
         viewStore.send(.openSettingsButtonTapped)
       }
-        .shadow(color: .Palette.Shadow.primary, radius: 20)
+      .shadow(color: .Palette.Shadow.primary, radius: 20)
     }
     .padding()
     .frame(maxWidth: .infinity)

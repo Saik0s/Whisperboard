@@ -1,7 +1,3 @@
-//
-// DesignSystem.swift
-//
-
 import CoreGraphics
 
 public extension CGFloat {

@@ -1,7 +1,3 @@
-//
-// Gradients.swift
-//
-
 import DynamicColor
 import SwiftUI
 

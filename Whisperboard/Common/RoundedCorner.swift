@@ -1,7 +1,3 @@
-//
-// RoundedCorner.swift
-//
-
 import SwiftUI
 
 public extension View {

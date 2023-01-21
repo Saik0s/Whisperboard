@@ -1,7 +1,3 @@
-//
-// DownloadState.swift
-//
-
 import Foundation
 
 enum DownloadState {

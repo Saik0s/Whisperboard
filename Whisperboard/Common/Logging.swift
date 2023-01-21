@@ -1,7 +1,3 @@
-//
-// Logging.swift
-//
-
 import Foundation
 
 private let rootFolderName = "Whisperboard"

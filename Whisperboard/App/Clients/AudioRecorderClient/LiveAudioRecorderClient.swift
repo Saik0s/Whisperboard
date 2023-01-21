@@ -1,7 +1,3 @@
-//
-// LiveAudioRecorderClient.swift
-//
-
 import AVFoundation
 import ComposableArchitecture // TODO: Should `UncheckedSendable` live in `Dependencies`?
 

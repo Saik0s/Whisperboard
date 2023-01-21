@@ -1,7 +1,3 @@
-//
-// Fonts.swift
-//
-
 import SwiftUI
 
 // MARK: - Font.DS

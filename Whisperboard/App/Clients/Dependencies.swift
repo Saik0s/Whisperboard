@@ -1,7 +1,3 @@
-//
-// Dependencies.swift
-//
-
 import Dependencies
 import SwiftUI
 import XCTestDynamicOverlay

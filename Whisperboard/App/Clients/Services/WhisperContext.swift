@@ -1,7 +1,3 @@
-//
-// WhisperContext.swift
-//
-
 import Foundation
 import whisper
 
@@ -42,7 +38,7 @@ actor WhisperContext {
       params.offset_ms = 0
       params.no_context = true
       params.single_segment = false
-      params.new_segment_callback = { context, number, userData in
+      params.new_segment_callback = { context, _, _ in
         log(String(cString: whisper_full_get_segment_text(context, whisper_full_n_segments(context) - 1)))
       }
 

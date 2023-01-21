@@ -1,7 +1,3 @@
-//
-// ActivityIndicator.swift
-//
-
 import SwiftUI
 
 // MARK: - ActivityIndicator
