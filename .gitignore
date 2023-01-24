@@ -93,3 +93,4 @@ iOSInjectionProject/
 .idea/
 Whisperboard/Resources/*.bin
 .vscode/
+.prompt
