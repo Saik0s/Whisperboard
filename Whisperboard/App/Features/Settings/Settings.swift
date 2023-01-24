@@ -68,7 +68,7 @@ struct SettingsView: View {
             .foregroundColor(.Palette.Text.base)
           TextField("OpenAI API Key", text: viewStore.binding(\.$openAIAPIKey))
             .textFieldStyle(RoundedBorderTextFieldStyle())
-          Text("Got to OpenAI website to create your API key https://beta.openai.com/account/api-keys")
+          Text("Go to OpenAI website to create your API key https://beta.openai.com/account/api-keys")
             .font(.DS.footnote)
             .foregroundColor(.Palette.Text.subdued)
         }
