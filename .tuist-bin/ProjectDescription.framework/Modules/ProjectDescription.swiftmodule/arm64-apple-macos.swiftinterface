@@ -1,0 +1,1419 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 5.6.1 (swiftlang-5.6.0.323.66 clang-1316.0.20.12)
+// swift-module-flags: -target arm64-apple-macos11.0 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -module-name ProjectDescription
+import Foundation
+import Swift
+import _Concurrency
+public struct AnalyzeAction : Swift.Equatable, Swift.Codable {
+  public let configuration: ProjectDescription.ConfigurationName
+  public static func analyzeAction(configuration: ProjectDescription.ConfigurationName) -> ProjectDescription.AnalyzeAction
+  public static func == (a: ProjectDescription.AnalyzeAction, b: ProjectDescription.AnalyzeAction) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct ArchiveAction : Swift.Equatable, Swift.Codable {
+  public let configuration: ProjectDescription.ConfigurationName
+  public let revealArchiveInOrganizer: Swift.Bool
+  public let customArchiveName: Swift.String?
+  public let preActions: [ProjectDescription.ExecutionAction]
+  public let postActions: [ProjectDescription.ExecutionAction]
+  public static func archiveAction(configuration: ProjectDescription.ConfigurationName, revealArchiveInOrganizer: Swift.Bool = true, customArchiveName: Swift.String? = nil, preActions: [ProjectDescription.ExecutionAction] = [], postActions: [ProjectDescription.ExecutionAction] = []) -> ProjectDescription.ArchiveAction
+  public static func == (a: ProjectDescription.ArchiveAction, b: ProjectDescription.ArchiveAction) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct Arguments : Swift.Equatable, Swift.Codable {
+  public let environment: [Swift.String : Swift.String]
+  public let launchArguments: [ProjectDescription.LaunchArgument]
+  public init(environment: [Swift.String : Swift.String] = [:], launchArguments: [ProjectDescription.LaunchArgument] = [])
+  public static func == (a: ProjectDescription.Arguments, b: ProjectDescription.Arguments) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct BuildAction : Swift.Equatable, Swift.Codable {
+  public let targets: [ProjectDescription.TargetReference]
+  public let preActions: [ProjectDescription.ExecutionAction]
+  public let postActions: [ProjectDescription.ExecutionAction]
+  public let runPostActionsOnFailure: Swift.Bool
+  public init(targets: [ProjectDescription.TargetReference], preActions: [ProjectDescription.ExecutionAction] = [], postActions: [ProjectDescription.ExecutionAction] = [], runPostActionsOnFailure: Swift.Bool = false)
+  public static func buildAction(targets: [ProjectDescription.TargetReference], preActions: [ProjectDescription.ExecutionAction] = [], postActions: [ProjectDescription.ExecutionAction] = [], runPostActionsOnFailure: Swift.Bool = false) -> ProjectDescription.BuildAction
+  public static func == (a: ProjectDescription.BuildAction, b: ProjectDescription.BuildAction) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct Cache : Swift.Codable, Swift.Equatable {
+  public struct Profile : Swift.Codable, Swift.Equatable {
+    public let name: Swift.String
+    public let configuration: Swift.String
+    public let device: Swift.String?
+    public let os: Swift.String?
+    public static func profile(name: Swift.String, configuration: Swift.String, device: Swift.String? = nil, os: Swift.String? = nil) -> ProjectDescription.Cache.Profile
+    public static func == (a: ProjectDescription.Cache.Profile, b: ProjectDescription.Cache.Profile) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+  public let profiles: [ProjectDescription.Cache.Profile]
+  public let path: ProjectDescription.Path?
+  public static func cache(profiles: [ProjectDescription.Cache.Profile] = [], path: ProjectDescription.Path? = nil) -> ProjectDescription.Cache
+  public static func == (a: ProjectDescription.Cache, b: ProjectDescription.Cache) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct Cloud : Swift.Codable, Swift.Equatable {
+  public enum Option : Swift.String, Swift.Codable, Swift.Equatable {
+    case analytics
+    case optional
+    public init?(rawValue: Swift.String)
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+  public let url: Swift.String
+  public let projectId: Swift.String
+  public let options: [ProjectDescription.Cloud.Option]
+  public static func cloud(projectId: Swift.String, url: Swift.String, options: [ProjectDescription.Cloud.Option] = []) -> ProjectDescription.Cloud
+  public static func == (a: ProjectDescription.Cloud, b: ProjectDescription.Cloud) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public enum CompatibleXcodeVersions : Swift.ExpressibleByArrayLiteral, Swift.ExpressibleByStringInterpolation, Swift.Codable, Swift.Equatable {
+  case all
+  case exact(ProjectDescription.Version)
+  case upToNextMajor(ProjectDescription.Version)
+  case upToNextMinor(ProjectDescription.Version)
+  case list([ProjectDescription.CompatibleXcodeVersions])
+  public init(arrayLiteral elements: [ProjectDescription.CompatibleXcodeVersions])
+  public init(arrayLiteral elements: ProjectDescription.CompatibleXcodeVersions...)
+  public init(stringLiteral value: Swift.String)
+  public static func == (a: ProjectDescription.CompatibleXcodeVersions, b: ProjectDescription.CompatibleXcodeVersions) -> Swift.Bool
+  public typealias ArrayLiteralElement = ProjectDescription.CompatibleXcodeVersions
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct Config : Swift.Codable, Swift.Equatable {
+  public let generationOptions: ProjectDescription.Config.GenerationOptions
+  public let compatibleXcodeVersions: ProjectDescription.CompatibleXcodeVersions
+  public let plugins: [ProjectDescription.PluginLocation]
+  public let cloud: ProjectDescription.Cloud?
+  public let cache: ProjectDescription.Cache?
+  public let swiftVersion: ProjectDescription.Version?
+  public init(compatibleXcodeVersions: ProjectDescription.CompatibleXcodeVersions = .all, cloud: ProjectDescription.Cloud? = nil, cache: ProjectDescription.Cache? = nil, swiftVersion: ProjectDescription.Version? = nil, plugins: [ProjectDescription.PluginLocation] = [], generationOptions: ProjectDescription.Config.GenerationOptions = .options())
+  public static func == (a: ProjectDescription.Config, b: ProjectDescription.Config) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.Config {
+  public struct GenerationOptions : Swift.Codable, Swift.Equatable {
+    public let resolveDependenciesWithSystemScm: Swift.Bool
+    public let disablePackageVersionLocking: Swift.Bool
+    public static func options(resolveDependenciesWithSystemScm: Swift.Bool = false, disablePackageVersionLocking: Swift.Bool = false) -> ProjectDescription.Config.GenerationOptions
+    public static func == (a: ProjectDescription.Config.GenerationOptions, b: ProjectDescription.Config.GenerationOptions) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+}
+public struct ConfigurationName : Swift.ExpressibleByStringLiteral, Swift.Codable, Swift.Equatable {
+  public let rawValue: Swift.String
+  public init(stringLiteral value: Swift.StringLiteralType)
+  public static func configuration(_ name: Swift.String) -> ProjectDescription.ConfigurationName
+  public static var debug: ProjectDescription.ConfigurationName {
+    get
+  }
+  public static var release: ProjectDescription.ConfigurationName {
+    get
+  }
+  public static func == (a: ProjectDescription.ConfigurationName, b: ProjectDescription.ConfigurationName) -> Swift.Bool
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.StringLiteralType
+  public typealias StringLiteralType = Swift.StringLiteralType
+  public typealias UnicodeScalarLiteralType = Swift.StringLiteralType
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct CopyFilesAction : Swift.Codable, Swift.Equatable {
+  public var name: Swift.String
+  public var destination: ProjectDescription.CopyFilesAction.Destination
+  public var subpath: Swift.String?
+  public var files: [ProjectDescription.FileElement]
+  public enum Destination : Swift.String, Swift.Codable, Swift.Equatable {
+    case absolutePath
+    case productsDirectory
+    case wrapper
+    case executables
+    case resources
+    case javaResources
+    case frameworks
+    case sharedFrameworks
+    case sharedSupport
+    case plugins
+    case other
+    public init?(rawValue: Swift.String)
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+  public static func productsDirectory(name: Swift.String, subpath: Swift.String? = nil, files: [ProjectDescription.FileElement]) -> ProjectDescription.CopyFilesAction
+  public static func wrapper(name: Swift.String, subpath: Swift.String? = nil, files: [ProjectDescription.FileElement]) -> ProjectDescription.CopyFilesAction
+  public static func executables(name: Swift.String, subpath: Swift.String? = nil, files: [ProjectDescription.FileElement]) -> ProjectDescription.CopyFilesAction
+  public static func resources(name: Swift.String, subpath: Swift.String? = nil, files: [ProjectDescription.FileElement]) -> ProjectDescription.CopyFilesAction
+  public static func javaResources(name: Swift.String, subpath: Swift.String? = nil, files: [ProjectDescription.FileElement]) -> ProjectDescription.CopyFilesAction
+  public static func frameworks(name: Swift.String, subpath: Swift.String? = nil, files: [ProjectDescription.FileElement]) -> ProjectDescription.CopyFilesAction
+  public static func sharedFrameworks(name: Swift.String, subpath: Swift.String? = nil, files: [ProjectDescription.FileElement]) -> ProjectDescription.CopyFilesAction
+  public static func sharedSupport(name: Swift.String, subpath: Swift.String? = nil, files: [ProjectDescription.FileElement]) -> ProjectDescription.CopyFilesAction
+  public static func plugins(name: Swift.String, subpath: Swift.String? = nil, files: [ProjectDescription.FileElement]) -> ProjectDescription.CopyFilesAction
+  public static func == (a: ProjectDescription.CopyFilesAction, b: ProjectDescription.CopyFilesAction) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct CoreDataModel : Swift.Codable, Swift.Equatable {
+  public let path: ProjectDescription.Path
+  public let currentVersion: Swift.String?
+  public init(_ path: ProjectDescription.Path, currentVersion: Swift.String? = nil)
+  public static func == (a: ProjectDescription.CoreDataModel, b: ProjectDescription.CoreDataModel) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct CarthageDependencies : Swift.Codable, Swift.Equatable {
+  public let dependencies: [ProjectDescription.CarthageDependencies.Dependency]
+  public init(_ dependencies: [ProjectDescription.CarthageDependencies.Dependency])
+  public static func == (a: ProjectDescription.CarthageDependencies, b: ProjectDescription.CarthageDependencies) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.CarthageDependencies : Swift.ExpressibleByArrayLiteral {
+  public init(arrayLiteral elements: ProjectDescription.CarthageDependencies.Dependency...)
+  public typealias ArrayLiteralElement = ProjectDescription.CarthageDependencies.Dependency
+}
+extension ProjectDescription.CarthageDependencies {
+  public enum Dependency : Swift.Codable, Swift.Equatable {
+    case github(path: Swift.String, requirement: ProjectDescription.CarthageDependencies.Requirement)
+    case git(path: Swift.String, requirement: ProjectDescription.CarthageDependencies.Requirement)
+    case binary(path: Swift.String, requirement: ProjectDescription.CarthageDependencies.Requirement)
+    public static func == (a: ProjectDescription.CarthageDependencies.Dependency, b: ProjectDescription.CarthageDependencies.Dependency) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+  public enum Requirement : Swift.Codable, Swift.Equatable {
+    case exact(ProjectDescription.Version)
+    case upToNext(ProjectDescription.Version)
+    case atLeast(ProjectDescription.Version)
+    case branch(Swift.String)
+    case revision(Swift.String)
+    public static func == (a: ProjectDescription.CarthageDependencies.Requirement, b: ProjectDescription.CarthageDependencies.Requirement) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+}
+public struct Dependencies : Swift.Codable, Swift.Equatable {
+  public let carthage: ProjectDescription.CarthageDependencies?
+  public let swiftPackageManager: ProjectDescription.SwiftPackageManagerDependencies?
+  public let platforms: Swift.Set<ProjectDescription.Platform>
+  public init(carthage: ProjectDescription.CarthageDependencies? = nil, swiftPackageManager: ProjectDescription.SwiftPackageManagerDependencies? = nil, platforms: Swift.Set<ProjectDescription.Platform> = Set(Platform.allCases))
+  public static func == (a: ProjectDescription.Dependencies, b: ProjectDescription.Dependencies) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct SwiftPackageManagerDependencies : Swift.Codable, Swift.Equatable {
+  public let packages: [ProjectDescription.Package]
+  public let productTypes: [Swift.String : ProjectDescription.Product]
+  public let baseSettings: ProjectDescription.Settings
+  public let targetSettings: [Swift.String : ProjectDescription.SettingsDictionary]
+  public let projectOptions: [Swift.String : ProjectDescription.Project.Options]
+  public init(_ packages: [ProjectDescription.Package], productTypes: [Swift.String : ProjectDescription.Product] = [:], baseSettings: ProjectDescription.Settings = .settings(), targetSettings: [Swift.String : ProjectDescription.SettingsDictionary] = [:], projectOptions: [Swift.String : ProjectDescription.Project.Options] = [:])
+  public static func == (a: ProjectDescription.SwiftPackageManagerDependencies, b: ProjectDescription.SwiftPackageManagerDependencies) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.SwiftPackageManagerDependencies : Swift.ExpressibleByArrayLiteral {
+  public init(arrayLiteral elements: ProjectDescription.Package...)
+  public typealias ArrayLiteralElement = ProjectDescription.Package
+}
+public struct DeploymentDevice : Swift.OptionSet, Swift.Codable, Swift.Hashable {
+  public static let iphone: ProjectDescription.DeploymentDevice
+  public static let ipad: ProjectDescription.DeploymentDevice
+  public static let mac: ProjectDescription.DeploymentDevice
+  public let rawValue: Swift.UInt
+  public init(rawValue: Swift.UInt)
+  public typealias ArrayLiteralElement = ProjectDescription.DeploymentDevice
+  public typealias Element = ProjectDescription.DeploymentDevice
+  public typealias RawValue = Swift.UInt
+}
+public enum DeploymentTarget : Swift.Codable, Swift.Hashable {
+  case iOS(targetVersion: Swift.String, devices: ProjectDescription.DeploymentDevice)
+  case macOS(targetVersion: Swift.String)
+  case watchOS(targetVersion: Swift.String)
+  case tvOS(targetVersion: Swift.String)
+  public var targetVersion: Swift.String {
+    get
+  }
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: ProjectDescription.DeploymentTarget, b: ProjectDescription.DeploymentTarget) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public var hashValue: Swift.Int {
+    get
+  }
+  public init(from decoder: Swift.Decoder) throws
+}
+@dynamicMemberLookup public enum Environment {
+  public enum Value : Swift.Equatable {
+    case string(Swift.String)
+    public static func == (a: ProjectDescription.Environment.Value, b: ProjectDescription.Environment.Value) -> Swift.Bool
+  }
+  public static subscript(dynamicMember member: Swift.String) -> ProjectDescription.Environment.Value? {
+    get
+  }
+}
+extension Swift.Optional where Wrapped == ProjectDescription.Environment.Value {
+  public func getString(default defaultString: Swift.String) -> Swift.String
+  public func getBoolean(default defaultBoolean: Swift.Bool) -> Swift.Bool
+}
+public struct ExecutionAction : Swift.Equatable, Swift.Codable {
+  public let title: Swift.String
+  public let scriptText: Swift.String
+  public let target: ProjectDescription.TargetReference?
+  public init(title: Swift.String = "Run Script", scriptText: Swift.String, target: ProjectDescription.TargetReference? = nil)
+  public static func == (a: ProjectDescription.ExecutionAction, b: ProjectDescription.ExecutionAction) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public enum FileCodeGen : Swift.String, Swift.Codable, Swift.Equatable {
+  case `public`
+  case `private`
+  case project
+  case disabled
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum FileElement : Swift.Codable, Swift.Equatable {
+  case glob(pattern: ProjectDescription.Path)
+  case folderReference(path: ProjectDescription.Path)
+  public static func == (a: ProjectDescription.FileElement, b: ProjectDescription.FileElement) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.FileElement : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+extension Swift.Array : Swift.ExpressibleByUnicodeScalarLiteral where Element == ProjectDescription.FileElement {
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+extension Swift.Array : Swift.ExpressibleByExtendedGraphemeClusterLiteral where Element == ProjectDescription.FileElement {
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+}
+extension Swift.Array : Swift.ExpressibleByStringLiteral where Element == ProjectDescription.FileElement {
+  public typealias StringLiteralType = Swift.String
+  public init(stringLiteral value: Swift.String)
+}
+public enum FileHeaderTemplate : Swift.Codable, Swift.Equatable, Swift.ExpressibleByStringInterpolation {
+  case file(ProjectDescription.Path)
+  case string(Swift.String)
+  public init(stringLiteral value: Swift.String)
+  public static func == (a: ProjectDescription.FileHeaderTemplate, b: ProjectDescription.FileHeaderTemplate) -> Swift.Bool
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct FileList : Swift.Codable, Swift.Equatable {
+  public let globs: [ProjectDescription.FileListGlob]
+  public static func list(_ globs: [ProjectDescription.FileListGlob]) -> ProjectDescription.FileList
+  public static func == (a: ProjectDescription.FileList, b: ProjectDescription.FileList) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.FileList : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+extension ProjectDescription.FileList : Swift.ExpressibleByArrayLiteral {
+  public init(arrayLiteral elements: Swift.String...)
+  public typealias ArrayLiteralElement = Swift.String
+}
+public struct FileListGlob : Swift.Codable, Swift.Equatable {
+  public var glob: ProjectDescription.Path
+  public var excluding: [ProjectDescription.Path]
+  public static func glob(_ glob: ProjectDescription.Path, excluding: [ProjectDescription.Path] = []) -> ProjectDescription.FileListGlob
+  public static func glob(_ glob: ProjectDescription.Path, excluding: ProjectDescription.Path?) -> ProjectDescription.FileListGlob
+  public static func == (a: ProjectDescription.FileListGlob, b: ProjectDescription.FileListGlob) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.FileListGlob : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+public struct Headers : Swift.Codable, Swift.Equatable {
+  public enum AutomaticExclusionRule : Swift.Int, Swift.Codable {
+    case projectExcludesPrivateAndPublic
+    case publicExcludesPrivateAndProject
+    public init?(rawValue: Swift.Int)
+    public typealias RawValue = Swift.Int
+    public var rawValue: Swift.Int {
+      get
+    }
+  }
+  public let umbrellaHeader: ProjectDescription.Path?
+  public let `public`: ProjectDescription.FileList?
+  public let `private`: ProjectDescription.FileList?
+  public let project: ProjectDescription.FileList?
+  public let exclusionRule: ProjectDescription.Headers.AutomaticExclusionRule
+  public static func headers(public: ProjectDescription.FileList? = nil, private: ProjectDescription.FileList? = nil, project: ProjectDescription.FileList? = nil, exclusionRule: ProjectDescription.Headers.AutomaticExclusionRule = .projectExcludesPrivateAndPublic) -> ProjectDescription.Headers
+  public static func allHeaders(from list: ProjectDescription.FileList, umbrella: ProjectDescription.Path, private privateHeaders: ProjectDescription.FileList? = nil) -> ProjectDescription.Headers
+  public static func onlyHeaders(from list: ProjectDescription.FileList, umbrella: ProjectDescription.Path, private privateHeaders: ProjectDescription.FileList? = nil) -> ProjectDescription.Headers
+  public static func == (a: ProjectDescription.Headers, b: ProjectDescription.Headers) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public enum InfoPlist : Swift.Codable, Swift.Equatable {
+  indirect public enum Value : Swift.Codable, Swift.Equatable {
+    case string(Swift.String)
+    case integer(Swift.Int)
+    case real(Swift.Double)
+    case boolean(Swift.Bool)
+    case dictionary([Swift.String : ProjectDescription.InfoPlist.Value])
+    case array([ProjectDescription.InfoPlist.Value])
+    public static func == (a: ProjectDescription.InfoPlist.Value, b: ProjectDescription.InfoPlist.Value) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+  case file(path: ProjectDescription.Path)
+  case dictionary([Swift.String : ProjectDescription.InfoPlist.Value])
+  case extendingDefault(with: [Swift.String : ProjectDescription.InfoPlist.Value])
+  public static var `default`: ProjectDescription.InfoPlist {
+    get
+  }
+  public enum CodingError : Swift.Error {
+    case invalidType(Swift.String)
+  }
+  public var path: ProjectDescription.Path? {
+    get
+  }
+  public static func == (a: ProjectDescription.InfoPlist, b: ProjectDescription.InfoPlist) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.InfoPlist : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+extension ProjectDescription.InfoPlist.Value : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+extension ProjectDescription.InfoPlist.Value : Swift.ExpressibleByIntegerLiteral {
+  public init(integerLiteral value: Swift.Int)
+  public typealias IntegerLiteralType = Swift.Int
+}
+extension ProjectDescription.InfoPlist.Value : Swift.ExpressibleByFloatLiteral {
+  public init(floatLiteral value: Swift.Double)
+  public typealias FloatLiteralType = Swift.Double
+}
+extension ProjectDescription.InfoPlist.Value : Swift.ExpressibleByBooleanLiteral {
+  public init(booleanLiteral value: Swift.Bool)
+  public typealias BooleanLiteralType = Swift.Bool
+}
+extension ProjectDescription.InfoPlist.Value : Swift.ExpressibleByDictionaryLiteral {
+  public init(dictionaryLiteral elements: (Swift.String, ProjectDescription.InfoPlist.Value)...)
+  public typealias Key = Swift.String
+  public typealias Value = ProjectDescription.InfoPlist.Value
+}
+extension ProjectDescription.InfoPlist.Value : Swift.ExpressibleByArrayLiteral {
+  public init(arrayLiteral elements: ProjectDescription.InfoPlist.Value...)
+  public typealias ArrayLiteralElement = ProjectDescription.InfoPlist.Value
+}
+public struct LaunchArgument : Swift.Equatable, Swift.Codable {
+  public let name: Swift.String
+  public let isEnabled: Swift.Bool
+  public init(name: Swift.String, isEnabled: Swift.Bool)
+  public static func == (a: ProjectDescription.LaunchArgument, b: ProjectDescription.LaunchArgument) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public enum Package : Swift.Equatable, Swift.Codable {
+  case remote(url: Swift.String, requirement: ProjectDescription.Package.Requirement)
+  case local(path: ProjectDescription.Path)
+  public static func == (a: ProjectDescription.Package, b: ProjectDescription.Package) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.Package {
+  public enum Requirement : Swift.Codable, Swift.Equatable {
+    case upToNextMajor(from: ProjectDescription.Version)
+    case upToNextMinor(from: ProjectDescription.Version)
+    case range(from: ProjectDescription.Version, to: ProjectDescription.Version)
+    case exact(ProjectDescription.Version)
+    case branch(Swift.String)
+    case revision(Swift.String)
+    public static func == (a: ProjectDescription.Package.Requirement, b: ProjectDescription.Package.Requirement) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+}
+extension ProjectDescription.Package {
+  public static func package(url: Swift.String, from version: ProjectDescription.Version) -> ProjectDescription.Package
+  public static func package(url: Swift.String, _ requirement: ProjectDescription.Package.Requirement) -> ProjectDescription.Package
+  public static func package(url: Swift.String, _ range: Swift.Range<ProjectDescription.Version>) -> ProjectDescription.Package
+  public static func package(url: Swift.String, _ range: Swift.ClosedRange<ProjectDescription.Version>) -> ProjectDescription.Package
+  public static func package(path: ProjectDescription.Path) -> ProjectDescription.Package
+}
+extension ProjectDescription.Package {
+  @available(*, unavailable, message: "use package(url:_:) with the .exact(Version) initializer instead")
+  public static func package(url _: Swift.String, version _: ProjectDescription.Version) -> ProjectDescription.Package
+  @available(*, unavailable, message: "use package(url:_:) with the .branch(String) initializer instead")
+  public static func package(url _: Swift.String, branch _: Swift.String) -> ProjectDescription.Package
+  @available(*, unavailable, message: "use package(url:_:) with the .revision(String) initializer instead")
+  public static func package(url _: Swift.String, revision _: Swift.String) -> ProjectDescription.Package
+  @available(*, unavailable, message: "use package(url:_:) without the range label instead")
+  public static func package(url _: Swift.String, range _: Swift.Range<ProjectDescription.Version>) -> ProjectDescription.Package
+}
+public struct Path : Swift.ExpressibleByStringInterpolation, Swift.Codable, Swift.Hashable {
+  public enum PathType : Swift.String, Swift.Codable {
+    case relativeToCurrentFile
+    case relativeToManifest
+    case relativeToRoot
+    public init?(rawValue: Swift.String)
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+  public let type: ProjectDescription.Path.PathType
+  public let pathString: Swift.String
+  public let callerPath: Swift.String?
+  public init(_ path: Swift.String)
+  public static func relativeToCurrentFile(_ pathString: Swift.String, callerPath: Swift.StaticString = #file) -> ProjectDescription.Path
+  public static func relativeToManifest(_ pathString: Swift.String) -> ProjectDescription.Path
+  public static func relativeToRoot(_ pathString: Swift.String) -> ProjectDescription.Path
+  public init(stringLiteral: Swift.String)
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: ProjectDescription.Path, b: ProjectDescription.Path) -> Swift.Bool
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+  public func encode(to encoder: Swift.Encoder) throws
+  public var hashValue: Swift.Int {
+    get
+  }
+  public init(from decoder: Swift.Decoder) throws
+}
+public enum Platform : Swift.String, Swift.Codable, Swift.Equatable, Swift.CaseIterable {
+  case iOS
+  case macOS
+  case watchOS
+  case tvOS
+  public init?(rawValue: Swift.String)
+  public typealias AllCases = [ProjectDescription.Platform]
+  public typealias RawValue = Swift.String
+  public static var allCases: [ProjectDescription.Platform] {
+    get
+  }
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public struct Plugin : Swift.Codable, Swift.Equatable {
+  public let name: Swift.String
+  public init(name: Swift.String)
+  public static func == (a: ProjectDescription.Plugin, b: ProjectDescription.Plugin) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct PluginLocation : Swift.Codable, Swift.Equatable {
+  public let type: ProjectDescription.PluginLocation.LocationType
+  public static func local(path: ProjectDescription.Path) -> ProjectDescription.PluginLocation
+  public static func git(url: Swift.String, tag: Swift.String, directory: Swift.String? = nil) -> ProjectDescription.PluginLocation
+  public static func git(url: Swift.String, sha: Swift.String, directory: Swift.String? = nil) -> ProjectDescription.PluginLocation
+  public static func == (a: ProjectDescription.PluginLocation, b: ProjectDescription.PluginLocation) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.PluginLocation {
+  public enum LocationType : Swift.Codable, Swift.Equatable {
+    case local(path: ProjectDescription.Path)
+    case gitWithTag(url: Swift.String, tag: Swift.String, directory: Swift.String?)
+    case gitWithSha(url: Swift.String, sha: Swift.String, directory: Swift.String?)
+    public static func == (a: ProjectDescription.PluginLocation.LocationType, b: ProjectDescription.PluginLocation.LocationType) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+}
+public enum Product : Swift.String, Swift.Codable, Swift.Equatable {
+  case app
+  case staticLibrary
+  case dynamicLibrary
+  case framework
+  case staticFramework
+  case unitTests
+  case uiTests
+  case bundle
+  case commandLineTool
+  case appClip
+  case appExtension
+  case watch2App
+  case watch2Extension
+  case tvTopShelfExtension
+  case messagesExtension
+  case stickerPackExtension
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public struct ProfileAction : Swift.Equatable, Swift.Codable {
+  public let configuration: ProjectDescription.ConfigurationName
+  public let preActions: [ProjectDescription.ExecutionAction]
+  public let postActions: [ProjectDescription.ExecutionAction]
+  public let executable: ProjectDescription.TargetReference?
+  public let arguments: ProjectDescription.Arguments?
+  public static func profileAction(configuration: ProjectDescription.ConfigurationName = .release, preActions: [ProjectDescription.ExecutionAction] = [], postActions: [ProjectDescription.ExecutionAction] = [], executable: ProjectDescription.TargetReference? = nil, arguments: ProjectDescription.Arguments? = nil) -> ProjectDescription.ProfileAction
+  public static func == (a: ProjectDescription.ProfileAction, b: ProjectDescription.ProfileAction) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct Project : Swift.Codable, Swift.Equatable {
+  public let name: Swift.String
+  public let organizationName: Swift.String?
+  public let options: ProjectDescription.Project.Options
+  public let packages: [ProjectDescription.Package]
+  public let targets: [ProjectDescription.Target]
+  public let schemes: [ProjectDescription.Scheme]
+  public let settings: ProjectDescription.Settings?
+  public let fileHeaderTemplate: ProjectDescription.FileHeaderTemplate?
+  public let additionalFiles: [ProjectDescription.FileElement]
+  public let resourceSynthesizers: [ProjectDescription.ResourceSynthesizer]
+  public init(name: Swift.String, organizationName: Swift.String? = nil, options: ProjectDescription.Project.Options = .options(), packages: [ProjectDescription.Package] = [], settings: ProjectDescription.Settings? = nil, targets: [ProjectDescription.Target] = [], schemes: [ProjectDescription.Scheme] = [], fileHeaderTemplate: ProjectDescription.FileHeaderTemplate? = nil, additionalFiles: [ProjectDescription.FileElement] = [], resourceSynthesizers: [ProjectDescription.ResourceSynthesizer] = .default)
+  public static func == (a: ProjectDescription.Project, b: ProjectDescription.Project) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.Project {
+  public struct Options : Swift.Codable, Swift.Equatable {
+    public let automaticSchemesOptions: ProjectDescription.Project.Options.AutomaticSchemesOptions
+    public let defaultKnownRegions: [Swift.String]?
+    public let developmentRegion: Swift.String?
+    public let disableBundleAccessors: Swift.Bool
+    public let disableShowEnvironmentVarsInScriptPhases: Swift.Bool
+    public let disableSynthesizedResourceAccessors: Swift.Bool
+    public let textSettings: ProjectDescription.Project.Options.TextSettings
+    public let xcodeProjectName: Swift.String?
+    public static func options(automaticSchemesOptions: ProjectDescription.Project.Options.AutomaticSchemesOptions = .enabled(), defaultKnownRegions: [Swift.String]? = nil, developmentRegion: Swift.String? = nil, disableBundleAccessors: Swift.Bool = false, disableShowEnvironmentVarsInScriptPhases: Swift.Bool = false, disableSynthesizedResourceAccessors: Swift.Bool = false, textSettings: ProjectDescription.Project.Options.TextSettings = .textSettings(), xcodeProjectName: Swift.String? = nil) -> ProjectDescription.Project.Options
+    public static func == (a: ProjectDescription.Project.Options, b: ProjectDescription.Project.Options) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+}
+extension ProjectDescription.Project.Options {
+  public enum AutomaticSchemesOptions : Swift.Codable, Swift.Equatable {
+    public enum TargetSchemesGrouping : Swift.Codable, Swift.Equatable {
+      case singleScheme
+      case byNameSuffix(build: Swift.Set<Swift.String>, test: Swift.Set<Swift.String>, run: Swift.Set<Swift.String>)
+      case notGrouped
+      public static func == (a: ProjectDescription.Project.Options.AutomaticSchemesOptions.TargetSchemesGrouping, b: ProjectDescription.Project.Options.AutomaticSchemesOptions.TargetSchemesGrouping) -> Swift.Bool
+      public func encode(to encoder: Swift.Encoder) throws
+      public init(from decoder: Swift.Decoder) throws
+    }
+    case enabled(targetSchemesGrouping: ProjectDescription.Project.Options.AutomaticSchemesOptions.TargetSchemesGrouping = .byNameSuffix(
+                build: ["Implementation", "Interface", "Mocks", "Testing"],
+                test: ["Tests", "IntegrationTests", "UITests", "SnapshotTests"],
+                run: ["App", "Demo"]
+            ), codeCoverageEnabled: Swift.Bool = false, testingOptions: ProjectDescription.TestingOptions = [])
+    case disabled
+    public static func == (a: ProjectDescription.Project.Options.AutomaticSchemesOptions, b: ProjectDescription.Project.Options.AutomaticSchemesOptions) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+  public struct TextSettings : Swift.Codable, Swift.Equatable {
+    public let usesTabs: Swift.Bool?
+    public let indentWidth: Swift.UInt?
+    public let tabWidth: Swift.UInt?
+    public let wrapsLines: Swift.Bool?
+    public static func textSettings(usesTabs: Swift.Bool? = nil, indentWidth: Swift.UInt? = nil, tabWidth: Swift.UInt? = nil, wrapsLines: Swift.Bool? = nil) -> ProjectDescription.Project.Options.TextSettings
+    public static func == (a: ProjectDescription.Project.Options.TextSettings, b: ProjectDescription.Project.Options.TextSettings) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+}
+public enum ResourceFileElement : Swift.Codable, Swift.Equatable {
+  case glob(pattern: ProjectDescription.Path, excluding: [ProjectDescription.Path] = [], tags: [Swift.String] = [])
+  case folderReference(path: ProjectDescription.Path, tags: [Swift.String] = [])
+  public static func == (a: ProjectDescription.ResourceFileElement, b: ProjectDescription.ResourceFileElement) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.ResourceFileElement : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+public struct ResourceFileElements : Swift.Codable, Swift.Equatable {
+  public let resources: [ProjectDescription.ResourceFileElement]
+  public init(resources: [ProjectDescription.ResourceFileElement])
+  public static func == (a: ProjectDescription.ResourceFileElements, b: ProjectDescription.ResourceFileElements) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.ResourceFileElements : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+extension ProjectDescription.ResourceFileElements : Swift.ExpressibleByArrayLiteral {
+  public init(arrayLiteral elements: ProjectDescription.ResourceFileElement...)
+  public typealias ArrayLiteralElement = ProjectDescription.ResourceFileElement
+}
+public struct ResourceSynthesizer : Swift.Codable, Swift.Equatable {
+  public let templateType: ProjectDescription.ResourceSynthesizer.TemplateType
+  public let parser: ProjectDescription.ResourceSynthesizer.Parser
+  public let extensions: Swift.Set<Swift.String>
+  public enum TemplateType : Swift.Codable, Swift.Equatable {
+    case plugin(name: Swift.String, resourceName: Swift.String)
+    case defaultTemplate(resourceName: Swift.String)
+    public static func == (a: ProjectDescription.ResourceSynthesizer.TemplateType, b: ProjectDescription.ResourceSynthesizer.TemplateType) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+  public enum Parser : Swift.String, Swift.Codable {
+    case strings
+    case assets
+    case plists
+    case fonts
+    case coreData
+    case interfaceBuilder
+    case json
+    case yaml
+    case files
+    public init?(rawValue: Swift.String)
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+  public static func strings() -> ProjectDescription.ResourceSynthesizer
+  public static func strings(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
+  public static func assets() -> ProjectDescription.ResourceSynthesizer
+  public static func assets(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
+  public static func fonts() -> ProjectDescription.ResourceSynthesizer
+  public static func fonts(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
+  public static func plists() -> ProjectDescription.ResourceSynthesizer
+  public static func plists(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
+  public static func coreData(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
+  public static func coreData() -> ProjectDescription.ResourceSynthesizer
+  public static func interfaceBuilder(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
+  public static func interfaceBuilder() -> ProjectDescription.ResourceSynthesizer
+  public static func json(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
+  public static func json() -> ProjectDescription.ResourceSynthesizer
+  public static func yaml(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
+  public static func yaml() -> ProjectDescription.ResourceSynthesizer
+  public static func files(plugin: Swift.String, extensions: Swift.Set<Swift.String>) -> ProjectDescription.ResourceSynthesizer
+  public static func files(extensions: Swift.Set<Swift.String>) -> ProjectDescription.ResourceSynthesizer
+  public static func custom(plugin: Swift.String, parser: ProjectDescription.ResourceSynthesizer.Parser, extensions: Swift.Set<Swift.String>, resourceName: Swift.String) -> ProjectDescription.ResourceSynthesizer
+  public static func custom(name: Swift.String, parser: ProjectDescription.ResourceSynthesizer.Parser, extensions: Swift.Set<Swift.String>) -> ProjectDescription.ResourceSynthesizer
+  public static func == (a: ProjectDescription.ResourceSynthesizer, b: ProjectDescription.ResourceSynthesizer) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension Swift.Array where Element == ProjectDescription.ResourceSynthesizer {
+  public static var `default`: Swift.Array<ProjectDescription.ResourceSynthesizer> {
+    get
+  }
+}
+public struct RunAction : Swift.Equatable, Swift.Codable {
+  public let configuration: ProjectDescription.ConfigurationName
+  public let attachDebugger: Swift.Bool
+  public let preActions: [ProjectDescription.ExecutionAction]
+  public let postActions: [ProjectDescription.ExecutionAction]
+  public let executable: ProjectDescription.TargetReference?
+  public let arguments: ProjectDescription.Arguments?
+  public let options: ProjectDescription.RunActionOptions
+  public let diagnosticsOptions: [ProjectDescription.SchemeDiagnosticsOption]
+  public static func runAction(configuration: ProjectDescription.ConfigurationName = .debug, attachDebugger: Swift.Bool = true, preActions: [ProjectDescription.ExecutionAction] = [], postActions: [ProjectDescription.ExecutionAction] = [], executable: ProjectDescription.TargetReference? = nil, arguments: ProjectDescription.Arguments? = nil, options: ProjectDescription.RunActionOptions = .options(), diagnosticsOptions: [ProjectDescription.SchemeDiagnosticsOption] = [.mainThreadChecker]) -> ProjectDescription.RunAction
+  public static func == (a: ProjectDescription.RunAction, b: ProjectDescription.RunAction) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct RunActionOptions : Swift.Equatable, Swift.Codable {
+  public let language: ProjectDescription.SchemeLanguage?
+  public let storeKitConfigurationPath: ProjectDescription.Path?
+  public let simulatedLocation: ProjectDescription.RunActionOptions.SimulatedLocation?
+  public let enableGPUFrameCaptureMode: ProjectDescription.RunActionOptions.GPUFrameCaptureMode
+  public static func options(language: ProjectDescription.SchemeLanguage? = nil, storeKitConfigurationPath: ProjectDescription.Path? = nil, simulatedLocation: ProjectDescription.RunActionOptions.SimulatedLocation? = nil, enableGPUFrameCaptureMode: ProjectDescription.RunActionOptions.GPUFrameCaptureMode = GPUFrameCaptureMode.default) -> ProjectDescription.RunActionOptions
+  public static func == (a: ProjectDescription.RunActionOptions, b: ProjectDescription.RunActionOptions) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.RunActionOptions {
+  public struct SimulatedLocation : Swift.Codable, Swift.Equatable {
+    public let identifier: Swift.String?
+    public let gpxFile: ProjectDescription.Path?
+    public static func custom(gpxFile: ProjectDescription.Path) -> ProjectDescription.RunActionOptions.SimulatedLocation
+    public static var london: ProjectDescription.RunActionOptions.SimulatedLocation {
+      get
+    }
+    public static var johannesburg: ProjectDescription.RunActionOptions.SimulatedLocation {
+      get
+    }
+    public static var moscow: ProjectDescription.RunActionOptions.SimulatedLocation {
+      get
+    }
+    public static var mumbai: ProjectDescription.RunActionOptions.SimulatedLocation {
+      get
+    }
+    public static var tokyo: ProjectDescription.RunActionOptions.SimulatedLocation {
+      get
+    }
+    public static var sydney: ProjectDescription.RunActionOptions.SimulatedLocation {
+      get
+    }
+    public static var hongKong: ProjectDescription.RunActionOptions.SimulatedLocation {
+      get
+    }
+    public static var honolulu: ProjectDescription.RunActionOptions.SimulatedLocation {
+      get
+    }
+    public static var sanFrancisco: ProjectDescription.RunActionOptions.SimulatedLocation {
+      get
+    }
+    public static var mexicoCity: ProjectDescription.RunActionOptions.SimulatedLocation {
+      get
+    }
+    public static var newYork: ProjectDescription.RunActionOptions.SimulatedLocation {
+      get
+    }
+    public static var rioDeJaneiro: ProjectDescription.RunActionOptions.SimulatedLocation {
+      get
+    }
+    public static func == (a: ProjectDescription.RunActionOptions.SimulatedLocation, b: ProjectDescription.RunActionOptions.SimulatedLocation) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+}
+extension ProjectDescription.RunActionOptions {
+  public enum GPUFrameCaptureMode : Swift.String, Swift.Codable, Swift.Equatable {
+    case autoEnabled
+    case metal
+    case openGL
+    case disabled
+    public static var `default`: ProjectDescription.RunActionOptions.GPUFrameCaptureMode {
+      get
+    }
+    public init?(rawValue: Swift.String)
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+}
+public struct Scheme : Swift.Equatable, Swift.Codable {
+  public let name: Swift.String
+  public let shared: Swift.Bool
+  public let hidden: Swift.Bool
+  public let buildAction: ProjectDescription.BuildAction?
+  public let testAction: ProjectDescription.TestAction?
+  public let runAction: ProjectDescription.RunAction?
+  public let archiveAction: ProjectDescription.ArchiveAction?
+  public let profileAction: ProjectDescription.ProfileAction?
+  public let analyzeAction: ProjectDescription.AnalyzeAction?
+  public init(name: Swift.String, shared: Swift.Bool = true, hidden: Swift.Bool = false, buildAction: ProjectDescription.BuildAction? = nil, testAction: ProjectDescription.TestAction? = nil, runAction: ProjectDescription.RunAction? = nil, archiveAction: ProjectDescription.ArchiveAction? = nil, profileAction: ProjectDescription.ProfileAction? = nil, analyzeAction: ProjectDescription.AnalyzeAction? = nil)
+  public static func == (a: ProjectDescription.Scheme, b: ProjectDescription.Scheme) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public enum SchemeDiagnosticsOption : Swift.String, Swift.Equatable, Swift.Codable {
+  case mainThreadChecker
+  case performanceAntipatternChecker
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public struct SchemeLanguage : Swift.Codable, Swift.Equatable, Swift.ExpressibleByStringLiteral {
+  public let identifier: Swift.String
+  public init(identifier: Swift.String)
+  public init(stringLiteral: Swift.String)
+  public static func == (a: ProjectDescription.SchemeLanguage, b: ProjectDescription.SchemeLanguage) -> Swift.Bool
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.SchemeLanguage {
+  public static var doubleLengthPseudoLanguage: ProjectDescription.SchemeLanguage {
+    get
+  }
+  public static var rightToLeftPseudoLanguage: ProjectDescription.SchemeLanguage {
+    get
+  }
+  public static var accentedPseudoLanguage: ProjectDescription.SchemeLanguage {
+    get
+  }
+  public static var boundedStringPseudoLanguage: ProjectDescription.SchemeLanguage {
+    get
+  }
+  public static var rightToLeftWithStringsPseudoLanguage: ProjectDescription.SchemeLanguage {
+    get
+  }
+}
+public typealias SettingsDictionary = [Swift.String : ProjectDescription.SettingValue]
+public enum SettingValue : Swift.ExpressibleByStringInterpolation, Swift.ExpressibleByArrayLiteral, Swift.ExpressibleByBooleanLiteral, Swift.Equatable, Swift.Codable {
+  case string(Swift.String)
+  case array([Swift.String])
+  public init(stringLiteral value: Swift.String)
+  public init(arrayLiteral elements: Swift.String...)
+  public typealias BooleanLiteralType = Swift.Bool
+  public init(booleanLiteral value: Swift.Bool)
+  public init<T>(_ stringRawRepresentable: T) where T : Swift.RawRepresentable, T.RawValue == Swift.String
+  public static func == (a: ProjectDescription.SettingValue, b: ProjectDescription.SettingValue) -> Swift.Bool
+  public typealias ArrayLiteralElement = Swift.String
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct Configuration : Swift.Equatable, Swift.Codable {
+  public enum Variant : Swift.String, Swift.Codable {
+    case debug
+    case release
+    public init?(rawValue: Swift.String)
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+  public let name: ProjectDescription.ConfigurationName
+  public let variant: ProjectDescription.Configuration.Variant
+  public let settings: ProjectDescription.SettingsDictionary
+  public let xcconfig: ProjectDescription.Path?
+  public static func debug(name: ProjectDescription.ConfigurationName, settings: ProjectDescription.SettingsDictionary = [:], xcconfig: ProjectDescription.Path? = nil) -> ProjectDescription.Configuration
+  public static func release(name: ProjectDescription.ConfigurationName, settings: ProjectDescription.SettingsDictionary = [:], xcconfig: ProjectDescription.Path? = nil) -> ProjectDescription.Configuration
+  public static func == (a: ProjectDescription.Configuration, b: ProjectDescription.Configuration) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public enum DefaultSettings : Swift.Codable, Swift.Equatable {
+  case recommended(excluding: Swift.Set<Swift.String> = [])
+  case essential(excluding: Swift.Set<Swift.String> = [])
+  case none
+  public static func == (a: ProjectDescription.DefaultSettings, b: ProjectDescription.DefaultSettings) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.DefaultSettings {
+  public static var recommended: ProjectDescription.DefaultSettings {
+    get
+  }
+  public static var essential: ProjectDescription.DefaultSettings {
+    get
+  }
+}
+public struct Settings : Swift.Equatable, Swift.Codable {
+  public let base: ProjectDescription.SettingsDictionary
+  public let configurations: [ProjectDescription.Configuration]
+  public let defaultSettings: ProjectDescription.DefaultSettings
+  public static func settings(base: ProjectDescription.SettingsDictionary = [:], debug: ProjectDescription.SettingsDictionary = [:], release: ProjectDescription.SettingsDictionary = [:], defaultSettings: ProjectDescription.DefaultSettings = .recommended) -> ProjectDescription.Settings
+  public static func settings(base: ProjectDescription.SettingsDictionary = [:], configurations: [ProjectDescription.Configuration], defaultSettings: ProjectDescription.DefaultSettings = .recommended) -> ProjectDescription.Settings
+  public static func == (a: ProjectDescription.Settings, b: ProjectDescription.Settings) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension Swift.Dictionary where Key == Swift.String, Value == ProjectDescription.SettingValue {
+  public mutating func merge(_ other: ProjectDescription.SettingsDictionary)
+  public func merging(_ other: ProjectDescription.SettingsDictionary) -> ProjectDescription.SettingsDictionary
+}
+public enum SwiftCompilationMode : Swift.String {
+  case singlefile
+  case wholemodule
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum DebugInformationFormat : Swift.String {
+  case dwarf
+  case dwarfWithDsym
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum SwiftOptimizationLevel : Swift.String {
+  case o
+  case oNone
+  case oSize
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+extension Swift.Dictionary where Key == Swift.String, Value == ProjectDescription.SettingValue {
+  public func manualCodeSigning(identity: Swift.String? = nil, provisioningProfileSpecifier: Swift.String? = nil) -> ProjectDescription.SettingsDictionary
+  public func automaticCodeSigning(devTeam: Swift.String) -> ProjectDescription.SettingsDictionary
+  public func codeSignIdentityAppleDevelopment() -> ProjectDescription.SettingsDictionary
+  public func codeSignIdentity(_ identity: Swift.String) -> ProjectDescription.SettingsDictionary
+  public func currentProjectVersion(_ version: Swift.String) -> ProjectDescription.SettingsDictionary
+  public func marketingVersion(_ version: Swift.String) -> ProjectDescription.SettingsDictionary
+  public func appleGenericVersioningSystem() -> ProjectDescription.SettingsDictionary
+  public func versionInfo(_ version: Swift.String, prefix: Swift.String? = nil, suffix: Swift.String? = nil) -> ProjectDescription.SettingsDictionary
+  public func swiftVersion(_ version: Swift.String) -> ProjectDescription.SettingsDictionary
+  public func otherSwiftFlags(_ flags: Swift.String...) -> ProjectDescription.SettingsDictionary
+  public func swiftActiveCompilationConditions(_ conditions: Swift.String...) -> ProjectDescription.SettingsDictionary
+  public func swiftCompilationMode(_ mode: ProjectDescription.SwiftCompilationMode) -> ProjectDescription.SettingsDictionary
+  public func swiftOptimizationLevel(_ level: ProjectDescription.SwiftOptimizationLevel) -> ProjectDescription.SettingsDictionary
+  public func swiftOptimizeObjectLifetimes(_ enabled: Swift.Bool) -> ProjectDescription.SettingsDictionary
+  public func swiftObjcBridingHeaderPath(_ path: Swift.String) -> ProjectDescription.SettingsDictionary
+  public func otherCFlags(_ flags: [Swift.String]) -> ProjectDescription.SettingsDictionary
+  public func otherLinkerFlags(_ flags: [Swift.String]) -> ProjectDescription.SettingsDictionary
+  public func bitcodeEnabled(_ enabled: Swift.Bool) -> ProjectDescription.SettingsDictionary
+  public func debugInformationFormat(_ format: ProjectDescription.DebugInformationFormat) -> ProjectDescription.SettingsDictionary
+}
+public struct SourceFileGlob : Swift.Codable, Swift.Equatable {
+  public let glob: ProjectDescription.Path
+  public let excluding: [ProjectDescription.Path]
+  public let compilerFlags: Swift.String?
+  public let codeGen: ProjectDescription.FileCodeGen?
+  public static func glob(_ glob: ProjectDescription.Path, excluding: [ProjectDescription.Path] = [], compilerFlags: Swift.String? = nil, codeGen: ProjectDescription.FileCodeGen? = nil) -> ProjectDescription.SourceFileGlob
+  public static func glob(_ glob: ProjectDescription.Path, excluding: ProjectDescription.Path?, compilerFlags: Swift.String? = nil, codeGen: ProjectDescription.FileCodeGen? = nil) -> ProjectDescription.SourceFileGlob
+  public static func == (a: ProjectDescription.SourceFileGlob, b: ProjectDescription.SourceFileGlob) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.SourceFileGlob : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+public struct SourceFilesList : Swift.Codable, Swift.Equatable {
+  public let globs: [ProjectDescription.SourceFileGlob]
+  public init(globs: [ProjectDescription.SourceFileGlob])
+  public init(globs: [Swift.String])
+  public static func paths(_ paths: [ProjectDescription.Path]) -> ProjectDescription.SourceFilesList
+  public static func == (a: ProjectDescription.SourceFilesList, b: ProjectDescription.SourceFilesList) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.SourceFilesList : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+extension ProjectDescription.SourceFilesList : Swift.ExpressibleByArrayLiteral {
+  public init(arrayLiteral elements: ProjectDescription.SourceFileGlob...)
+  public typealias ArrayLiteralElement = ProjectDescription.SourceFileGlob
+}
+public struct Target : Swift.Codable, Swift.Equatable {
+  public let name: Swift.String
+  public let platform: ProjectDescription.Platform
+  public let product: ProjectDescription.Product
+  public let productName: Swift.String?
+  public let bundleId: Swift.String
+  public let deploymentTarget: ProjectDescription.DeploymentTarget?
+  public let infoPlist: ProjectDescription.InfoPlist?
+  public let sources: ProjectDescription.SourceFilesList?
+  public let resources: ProjectDescription.ResourceFileElements?
+  public let copyFiles: [ProjectDescription.CopyFilesAction]?
+  public let headers: ProjectDescription.Headers?
+  public let entitlements: ProjectDescription.Path?
+  public let scripts: [ProjectDescription.TargetScript]
+  public let dependencies: [ProjectDescription.TargetDependency]
+  public let settings: ProjectDescription.Settings?
+  public let coreDataModels: [ProjectDescription.CoreDataModel]
+  public let environment: [Swift.String : Swift.String]
+  public let launchArguments: [ProjectDescription.LaunchArgument]
+  public let additionalFiles: [ProjectDescription.FileElement]
+  public init(name: Swift.String, platform: ProjectDescription.Platform, product: ProjectDescription.Product, productName: Swift.String? = nil, bundleId: Swift.String, deploymentTarget: ProjectDescription.DeploymentTarget? = nil, infoPlist: ProjectDescription.InfoPlist? = .default, sources: ProjectDescription.SourceFilesList? = nil, resources: ProjectDescription.ResourceFileElements? = nil, copyFiles: [ProjectDescription.CopyFilesAction]? = nil, headers: ProjectDescription.Headers? = nil, entitlements: ProjectDescription.Path? = nil, scripts: [ProjectDescription.TargetScript] = [], dependencies: [ProjectDescription.TargetDependency] = [], settings: ProjectDescription.Settings? = nil, coreDataModels: [ProjectDescription.CoreDataModel] = [], environment: [Swift.String : Swift.String] = [:], launchArguments: [ProjectDescription.LaunchArgument] = [], additionalFiles: [ProjectDescription.FileElement] = [])
+  public static func == (a: ProjectDescription.Target, b: ProjectDescription.Target) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public enum SDKStatus : Swift.String, Swift.Codable, Swift.Hashable {
+  case required
+  case optional
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum SDKType : Swift.String, Swift.Codable, Swift.Hashable {
+  case library
+  case framework
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum TargetDependency : Swift.Codable, Swift.Hashable {
+  case target(name: Swift.String)
+  case project(target: Swift.String, path: ProjectDescription.Path)
+  case framework(path: ProjectDescription.Path)
+  case library(path: ProjectDescription.Path, publicHeaders: ProjectDescription.Path, swiftModuleMap: ProjectDescription.Path?)
+  case package(product: Swift.String)
+  case sdk(name: Swift.String, type: ProjectDescription.SDKType, status: ProjectDescription.SDKStatus)
+  case xcframework(path: ProjectDescription.Path)
+  case xctest
+  case external(name: Swift.String)
+  public static func sdk(name: Swift.String, type: ProjectDescription.SDKType) -> ProjectDescription.TargetDependency
+  public static func target(_ target: ProjectDescription.Target) -> ProjectDescription.TargetDependency
+  public var typeName: Swift.String {
+    get
+  }
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: ProjectDescription.TargetDependency, b: ProjectDescription.TargetDependency) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public var hashValue: Swift.Int {
+    get
+  }
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct TargetReference : Swift.Hashable, Swift.Codable, Swift.ExpressibleByStringInterpolation {
+  public var projectPath: ProjectDescription.Path?
+  public var targetName: Swift.String
+  public init(projectPath: ProjectDescription.Path?, target: Swift.String)
+  public init(stringLiteral value: Swift.String)
+  public static func project(path: ProjectDescription.Path, target: Swift.String) -> ProjectDescription.TargetReference
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: ProjectDescription.TargetReference, b: ProjectDescription.TargetReference) -> Swift.Bool
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+  public func encode(to encoder: Swift.Encoder) throws
+  public var hashValue: Swift.Int {
+    get
+  }
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct TargetScript : Swift.Codable, Swift.Equatable {
+  public enum Order : Swift.String, Swift.Codable, Swift.Equatable {
+    case pre
+    case post
+    public init?(rawValue: Swift.String)
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+  public enum Script : Swift.Equatable, Swift.Codable {
+    case tool(path: Swift.String, args: [Swift.String])
+    case scriptPath(path: ProjectDescription.Path, args: [Swift.String])
+    case embedded(Swift.String)
+    public static func == (a: ProjectDescription.TargetScript.Script, b: ProjectDescription.TargetScript.Script) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+  public let name: Swift.String
+  public let script: ProjectDescription.TargetScript.Script
+  public let order: ProjectDescription.TargetScript.Order
+  public let inputPaths: [ProjectDescription.Path]
+  public let inputFileListPaths: [ProjectDescription.Path]
+  public let outputPaths: [ProjectDescription.Path]
+  public let outputFileListPaths: [ProjectDescription.Path]
+  public let basedOnDependencyAnalysis: Swift.Bool?
+  public let runForInstallBuildsOnly: Swift.Bool
+  public let shellPath: Swift.String
+  public static func pre(path: ProjectDescription.Path, arguments: Swift.String..., name: Swift.String, inputPaths: [ProjectDescription.Path] = [], inputFileListPaths: [ProjectDescription.Path] = [], outputPaths: [ProjectDescription.Path] = [], outputFileListPaths: [ProjectDescription.Path] = [], basedOnDependencyAnalysis: Swift.Bool? = nil, runForInstallBuildsOnly: Swift.Bool = false, shellPath: Swift.String = "/bin/sh") -> ProjectDescription.TargetScript
+  public static func pre(path: ProjectDescription.Path, arguments: [Swift.String], name: Swift.String, inputPaths: [ProjectDescription.Path] = [], inputFileListPaths: [ProjectDescription.Path] = [], outputPaths: [ProjectDescription.Path] = [], outputFileListPaths: [ProjectDescription.Path] = [], basedOnDependencyAnalysis: Swift.Bool? = nil, runForInstallBuildsOnly: Swift.Bool = false, shellPath: Swift.String = "/bin/sh") -> ProjectDescription.TargetScript
+  public static func post(path: ProjectDescription.Path, arguments: Swift.String..., name: Swift.String, inputPaths: [ProjectDescription.Path] = [], inputFileListPaths: [ProjectDescription.Path] = [], outputPaths: [ProjectDescription.Path] = [], outputFileListPaths: [ProjectDescription.Path] = [], basedOnDependencyAnalysis: Swift.Bool? = nil, runForInstallBuildsOnly: Swift.Bool = false, shellPath: Swift.String = "/bin/sh") -> ProjectDescription.TargetScript
+  public static func post(path: ProjectDescription.Path, arguments: [Swift.String], name: Swift.String, inputPaths: [ProjectDescription.Path] = [], inputFileListPaths: [ProjectDescription.Path] = [], outputPaths: [ProjectDescription.Path] = [], outputFileListPaths: [ProjectDescription.Path] = [], basedOnDependencyAnalysis: Swift.Bool? = nil, runForInstallBuildsOnly: Swift.Bool = false, shellPath: Swift.String = "/bin/sh") -> ProjectDescription.TargetScript
+  public static func pre(tool: Swift.String, arguments: Swift.String..., name: Swift.String, inputPaths: [ProjectDescription.Path] = [], inputFileListPaths: [ProjectDescription.Path] = [], outputPaths: [ProjectDescription.Path] = [], outputFileListPaths: [ProjectDescription.Path] = [], basedOnDependencyAnalysis: Swift.Bool? = nil, runForInstallBuildsOnly: Swift.Bool = false, shellPath: Swift.String = "/bin/sh") -> ProjectDescription.TargetScript
+  public static func pre(tool: Swift.String, arguments: [Swift.String], name: Swift.String, inputPaths: [ProjectDescription.Path] = [], inputFileListPaths: [ProjectDescription.Path] = [], outputPaths: [ProjectDescription.Path] = [], outputFileListPaths: [ProjectDescription.Path] = [], basedOnDependencyAnalysis: Swift.Bool? = nil, runForInstallBuildsOnly: Swift.Bool = false, shellPath: Swift.String = "/bin/sh") -> ProjectDescription.TargetScript
+  public static func post(tool: Swift.String, arguments: Swift.String..., name: Swift.String, inputPaths: [ProjectDescription.Path] = [], inputFileListPaths: [ProjectDescription.Path] = [], outputPaths: [ProjectDescription.Path] = [], outputFileListPaths: [ProjectDescription.Path] = [], basedOnDependencyAnalysis: Swift.Bool? = nil, runForInstallBuildsOnly: Swift.Bool = false, shellPath: Swift.String = "/bin/sh") -> ProjectDescription.TargetScript
+  public static func post(tool: Swift.String, arguments: [Swift.String], name: Swift.String, inputPaths: [ProjectDescription.Path] = [], inputFileListPaths: [ProjectDescription.Path] = [], outputPaths: [ProjectDescription.Path] = [], outputFileListPaths: [ProjectDescription.Path] = [], basedOnDependencyAnalysis: Swift.Bool? = nil, runForInstallBuildsOnly: Swift.Bool = false, shellPath: Swift.String = "/bin/sh") -> ProjectDescription.TargetScript
+  public static func pre(script: Swift.String, name: Swift.String, inputPaths: [ProjectDescription.Path] = [], inputFileListPaths: [ProjectDescription.Path] = [], outputPaths: [ProjectDescription.Path] = [], outputFileListPaths: [ProjectDescription.Path] = [], basedOnDependencyAnalysis: Swift.Bool? = nil, runForInstallBuildsOnly: Swift.Bool = false, shellPath: Swift.String = "/bin/sh") -> ProjectDescription.TargetScript
+  public static func post(script: Swift.String, name: Swift.String, inputPaths: [ProjectDescription.Path] = [], inputFileListPaths: [ProjectDescription.Path] = [], outputPaths: [ProjectDescription.Path] = [], outputFileListPaths: [ProjectDescription.Path] = [], basedOnDependencyAnalysis: Swift.Bool? = nil, runForInstallBuildsOnly: Swift.Bool = false, shellPath: Swift.String = "/bin/sh") -> ProjectDescription.TargetScript
+  public static func == (a: ProjectDescription.TargetScript, b: ProjectDescription.TargetScript) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct Template : Swift.Codable, Swift.Equatable {
+  public let description: Swift.String
+  public let attributes: [ProjectDescription.Template.Attribute]
+  public let items: [ProjectDescription.Template.Item]
+  public init(description: Swift.String, attributes: [ProjectDescription.Template.Attribute] = [], items: [ProjectDescription.Template.Item] = [])
+  public enum Contents : Swift.Codable, Swift.Equatable {
+    case string(Swift.String)
+    case file(ProjectDescription.Path)
+    case directory(ProjectDescription.Path)
+    public static func == (a: ProjectDescription.Template.Contents, b: ProjectDescription.Template.Contents) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+  public struct Item : Swift.Codable, Swift.Equatable {
+    public let path: Swift.String
+    public let contents: ProjectDescription.Template.Contents
+    public init(path: Swift.String, contents: ProjectDescription.Template.Contents)
+    public static func == (a: ProjectDescription.Template.Item, b: ProjectDescription.Template.Item) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+  public enum Attribute : Swift.Codable, Swift.Equatable {
+    case required(Swift.String)
+    case optional(Swift.String, default: Swift.String)
+    public static func == (a: ProjectDescription.Template.Attribute, b: ProjectDescription.Template.Attribute) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+  public static func == (a: ProjectDescription.Template, b: ProjectDescription.Template) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.Template.Item {
+  public static func string(path: Swift.String, contents: Swift.String) -> ProjectDescription.Template.Item
+  public static func file(path: Swift.String, templatePath: ProjectDescription.Path) -> ProjectDescription.Template.Item
+  public static func directory(path: Swift.String, sourcePath: ProjectDescription.Path) -> ProjectDescription.Template.Item
+}
+extension Swift.DefaultStringInterpolation {
+  public mutating func appendInterpolation(_ value: ProjectDescription.Template.Attribute)
+}
+public struct TemplateString : Swift.Encodable, Swift.Decodable, Swift.Equatable {
+  public static func == (a: ProjectDescription.TemplateString, b: ProjectDescription.TemplateString) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.TemplateString : Swift.ExpressibleByStringLiteral {
+  public init(stringLiteral: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+extension ProjectDescription.TemplateString : Swift.CustomStringConvertible {
+  public var description: Swift.String {
+    get
+  }
+}
+extension ProjectDescription.TemplateString : Swift.ExpressibleByStringInterpolation {
+  public init(stringInterpolation: ProjectDescription.TemplateString.StringInterpolation)
+  public struct StringInterpolation : Swift.StringInterpolationProtocol {
+    public init(literalCapacity _: Swift.Int, interpolationCount _: Swift.Int)
+    public mutating func appendLiteral(_ literal: Swift.String)
+    public mutating func appendInterpolation(_ token: ProjectDescription.TemplateString.Token)
+    public typealias StringLiteralType = Swift.String
+  }
+}
+extension ProjectDescription.TemplateString {
+  public enum Token : Swift.String, Swift.Equatable {
+    case projectName
+    public init?(rawValue: Swift.String)
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+}
+public struct TestAction : Swift.Equatable, Swift.Codable {
+  public let testPlans: [ProjectDescription.Path]?
+  public let targets: [ProjectDescription.TestableTarget]
+  public let arguments: ProjectDescription.Arguments?
+  public let configuration: ProjectDescription.ConfigurationName
+  public let attachDebugger: Swift.Bool
+  public let expandVariableFromTarget: ProjectDescription.TargetReference?
+  public let preActions: [ProjectDescription.ExecutionAction]
+  public let postActions: [ProjectDescription.ExecutionAction]
+  public let options: ProjectDescription.TestActionOptions
+  public let diagnosticsOptions: [ProjectDescription.SchemeDiagnosticsOption]
+  public static func targets(_ targets: [ProjectDescription.TestableTarget], arguments: ProjectDescription.Arguments? = nil, configuration: ProjectDescription.ConfigurationName = .debug, attachDebugger: Swift.Bool = true, expandVariableFromTarget: ProjectDescription.TargetReference? = nil, preActions: [ProjectDescription.ExecutionAction] = [], postActions: [ProjectDescription.ExecutionAction] = [], options: ProjectDescription.TestActionOptions = .options(), diagnosticsOptions: [ProjectDescription.SchemeDiagnosticsOption] = [.mainThreadChecker]) -> ProjectDescription.TestAction
+  public static func testPlans(_ testPlans: [ProjectDescription.Path], configuration: ProjectDescription.ConfigurationName = .debug, attachDebugger: Swift.Bool = true, preActions: [ProjectDescription.ExecutionAction] = [], postActions: [ProjectDescription.ExecutionAction] = []) -> ProjectDescription.TestAction
+  public static func == (a: ProjectDescription.TestAction, b: ProjectDescription.TestAction) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct TestActionOptions : Swift.Equatable, Swift.Codable {
+  public let language: ProjectDescription.SchemeLanguage?
+  public let region: Swift.String?
+  public let coverage: Swift.Bool
+  public let codeCoverageTargets: [ProjectDescription.TargetReference]
+  public static func options(language: ProjectDescription.SchemeLanguage? = nil, region: Swift.String? = nil, coverage: Swift.Bool = false, codeCoverageTargets: [ProjectDescription.TargetReference] = []) -> ProjectDescription.TestActionOptions
+  public static func == (a: ProjectDescription.TestActionOptions, b: ProjectDescription.TestActionOptions) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct TestableTarget : Swift.Equatable, Swift.Codable, Swift.ExpressibleByStringInterpolation {
+  public let target: ProjectDescription.TargetReference
+  public let isSkipped: Swift.Bool
+  public let isParallelizable: Swift.Bool
+  public let isRandomExecutionOrdering: Swift.Bool
+  public init(target: ProjectDescription.TargetReference, skipped: Swift.Bool = false, parallelizable: Swift.Bool = false, randomExecutionOrdering: Swift.Bool = false)
+  public init(stringLiteral value: Swift.String)
+  public static func == (a: ProjectDescription.TestableTarget, b: ProjectDescription.TestableTarget) -> Swift.Bool
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+public struct TestingOptions : Swift.OptionSet, Swift.Codable, Swift.Equatable {
+  public let rawValue: Swift.Int
+  public init(rawValue: Swift.Int)
+  public static let parallelizable: ProjectDescription.TestingOptions
+  public static let randomExecutionOrdering: ProjectDescription.TestingOptions
+  public typealias ArrayLiteralElement = ProjectDescription.TestingOptions
+  public typealias Element = ProjectDescription.TestingOptions
+  public typealias RawValue = Swift.Int
+}
+public struct Version : Swift.Hashable, Swift.Codable {
+  public let major: Swift.Int
+  public let minor: Swift.Int
+  public let patch: Swift.Int
+  public let prereleaseIdentifiers: [Swift.String]
+  public let buildMetadataIdentifiers: [Swift.String]
+  public init(_ major: Swift.Int, _ minor: Swift.Int, _ patch: Swift.Int, prereleaseIdentifiers: [Swift.String] = [], buildMetadataIdentifiers: [Swift.String] = [])
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: ProjectDescription.Version, b: ProjectDescription.Version) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public var hashValue: Swift.Int {
+    get
+  }
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.Version : Swift.Comparable {
+  public static func < (lhs: ProjectDescription.Version, rhs: ProjectDescription.Version) -> Swift.Bool
+}
+extension ProjectDescription.Version : Swift.CustomStringConvertible {
+  public var description: Swift.String {
+    get
+  }
+}
+extension ProjectDescription.Version {
+  public init?(string: Swift.String)
+}
+extension ProjectDescription.Version : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+extension Swift.ClosedRange where Bound == ProjectDescription.Version {
+  public func contains(_: ProjectDescription.Version) -> Swift.Bool
+}
+extension Swift.Range where Bound == ProjectDescription.Version {
+  public func contains(_: ProjectDescription.Version) -> Swift.Bool
+}
+extension Swift.Range where Bound == ProjectDescription.Version {
+  public func contains(version: ProjectDescription.Version) -> Swift.Bool
+}
+public struct Workspace : Swift.Codable, Swift.Equatable {
+  public let name: Swift.String
+  public let projects: [ProjectDescription.Path]
+  public let schemes: [ProjectDescription.Scheme]
+  public let fileHeaderTemplate: ProjectDescription.FileHeaderTemplate?
+  public let additionalFiles: [ProjectDescription.FileElement]
+  public let generationOptions: ProjectDescription.Workspace.GenerationOptions
+  public init(name: Swift.String, projects: [ProjectDescription.Path], schemes: [ProjectDescription.Scheme] = [], fileHeaderTemplate: ProjectDescription.FileHeaderTemplate? = nil, additionalFiles: [ProjectDescription.FileElement] = [], generationOptions: ProjectDescription.Workspace.GenerationOptions = .options())
+  public static func == (a: ProjectDescription.Workspace, b: ProjectDescription.Workspace) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.Workspace {
+  public struct GenerationOptions : Swift.Codable, Swift.Equatable {
+    public enum AutogeneratedWorkspaceSchemes : Swift.Codable, Swift.Equatable {
+      public enum CodeCoverageMode : Swift.Codable, Swift.Equatable {
+        case all
+        case relevant
+        case targets([ProjectDescription.TargetReference])
+        case disabled
+        public static func == (a: ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes.CodeCoverageMode, b: ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes.CodeCoverageMode) -> Swift.Bool
+        public func encode(to encoder: Swift.Encoder) throws
+        public init(from decoder: Swift.Decoder) throws
+      }
+      case disabled
+      case enabled(codeCoverageMode: ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes.CodeCoverageMode = .disabled, testingOptions: ProjectDescription.TestingOptions = [])
+      public static func == (a: ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes, b: ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes) -> Swift.Bool
+      public func encode(to encoder: Swift.Encoder) throws
+      public init(from decoder: Swift.Decoder) throws
+    }
+    public let enableAutomaticXcodeSchemes: Swift.Bool?
+    public let autogeneratedWorkspaceSchemes: ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes
+    public let lastXcodeUpgradeCheck: ProjectDescription.Version?
+    public let renderMarkdownReadme: Swift.Bool
+    public static func options(enableAutomaticXcodeSchemes: Swift.Bool? = false, autogeneratedWorkspaceSchemes: ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes = .enabled(), lastXcodeUpgradeCheck: ProjectDescription.Version? = nil, renderMarkdownReadme: Swift.Bool = false) -> ProjectDescription.Workspace.GenerationOptions
+    public static func == (a: ProjectDescription.Workspace.GenerationOptions, b: ProjectDescription.Workspace.GenerationOptions) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+}
+extension ProjectDescription.Cloud.Option : Swift.Hashable {}
+extension ProjectDescription.Cloud.Option : Swift.RawRepresentable {}
+extension ProjectDescription.CopyFilesAction.Destination : Swift.Hashable {}
+extension ProjectDescription.CopyFilesAction.Destination : Swift.RawRepresentable {}
+extension ProjectDescription.FileCodeGen : Swift.Hashable {}
+extension ProjectDescription.FileCodeGen : Swift.RawRepresentable {}
+extension ProjectDescription.Headers.AutomaticExclusionRule : Swift.Equatable {}
+extension ProjectDescription.Headers.AutomaticExclusionRule : Swift.Hashable {}
+extension ProjectDescription.Headers.AutomaticExclusionRule : Swift.RawRepresentable {}
+extension ProjectDescription.Path.PathType : Swift.Equatable {}
+extension ProjectDescription.Path.PathType : Swift.Hashable {}
+extension ProjectDescription.Path.PathType : Swift.RawRepresentable {}
+extension ProjectDescription.Platform : Swift.Hashable {}
+extension ProjectDescription.Platform : Swift.RawRepresentable {}
+extension ProjectDescription.Product : Swift.Hashable {}
+extension ProjectDescription.Product : Swift.RawRepresentable {}
+extension ProjectDescription.ResourceSynthesizer.Parser : Swift.Equatable {}
+extension ProjectDescription.ResourceSynthesizer.Parser : Swift.Hashable {}
+extension ProjectDescription.ResourceSynthesizer.Parser : Swift.RawRepresentable {}
+extension ProjectDescription.RunActionOptions.GPUFrameCaptureMode : Swift.Hashable {}
+extension ProjectDescription.RunActionOptions.GPUFrameCaptureMode : Swift.RawRepresentable {}
+extension ProjectDescription.SchemeDiagnosticsOption : Swift.Hashable {}
+extension ProjectDescription.SchemeDiagnosticsOption : Swift.RawRepresentable {}
+extension ProjectDescription.Configuration.Variant : Swift.Equatable {}
+extension ProjectDescription.Configuration.Variant : Swift.Hashable {}
+extension ProjectDescription.Configuration.Variant : Swift.RawRepresentable {}
+extension ProjectDescription.SwiftCompilationMode : Swift.Equatable {}
+extension ProjectDescription.SwiftCompilationMode : Swift.Hashable {}
+extension ProjectDescription.SwiftCompilationMode : Swift.RawRepresentable {}
+extension ProjectDescription.DebugInformationFormat : Swift.Equatable {}
+extension ProjectDescription.DebugInformationFormat : Swift.Hashable {}
+extension ProjectDescription.DebugInformationFormat : Swift.RawRepresentable {}
+extension ProjectDescription.SwiftOptimizationLevel : Swift.Equatable {}
+extension ProjectDescription.SwiftOptimizationLevel : Swift.Hashable {}
+extension ProjectDescription.SwiftOptimizationLevel : Swift.RawRepresentable {}
+extension ProjectDescription.SDKStatus : Swift.RawRepresentable {}
+extension ProjectDescription.SDKType : Swift.RawRepresentable {}
+extension ProjectDescription.TargetScript.Order : Swift.Hashable {}
+extension ProjectDescription.TargetScript.Order : Swift.RawRepresentable {}
+extension ProjectDescription.TemplateString.Token : Swift.Hashable {}
+extension ProjectDescription.TemplateString.Token : Swift.RawRepresentable {}
