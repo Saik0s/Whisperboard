@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://github.com/Saik0s/Whisperboard">
-    <img src="Whisperboard/Resources/Assets.xcassets/AppIcon.appiconset/ios-marketing.png" width="80">
+    <img src="App/Resources/Assets.xcassets/AppIcon.appiconset/ios-marketing.png" width="80">
   </a>
 
   <h3 align="center">Whisperboard</h3>
