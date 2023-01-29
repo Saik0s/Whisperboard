@@ -37,18 +37,33 @@ struct Root: ReducerProtocol {
     Scope(state: \.recordingListScreen, action: /Action.recordingListScreen) {
       RecordingListScreen()
     }
-    Scope(state: \.recordScreen, action: /Action.recordScreen) {
-      RecordScreen()
+
+    CombineReducers {
+      Scope(state: \.recordScreen, action: /Action.recordScreen) {
+        RecordScreen()
+      }
+      Reduce<State, Action> { state, action in
+        switch action {
+        case let .recordScreen(.newRecordingCreated(recordingInfo)):
+          state.whisperList.whispers.append(.init(recordingInfo: recordingInfo))
+          return .none
+        default:
+          return .none
+        }
+      }
     }
+
     Scope(state: \.settings, action: /Action.settings) {
       Settings()
     }
 
-    Scope(state: \.whisperList, action: /Action.whisperList) { WhisperList() }
+    Scope(state: \.whisperList, action: /Action.whisperList) {
+      WhisperList()
+    }
 
     Reduce { state, action in
       switch action {
-      case .selectTab(let tab):
+      case let .selectTab(tab):
         state.selectedTab = tab
         return .none
       default:
@@ -59,7 +74,6 @@ struct Root: ReducerProtocol {
 }
 
 // MARK: - RootView
-
 
 struct RootView: View {
   let store: StoreOf<Root>
@@ -94,8 +108,9 @@ struct RootView: View {
           }
           .tag(2)
       }
-        .task { viewStore.send(.settings(.modelSelector(.task))) }
+      .task { viewStore.send(.settings(.modelSelector(.task))) }
     }
+    .accentColor(Color.DS.Background.accent)
   }
 }
 

@@ -4,10 +4,10 @@ import SwiftUI
 
 // MARK: - Recording
 
-struct Recording: ReducerProtocol {
+public struct Recording: ReducerProtocol {
   struct CancelID: Hashable {}
 
-  struct State: Equatable {
+  public struct State: Equatable {
     var date: Date
     var duration: TimeInterval = 0
     var mode: Mode = .recording
@@ -19,7 +19,7 @@ struct Recording: ReducerProtocol {
     }
   }
 
-  enum Action: Equatable {
+  public enum Action: Equatable {
     case audioRecorderDidFinish(TaskResult<Bool>)
     case delegate(DelegateAction)
     case finalRecordingTime(TimeInterval)
@@ -28,7 +28,7 @@ struct Recording: ReducerProtocol {
     case stopButtonTapped
   }
 
-  enum DelegateAction: Equatable {
+  public enum DelegateAction: Equatable {
     case didFinish(TaskResult<State>)
   }
 
@@ -37,7 +37,7 @@ struct Recording: ReducerProtocol {
   @Dependency(\.audioRecorder) var audioRecorder
   @Dependency(\.continuousClock) var clock
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+  public func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
     switch action {
     case .audioRecorderDidFinish(.success(true)):
       return .task { [state] in .delegate(.didFinish(.success(state))) }

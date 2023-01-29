@@ -8,19 +8,11 @@ import SwiftUI
 struct WhisperList: ReducerProtocol {
   struct State: Equatable, Then {
     var alert: AlertState<Action>?
-    var audioRecorderPermission = RecorderPermission.undetermined
-    var recording: Recording.State?
     var whispers: IdentifiedArrayOf<Whisper.State> = []
     var isTranscribing = false
     var transcribingIdInProgress: Whisper.State.ID?
     var expandedWhisperId: Whisper.State.ID?
     var settings = Settings.State()
-
-    enum RecorderPermission {
-      case allowed
-      case denied
-      case undetermined
-    }
   }
 
   enum Action: BindableAction, Equatable {
@@ -28,10 +20,6 @@ struct WhisperList: ReducerProtocol {
     case readStoredWhispers
     case setRecordings(TaskResult<IdentifiedArrayOf<RecordingInfo>>)
     case alertDismissed
-    case openSettingsButtonTapped
-    case recordButtonTapped
-    case recordPermissionResponse(Bool)
-    case recording(Recording.Action)
     case whisper(id: Whisper.State.ID, action: Whisper.Action)
     case transcribeWhisper(id: Whisper.State.ID)
     case transcriptionFinished(id: Whisper.State.ID, TaskResult<String>)
@@ -68,67 +56,6 @@ struct WhisperList: ReducerProtocol {
           state.alert = AlertState(title: TextState("Failed to read recordings."), message: TextState(error.localizedDescription))
         }
         return .none
-
-      case .alertDismissed:
-        state.alert = nil
-        return .none
-
-      case .openSettingsButtonTapped:
-        return .fireAndForget {
-          await self.openSettings()
-        }
-
-      case .recordButtonTapped:
-        switch state.audioRecorderPermission {
-        case .undetermined:
-          UIImpactFeedbackGenerator(style: .light).impactOccurred()
-          return .task {
-            await .recordPermissionResponse(self.requestRecordPermission())
-          }
-
-        case .denied:
-          state.alert = AlertState(
-            title: TextState("Permission is required to record voice.")
-          )
-          return .none
-
-        case .allowed:
-          state.recording = newRecording
-          return .none
-        }
-
-      case let .recording(.delegate(.didFinish(.success(recording)))):
-        state.recording = nil
-        let recordingInfo = RecordingInfo(
-          fileName: recording.url.lastPathComponent,
-          date: recording.date,
-          duration: recording.duration
-        )
-        let whisper = Whisper.State(recordingInfo: recordingInfo)
-        state.whispers.insert(whisper, at: 0)
-        let id = recordingInfo.id
-        return .task { .transcribeWhisper(id: id) }
-          .merge(with: .cancel(id: Recording.CancelID()))
-
-      case .recording(.delegate(.didFinish(.failure))):
-        state.alert = AlertState(title: TextState("Voice recording failed."))
-        state.recording = nil
-        return .cancel(id: Recording.CancelID())
-
-      case .recording:
-        return .none
-
-      case let .recordPermissionResponse(permission):
-        state.audioRecorderPermission = permission ? .allowed : .denied
-        if permission {
-          state.recording = newRecording
-          return .none
-        } else {
-          state.alert = AlertState(
-            title: TextState("Permission is required to record voice.")
-          )
-          return .none
-        }
 
       case .whisper(id: _, action: .audioPlayerClient(.failure)):
         state.alert = AlertState(title: TextState("Voice playback failed."))
@@ -197,10 +124,11 @@ struct WhisperList: ReducerProtocol {
           state.alert = AlertState(title: TextState("Error while transcribing voice recording"), message: TextState(error.localizedDescription))
         }
         return .none
+
+      case .alertDismissed:
+        state.alert = nil
+        return .none
       }
-    }
-    .ifLet(\State.recording, action: /Action.recording) {
-      Recording()
     }
     .forEach(\.whispers, action: /Action.whisper(id:action:)) {
       Whisper()
@@ -210,13 +138,6 @@ struct WhisperList: ReducerProtocol {
         try await storage.write(whispers.map(\.recordingInfo).identifiedArray)
       }
     }
-  }
-
-  private var newRecording: Recording.State {
-    Recording.State(
-      date: date.now,
-      url: storage.createNewWhisperURL()
-    )
   }
 }
 
@@ -233,18 +154,12 @@ struct WhisperListView: View {
 
   var body: some View {
     NavigationStack {
-      ZStack {
-        whisperList()
-          .frame(maxHeight: .infinity, alignment: .top)
-
-        recordingControls()
-          .frame(maxHeight: .infinity, alignment: .bottom)
-      }
-      .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
-      .navigationTitle("Recordings")
-      .navigationBarTitleDisplayMode(.inline)
-      .background(LinearGradient.screenBackground)
-      .accentColor(Color.DS.Background.accent)
+      whisperList()
+        .frame(maxHeight: .infinity, alignment: .top)
+        .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+        .navigationTitle("Recordings")
+        .navigationBarTitleDisplayMode(.inline)
+        .background(LinearGradient.screenBackground)
     }
     .task { await viewStore.send(.readStoredWhispers).finish() }
     .accentColor(Color.DS.Background.accent)
@@ -261,23 +176,6 @@ struct WhisperListView: View {
       }
       .padding(.horizontal, .grid(4))
     }
-  }
-
-  func recordingControls() -> some View {
-    IfLetStore(
-      store.scope(state: \.recording, action: { .recording($0) })
-    ) { store in
-      RecordingView(store: store)
-    } else: {
-      RecordButton(permission: viewStore.audioRecorderPermission) {
-        viewStore.send(.recordButtonTapped, animation: .spring())
-      } settingsAction: {
-        viewStore.send(.openSettingsButtonTapped)
-      }
-      .shadow(color: .DS.Shadow.primary, radius: 20)
-    }
-    .padding()
-    .frame(maxWidth: .infinity)
   }
 
   func whisperRowView(_ childStore: StoreOf<Whisper>) -> some View {
