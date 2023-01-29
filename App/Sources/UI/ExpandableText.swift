@@ -1,5 +1,5 @@
-import SwiftUI
 import AppDevUtils
+import SwiftUI
 
 // MARK: - ExpandableText
 

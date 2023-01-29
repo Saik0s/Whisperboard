@@ -8,7 +8,6 @@ let packages: [Package] = [
   .package(url: "https://github.com/dmrschmidt/DSWaveformImage.git", .upToNextMajor(from: "11.0.0")),
 ]
 
-
 let dependencies = Dependencies(
   swiftPackageManager: .init(packages),
   platforms: [.iOS]

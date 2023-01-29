@@ -1,7 +1,7 @@
+import AppDevUtils
 import DSWaveformImage
 import DSWaveformImageViews
 import SwiftUI
-import AppDevUtils
 
 struct WaveformProgressView: View {
   var audioURL: URL
