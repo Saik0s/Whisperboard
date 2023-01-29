@@ -54,7 +54,7 @@ struct WhisperList: ReducerProtocol {
 
     BindingReducer()
 
-    Reduce { state, action in
+    Reduce<State, Action> { state, action in
       switch action {
       case .binding:
         return .none
@@ -159,8 +159,11 @@ struct WhisperList: ReducerProtocol {
         return .none
 
       case let .transcribeWhisper(id):
-        guard !state.isTranscribing,
-              let modelURL = state.settings.modelSelector.selectedModel?.type.localURL else { return .none }
+        guard !state.isTranscribing else { return .none }
+        guard let modelURL = state.settings.modelSelector.selectedModel?.type.localURL else {
+          state.alert = AlertState(title: TextState("Model not selected."), message: TextState("Please select a model in the settings."))
+          return .none
+        }
 
         state.isTranscribing = true
         state.transcribingIdInProgress = id
@@ -245,27 +248,11 @@ struct WhisperListView: View {
   var body: some View {
     NavigationStack {
       ZStack {
-        if viewStore.settings.modelSelector.selectedModel == nil {
-          Text(viewStore.settings.modelSelector.isLoading
-            ? "Loading model..."
-            : "No model selected\nPlease select a model in the settings")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .overlay {
-              ZStack {
-                if viewStore.settings.modelSelector.isLoading {
-                  Color.DS.Shadow.primary.ignoresSafeArea()
-                  ProgressView().offset(y: 30)
-                }
-              }
-            }
-            .font(.DS.titleM)
-        } else {
-          whisperList()
-            .frame(maxHeight: .infinity, alignment: .top)
+        whisperList()
+          .frame(maxHeight: .infinity, alignment: .top)
 
-          recordingControls()
-            .frame(maxHeight: .infinity, alignment: .bottom)
-        }
+        recordingControls()
+          .frame(maxHeight: .infinity, alignment: .bottom)
       }
       .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
       .navigationTitle("Recordings")
