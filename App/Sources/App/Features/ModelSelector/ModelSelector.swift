@@ -33,7 +33,7 @@ struct ModelSelector: ReducerProtocol {
   @Dependency(\.transcriber) var transcriber
 
   var body: some ReducerProtocol<State, Action> {
-    Reduce { state, action in
+    Reduce<State,Action> { state, action in
       switch action {
       case .task:
         return .run { send in
@@ -61,15 +61,12 @@ struct ModelSelector: ReducerProtocol {
         guard model.isDownloaded else {
           return .task { .downloadModel(model) }
         }
+
+        transcriber.unloadModel()
+
         state.isLoading = true
         return .task {
-          do {
-            try await transcriber.loadModel(model.type.localURL)
-            return .setSelectedModel(model)
-          } catch {
-            log(error)
-            return .loadError(error.localizedDescription)
-          }
+          .setSelectedModel(model)
         }
 
       case let .setSelectedModel(model):

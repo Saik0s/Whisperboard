@@ -6,6 +6,7 @@ import Foundation
 
 struct TranscriberClient {
   var loadModel: @Sendable (_ modelUrl: URL) async throws -> Void
+  var unloadModel: () -> Void
   var transcribeAudio: @Sendable (_ audioURL: URL, _ modelUrl: URL) async throws -> String
 }
 
@@ -18,6 +19,9 @@ extension TranscriberClient: DependencyKey {
     return TranscriberClient(
       loadModel: { url in
         try await impl.loadModel(modelUrl: url)
+      },
+      unloadModel: {
+        impl.unloadModel()
       },
       transcribeAudio: { audioURL, modelURL in
         try await impl.transcribeAudio(audioURL, modelURL)
@@ -60,6 +64,11 @@ final class TranscriberImpl {
     }
   }
 
+  func unloadModel() {
+    isModelLoaded = false
+    whisperContext = nil
+  }
+
   func transcribeAudio(_ audioURL: URL, _ modelUrl: URL) async throws -> String {
     if !isModelLoaded || whisperContext == nil {
       try await loadModel(modelUrl: modelUrl)
@@ -82,8 +91,6 @@ final class TranscriberImpl {
   }
 
   private func readAudioSamples(_ url: URL) throws -> [Float] {
-    // stopPlayback()
-    // try startPlayback(url)
     try decodeWaveFile(url)
   }
 }

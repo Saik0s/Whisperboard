@@ -91,7 +91,6 @@ struct Whisper: ReducerProtocol {
       return .none
 
     case .retryTranscription:
-      UINotificationFeedbackGenerator().notificationOccurred(.success)
       return .none
 
     case let .improvedTranscription(text):
@@ -130,7 +129,7 @@ struct WhisperView: View {
 
   var body: some View {
     WithViewStore(store) { viewStore in
-      VStack(spacing: 0) {
+      VStack(spacing: .grid(1)) {
         VStack(spacing: .grid(1)) {
           HStack(spacing: .grid(3)) {
             PlayButton(isPlaying: viewStore.mode.isPlaying) {
@@ -164,8 +163,8 @@ struct WhisperView: View {
         }
 
         VStack(spacing: .grid(1)) {
-          if viewStore.recordingInfo.isTranscribed {
-            HStack {
+          HStack {
+            if viewStore.recordingInfo.isTranscribed {
               CopyButton(text: viewStore.recordingInfo.text)
               ShareButton(text: viewStore.recordingInfo.text)
 
@@ -180,14 +179,14 @@ struct WhisperView: View {
                   viewStore.send(.improvedTranscription($0))
                 }
               }
+            }
 
-              Spacer()
+            Spacer()
 
-              Button { viewStore.send(.delete) } label: {
-                Image(systemName: "trash")
-                  .foregroundColor(Color.DS.Background.accent)
-                  .padding(.grid(1))
-              }
+            Button { viewStore.send(.delete) } label: {
+              Image(systemName: "trash")
+                .foregroundColor(Color.DS.Background.accent)
+                .padding(.grid(1))
             }
           }
 
@@ -201,6 +200,7 @@ struct WhisperView: View {
               .frame(maxWidth: .infinity, alignment: .leading)
           }
         }
+        .frame(minHeight: 50)
         .mask {
           LinearGradient.easedGradient(colors: [
             .black,
@@ -211,8 +211,8 @@ struct WhisperView: View {
         .overlay {
           ActivityIndicator()
             .frame(width: 20, height: 20)
+            .padding(.grid(3))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(.ultraThinMaterial.opacity(0.7))
             .hidden(isTranscribing == false)
         }
       }
