@@ -16,6 +16,7 @@
 		18EA5F03A5AC779110F8EF88 /* ModelDownloadClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0AED253C9EAF60E240D80B /* ModelDownloadClient.swift */; };
 		1FA9797C9CDB2C000D59FA9B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 807A9CD508C856804021BA1A /* Assets.xcassets */; };
 		20F3860019EC7AF819258FF6 /* Clocks.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 833448FBA62203ED59B03B6B /* Clocks.framework */; platformFilter = ios; };
+		21C41F5FCB877A676E0D366D /* RecordScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 765E261F041287CFD7EC1DB7 /* RecordScreenView.swift */; };
 		28760B2FB1C114053F08DD14 /* DownloadState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04DEC07D3141E24F7C38A8EE /* DownloadState.swift */; };
 		32168F1E79569AC71658ABD3 /* CombineSchedulers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A27A3D0408637FC823B00D7D /* CombineSchedulers.framework */; platformFilter = ios; };
 		32EE165BB1DF4765EF3251F0 /* AudioRecorderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933EFBFA0468B43080F7BDF4 /* AudioRecorderClient.swift */; };
@@ -57,6 +58,7 @@
 		CBA94F5679AE23A105E008B5 /* RecordingListScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18E0C7AD53FC234F5F7FE24E /* RecordingListScreenView.swift */; };
 		CDEC29F2734D1674396B6589 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1911F79F313544678655F10 /* KeyboardViewController.swift */; };
 		CE1F28010B7DD6E5861F18AD /* LiveAudioRecorderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C86FF89B48C3F5CD0BE000A4 /* LiveAudioRecorderClient.swift */; };
+		D13E4290B2AB5818803E76A7 /* HotReloading in Frameworks */ = {isa = PBXBuildFile; productRef = 4B3B6511ABEDC9DF0262C03C /* HotReloading */; };
 		D65835CD023FDC314FC92FC2 /* Whisper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 281599C776275B5E35C6D689 /* Whisper.swift */; };
 		DB887DEB3E01F3CF70ED4590 /* XCTestDynamicOverlay.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4171F61348BFD284F7D9936 /* XCTestDynamicOverlay.framework */; platformFilter = ios; };
 		DBCCEF3483403F62C48B75FA /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 463C52BD7AD9B994FA98207E /* RootView.swift */; };
@@ -152,6 +154,7 @@
 		6C2191376586E67FCB977645 /* Recording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recording.swift; sourceTree = "<group>"; };
 		70A642B6F2E676CBFA807660 /* VoiceModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceModel.swift; sourceTree = "<group>"; };
 		7589E67355F1E0D9C221DB99 /* OpenAI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = OpenAI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		765E261F041287CFD7EC1DB7 /* RecordScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordScreenView.swift; sourceTree = "<group>"; };
 		7E0BA78E2FFF8D6402EFD2DE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		804D9F26B442291ECCBA163F /* ComposableArchitecture.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ComposableArchitecture.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		807A9CD508C856804021BA1A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -208,6 +211,7 @@
 				DB887DEB3E01F3CF70ED4590 /* XCTestDynamicOverlay.framework in Frameworks */,
 				72E446E58928FCD819B9D19F /* _SwiftUINavigationState.framework in Frameworks */,
 				E1EE2D4046578BD964E79FF6 /* whisper in Frameworks */,
+				D13E4290B2AB5818803E76A7 /* HotReloading in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -309,6 +313,14 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		3A64410E8EBB937C929D665C /* RecordScreen */ = {
+			isa = PBXGroup;
+			children = (
+				765E261F041287CFD7EC1DB7 /* RecordScreenView.swift */,
+			);
+			path = RecordScreen;
+			sourceTree = "<group>";
+		};
 		436608E939DCB67610D16113 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
@@ -364,6 +376,7 @@
 				BFCB1EEF8075F08B45AB884B /* ModelSelector */,
 				4E76D54700091EF46E39EED1 /* Recording */,
 				DECE7C1FECA7B6C7EE411B93 /* RecordingListScreen */,
+				3A64410E8EBB937C929D665C /* RecordScreen */,
 				1B2AEBC6292C2EADC9F9506F /* Root */,
 				436608E939DCB67610D16113 /* Settings */,
 				B77899C85B5208AC53E8DA70 /* Whisper */,
@@ -552,6 +565,7 @@
 			name = WhisperBoard;
 			packageProductDependencies = (
 				6F5AA53CA1ECD620E0C47E08 /* whisper */,
+				4B3B6511ABEDC9DF0262C03C /* HotReloading */,
 			);
 			productName = WhisperBoard;
 			productReference = 9C46B68DA8DB1C29A7485E62 /* WhisperBoard.app */;
@@ -596,6 +610,7 @@
 			mainGroup = 8B8027E3294057A484F0D0DD;
 			packageReferences = (
 				E81160A1319A87AFF834C562 /* XCRemoteSwiftPackageReference "whisper.spm" */,
+				B31613BD52BE896289E5FC5A /* XCRemoteSwiftPackageReference "HotReloading" */,
 			);
 			productRefGroup = 27D23157A62BBED82629B2C6 /* Products */;
 			projectDirPath = "";
@@ -647,6 +662,7 @@
 				8E71E9788060F78E6BBBBB58 /* RecordingInfo.swift in Sources */,
 				9E341A048D2EB1649E117E7D /* VoiceModel.swift in Sources */,
 				EE742F09F20FE20E496039FB /* ModelSelector.swift in Sources */,
+				21C41F5FCB877A676E0D366D /* RecordScreenView.swift in Sources */,
 				6FB91FEDD596D907D0106B91 /* Recording.swift in Sources */,
 				CBA94F5679AE23A105E008B5 /* RecordingListScreenView.swift in Sources */,
 				DBCCEF3483403F62C48B75FA /* RootView.swift in Sources */,
@@ -938,6 +954,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		B31613BD52BE896289E5FC5A /* XCRemoteSwiftPackageReference "HotReloading" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/johnno1962/HotReloading";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		E81160A1319A87AFF834C562 /* XCRemoteSwiftPackageReference "whisper.spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ggerganov/whisper.spm";
@@ -949,6 +973,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		4B3B6511ABEDC9DF0262C03C /* HotReloading */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HotReloading;
+		};
 		6F5AA53CA1ECD620E0C47E08 /* whisper */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = whisper;
