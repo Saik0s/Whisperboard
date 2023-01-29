@@ -21,6 +21,7 @@ let project = Project(
   ),
   packages: [
     .package(url: "https://github.com/ggerganov/whisper.spm", .branch("master")),
+    .package(url: "https://github.com/johnno1962/HotReloading", .branch("main")),
   ],
   settings: .settings(configurations: [
     .debug(name: "Debug", settings: projectSettings, xcconfig: nil),
@@ -65,6 +66,7 @@ let project = Project(
         .external(name: "DSWaveformImage"),
         .external(name: "DSWaveformImageViews"),
         .package(product: "whisper"),
+        .package(product: "HotReloading"),
       ]
     ),
     Target(

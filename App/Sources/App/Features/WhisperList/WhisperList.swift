@@ -6,7 +6,7 @@ import SwiftUI
 // MARK: - WhisperList
 
 struct WhisperList: ReducerProtocol {
-  struct State: Equatable {
+  struct State: Equatable, Then {
     var alert: AlertState<Action>?
     var audioRecorderPermission = RecorderPermission.undetermined
     var recording: Recording.State?
@@ -15,7 +15,6 @@ struct WhisperList: ReducerProtocol {
     var transcribingIdInProgress: Whisper.State.ID?
     var expandedWhisperId: Whisper.State.ID?
     var settings = Settings.State()
-    @BindableState var isSettingsPresented = false
 
     enum RecorderPermission {
       case allowed
@@ -34,10 +33,8 @@ struct WhisperList: ReducerProtocol {
     case recordPermissionResponse(Bool)
     case recording(Recording.Action)
     case whisper(id: Whisper.State.ID, action: Whisper.Action)
-    case gearButtonTapped
     case transcribeWhisper(id: Whisper.State.ID)
     case transcriptionFinished(id: Whisper.State.ID, TaskResult<String>)
-    case settings(Settings.Action)
   }
 
   @Dependency(\.audioRecorder.requestRecordPermission) var requestRecordPermission
@@ -48,10 +45,6 @@ struct WhisperList: ReducerProtocol {
   @Dependency(\.transcriber) var transcriber
 
   var body: some ReducerProtocol<State, Action> {
-    Scope(state: \.settings, action: /Action.settings) {
-      Settings()
-    }
-
     BindingReducer()
 
     Reduce<State, Action> { state, action in
@@ -154,10 +147,6 @@ struct WhisperList: ReducerProtocol {
         }
         return .none
 
-      case .gearButtonTapped:
-        state.isSettingsPresented = true
-        return .none
-
       case let .transcribeWhisper(id):
         guard !state.isTranscribing else { return .none }
         guard let modelURL = state.settings.modelSelector.selectedModel?.type.localURL else {
@@ -208,9 +197,6 @@ struct WhisperList: ReducerProtocol {
           state.alert = AlertState(title: TextState("Error while transcribing voice recording"), message: TextState(error.localizedDescription))
         }
         return .none
-
-      case .settings:
-        return .none
       }
     }
     .ifLet(\State.recording, action: /Action.recording) {
@@ -257,21 +243,9 @@ struct WhisperListView: View {
       .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
       .navigationTitle("Recordings")
       .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .navigationBarTrailing) {
-          Button { viewStore.send(.gearButtonTapped) } label: {
-            Image(systemName: "gearshape")
-              .font(.headline)
-          }
-        }
-      }
-      .navigationDestination(isPresented: viewStore.binding(\.$isSettingsPresented)) {
-        SettingsView(store: store.scope(state: \.settings, action: WhisperList.Action.settings))
-      }
       .background(LinearGradient.screenBackground)
       .accentColor(Color.DS.Background.accent)
     }
-    .task { viewStore.send(.settings(.modelSelector(.task))) }
     .task { await viewStore.send(.readStoredWhispers).finish() }
     .accentColor(Color.DS.Background.accent)
   }
