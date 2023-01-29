@@ -8,11 +8,17 @@ struct ModelDownloadClient {
 }
 
 extension ModelDownloadClient {
-  static let live = Self(
-    downloadModel: { model in
-      AsyncStream { continuation in
-        Task {
-          do {
+  static let live: Self = {
+    let config: URLSessionConfiguration = .background(withIdentifier: "me.igortarasenko.whisperboard.background")
+    config.isDiscretionary = false
+
+    let delegate = SessionDelegate()
+    let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
+
+    return Self(
+      downloadModel: { model in
+        AsyncStream { continuation in
+          Task {
             let progress = ProgressHandler { total, current in
               continuation.yield(.inProgress(Double(current) / Double(total)))
             }
@@ -20,25 +26,51 @@ extension ModelDownloadClient {
             try FileManager.default.createDirectory(at: VoiceModelType.localFolderURL, withIntermediateDirectories: true)
             let destination = model.type.localURL
 
-            let (url, _) = try await URLSession.shared.download(from: model.type.remoteURL, progress: progress)
-            try? FileManager.default.removeItem(at: destination)
-            try FileManager.default.moveItem(at: url, to: destination)
+            delegate.progress = progress
+            delegate.onComplete = { url in
+              do {
+                try? FileManager.default.removeItem(at: destination)
+                try FileManager.default.moveItem(at: url, to: destination)
+                continuation.yield(.success(fileURL: url))
+              } catch {
+                continuation.yield(.failure(error))
+                log(error)
+              }
+              continuation.finish()
+            }
 
-            continuation.yield(.success(fileURL: destination))
-          } catch {
-            continuation.yield(.failure(error))
-            log(error)
+            let task = session.downloadTask(with: model.type.remoteURL)
+            task.resume()
           }
         }
       }
-    }
-  )
+    )
+  }()
 }
 
-// MARK: - DownloadError
+// MARK: - SessionDelegate
 
-enum DownloadError: Error {
-  case cannotOpenFile
+class SessionDelegate: NSObject, URLSessionDownloadDelegate {
+  var progress: ProgressHandler?
+  var onComplete: ((URL) -> Void)?
+
+  override init() { super.init() }
+
+  func urlSession(_: URLSession, downloadTask _: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+    log(location)
+    onComplete?(location)
+  }
+
+  func urlSession(
+    _: URLSession,
+    downloadTask _: URLSessionDownloadTask,
+    didWriteData _: Int64,
+    totalBytesWritten: Int64,
+    totalBytesExpectedToWrite: Int64
+  ) {
+    progress?.completedUnitCount = totalBytesWritten
+    progress?.totalUnitCount = totalBytesExpectedToWrite
+  }
 }
 
 // MARK: - ProgressHandler
@@ -51,96 +83,5 @@ final class ProgressHandler {
 
   init(closure: @escaping (Int64, Int64) -> Void) {
     self.closure = closure
-  }
-}
-
-extension URLSession {
-  func download(from url: URL, delegate: URLSessionTaskDelegate? = nil, progress: ProgressHandler) async throws -> (URL, URLResponse) {
-    try await download(for: URLRequest(url: url), delegate: delegate, progress: progress)
-  }
-
-  func download(for request: URLRequest, delegate: URLSessionTaskDelegate? = nil, progress: ProgressHandler) async throws -> (URL, URLResponse) {
-    let bufferSize = 65536
-    let estimatedSize: Int64 = 1_000_000
-
-    let (asyncBytes, response) = try await bytes(for: request, delegate: delegate)
-    let expectedLength = response.expectedContentLength // note, if server cannot provide expectedContentLength, this will be -1
-    progress.totalUnitCount = expectedLength > 0 ? expectedLength : estimatedSize
-
-    let fileURL = URL(fileURLWithPath: NSTemporaryDirectory())
-      .appendingPathComponent(UUID().uuidString)
-    guard let output = OutputStream(url: fileURL, append: false) else {
-      throw DownloadError.cannotOpenFile
-    }
-    output.open()
-
-    var buffer = Data()
-    if expectedLength > 0 {
-      buffer.reserveCapacity(min(bufferSize, Int(expectedLength)))
-    } else {
-      buffer.reserveCapacity(bufferSize)
-    }
-
-    var count: Int64 = 0
-    for try await byte in asyncBytes {
-      try Task.checkCancellation()
-
-      count += 1
-      buffer.append(byte)
-
-      if buffer.count >= bufferSize {
-        try output.write(buffer)
-        buffer.removeAll(keepingCapacity: true)
-
-        if expectedLength < 0 || count > expectedLength {
-          progress.totalUnitCount = count + estimatedSize
-        }
-        progress.completedUnitCount = count
-      }
-    }
-
-    if !buffer.isEmpty {
-      try output.write(buffer)
-    }
-
-    output.close()
-
-    progress.totalUnitCount = count
-    progress.completedUnitCount = count
-
-    return (fileURL, response)
-  }
-}
-
-// MARK: - OutputStreamError
-
-enum OutputStreamError: Error {
-  case bufferFailure
-  case writeFailure
-}
-
-extension OutputStream {
-  /// Write `Data` to `OutputStream`
-  ///
-  /// - parameter data:                  The `Data` to write.
-
-  func write(_ data: Data) throws {
-    try data.withUnsafeBytes { (buffer: UnsafeRawBufferPointer) throws in
-      guard var pointer = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
-        throw OutputStreamError.bufferFailure
-      }
-
-      var bytesRemaining = buffer.count
-
-      while bytesRemaining > 0 {
-        let bytesWritten = write(pointer, maxLength: bytesRemaining)
-        if bytesWritten < 0 {
-          throw OutputStreamError.writeFailure
-        }
-
-        bytesRemaining -= bytesWritten
-        pointer += bytesWritten
-      }
-    }
   }
 }

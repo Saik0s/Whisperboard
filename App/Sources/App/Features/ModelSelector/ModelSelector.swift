@@ -17,6 +17,7 @@ struct ModelSelector: ReducerProtocol {
     var models: [VoiceModel] = []
     var selectedModel: VoiceModel?
     var isLoading = true
+    var alert: AlertState<Action>?
   }
 
   enum Action: Equatable {
@@ -26,14 +27,18 @@ struct ModelSelector: ReducerProtocol {
     case setSelectedModel(VoiceModel)
     case downloadModel(VoiceModel)
     case modelUpdated(VoiceModel)
+    case deleteModel(VoiceModel)
     case loadError(String)
+    case alertDismissed
   }
 
   private var modelDownload: ModelDownloadClient { .live }
   @Dependency(\.transcriber) var transcriber
 
+  struct CancelDownloadID: Hashable {}
+
   var body: some ReducerProtocol<State, Action> {
-    Reduce<State,Action> { state, action in
+    Reduce<State, Action> { state, action in
       switch action {
       case .task:
         return .run { send in
@@ -103,6 +108,7 @@ struct ModelSelector: ReducerProtocol {
           }
         }
         .animation()
+        .cancellable(id: CancelDownloadID(), cancelInFlight: true)
 
       case let .modelUpdated(model):
         return .task { [models = state.models] in
@@ -111,9 +117,21 @@ struct ModelSelector: ReducerProtocol {
           })
         }
 
+      case let .deleteModel(model):
+        return .run { send in
+          await send(.modelUpdated(model.with {
+            $0.downloadProgress = 0
+            $0.isDownloading = false
+          }))
+          try? FileManager.default.removeItem(at: model.type.localURL)
+        }
       case let .loadError(error):
         state.isLoading = false
         log(error)
+        return .none
+
+      case .alertDismissed:
+        state.alert = nil
         return .none
       }
     }
@@ -141,32 +159,33 @@ struct ModelSelectorView: View {
       .multilineTextAlignment(.leading)
       .padding(.horizontal, .grid(2))
 
-      ForEach(viewStore.models) { model in
-        HStack {
-          Text(model.name)
-          Text(model.type.sizeLabel)
-            .foregroundColor(Color.DS.Text.subdued)
-          Spacer()
-          if model.isDownloaded {
-            Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
-          } else if model.isDownloading {
-            ProgressView(value: model.downloadProgress)
-          } else {
-            Text("Download")
-              .padding(.grid(2))
-              .background(Color.DS.Background.accent)
-              .cornerRadius(.grid(2))
+        ForEach(viewStore.models) { model in
+          HStack {
+            Text(model.name)
+            Text(model.type.sizeLabel)
+              .foregroundColor(Color.DS.Text.subdued)
+            Spacer()
+            if model.isDownloaded {
+              Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
+            } else if model.isDownloading {
+              ProgressView(value: model.downloadProgress)
+            } else {
+              Text("Download")
+                .padding(.grid(2))
+                .background(Color.DS.Background.accent)
+                .cornerRadius(.grid(2))
+            }
           }
+            .foregroundColor(model == viewStore.selectedModel ? .green : .white)
+            .padding(.horizontal, .grid(2))
+            .frame(height: 50)
+            .background {
+              RoundedRectangle(cornerRadius: .grid(4))
+                .fill(Color.DS.Background.tertiary)
+            }
+            .onTapGesture { viewStore.send(.modelSelected(model)) }
+            .contextMenu(contextMenu(for: model))
         }
-        .foregroundColor(model == viewStore.selectedModel ? .green : .white)
-        .padding(.horizontal, .grid(2))
-        .frame(height: 50)
-        .background {
-          RoundedRectangle(cornerRadius: .grid(4))
-            .fill(Color.DS.Background.tertiary)
-        }
-        .onTapGesture { viewStore.send(.modelSelected(model)) }
-      }
     }
     .padding(.grid(2))
     .background {
@@ -179,6 +198,18 @@ struct ModelSelectorView: View {
           Color.DS.Shadow.primary.ignoresSafeArea()
           ProgressView()
         }
+      }
+    }
+    .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+  }
+
+  func contextMenu(for model: VoiceModel) -> ContextMenu<TupleView<(Button<Text>, Button<Text>)>> {
+    ContextMenu {
+      Button(action: { viewStore.send(.modelSelected(model)) }) {
+        Text("Select")
+      }
+      Button(action: { viewStore.send(.deleteModel(model)) }) {
+        Text("Delete")
       }
     }
   }
