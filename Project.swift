@@ -54,6 +54,7 @@ let project = Project(
         "UILaunchScreen": [
           "UILaunchScreen": [:],
         ],
+        "NSMicrophoneUsageDescription": "WhisperBoard uses the microphone to record voice and later transcribe it.",
       ]),
       sources: .paths([.relativeToManifest("App/Sources/**")]),
       resources: [
