@@ -8,4 +8,7 @@ root_dir=$(pwd)
 
 export PATH=$PATH":$root_dir/.tuist-bin"
 
+defaults write com.apple.dt.Xcode IDEPackageOnlyUseVersionsFromResolvedFile -bool NO
+defaults write com.apple.dt.Xcode IDEDisableAutomaticPackageResolution -bool NO
+
 make
