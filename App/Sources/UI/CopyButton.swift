@@ -1,6 +1,6 @@
+import AppDevUtils
 import SwiftUI
 import UIKit
-import AppDevUtils
 
 struct CopyButton: View {
   var text: String

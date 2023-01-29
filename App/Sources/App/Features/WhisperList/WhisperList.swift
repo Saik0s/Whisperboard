@@ -1,7 +1,7 @@
+import AppDevUtils
 import AVFoundation
 import ComposableArchitecture
 import SwiftUI
-import AppDevUtils
 
 // MARK: - WhisperList
 
@@ -27,7 +27,7 @@ struct WhisperList: ReducerProtocol {
   enum Action: BindableAction, Equatable {
     case binding(BindingAction<State>)
     case readStoredWhispers
-    case setWhispers(TaskResult<IdentifiedArrayOf<Whisper.State>>)
+    case setRecordings(TaskResult<IdentifiedArrayOf<RecordingInfo>>)
     case alertDismissed
     case openSettingsButtonTapped
     case recordButtonTapped
@@ -61,21 +61,18 @@ struct WhisperList: ReducerProtocol {
 
       case .readStoredWhispers:
         return .task {
-          try? await storage.cleanup()
-          return await .setWhispers(TaskResult { try await storage.read() })
+          await .setRecordings(TaskResult { try await storage.read() })
         }
         .animation()
 
-      case let .setWhispers(result):
+      case let .setRecordings(result):
         switch result {
         case let .success(value):
-          state.whispers = value.map { recording in
-            recording.with {
-              $0.mode = .notPlaying
-            }
-          }.identifiedArray
+          state.whispers = value.map(Whisper.State.init(recordingInfo:)).identifiedArray
+
         case let .failure(error):
           log(error)
+          state.alert = AlertState(title: TextState("Failed to read recordings."), message: TextState(error.localizedDescription))
         }
         return .none
 
@@ -109,13 +106,14 @@ struct WhisperList: ReducerProtocol {
 
       case let .recording(.delegate(.didFinish(.success(recording)))):
         state.recording = nil
-        let whisper = Whisper.State(
+        let recordingInfo = RecordingInfo(
+          fileName: recording.url.lastPathComponent,
           date: recording.date,
-          duration: recording.duration,
-          fileName: recording.url.lastPathComponent
+          duration: recording.duration
         )
+        let whisper = Whisper.State(recordingInfo: recordingInfo)
         state.whispers.insert(whisper, at: 0)
-        let id = whisper.id
+        let id = recordingInfo.id
         return .task { .transcribeWhisper(id: id) }
           .merge(with: .cancel(id: Recording.CancelID()))
 
@@ -179,7 +177,7 @@ struct WhisperList: ReducerProtocol {
 
         guard let whisper = state.whispers[id: id] else { return .none }
 
-        if !whisper.isTranscribed {
+        if !whisper.recordingInfo.isTranscribed {
           return .task { .transcribeWhisper(id: id) }
         } else {
           if state.expandedWhisperId == id {
@@ -199,8 +197,8 @@ struct WhisperList: ReducerProtocol {
         state.isTranscribing = false
         switch result {
         case let .success(text):
-          state.whispers[id: id]?.text = text
-          state.whispers[id: id]?.isTranscribed = true
+          state.whispers[id: id]?.recordingInfo.text = text
+          state.whispers[id: id]?.recordingInfo.isTranscribed = true
           state.expandedWhisperId = id
 
         case let .failure(error):
@@ -220,7 +218,7 @@ struct WhisperList: ReducerProtocol {
     }
     .onChange(of: \.whispers) { whispers, _, _ -> EffectTask<Action> in
       .fireAndForget {
-        try await storage.write(whispers)
+        try await storage.write(whispers.map(\.recordingInfo).identifiedArray)
       }
     }
   }

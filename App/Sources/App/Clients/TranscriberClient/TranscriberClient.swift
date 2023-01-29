@@ -1,21 +1,21 @@
+import AppDevUtils
 import Dependencies
 import Foundation
-import AppDevUtils
 
-// MARK: - Transcriber
+// MARK: - TranscriberClient
 
-struct Transcriber {
+struct TranscriberClient {
   var loadModel: @Sendable (_ modelUrl: URL) async throws -> Void
   var transcribeAudio: @Sendable (_ audioURL: URL, _ modelUrl: URL) async throws -> String
 }
 
 // MARK: DependencyKey
 
-extension Transcriber: DependencyKey {
-  static let liveValue: Transcriber = {
+extension TranscriberClient: DependencyKey {
+  static let liveValue: TranscriberClient = {
     let impl = TranscriberImpl()
 
-    return Transcriber(
+    return TranscriberClient(
       loadModel: { url in
         try await impl.loadModel(modelUrl: url)
       },
@@ -89,9 +89,9 @@ final class TranscriberImpl {
 }
 
 extension DependencyValues {
-  var transcriber: Transcriber {
-    get { self[Transcriber.self] }
-    set { self[Transcriber.self] = newValue }
+  var transcriber: TranscriberClient {
+    get { self[TranscriberClient.self] }
+    set { self[TranscriberClient.self] = newValue }
   }
 }
 

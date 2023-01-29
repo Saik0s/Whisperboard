@@ -1,34 +1,23 @@
+import AppDevUtils
 import ComposableArchitecture
 import SwiftUI
-import AppDevUtils
 
 // MARK: - Whisper
 
 struct Whisper: ReducerProtocol {
   struct State: Equatable, Identifiable, Codable, Then {
-    var date: Date
-    var duration: TimeInterval
-    var mode = Mode.notPlaying
-    var title = ""
-    var fileName: String
-    var text: String = ""
-    var isTranscribed = false
-
-    var id: String { fileName }
-
     enum Mode: Equatable, Codable {
       case notPlaying
       case playing(progress: Double)
+    }
 
-      var isPlaying: Bool {
-        if case .playing = self { return true }
-        return false
-      }
+    var recordingInfo: RecordingInfo
+    var mode = Mode.notPlaying
 
-      var progress: Double? {
-        if case let .playing(progress) = self { return progress }
-        return nil
-      }
+    var id: String { recordingInfo.id }
+
+    init(recordingInfo: RecordingInfo) {
+      self.recordingInfo = recordingInfo
     }
   }
 
@@ -64,7 +53,7 @@ struct Whisper: ReducerProtocol {
       case .notPlaying:
         state.mode = .playing(progress: 0)
 
-        return .run { [fileName = state.fileName] send in
+        return .run { [fileName = state.recordingInfo.fileName] send in
           let url = storage.fileURLWithName(fileName)
           async let playAudio: Void = send(
             .audioPlayerClient(TaskResult { try await audioPlayer.play(url) })
@@ -90,12 +79,12 @@ struct Whisper: ReducerProtocol {
       case .notPlaying:
         break
       case .playing:
-        state.mode = .playing(progress: time / state.duration)
+        state.mode = .playing(progress: time / state.recordingInfo.duration)
       }
       return .none
 
     case let .titleTextFieldChanged(text):
-      state.title = text
+      state.recordingInfo.title = text
       return .none
 
     case .bodyTapped:
@@ -107,15 +96,27 @@ struct Whisper: ReducerProtocol {
 
     case let .improvedTranscription(text):
       UINotificationFeedbackGenerator().notificationOccurred(.success)
-      state.text = text
+      state.recordingInfo.text = text
       return .none
     }
   }
 }
 
+extension Whisper.State.Mode {
+  var isPlaying: Bool {
+    if case .playing = self { return true }
+    return false
+  }
+
+  var progress: Double? {
+    if case let .playing(progress) = self { return progress }
+    return nil
+  }
+}
+
 extension ViewStore where ViewState == Whisper.State {
   var currentTime: TimeInterval {
-    state.mode.progress.map { $0 * state.duration } ?? state.duration
+    state.mode.progress.map { $0 * state.recordingInfo.duration } ?? state.recordingInfo.duration
   }
 }
 
@@ -138,10 +139,10 @@ struct WhisperView: View {
 
             VStack(alignment: .leading, spacing: 0) {
               TextField("Untitled",
-                        text: viewStore.binding(get: \.title, send: { .titleTextFieldChanged($0) }))
+                        text: viewStore.binding(get: \.recordingInfo.title, send: { .titleTextFieldChanged($0) }))
                 .font(.DS.bodyM)
                 .foregroundColor(Color.DS.Text.base)
-              Text(viewStore.date.formatted(date: .abbreviated, time: .shortened))
+              Text(viewStore.recordingInfo.date.formatted(date: .abbreviated, time: .shortened))
                 .font(.DS.date)
                 .foregroundColor(Color.DS.Text.subdued)
             }
@@ -156,43 +157,55 @@ struct WhisperView: View {
           }
 
           WaveformProgressView(
-            audioURL: Storage.liveValue.fileURLWithName(viewStore.fileName),
+            audioURL: StorageClient.liveValue.fileURLWithName(viewStore.recordingInfo.fileName),
             progress: viewStore.mode.progress ?? 0,
             isPlaying: viewStore.mode.isPlaying
           )
         }
 
         VStack(spacing: .grid(1)) {
-          HStack {
-            CopyButton(text: viewStore.text)
-            ShareButton(text: viewStore.text)
+          if viewStore.recordingInfo.isTranscribed {
+            HStack {
+              CopyButton(text: viewStore.recordingInfo.text)
+              ShareButton(text: viewStore.recordingInfo.text)
 
-            Button { viewStore.send(.retryTranscription) } label: {
-              Image(systemName: "arrow.clockwise")
-                .foregroundColor(Color.DS.Background.accent)
-                .padding(.grid(1))
-            }
-
-            if viewStore.text.isEmpty == false && UserDefaults.standard.openAIAPIKey?.isEmpty == false {
-              ImproveTranscriptionButton(text: viewStore.text) {
-                viewStore.send(.improvedTranscription($0))
+              Button { viewStore.send(.retryTranscription) } label: {
+                Image(systemName: "arrow.clockwise")
+                  .foregroundColor(Color.DS.Background.accent)
+                  .padding(.grid(1))
               }
-            }
 
-            Spacer()
+              if viewStore.recordingInfo.text.isEmpty == false && UserDefaults.standard.openAIAPIKey?.isEmpty == false {
+                ImproveTranscriptionButton(text: viewStore.recordingInfo.text) {
+                  viewStore.send(.improvedTranscription($0))
+                }
+              }
 
-            Button { viewStore.send(.delete) } label: {
-              Image(systemName: "trash")
-                .foregroundColor(Color.DS.Background.accent)
-                .padding(.grid(1))
+              Spacer()
+
+              Button { viewStore.send(.delete) } label: {
+                Image(systemName: "trash")
+                  .foregroundColor(Color.DS.Background.accent)
+                  .padding(.grid(1))
+              }
             }
           }
 
-          ExpandableText(viewStore.text, lineLimit: 2, font: .DS.bodyM, isExpanded: $isExpanded)
-            .frame(maxWidth: .infinity, alignment: .leading)
+          if viewStore.recordingInfo.isTranscribed == false, isTranscribing == false {
+            Button { viewStore.send(.retryTranscription) } label: {
+              Text("Transcribe")
+            }
+            .buttonStyle(MyButtonStyle())
+          } else {
+            ExpandableText(viewStore.recordingInfo.text, lineLimit: 2, font: .DS.bodyM, isExpanded: $isExpanded)
+              .frame(maxWidth: .infinity, alignment: .leading)
+          }
         }
         .mask {
-          LinearGradient.easedGradient(colors: [.black, isExpanded ? .black : .clear], steps: 2)
+          LinearGradient.easedGradient(colors: [
+            .black,
+            isExpanded || !viewStore.recordingInfo.isTranscribed ? .black : .clear,
+          ], steps: 2)
         }
         .blur(radius: isTranscribing ? 5 : 0)
         .overlay {

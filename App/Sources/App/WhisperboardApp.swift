@@ -1,7 +1,7 @@
-import ComposableArchitecture
-import SwiftUI
 import AppDevUtils
+import ComposableArchitecture
 import DynamicColor
+import SwiftUI
 
 @main
 struct WhisperboardApp: App {

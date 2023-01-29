@@ -1,7 +1,7 @@
+import AppDevUtils
 import ComposableArchitecture
 import Foundation
 import SwiftUI
-import AppDevUtils
 
 extension UserDefaults {
   var selectedModelName: String? {

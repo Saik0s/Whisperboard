@@ -105,7 +105,6 @@ iOSInjectionProject/
 
 .vscode/*
 
-!.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
@@ -122,4 +121,4 @@ Private/
 *.xcodeproj
 .prompt
 Whisperboard/Resources/*.bin
-.vscode/
+App/Sources/App/Clients/Secrets.swift

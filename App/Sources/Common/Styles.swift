@@ -1,16 +1,17 @@
-import SwiftUI
 import AppDevUtils
+import SwiftUI
 
 // MARK: - MyButtonStyle
 
 struct MyButtonStyle: ButtonStyle {
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
-      .padding()
-      .background(Color(UIColor.systemGray3))
-      .foregroundColor(Color(UIColor.label))
+      .font(.DS.bodyM)
+      .padding(.grid(2))
+      .background(Color.DS.Background.accent)
+      .foregroundColor(Color.DS.Text.base)
       .cornerRadius(5)
-      .shadow(color: Color(UIColor.systemGray6), radius: 0.5, x: 0, y: 1)
+      .shadow(color: Color.DS.Shadow.primary, radius: 0.5, x: 0, y: 1)
       .overlay {
         ZStack {
           if configuration.isPressed {
