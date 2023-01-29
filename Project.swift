@@ -8,7 +8,7 @@ let projectSettings: SettingsDictionary = [
   "OTHER_LDFLAGS[config=Debug][sdk=*][arch=*]": "$(inherited) -Xlinker -interposable -all_load",
   "CODE_SIGN_STYLE": "Automatic",
   "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
-  "MARKETING_VERSION": "1.2.0",
+  "MARKETING_VERSION": "1.3.0",
 ]
 
 let project = Project(
