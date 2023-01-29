@@ -42,15 +42,12 @@
 ## Installation
 
 1. Clone this repository
-2. Open the project in Xcode
-
-## Contribution
-
-If you have an idea for a new feature or have found a bug, please open an issue or submit a pull request.
+2. Run `make`
+3. Open the project in Xcode
 
 ## License
 
-This project is licensed under the MIT license.
+This project is licensed under the GPL-3.0 license.
 
 ## Links
 
