@@ -35,6 +35,7 @@ let project = Project(
       bundleId: "me.igortarasenko.Whisperboard",
       deploymentTarget: .iOS(targetVersion: "16.0", devices: .iphone),
       infoPlist: .extendingDefault(with: [
+        "CFBundleShortVersionString": "$(MARKETING_VERSION)",
         "CFBundleURLTypes": [
           [
             "CFBundleTypeRole": "Editor",
@@ -76,6 +77,7 @@ let project = Project(
       bundleId: "me.igortarasenko.Whisperboard.Keyboard",
       infoPlist: .extendingDefault(with: [
         "CFBundleDisplayName": "WhisperBoard Keyboard",
+        "CFBundleShortVersionString": "$(MARKETING_VERSION)",
         "NSExtension": [
           "NSExtensionAttributes": [
             "PrimaryLanguage": "en-US",

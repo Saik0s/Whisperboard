@@ -58,7 +58,6 @@
 		CBA94F5679AE23A105E008B5 /* RecordingListScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18E0C7AD53FC234F5F7FE24E /* RecordingListScreenView.swift */; };
 		CDEC29F2734D1674396B6589 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1911F79F313544678655F10 /* KeyboardViewController.swift */; };
 		CE1F28010B7DD6E5861F18AD /* LiveAudioRecorderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C86FF89B48C3F5CD0BE000A4 /* LiveAudioRecorderClient.swift */; };
-		D13E4290B2AB5818803E76A7 /* HotReloading in Frameworks */ = {isa = PBXBuildFile; productRef = 4B3B6511ABEDC9DF0262C03C /* HotReloading */; };
 		D65835CD023FDC314FC92FC2 /* Whisper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 281599C776275B5E35C6D689 /* Whisper.swift */; };
 		DB887DEB3E01F3CF70ED4590 /* XCTestDynamicOverlay.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4171F61348BFD284F7D9936 /* XCTestDynamicOverlay.framework */; platformFilter = ios; };
 		DBCCEF3483403F62C48B75FA /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 463C52BD7AD9B994FA98207E /* RootView.swift */; };
@@ -211,7 +210,6 @@
 				DB887DEB3E01F3CF70ED4590 /* XCTestDynamicOverlay.framework in Frameworks */,
 				72E446E58928FCD819B9D19F /* _SwiftUINavigationState.framework in Frameworks */,
 				E1EE2D4046578BD964E79FF6 /* whisper in Frameworks */,
-				D13E4290B2AB5818803E76A7 /* HotReloading in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -565,7 +563,6 @@
 			name = WhisperBoard;
 			packageProductDependencies = (
 				6F5AA53CA1ECD620E0C47E08 /* whisper */,
-				4B3B6511ABEDC9DF0262C03C /* HotReloading */,
 			);
 			productName = WhisperBoard;
 			productReference = 9C46B68DA8DB1C29A7485E62 /* WhisperBoard.app */;
@@ -610,7 +607,6 @@
 			mainGroup = 8B8027E3294057A484F0D0DD;
 			packageReferences = (
 				E81160A1319A87AFF834C562 /* XCRemoteSwiftPackageReference "whisper.spm" */,
-				B31613BD52BE896289E5FC5A /* XCRemoteSwiftPackageReference "HotReloading" */,
 			);
 			productRefGroup = 27D23157A62BBED82629B2C6 /* Products */;
 			projectDirPath = "";
@@ -845,7 +841,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.3.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				"OTHER_LDFLAGS[config=Debug][sdk=*][arch=*]" = "$(inherited) -Xlinker -interposable -all_load";
 				"OTHER_SWIFT_FLAGS[config=Debug][sdk=*][arch=*]" = "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -enable-actor-data-race-checks";
@@ -911,7 +907,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.3.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_LDFLAGS[config=Debug][sdk=*][arch=*]" = "$(inherited) -Xlinker -interposable -all_load";
@@ -954,14 +950,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		B31613BD52BE896289E5FC5A /* XCRemoteSwiftPackageReference "HotReloading" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/johnno1962/HotReloading";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
 		E81160A1319A87AFF834C562 /* XCRemoteSwiftPackageReference "whisper.spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ggerganov/whisper.spm";
@@ -973,10 +961,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4B3B6511ABEDC9DF0262C03C /* HotReloading */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = HotReloading;
-		};
 		6F5AA53CA1ECD620E0C47E08 /* whisper */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = whisper;
