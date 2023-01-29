@@ -159,33 +159,33 @@ struct ModelSelectorView: View {
       .multilineTextAlignment(.leading)
       .padding(.horizontal, .grid(2))
 
-        ForEach(viewStore.models) { model in
-          HStack {
-            Text(model.name)
-            Text(model.type.sizeLabel)
-              .foregroundColor(Color.DS.Text.subdued)
-            Spacer()
-            if model.isDownloaded {
-              Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
-            } else if model.isDownloading {
-              ProgressView(value: model.downloadProgress)
-            } else {
-              Text("Download")
-                .padding(.grid(2))
-                .background(Color.DS.Background.accent)
-                .cornerRadius(.grid(2))
-            }
+      ForEach(viewStore.models) { model in
+        HStack {
+          Text(model.name)
+          Text(model.type.sizeLabel)
+            .foregroundColor(Color.DS.Text.subdued)
+          Spacer()
+          if model.isDownloaded {
+            Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
+          } else if model.isDownloading {
+            ProgressView(value: model.downloadProgress)
+          } else {
+            Text("Download")
+              .padding(.grid(2))
+              .background(Color.DS.Background.accent)
+              .cornerRadius(.grid(2))
           }
-            .foregroundColor(model == viewStore.selectedModel ? .green : .white)
-            .padding(.horizontal, .grid(2))
-            .frame(height: 50)
-            .background {
-              RoundedRectangle(cornerRadius: .grid(4))
-                .fill(Color.DS.Background.tertiary)
-            }
-            .onTapGesture { viewStore.send(.modelSelected(model)) }
-            .contextMenu(contextMenu(for: model))
         }
+        .foregroundColor(model == viewStore.selectedModel ? .green : .white)
+        .padding(.horizontal, .grid(2))
+        .frame(height: 50)
+        .background {
+          RoundedRectangle(cornerRadius: .grid(4))
+            .fill(Color.DS.Background.tertiary)
+        }
+        .onTapGesture { viewStore.send(.modelSelected(model)) }
+        .contextMenu(contextMenu(for: model))
+      }
     }
     .padding(.grid(2))
     .background {
