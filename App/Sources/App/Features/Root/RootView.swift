@@ -89,7 +89,7 @@ struct RootView: View {
       TabView(selection: viewStore.binding(get: { $0.selectedTab }, send: Root.Action.selectTab)) {
         WhisperListView(store: store.scope(state: \.whisperList, action: Root.Action.whisperList))
           .tabItem {
-            Image(systemName: "1.circle")
+            Image(systemName: "list.bullet.circle")
             Text("Recordings")
           }
           .tag(0)
