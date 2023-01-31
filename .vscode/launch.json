@@ -1,0 +1,24 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run",
+      "type": "lightcode",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Debug-iphoneos/WhisperBoard.app",
+      "buildCommand": "xcodebuild -configuration Debug -sdk iphoneos -allowProvisioningUpdates",
+      "appBundleId": "me.igortarasenko.Whisperboard"
+    },
+    {
+      "name": "Attach",
+      "type": "lightcode",
+      "request": "attach",
+      "program": "${workspaceFolder}/build/Debug-iphoneos/WhisperBoard.app",
+      "buildCommand": "xcodebuild -configuration Debug -sdk iphoneos -allowProvisioningUpdates",
+      "appBundleId": "me.igortarasenko.Whisperboard"
+    }
+  ]
+}
