@@ -11,6 +11,81 @@ let projectSettings: SettingsDictionary = [
   "MARKETING_VERSION": "1.3.0",
 ]
 
+func appTarget(isHot: Bool = false) -> Target {
+  Target(
+    name: "WhisperBoard" + (isHot ? "Hot" : ""),
+    platform: .iOS,
+    product: .app,
+    bundleId: "me.igortarasenko.Whisperboard" + (isHot ? ".hot" : ""),
+    deploymentTarget: .iOS(targetVersion: "16.0", devices: .iphone),
+    infoPlist: .extendingDefault(with: [
+      "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+      "CFBundleURLTypes": [
+        [
+          "CFBundleTypeRole": "Editor",
+          "CFBundleURLName": .string("WhisperBoard" + (isHot ? "Hot" : "")),
+          "CFBundleURLSchemes": [
+            .string("whisperboard" + (isHot ? "-hot" : "")),
+          ],
+        ],
+      ],
+      "UIApplicationSceneManifest": [
+        "UIApplicationSupportsMultipleScenes": false,
+        "UISceneConfigurations": [
+        ],
+      ],
+      "ITSAppUsesNonExemptEncryption": false,
+      "UILaunchScreen": [
+        "UILaunchScreen": [:],
+      ],
+      "NSMicrophoneUsageDescription": "WhisperBoard uses the microphone to record voice and later transcribe it.",
+    ]),
+    sources: .paths([.relativeToManifest("App/Sources/**")]),
+    resources: [
+      "App/Resources/**",
+    ],
+    dependencies: [
+      .target(name: "WhisperBoardKeyboard" + (isHot ? "Hot" : "")),
+      .external(name: "AppDevUtils"),
+      .external(name: "Inject"),
+      .external(name: "OpenAI"),
+      .external(name: "DSWaveformImage"),
+      .external(name: "DSWaveformImageViews"),
+      .package(product: "whisper"),
+    ] + (isHot ? [.package(product: "HotReloading")] : [])
+  )
+}
+
+func keyboardTarget(isHot: Bool = false) -> Target {
+  Target(
+    name: "WhisperBoardKeyboard" + (isHot ? "Hot" : ""),
+    platform: .iOS,
+    product: .appExtension,
+    bundleId: "me.igortarasenko.Whisperboard\(isHot ? ".hot" : "").Keyboard",
+    infoPlist: .extendingDefault(with: [
+      "CFBundleDisplayName": "WhisperBoard\(isHot ? " Hot" : "") Keyboard",
+      "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+      "NSExtension": [
+        "NSExtensionAttributes": [
+          "PrimaryLanguage": "en-US",
+          "PrefersRightToLeft": false,
+          "IsASCIICapable": false,
+          "RequestsOpenAccess": false,
+        ],
+        "NSExtensionPointIdentifier": "com.apple.keyboard-service",
+        "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).KeyboardViewController",
+      ],
+    ]),
+    sources: .paths([.relativeToManifest("Keyboard/Sources/**")]),
+    resources: [
+      "Keyboard/Resources/**",
+    ],
+    dependencies: [
+      .external(name: "KeyboardKit"),
+    ]
+  )
+}
+
 let project = Project(
   name: "WhisperBoard",
   options: .options(
@@ -21,82 +96,16 @@ let project = Project(
   ),
   packages: [
     .package(url: "https://github.com/ggerganov/whisper.spm", .branch("master")),
-    // .package(url: "https://github.com/johnno1962/HotReloading", .branch("main")),
+    .package(url: "https://github.com/johnno1962/HotReloading", .branch("main")),
   ],
   settings: .settings(configurations: [
     .debug(name: "Debug", settings: projectSettings, xcconfig: nil),
     .release(name: "Release", settings: projectSettings, xcconfig: nil),
   ]),
   targets: [
-    Target(
-      name: "WhisperBoard",
-      platform: .iOS,
-      product: .app,
-      bundleId: "me.igortarasenko.Whisperboard",
-      deploymentTarget: .iOS(targetVersion: "16.0", devices: .iphone),
-      infoPlist: .extendingDefault(with: [
-        "CFBundleShortVersionString": "$(MARKETING_VERSION)",
-        "CFBundleURLTypes": [
-          [
-            "CFBundleTypeRole": "Editor",
-            "CFBundleURLName": "WhisperBoard",
-            "CFBundleURLSchemes": [
-              "whisperboard",
-            ],
-          ],
-        ],
-        "UIApplicationSceneManifest": [
-          "UIApplicationSupportsMultipleScenes": false,
-          "UISceneConfigurations": [
-          ],
-        ],
-        "ITSAppUsesNonExemptEncryption": false,
-        "UILaunchScreen": [
-          "UILaunchScreen": [:],
-        ],
-        "NSMicrophoneUsageDescription": "WhisperBoard uses the microphone to record voice and later transcribe it.",
-      ]),
-      sources: .paths([.relativeToManifest("App/Sources/**")]),
-      resources: [
-        "App/Resources/**",
-      ],
-      dependencies: [
-        .target(name: "WhisperBoardKeyboard"),
-        .external(name: "AppDevUtils"),
-        .external(name: "Inject"),
-        .external(name: "OpenAI"),
-        .external(name: "DSWaveformImage"),
-        .external(name: "DSWaveformImageViews"),
-        .package(product: "whisper"),
-        // .package(product: "HotReloading"),
-      ]
-    ),
-    Target(
-      name: "WhisperBoardKeyboard",
-      platform: .iOS,
-      product: .appExtension,
-      bundleId: "me.igortarasenko.Whisperboard.Keyboard",
-      infoPlist: .extendingDefault(with: [
-        "CFBundleDisplayName": "WhisperBoard Keyboard",
-        "CFBundleShortVersionString": "$(MARKETING_VERSION)",
-        "NSExtension": [
-          "NSExtensionAttributes": [
-            "PrimaryLanguage": "en-US",
-            "PrefersRightToLeft": false,
-            "IsASCIICapable": false,
-            "RequestsOpenAccess": false,
-          ],
-          "NSExtensionPointIdentifier": "com.apple.keyboard-service",
-          "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).KeyboardViewController",
-        ],
-      ]),
-      sources: .paths([.relativeToManifest("Keyboard/Sources/**")]),
-      resources: [
-        "Keyboard/Resources/**",
-      ],
-      dependencies: [
-        .external(name: "KeyboardKit"),
-      ]
-    ),
+    appTarget(),
+    appTarget(isHot: true),
+    keyboardTarget(),
+    keyboardTarget(isHot: true),
   ]
 )
