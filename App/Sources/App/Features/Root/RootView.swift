@@ -10,18 +10,6 @@ struct Root: ReducerProtocol {
     var recordScreen = RecordScreen.State()
     var settings = Settings.State()
     var selectedTab = 0
-
-    var _whisperList = WhisperList.State()
-    var whisperList: WhisperList.State {
-      get {
-        _whisperList.with {
-          $0.settings = settings
-        }
-      }
-      set {
-        _whisperList = newValue
-      }
-    }
   }
 
   enum Action: Equatable {
@@ -29,8 +17,6 @@ struct Root: ReducerProtocol {
     case recordScreen(RecordScreen.Action)
     case settings(Settings.Action)
     case selectTab(Int)
-
-    case whisperList(WhisperList.Action)
   }
 
   var body: some ReducerProtocol<State, Action> {
@@ -45,7 +31,7 @@ struct Root: ReducerProtocol {
       Reduce<State, Action> { state, action in
         switch action {
         case let .recordScreen(.newRecordingCreated(recordingInfo)):
-          state.whisperList.whispers.append(.init(recordingInfo: recordingInfo))
+          state.recordingListScreen.recordings.append(.init(recordingInfo: recordingInfo))
           return .none
         default:
           return .none
@@ -55,10 +41,6 @@ struct Root: ReducerProtocol {
 
     Scope(state: \.settings, action: /Action.settings) {
       Settings()
-    }
-
-    Scope(state: \.whisperList, action: /Action.whisperList) {
-      WhisperList()
     }
 
     Reduce { state, action in
@@ -87,9 +69,9 @@ struct RootView: View {
   var body: some View {
     WithViewStore(store) { viewStore in
       TabView(selection: viewStore.binding(get: { $0.selectedTab }, send: Root.Action.selectTab)) {
-        WhisperListView(store: store.scope(state: \.whisperList, action: Root.Action.whisperList))
+        RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: Root.Action.recordingListScreen))
           .tabItem {
-            Image(systemName: "list.bullet.circle")
+            Image(systemName: "list.bullet")
             Text("Recordings")
           }
           .tag(0)
