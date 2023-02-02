@@ -3,12 +3,35 @@ import DSWaveformImage
 import DSWaveformImageViews
 import SwiftUI
 
-struct WaveformProgressView: View {
-  var audioURL: URL
-  var progress = 0.0
-  var isPlaying = false
+import AppDevUtils
+import Inject
+import SwiftUI
+import ComposableArchitecture
 
-  var configuration = Waveform.Configuration(
+public struct WaveformProgress: ReducerProtocol {
+  public struct State: Equatable {
+    var fileName = ""
+    var progress = 0.0
+    var isPlaying = false
+
+)
+    var notPlayedConfiguration: Waveform.Configuration {
+      configuration
+        .with(style: .striped(.init(color: UIColor(Color.DS.Text.subdued), width: 2, spacing: 4, lineCap: .round)))
+    }
+
+    var fileExists: Bool {
+      FileManager.default.fileExists(atPath: audioURL.path)
+    }
+  }
+
+  public enum Action: Equatable {
+    case task
+  }
+
+  @Dependency(\.storage) var storage: StorageClient
+  let waveImageDrawer = WaveformImageDrawer()
+  let configuration = Waveform.Configuration(
     size: .zero,
     backgroundColor: .clear,
     style: .striped(.init(color: .white, width: 2, spacing: 4, lineCap: .round)),
@@ -18,20 +41,41 @@ struct WaveformProgressView: View {
     verticalScalingFactor: 0.95,
     shouldAntialias: true
   )
-  var notPlayedConfiguration: Waveform.Configuration {
-    configuration
-      .with(style: .striped(.init(color: UIColor(Color.DS.Text.subdued), width: 2, spacing: 4, lineCap: .round)))
+
+  public var body: some ReducerProtocol<State, Action> {
+    Reduce<State, Action> { state, action in
+      switch action {
+      case .task:
+        let waveImageURL = storage.waveFileURLWithName(state.fileName + ".png")
+        let audioURL = storage.audioFileURLWithName(state.fileName)
+        guard FileManager.default.fileExists(atPath: audioURL.path) else {
+          return .none
+        }
+
+        return .none
+
+        // return .task {
+        //   if let image = UIImage(contentsOfFile: )
+        //   let image = await waveImageDrawer.waveformImage(fromAudioAt: audioURL, with: configuration)
+        // }
+      }
+    }
+  }
+}
+
+public struct WaveformProgressView: View {
+  @ObserveInjection var inject
+
+  let store: StoreOf<WaveformProgress>
+
+  public init(store: StoreOf<WaveformProgress>) {
+    self.store = store
   }
 
-  var fileExists: Bool {
-    FileManager.default.fileExists(atPath: audioURL.path)
-  }
-
-  var body: some View {
+  public var body: some View {
     ZStack {
-      if fileExists {
-        WaveformView(audioURL: audioURL, configuration: notPlayedConfiguration)
-        WaveformView(audioURL: audioURL, configuration: configuration)
+      Image("")
+      Image("")
           .mask(alignment: .leading) {
             GeometryReader { geometry in
               if isPlaying {
@@ -41,10 +85,25 @@ struct WaveformProgressView: View {
               }
             }
           }
-      }
     }
-    .frame(height: 50)
-    .frame(maxWidth: .infinity)
-    .animation(.linear(duration: 0.5), value: progress)
+      .frame(height: 50)
+      .frame(maxWidth: .infinity)
+      .animation(.linear(duration: 0.1), value: progress)
+      .enableInjection()
   }
 }
+
+#if DEBUG
+  struct WaveformProgressView_Previews: PreviewProvider {
+    static var previews: some View {
+      NavigationView {
+        WaveformProgressView(
+          store: Store(
+            initialState: WaveformProgress.State(),
+            reducer: WaveformProgress()
+          )
+        )
+      }
+    }
+  }
+#endif

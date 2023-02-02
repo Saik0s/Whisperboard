@@ -23,7 +23,10 @@ extension StorageClient: DependencyKey {
         let url = documentsURL.appending(path: filename)
         return url
       },
-      fileURLWithName: { name in
+      audioFileURLWithName: { name in
+        documentsURL.appending(path: name)
+      },
+      waveFileURLWithName: { name in
         documentsURL.appending(path: name)
       }
     )
