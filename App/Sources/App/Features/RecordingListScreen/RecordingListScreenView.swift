@@ -8,7 +8,6 @@ import SwiftUI
 public struct RecordingListScreen: ReducerProtocol {
   public struct State: Equatable {
     var alert: AlertState<Action>?
-    @BindingState var editMode: EditMode = .inactive
     var recordings: IdentifiedArrayOf<RecordingCard.State> = []
     @BindingState var searchQuery = ""
   }
@@ -20,6 +19,7 @@ public struct RecordingListScreen: ReducerProtocol {
     case setRecordings(TaskResult<IdentifiedArrayOf<RecordingInfo>>)
     case recording(id: RecordingCard.State.ID, action: RecordingCard.Action)
     case delete(IndexSet)
+    case plusButtonTapped
   }
 
   @Dependency(\.storage) var storage
@@ -59,6 +59,9 @@ public struct RecordingListScreen: ReducerProtocol {
         case let .delete(indexSet):
           state.recordings.remove(atOffsets: indexSet)
           return .none
+
+        case .plusButtonTapped:
+          return .none
         }
       }
     }
@@ -66,7 +69,8 @@ public struct RecordingListScreen: ReducerProtocol {
       RecordingCard()
     }
     .onChange(of: \.recordings) { recordings, _, _ -> EffectTask<Action> in
-      .fireAndForget {
+      log.debug("Saving recordings: \(recordings)")
+      return .fireAndForget {
         try await storage.write(recordings.map(\.recordingInfo).identifiedArray)
       }
       .cancellable(id: SavingRecordingsID(), cancelInFlight: true)
@@ -114,18 +118,16 @@ public struct RecordingListScreenView: View {
       .navigationTitle("Recordings")
       .navigationBarItems(
         trailing: HStack(spacing: .grid(4)) {
-          EditButton()
-          Button {} label: {
+          Button { viewStore.send(.plusButtonTapped) } label: {
             Image(systemName: "plus")
           }
         }
       )
-      .environment(
-        \.editMode,
-        viewStore.binding(\.$editMode)
-      )
     }
     .navigationViewStyle(.stack)
+    .task {
+      viewStore.send(.readStoredRecordings)
+    }
     .enableInjection()
   }
 }

@@ -120,3 +120,14 @@ struct ImproveTranscriptionButton: View {
     }
   }
 }
+
+extension StringProtocol {
+  /// Removes the given delimiter string from both the start and the end of this string if and only if it starts with and ends with the delimiter.
+  /// Otherwise returns this string unchanged.
+  func removingSurrounding(_ character: Character) -> SubSequence {
+    guard count > 1, first == character, last == character else {
+      return self[...]
+    }
+    return dropFirst().dropLast()
+  }
+}
