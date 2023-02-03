@@ -5,7 +5,7 @@ import Foundation
 // MARK: - RecordingCard
 
 public struct RecordingCard: ReducerProtocol {
-  public struct State: Equatable, Identifiable, Codable, Then {
+  public struct State: Equatable, Identifiable, Then {
     enum Mode: Equatable, Codable {
       case notPlaying
       case playing(progress: Double)
@@ -16,15 +16,21 @@ public struct RecordingCard: ReducerProtocol {
     var mode = Mode.notPlaying
     var isTranscribing = false
     var isExpanded = false
+
+    var _waveform = WaveformProgress.State()
     var waveform: WaveformProgress.State {
       get {
-        WaveformProgress.State(
-          fileName: recordingInfo.fileName,
-          progress: mode.progress ?? 0,
-          isPlaying: mode.isPlaying
-        )
+        _waveform
+          .with(\.fileName, setTo: recordingInfo.fileName)
+          .with(\.progress, setTo: mode.progress ?? 0)
+          .with(\.isPlaying, setTo: mode.isPlaying)
       }
-      set {}
+      set {
+        _waveform = newValue
+        if mode.isPlaying {
+          mode = .playing(progress: newValue.progress)
+        }
+      }
     }
 
     init(recordingInfo: RecordingInfo) {
@@ -76,13 +82,11 @@ public struct RecordingCard: ReducerProtocol {
     }
   }
 
-  public func reduce(into _: inout State, action _: Action) -> EffectTask<Action> {}
-
   private func play(state: inout State) -> EffectPublisher<Action, Never> {
     state.mode = .playing(progress: 0)
 
     return .run { [fileName = state.recordingInfo.fileName] send in
-      let url = storage.fileURLWithName(fileName)
+      let url = storage.audioFileURLWithName(fileName)
       for await playback in audioPlayer.play(url) {
         switch playback {
         case let .playing(position):

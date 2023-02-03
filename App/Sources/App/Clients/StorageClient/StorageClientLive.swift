@@ -45,7 +45,6 @@ private final class Storage {
   }
 
   func read() async throws -> [RecordingInfo] {
-    log("Reading stored whispers")
     let docURL = try documentsURL()
     let dbURL = try dbURL()
 
