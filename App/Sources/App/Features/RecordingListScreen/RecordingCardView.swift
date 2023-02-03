@@ -1,6 +1,9 @@
 import AppDevUtils
 import ComposableArchitecture
+import Inject
 import SwiftUI
+
+// MARK: - RecordingCardView
 
 struct RecordingCardView: View {
   struct ViewState: Equatable {
@@ -10,6 +13,8 @@ struct RecordingCardView: View {
     var mode: RecordingCard.State.Mode
     var fileName: String
   }
+
+  @ObserveInjection var inject
 
   let store: StoreOf<RecordingCard>
   @ObservedObject var viewStore: ViewStore<ViewState, RecordingCard.Action>
@@ -30,61 +35,55 @@ struct RecordingCardView: View {
   }
 
   var body: some View {
-    VStack(spacing: .grid(1)) {
-      VStack(spacing: .grid(1)) {
-        HStack(spacing: .grid(3)) {
-          PlayButton(isPlaying: viewStore.mode.isPlaying) {
-            viewStore.send(.playButtonTapped)
-          }
-
-          VStack(alignment: .leading, spacing: 0) {
-            Text(viewStore.title)
-              .font(.DS.bodyM)
-              .foregroundColor(Color.DS.Text.base)
-            Text(viewStore.dateString)
-              .font(.DS.date)
-              .foregroundColor(Color.DS.Text.subdued)
-          }
-
-          Text(viewStore.currentTimeString)
-            .font(.DS.date)
-            .foregroundColor(
-              viewStore.mode.isPlaying
-                ? Color.DS.Text.base
-                : Color.DS.Text.subdued
-            )
+    VStack(spacing: .grid(4)) {
+      HStack(spacing: .grid(4)) {
+        PlayButton(isPlaying: viewStore.mode.isPlaying) {
+          viewStore.send(.playButtonTapped, animation: .easeIn(duration: 0.3))
         }
 
+        VStack(alignment: .leading, spacing: .grid(1)) {
+          if viewStore.title.isEmpty {
+            Text("Untitled")
+              .font(.DS.headlineS)
+              .foregroundColor(.DS.Text.subdued)
+              .opacity(0.5)
+          } else {
+            Text(viewStore.title)
+              .font(.DS.headlineS)
+              .foregroundColor(.DS.Text.base)
+          }
+
+          Text(viewStore.dateString)
+            .font(.DS.date)
+            .foregroundColor(.DS.Text.subdued)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+        Text(viewStore.currentTimeString)
+          .font(.DS.date)
+          .foregroundColor(
+            viewStore.mode.isPlaying
+              ? Color.DS.Text.base
+              : Color.DS.Text.subdued
+          )
+      }
+
+      if viewStore.mode.isPlaying {
         WaveformProgressView(
-          audioURL: viewStore.fileName,
-          progress: viewStore.mode.progress ?? 0,
-          isPlaying: viewStore.mode.isPlaying
+          store: store.scope(
+            state: { $0.waveform },
+            action: { .waveform($0) }
+          )
         )
       }
     }
-      .padding(.grid(4))
-      .cardStyle(isPrimary: viewStore.mode.isPlaying)
-      .animation(.easeIn(duration: 0.3), value: viewStore.mode.isPlaying)
-  }
-}
-
-// MARK: - PlayButton
-
-struct PlayButton: View {
-  var isPlaying: Bool
-  var action: () -> Void
-
-  var body: some View {
-    Button {
-      action()
-    } label: {
-      Image(systemName: isPlaying ? "pause.circle" : "play.circle")
-        .resizable()
-        .aspectRatio(1, contentMode: .fit)
-        .foregroundColor(.white)
-        .animation(.easeInOut(duration: 0.15), value: isPlaying)
-    }
-      .aspectRatio(1, contentMode: .fit)
-      .frame(width: 35, height: 35)
+    .padding(.grid(4))
+    .background(Color.DS.Background.secondary)
+    .cornerRadius(.grid(4))
+    .shadow(color: .black.opacity(0.5),
+            radius: viewStore.mode.isPlaying ? 12 : 0,
+            y: viewStore.mode.isPlaying ? 8 : 0)
+    .animation(.easeIn(duration: 0.3), value: viewStore.mode.isPlaying)
+    .enableInjection()
   }
 }

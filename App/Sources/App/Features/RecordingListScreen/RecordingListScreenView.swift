@@ -69,8 +69,7 @@ public struct RecordingListScreen: ReducerProtocol {
       RecordingCard()
     }
     .onChange(of: \.recordings) { recordings, _, _ -> EffectTask<Action> in
-      log.debug("Saving recordings: \(recordings)")
-      return .fireAndForget {
+      .fireAndForget {
         try await storage.write(recordings.map(\.recordingInfo).identifiedArray)
       }
       .cancellable(id: SavingRecordingsID(), cancelInFlight: true)
@@ -94,27 +93,31 @@ public struct RecordingListScreenView: View {
   public var body: some View {
     NavigationView {
       VStack(alignment: .leading) {
-        HStack {
-          Image(systemName: "magnifyingglass")
-          TextField(
-            "Search for recording",
-            text: viewStore.binding(\.$searchQuery)
-          )
-          .textFieldStyle(.roundedBorder)
-          .autocapitalization(.none)
-          .disableAutocorrection(true)
-        }
-        .padding(.horizontal, 16)
+        // HStack {
+        //   Image(systemName: "magnifyingglass")
+        //   TextField(
+        //     "Search for recording",
+        //     text: viewStore.binding(\.$searchQuery)
+        //   )
+        //   .textFieldStyle(.roundedBorder)
+        //   .autocapitalization(.none)
+        //   .disableAutocorrection(true)
+        // }
+        // .padding(.horizontal, 16)
 
-        List {
-          ForEachStore(
-            store.scope(state: \.recordings, action: RecordingListScreen.Action.recording(id:action:))
-          ) {
-            RecordingCardView(store: $0)
+        ScrollView {
+          VStack(spacing: .grid(4)) {
+            ForEachStore(
+              store.scope(state: \.recordings, action: RecordingListScreen.Action.recording(id:action:))
+            ) {
+              RecordingCardView(store: $0)
+            }
+              .onDelete { viewStore.send(.delete($0)) }
           }
-          .onDelete { viewStore.send(.delete($0)) }
+            .padding(.grid(4))
         }
       }
+        .screenRadialBackground()
       .navigationTitle("Recordings")
       .navigationBarItems(
         trailing: HStack(spacing: .grid(4)) {
