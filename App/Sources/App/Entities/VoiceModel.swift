@@ -29,6 +29,21 @@ enum VoiceModelType: String, CaseIterable {
 
   var name: String { "ggml-\(rawValue).bin" }
 
+  var readableName: String {
+    switch self {
+    case .tinyEN: return "Tiny (English)"
+    case .tiny: return "Tiny"
+    case .baseEN: return "Base (English)"
+    case .base: return "Base"
+    case .smallEN: return "Small (English)"
+    case .small: return "Small"
+      // case .mediumEN: return "Medium (English)"
+      // case .medium: return "Medium (Chinese)"
+      // case .largeV1: return "Large (English)"
+      // case .large: return "Large (Chinese)"
+    }
+  }
+
   var sizeLabel: String {
     switch self {
     case .tinyEN, .tiny: return "75 MB"
