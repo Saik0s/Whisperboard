@@ -1,3 +1,4 @@
+import AppDevUtils
 import SwiftUI
 
 struct PlayButton: View {
@@ -11,10 +12,10 @@ struct PlayButton: View {
       Image(systemName: isPlaying ? "pause.circle" : "play.circle")
         .resizable()
         .aspectRatio(1, contentMode: .fit)
-        .foregroundColor(.white)
+        .foregroundColor(isPlaying ? .DS.Text.accent : .DS.Text.accentAlt)
         .animation(.easeInOut(duration: 0.15), value: isPlaying)
     }
-      .aspectRatio(1, contentMode: .fit)
-      .frame(width: 35, height: 35)
+    .aspectRatio(1, contentMode: .fit)
+    .frame(width: 35, height: 35)
   }
 }

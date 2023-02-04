@@ -58,13 +58,17 @@ private final class Storage {
       .filter { $0.hasSuffix(".wav") }
 
     var shouldWrite = false
-    let recordings: [RecordingInfo] = try recordingFiles.map { file in
+    var recordings: [RecordingInfo] = try recordingFiles.map { file in
       if let recording = storedRecordings.first(where: { $0.fileName == file }) {
         return recording
       }
 
       shouldWrite = true
       return try createInfo(fileName: file)
+    }
+
+    recordings.sort { info, info2 in
+      info.date > info2.date
     }
 
     if shouldWrite {

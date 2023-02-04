@@ -28,11 +28,14 @@ struct Root: ReducerProtocol {
       Scope(state: \.recordScreen, action: /Action.recordScreen) {
         RecordScreen()
       }
+
       Reduce<State, Action> { state, action in
         switch action {
         case let .recordScreen(.newRecordingCreated(recordingInfo)):
-          state.recordingListScreen.recordings.append(.init(recordingInfo: recordingInfo))
+          let recordingCard = RecordingCard.State(recordingInfo: recordingInfo, listIndex: state.recordingListScreen.recordings.count)
+          state.recordingListScreen.recordings.insert(recordingCard, at: 0)
           return .none
+
         default:
           return .none
         }
