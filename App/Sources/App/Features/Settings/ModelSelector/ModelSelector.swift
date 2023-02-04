@@ -16,7 +16,7 @@ struct ModelSelector: ReducerProtocol {
   struct State: Equatable {
     var models: [VoiceModel] = []
     var selectedModel: VoiceModel?
-    var isLoading = true
+    var isLoading = false
     var alert: AlertState<Action>?
   }
 
@@ -53,6 +53,8 @@ struct ModelSelector: ReducerProtocol {
           if let selectedModelName = UserDefaults.standard.selectedModelName,
              let selectedModel = models.first(where: { $0.name == selectedModelName }), selectedModel.isDownloaded {
             await send(.modelSelected(selectedModel))
+          } else if let model = models.first(where: { $0.isDownloaded }) {
+            await send(.modelSelected(model))
           }
         }
 
@@ -231,5 +233,6 @@ struct ModelSelector_Previews: PreviewProvider {
         reducer: ModelSelector()
       )
     )
+    .previewPreset()
   }
 }
