@@ -48,7 +48,6 @@ public struct RecordingListScreen: ReducerProtocol {
           state.recordings = recordings.enumerated().map { offset, info in
             RecordingCard.State(recordingInfo: info, listIndex: offset)
           }.identifiedArray
-          log.debug(state.recordings)
           return .none
 
         case let .setRecordings(.failure(error)):

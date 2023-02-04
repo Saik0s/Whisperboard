@@ -59,11 +59,12 @@ struct SettingsView: View {
   }
 
   var body: some View {
-    ScrollView {
+    // ScrollView {
       VStack(spacing: .grid(4)) {
         ModelSelectorView(store: store.scope(state: \.modelSelector, action: Settings.Action.modelSelector))
+        Spacer()
       }
-    }
+    // }
     .padding(.grid(4))
     .screenRadialBackground()
     .navigationBarTitle("Settings")

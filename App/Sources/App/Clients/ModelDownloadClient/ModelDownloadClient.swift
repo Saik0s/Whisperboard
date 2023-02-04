@@ -15,7 +15,7 @@ extension ModelDownloadClient {
     let delegate = SessionDelegate()
     let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
 
-    return Self(
+    return ModelDownloadClient(
       downloadModel: { model in
         AsyncStream { continuation in
           Task {
@@ -24,7 +24,7 @@ extension ModelDownloadClient {
             }
 
             try FileManager.default.createDirectory(at: VoiceModelType.localFolderURL, withIntermediateDirectories: true)
-            let destination = model.type.localURL
+            let destination = model.modelType.localURL
 
             delegate.progress = progress
             delegate.onComplete = { url in
@@ -39,7 +39,7 @@ extension ModelDownloadClient {
               continuation.finish()
             }
 
-            let task = session.downloadTask(with: model.type.remoteURL)
+            let task = session.downloadTask(with: model.modelType.remoteURL)
             task.resume()
           }
         }
