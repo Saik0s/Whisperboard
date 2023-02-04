@@ -45,7 +45,7 @@ struct ModelSelector: ReducerProtocol {
           let models = VoiceModelType.allCases
             .map {
               VoiceModel(
-                type: $0,
+                modelType: $0,
                 downloadProgress: FileManager.default.fileExists(atPath: $0.localURL.path) ? 1 : 0
               )
             }
@@ -125,7 +125,7 @@ struct ModelSelector: ReducerProtocol {
             $0.downloadProgress = 0
             $0.isDownloading = false
           }))
-          try? FileManager.default.removeItem(at: model.type.localURL)
+          try? FileManager.default.removeItem(at: model.modelType.localURL)
         }
       case let .loadError(error):
         state.isLoading = false
@@ -152,7 +152,13 @@ struct ModelSelectorView: View {
   }
 
   var body: some View {
-    VStack(spacing: .grid(4)) {
+    modelList()
+      .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+      .enableInjection()
+  }
+
+  private func modelList() -> some View {
+    Form {
       Text(
         "Whisper is an automatic speech recognition (ASR) model developed by OpenAI. It uses deep learning techniques to transcribe spoken language into text. It is designed to be more accurate and efficient than traditional ASR models.\n\nThere are several different Whisper models available, each with different capabilities. The main difference between them is the size of the model, which affects the accuracy and efficiency of the transcription."
       )
@@ -160,48 +166,18 @@ struct ModelSelectorView: View {
       .foregroundColor(.DS.Text.subdued)
       .multilineTextAlignment(.leading)
 
-      modelList()
-    }
-    .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
-  }
-
-  private func modelList() -> some View {
-    VStack(spacing: .grid(4)) {
       ForEach(viewStore.models) { model in
-        HStack(spacing: .grid(4)) {
-          Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
-            .font(.DS.headlineL)
-            .opacity(model.isDownloaded ? 1 : 0.3)
-
-          VStack(alignment: .leading, spacing: .grid(2)) {
-            Text(model.readableName)
-              .font(.DS.headlineM)
-              .foregroundColor(Color.DS.Text.base)
-            Text(model.type.sizeLabel)
-              .font(.DS.captionS)
-              .foregroundColor(Color.DS.Text.subdued)
-          }
-
-          Spacer()
-
-          if model.isDownloading {
-            ProgressView(value: model.downloadProgress)
-          } else if model.isDownloaded == false {
-            Text("Download")
-              .padding(.grid(2))
-              .background(Color.DS.Background.accentAlt)
-              .cornerRadius(.grid(2))
-          }
-        }
-        .padding(.horizontal, .grid(2))
-        .frame(height: 50)
-        .onTapGesture { viewStore.send(.modelSelected(model)) }
-
-        if model != viewStore.models.last {
-          Divider()
-        }
+        modelRow(for: model)
+          .frame(height: 50)
+          .padding(.grid(2))
+          .contentShape(Rectangle())
+          .onTapGesture { viewStore.send(.modelSelected(model)) }
+          .contextMenu(model.isDownloaded && model.modelType != .tiny ? contextMenu(for: model) : nil)
       }
+      .listRowBackground(Color.clear)
+      .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
+    .scrollContentBackground(.hidden)
     .padding(.grid(4))
     .background(Color.DS.Background.secondary)
     .overlay {
@@ -214,6 +190,34 @@ struct ModelSelectorView: View {
     }
     .continuousCornerRadius(.grid(6))
     .shadow(style: .card)
+  }
+
+  private func modelRow(for model: VoiceModel) -> some View {
+    HStack(spacing: .grid(4)) {
+      Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
+        .font(.DS.headlineL)
+        .opacity(model.isDownloaded ? 1 : 0.3)
+
+      VStack(spacing: .grid(2)) {
+        Text(model.modelType.readableName)
+          .font(.DS.headlineM)
+          .foregroundColor(Color.DS.Text.base)
+        Text(model.modelType.sizeLabel)
+          .font(.DS.captionS)
+          .foregroundColor(Color.DS.Text.subdued)
+      }
+
+      Spacer()
+
+      if model.isDownloading {
+        ProgressView(value: model.downloadProgress)
+      } else if model.isDownloaded == false {
+        Text("Download")
+          .padding(.grid(2))
+          .background(Color.DS.Background.accentAlt)
+          .cornerRadius(.grid(2))
+      }
+    }
   }
 
   func contextMenu(for model: VoiceModel) -> ContextMenu<TupleView<(Button<Text>, Button<Text>)>> {
@@ -236,8 +240,8 @@ struct ModelSelector_Previews: PreviewProvider {
       store: Store(
         initialState: ModelSelector.State(
           models: [
-            VoiceModel(type: .base),
-            VoiceModel(type: .baseEN),
+            VoiceModel(modelType: .base),
+            VoiceModel(modelType: .baseEN),
           ],
           selectedModel: nil
         ),
