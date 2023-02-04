@@ -107,5 +107,8 @@ let project = Project(
     appTarget(isHot: true),
     keyboardTarget(),
     keyboardTarget(isHot: true),
+  ],
+  resourceSynthesizers: [
+    .files(extensions: ["bin"]),
   ]
 )

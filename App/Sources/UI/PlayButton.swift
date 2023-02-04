@@ -13,6 +13,7 @@ struct PlayButton: View {
         .resizable()
         .aspectRatio(1, contentMode: .fit)
         .foregroundColor(isPlaying ? .DS.Text.accent : .DS.Text.accentAlt)
+        .symbolRenderingMode(.hierarchical)
         .animation(.easeInOut(duration: 0.15), value: isPlaying)
     }
     .aspectRatio(1, contentMode: .fit)

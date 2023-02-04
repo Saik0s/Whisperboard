@@ -42,10 +42,6 @@ final class TranscriberImpl {
     case somethingWrong
   }
 
-  private var modelUrl: URL? {
-    Bundle.main.url(forResource: "ggml-tiny.en", withExtension: "bin")
-  }
-
   private var whisperContext: WhisperContext?
 
   func loadModel(modelUrl: URL) async throws {
