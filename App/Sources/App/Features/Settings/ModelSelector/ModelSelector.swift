@@ -152,48 +152,58 @@ struct ModelSelectorView: View {
   }
 
   var body: some View {
-    VStack(spacing: .grid(2)) {
+    VStack(spacing: .grid(4)) {
       Text(
         "Whisper is an automatic speech recognition (ASR) model developed by OpenAI. It uses deep learning techniques to transcribe spoken language into text. It is designed to be more accurate and efficient than traditional ASR models.\n\nThere are several different Whisper models available, each with different capabilities. The main difference between them is the size of the model, which affects the accuracy and efficiency of the transcription."
       )
       .font(.DS.footnote)
       .foregroundColor(.DS.Text.subdued)
       .multilineTextAlignment(.leading)
-      .padding(.horizontal, .grid(2))
 
+      modelList()
+    }
+    .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+  }
+
+  private func modelList() -> some View {
+    VStack(spacing: .grid(4)) {
       ForEach(viewStore.models) { model in
-        HStack {
-          Text(model.name)
-          Text(model.type.sizeLabel)
-            .foregroundColor(Color.DS.Text.subdued)
+        HStack(spacing: .grid(4)) {
+          Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
+            .font(.DS.headlineL)
+            .opacity(model.isDownloaded ? 1 : 0.3)
+
+          VStack(alignment: .leading, spacing: .grid(2)) {
+            Text(model.readableName)
+              .font(.DS.headlineM)
+              .foregroundColor(Color.DS.Text.base)
+            Text(model.type.sizeLabel)
+              .font(.DS.captionS)
+              .foregroundColor(Color.DS.Text.subdued)
+          }
+
           Spacer()
-          if model.isDownloaded {
-            Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
-          } else if model.isDownloading {
+
+          if model.isDownloading {
             ProgressView(value: model.downloadProgress)
-          } else {
+          } else if model.isDownloaded == false {
             Text("Download")
               .padding(.grid(2))
-              .background(Color.DS.Background.accent)
+              .background(Color.DS.Background.accentAlt)
               .cornerRadius(.grid(2))
           }
         }
-        .foregroundColor(model == viewStore.selectedModel ? .green : .white)
         .padding(.horizontal, .grid(2))
         .frame(height: 50)
-        .background {
-          RoundedRectangle(cornerRadius: .grid(4))
-            .fill(Color.DS.Background.tertiary)
-        }
         .onTapGesture { viewStore.send(.modelSelected(model)) }
-        .contextMenu(contextMenu(for: model))
+
+        if model != viewStore.models.last {
+          Divider()
+        }
       }
     }
-    .padding(.grid(2))
-    .background {
-      RoundedRectangle(cornerRadius: .grid(4))
-        .fill(Color.DS.Background.secondary)
-    }
+    .padding(.grid(4))
+    .background(Color.DS.Background.secondary)
     .overlay {
       ZStack {
         if viewStore.isLoading {
@@ -202,7 +212,8 @@ struct ModelSelectorView: View {
         }
       }
     }
-    .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+    .continuousCornerRadius(.grid(6))
+    .shadow(style: .card)
   }
 
   func contextMenu(for model: VoiceModel) -> ContextMenu<TupleView<(Button<Text>, Button<Text>)>> {

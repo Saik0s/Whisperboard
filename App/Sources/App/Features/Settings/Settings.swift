@@ -62,26 +62,9 @@ struct SettingsView: View {
     ScrollView {
       VStack(spacing: .grid(4)) {
         ModelSelectorView(store: store.scope(state: \.modelSelector, action: Settings.Action.modelSelector))
-
-        VStack(alignment: .leading, spacing: .grid(1)) {
-          Text("OpenAI API Key for experimental transcription improvement:")
-            .font(.DS.bodyS)
-            .foregroundColor(.DS.Text.base)
-          TextField("OpenAI API Key", text: viewStore.binding(\.$openAIAPIKey))
-            .textFieldStyle(RoundedBorderTextFieldStyle())
-          Text("Go to OpenAI website to create your API key https://beta.openai.com/account/api-keys")
-            .font(.DS.footnote)
-            .foregroundColor(.DS.Text.subdued)
-        }
-        .multilineTextAlignment(.leading)
-        .padding(.grid(2))
-        .background {
-          RoundedRectangle(cornerRadius: .grid(4))
-            .fill(Color.DS.Background.secondary)
-        }
       }
     }
-    .padding(.grid(2))
+    .padding(.grid(4))
     .screenRadialBackground()
     .navigationBarTitle("Settings")
     .task { viewStore.send(.task) }
