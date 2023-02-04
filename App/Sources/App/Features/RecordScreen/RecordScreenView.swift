@@ -97,7 +97,7 @@ public struct RecordScreen: ReducerProtocol {
         return .none
       }
     }
-      .ifLet(\.recording, action: /Action.recording) { Recording() }
+    .ifLet(\.recording, action: /Action.recording) { Recording() }
   }
 
   private var newRecording: Recording.State {

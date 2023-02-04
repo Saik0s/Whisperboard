@@ -72,16 +72,17 @@ public struct WaveformProgress: ReducerProtocol {
         log.error(error)
         return .none
 
-        case let .didTouchAtHorizontalLocation(horizontal):
-          log.debug(horizontal)
-          state.progress = horizontal
-          return .none
+      case let .didTouchAtHorizontalLocation(horizontal):
+        log.debug(horizontal)
+        state.progress = horizontal
+        return .none
       }
     }
   }
 }
 
 // MARK: - WaveformProgressView
+
 @MainActor
 public struct WaveformProgressView: View {
   @ObserveInjection var inject
@@ -103,21 +104,21 @@ public struct WaveformProgressView: View {
         onTouchLocationPercent { horizontal, _ in
           viewStore.send(.didTouchAtHorizontalLocation(horizontal))
         }
-          .padding(.grid(1))
-          .frame(height: 50)
-          .frame(maxWidth: .infinity)
+        .padding(.grid(1))
+        .frame(height: 50)
+        .frame(maxWidth: .infinity)
       }
     }
     .animation(.linear(duration: 0.1), value: viewStore.progress)
     .onAppear {
       viewStore.send(.didAppear)
     }
-      .onChange(of: viewStore.waveFormImageURL) { waveFormImageURL in
-        if let imageURL = waveFormImageURL,
-           let newImage = UIImage(contentsOfFile: imageURL.path) {
-          image = newImage
-        }
+    .onChange(of: viewStore.waveFormImageURL) { waveFormImageURL in
+      if let imageURL = waveFormImageURL,
+         let newImage = UIImage(contentsOfFile: imageURL.path) {
+        image = newImage
       }
+    }
     .enableInjection()
   }
 

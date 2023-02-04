@@ -43,10 +43,12 @@ public struct RecordingListScreen: ReducerProtocol {
           return .task {
             await .setRecordings(TaskResult { try await storage.read() })
           }
-          .animation()
 
         case let .setRecordings(.success(recordings)):
-          state.recordings = recordings.map(RecordingCard.State.init(recordingInfo:)).identifiedArray
+          state.recordings = recordings.enumerated().map { offset, info in
+            RecordingCard.State(recordingInfo: info, listIndex: offset)
+          }.identifiedArray
+          log.debug(state.recordings)
           return .none
 
         case let .setRecordings(.failure(error)):
@@ -85,6 +87,8 @@ public struct RecordingListScreenView: View {
   let store: StoreOf<RecordingListScreen>
   @ObservedObject var viewStore: ViewStoreOf<RecordingListScreen>
 
+  @State var showListItems = false
+
   public init(store: StoreOf<RecordingListScreen>) {
     self.store = store
     viewStore = ViewStore(store)
@@ -106,18 +110,28 @@ public struct RecordingListScreenView: View {
         // .padding(.horizontal, 16)
 
         ScrollView {
-          VStack(spacing: .grid(4)) {
+          LazyVStack(spacing: .grid(4)) {
             ForEachStore(
               store.scope(state: \.recordings, action: RecordingListScreen.Action.recording(id:action:))
-            ) {
-              RecordingCardView(store: $0)
+            ) { cardStore in
+              WithViewStore(cardStore) { cardViewStore in
+                RecordingCardView(store: cardStore)
+                  .offset(y: showListItems ? 0 : 100)
+                  .opacity(showListItems ? 1 : 0)
+                  .animation(
+                    .easeInOut(duration: 0.3).delay(Double(cardViewStore.listIndex) * 0.3),
+                    value: showListItems
+                  )
+              }
             }
-              .onDelete { viewStore.send(.delete($0)) }
           }
-            .padding(.grid(4))
+          .padding(.grid(4))
+          .onChange(of: viewStore.recordings.count) {
+            showListItems = $0 > 0
+          }
         }
       }
-        .screenRadialBackground()
+      .screenRadialBackground()
       .navigationTitle("Recordings")
       .navigationBarItems(
         trailing: HStack(spacing: .grid(4)) {

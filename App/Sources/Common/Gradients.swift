@@ -47,26 +47,63 @@ public extension View {
   @ViewBuilder
   func screenRadialBackground() -> some View {
     background {
-      ZStack {
-        Color.DS.Background.primary
+      ScreenRadialBackgroundView()
+    }
+  }
+}
 
-        spotlight()
-          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-          .offset(x: -120, y: -90)
+// MARK: - ScreenRadialBackgroundView
 
-        spotlight()
-          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-          .offset(x: 90, y: 90)
-      }
-      .ignoresSafeArea()
+struct ScreenRadialBackgroundView: View {
+  @State var topSpotlightOffset: CGSize = .zero
+  @State var bottomSpotlightOffset: CGSize = .zero
+
+  let timer = Timer.publish(every: 3, on: .main, in: .common).autoconnect()
+
+  var body: some View {
+    ZStack {
+      Color.DS.Background.primary
+
+      spotlight()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .offset(x: -120, y: -90)
+        .offset(topSpotlightOffset)
+
+      spotlight()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+        .offset(x: 90, y: 90)
+        .offset(bottomSpotlightOffset)
+    }
+    .ignoresSafeArea()
+    .onReceive(timer) { _ in
+      animateSpotlights()
+    }
+    .task {
+      animateSpotlights()
+    }
+  }
+
+  private func animateSpotlights() {
+    withAnimation(.interpolatingSpring(stiffness: 170, damping: 15).speed(0.03)) {
+      let screenSize = UIScreen.main.bounds.size
+
+      let horizontal: CGFloat = .random(in: -50 ... screenSize.width)
+      let vertical: CGFloat = .random(in: -50 ... (screenSize.height / 4))
+      topSpotlightOffset = CGSize(width: horizontal, height: vertical)
+
+      let horizontal1: CGFloat = .random(in: -screenSize.width ... 50)
+      let vertical1: CGFloat = .random(in: -(screenSize.height / 4) ... 50)
+      bottomSpotlightOffset = CGSize(width: horizontal1, height: vertical1)
     }
   }
 
   private func spotlight() -> some View {
-    RadialGradient.purpleSpotlight
-      .opacity(0.25)
+    let size = UIScreen.main.bounds.size
+    return Circle()
+      .fill(RadialGradient.purpleSpotlight)
+      .frame(width: size.width, height: size.width)
+      .blur(radius: 90)
+      .compositingGroup()
       .blendMode(.overlay)
-      .frame(width: 375, height: 375)
-      .blur(radius: 80)
   }
 }

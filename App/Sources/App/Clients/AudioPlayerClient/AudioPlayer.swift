@@ -1,4 +1,5 @@
 import Foundation
+
 @preconcurrency import AVFoundation
 
 final class AudioPlayer: NSObject, AVAudioPlayerDelegate, Sendable {
@@ -26,4 +27,3 @@ final class AudioPlayer: NSObject, AVAudioPlayerDelegate, Sendable {
     decodeErrorDidOccur(error)
   }
 }
-

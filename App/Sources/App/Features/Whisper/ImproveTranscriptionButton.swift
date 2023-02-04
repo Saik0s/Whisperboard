@@ -2,6 +2,8 @@ import AppDevUtils
 import ComposableArchitecture
 import SwiftUI
 
+// MARK: - ImproveTranscriptionButton
+
 @MainActor
 struct ImproveTranscriptionButton: View {
   struct TextCompletion: Codable {

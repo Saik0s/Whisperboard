@@ -1,5 +1,6 @@
 import Dependencies
 import Foundation
+
 @preconcurrency import AVFoundation
 
 // MARK: - AudioPlayerClient
@@ -12,7 +13,7 @@ struct AudioPlayerClient {
   var speed: @Sendable (Float) async -> Void
 }
 
-// MARK: - AudioPlayerClient + DependencyKey
+// MARK: DependencyKey
 
 extension AudioPlayerClient: DependencyKey {
   class Context {

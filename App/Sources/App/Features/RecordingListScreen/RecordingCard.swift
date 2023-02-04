@@ -16,6 +16,7 @@ public struct RecordingCard: ReducerProtocol {
     var mode = Mode.notPlaying
     var isTranscribing = false
     var isExpanded = false
+    var listIndex: Int = 0
 
     var _waveform = WaveformProgress.State()
     var waveform: WaveformProgress.State {
@@ -33,8 +34,9 @@ public struct RecordingCard: ReducerProtocol {
       }
     }
 
-    init(recordingInfo: RecordingInfo) {
+    init(recordingInfo: RecordingInfo, listIndex: Int) {
       self.recordingInfo = recordingInfo
+      self.listIndex = listIndex
     }
   }
 
