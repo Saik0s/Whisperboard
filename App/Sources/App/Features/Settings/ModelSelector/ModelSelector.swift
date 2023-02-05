@@ -159,37 +159,39 @@ struct ModelSelectorView: View {
 
   private func modelList() -> some View {
     Form {
-      Text(
-        "Whisper is an automatic speech recognition (ASR) model developed by OpenAI. It uses deep learning techniques to transcribe spoken language into text. It is designed to be more accurate and efficient than traditional ASR models.\n\nThere are several different Whisper models available, each with different capabilities. The main difference between them is the size of the model, which affects the accuracy and efficiency of the transcription."
-      )
-      .font(.DS.footnote)
-      .foregroundColor(.DS.Text.subdued)
-      .multilineTextAlignment(.leading)
+      Section {
+        Text(
+          "Whisper is an automatic speech recognition (ASR) model developed by OpenAI. It uses deep learning techniques to transcribe spoken language into text. It is designed to be more accurate and efficient than traditional ASR models.\n\nThere are several different Whisper models available, each with different capabilities. The main difference between them is the size of the model, which affects the accuracy and efficiency of the transcription."
+        )
+        .font(.DS.footnote)
+        .foregroundColor(.DS.Text.subdued)
+        .multilineTextAlignment(.leading)
+        .listRowBackground(Color.DS.Background.secondary)
 
-      ForEach(viewStore.models) { model in
-        modelRow(for: model)
-          .frame(height: 50)
-          .padding(.grid(2))
-          .contentShape(Rectangle())
-          .onTapGesture { viewStore.send(.modelSelected(model)) }
-          .contextMenu(model.isDownloaded && model.modelType != .tiny ? contextMenu(for: model) : nil)
+        ForEach(viewStore.models) { model in
+          modelRow(for: model)
+            .frame(height: 40)
+            .contentShape(Rectangle())
+            .onTapGesture { viewStore.send(.modelSelected(model)) }
+            .contextMenu(model.isDownloaded && model.modelType != .tiny ? contextMenu(for: model) : nil)
+        }
+        .listRowBackground(Color.DS.Background.secondary)
+      } header: {
+        Text("Select transcription model")
       }
-      .listRowBackground(Color.clear)
-      .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-    }
-    .scrollContentBackground(.hidden)
-    .padding(.grid(4))
-    .background(Color.DS.Background.secondary)
-    .overlay {
-      ZStack {
-        if viewStore.isLoading {
-          Color.DS.Shadow.primary.ignoresSafeArea()
-          ProgressView()
+      .overlay {
+        ZStack {
+          if viewStore.isLoading {
+            Color.DS.Shadow.primary.ignoresSafeArea()
+            ProgressView()
+          }
         }
       }
     }
-    .continuousCornerRadius(.grid(6))
+    .formStyle(.grouped)
+    .scrollContentBackground(.hidden)
     .shadow(style: .card)
+    .screenRadialBackground()
   }
 
   private func modelRow(for model: VoiceModel) -> some View {
@@ -198,7 +200,7 @@ struct ModelSelectorView: View {
         .font(.DS.headlineL)
         .opacity(model.isDownloaded ? 1 : 0.3)
 
-      VStack(spacing: .grid(2)) {
+      VStack(alignment: .leading, spacing: .grid(2)) {
         Text(model.modelType.readableName)
           .font(.DS.headlineM)
           .foregroundColor(Color.DS.Text.base)

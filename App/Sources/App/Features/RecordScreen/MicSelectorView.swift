@@ -93,10 +93,10 @@ public struct MicSelectorView: View {
           Button(action: { viewStore.send(.micSelected(mic)) }) {
             HStack(spacing: .grid(2)) {
               let isSelected = mic.id == viewStore.currentMic?.id
-                Image(systemName: "checkmark")
-                  .font(.DS.bodyS)
-                  .foregroundColor(.DS.Text.success)
-                  .hidden(!isSelected)
+              Image(systemName: "checkmark")
+                .font(.DS.bodyS)
+                .foregroundColor(.DS.Text.success)
+                .hidden(!isSelected)
 
               VStack(alignment: .leading, spacing: 0) {
                 Text(mic.port.portName)
@@ -104,7 +104,7 @@ public struct MicSelectorView: View {
                   .foregroundColor(.DS.Text.base)
               }
             }
-              .padding(.grid(2))
+            .padding(.grid(2))
           }
 
           if mic.id != viewStore.mics.last?.id {
@@ -112,7 +112,7 @@ public struct MicSelectorView: View {
           }
         }
       }
-        .fixedSize(horizontal: true, vertical: false)
+      .fixedSize(horizontal: true, vertical: false)
       .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
       .task { viewStore.send(.task) }
     }

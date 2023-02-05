@@ -137,7 +137,7 @@ private actor AudioRecorder {
     let updateStream = AsyncStream<[Microphone]>(
       NotificationCenter.default
         .notifications(named: AVAudioSession.routeChangeNotification)
-        .map { notification -> [Microphone] in
+        .map { _ -> [Microphone] in
           AVAudioSession.sharedInstance().availableInputs?.map(Microphone.init) ?? []
         }
     )
