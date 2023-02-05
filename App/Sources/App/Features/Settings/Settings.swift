@@ -1,5 +1,6 @@
 import AppDevUtils
 import ComposableArchitecture
+import Inject
 import SwiftUI
 
 extension UserDefaults {
@@ -50,6 +51,8 @@ struct Settings: ReducerProtocol {
 // MARK: - SettingsView
 
 struct SettingsView: View {
+  @ObserveInjection var inject
+
   let store: StoreOf<Settings>
   @ObservedObject var viewStore: ViewStoreOf<Settings>
 
@@ -59,16 +62,24 @@ struct SettingsView: View {
   }
 
   var body: some View {
-    // ScrollView {
-      VStack(spacing: .grid(4)) {
-        ModelSelectorView(store: store.scope(state: \.modelSelector, action: Settings.Action.modelSelector))
-        Spacer()
+    NavigationView {
+      List {
+        Section(header: Text("Transcription")) {
+          NavigationLink(destination: ModelSelectorView(store: store.scope(state: \.modelSelector, action: Settings.Action.modelSelector))) {
+            HStack(spacing: .grid(4)) {
+              Text("🤖")
+              Text("Transcription Model")
+            }
+          }
+        }
+        .listRowBackground(Color.DS.Background.secondary)
       }
-    // }
-    .padding(.grid(4))
-    .screenRadialBackground()
+      .screenRadialBackground()
+    }
+    .scrollContentBackground(.hidden)
     .navigationBarTitle("Settings")
     .task { viewStore.send(.task) }
+    .enableInjection()
   }
 }
 

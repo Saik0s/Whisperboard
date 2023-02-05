@@ -141,13 +141,13 @@ public struct RecordScreenView: View {
           } settingsAction: {
             viewStore.send(.openSettingsButtonTapped)
           }
-            .shadow(color: .DS.Shadow.primary, radius: 20)
+          .shadow(color: .DS.Shadow.primary, radius: 20)
         }
       }
-        .padding(.grid(4))
-        .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+      .padding(.grid(4))
+      .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
     }
-      .screenRadialBackground()
+    .screenRadialBackground()
     .navigationTitle("RecordScreen")
     .enableInjection()
   }

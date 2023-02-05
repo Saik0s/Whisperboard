@@ -93,7 +93,7 @@ struct RootView: View {
           }
           .tag(2)
       }
-        .task { viewStore.send(.settings(.modelSelector(.task))) }
+      .task { viewStore.send(.settings(.modelSelector(.task))) }
     }
     .accentColor(Color.DS.Background.accent)
     .environment(\.colorScheme, .dark)
