@@ -78,6 +78,10 @@ public struct RecordingCard: ReducerProtocol {
         }
         return .none
 
+      case let .waveform(.didTouchAtHorizontalLocation(progress)):
+        guard state.mode.isPlaying else { return .none }
+        return .fireAndForget { await audioPlayer.seekProgress(progress) }
+
       case .waveform:
         return .none
       }
@@ -100,9 +104,9 @@ public struct RecordingCard: ReducerProtocol {
         case let .error(error):
           log.error(error as Any)
           // TODO: Show alert with error
-          await send(.audioPlayerFinished(.failure(error ?? NSError())))
+          await send(.audioPlayerFinished(.failure(error ?? NSError())), animation: .default)
         case let .finish(successful):
-          await send(.audioPlayerFinished(.success(successful)))
+          await send(.audioPlayerFinished(.success(successful)), animation: .default)
         }
       }
     }

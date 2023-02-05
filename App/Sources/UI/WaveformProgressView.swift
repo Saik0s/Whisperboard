@@ -56,12 +56,13 @@ public struct WaveformProgress: ReducerProtocol {
         }
 
         return .task {
-          await .waveFormImageCreated(TaskResult {
-            let image = try await waveImageDrawer.waveformImage(fromAudioAt: audioURL, with: configuration)
-            let data = try image.pngData().require()
-            try data.write(to: waveImageURL)
-            return waveImageURL
-          })
+          let image = try await waveImageDrawer.waveformImage(fromAudioAt: audioURL, with: configuration)
+          let data = try image.pngData().require()
+          try data.write(to: waveImageURL, options: .atomic)
+          return .waveFormImageCreated(.success(waveImageURL))
+        } catch: { error in
+          log.error(error)
+          return .waveFormImageCreated(.failure(error))
         }
 
       case let .waveFormImageCreated(.success(url)):
@@ -90,8 +91,6 @@ public struct WaveformProgressView: View {
   let store: StoreOf<WaveformProgress>
   @ObservedObject var viewStore: ViewStoreOf<WaveformProgress>
 
-  @State private var image: UIImage?
-
   public init(store: StoreOf<WaveformProgress>) {
     self.store = store
     viewStore = ViewStore(store)
@@ -99,46 +98,42 @@ public struct WaveformProgressView: View {
 
   public var body: some View {
     ZStack {
-      if let image {
-        waveImageView(image: image)
-        onTouchLocationPercent { horizontal, _ in
+      waveImageView()
+        .onTouchLocationPercent { horizontal, _ in
           viewStore.send(.didTouchAtHorizontalLocation(horizontal))
         }
-        .padding(.grid(1))
+        .padding(.horizontal, .grid(1))
         .frame(height: 50)
         .frame(maxWidth: .infinity)
-      }
     }
     .animation(.linear(duration: 0.1), value: viewStore.progress)
     .onAppear {
       viewStore.send(.didAppear)
     }
-    .onChange(of: viewStore.waveFormImageURL) { waveFormImageURL in
-      if let imageURL = waveFormImageURL,
-         let newImage = UIImage(contentsOfFile: imageURL.path) {
-        image = newImage
-      }
-    }
     .enableInjection()
   }
 
-  private func waveImageView(image: UIImage) -> some View {
-    ZStack {
-      Image(uiImage: image)
-        .resizable()
-      Image(uiImage: image)
-        .resizable()
-        .renderingMode(.template)
-        .foregroundColor(.DS.Text.subdued)
-        .mask(alignment: .leading) {
-          GeometryReader { geometry in
-            if viewStore.isPlaying {
-              Rectangle().frame(width: geometry.size.width * viewStore.progress)
-            } else {
-              Rectangle()
+  @ViewBuilder
+  private func waveImageView() -> some View {
+    if let imageURL = viewStore.waveFormImageURL,
+       let image = UIImage(contentsOfFile: imageURL.path) {
+      ZStack {
+        Image(uiImage: image)
+          .resizable()
+        Image(uiImage: image)
+          .resizable()
+          .renderingMode(.template)
+          .foregroundColor(.DS.Text.subdued)
+          .mask(alignment: .leading) {
+            GeometryReader { geometry in
+              if viewStore.isPlaying {
+                Rectangle().frame(width: geometry.size.width * viewStore.progress)
+              } else {
+                Rectangle()
+              }
             }
           }
-        }
+      }
     }
   }
 }

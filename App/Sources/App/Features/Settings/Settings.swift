@@ -15,7 +15,6 @@ extension UserDefaults {
 struct Settings: ReducerProtocol {
   struct State: Equatable {
     var modelSelector = ModelSelector.State()
-    @BindingState var openAIAPIKey: String = ""
   }
 
   enum Action: BindableAction, Equatable {
@@ -31,14 +30,9 @@ struct Settings: ReducerProtocol {
       ModelSelector()
     }
 
-    Reduce { state, action in
+    Reduce { _, action in
       switch action {
       case .task:
-        state.openAIAPIKey = UserDefaults.standard.openAIAPIKey ?? ""
-        return .none
-
-      case .binding(\.$openAIAPIKey):
-        UserDefaults.standard.openAIAPIKey = state.openAIAPIKey
         return .none
 
       default:
