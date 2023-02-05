@@ -10,6 +10,7 @@ public struct RecordScreen: ReducerProtocol {
     var alert: AlertState<Action>?
     var audioRecorderPermission = RecorderPermission.undetermined
     var recording: Recording.State?
+    var micSelector = MicSelector.State()
 
     enum RecorderPermission {
       case allowed
@@ -25,6 +26,7 @@ public struct RecordScreen: ReducerProtocol {
     case openSettingsButtonTapped
     case alertDismissed
     case newRecordingCreated(RecordingInfo)
+    case micSelector(MicSelector.Action)
   }
 
   @Dependency(\.audioRecorder.requestRecordPermission) var requestRecordPermission
@@ -33,6 +35,8 @@ public struct RecordScreen: ReducerProtocol {
   @Dependency(\.storage) var storage
 
   public var body: some ReducerProtocol<State, Action> {
+    Scope(state: \.micSelector, action: /Action.micSelector) { MicSelector() }
+
     Reduce<State, Action> { state, action in
       switch action {
       case .recordButtonTapped:
@@ -95,6 +99,9 @@ public struct RecordScreen: ReducerProtocol {
 
       case .newRecordingCreated:
         return .none
+
+      case .micSelector:
+        return .none
       }
     }
     .ifLet(\.recording, action: /Action.recording) { Recording() }
@@ -121,22 +128,26 @@ public struct RecordScreenView: View {
 
   public var body: some View {
     WithViewStore(store, observe: { $0 }) { viewStore in
-      IfLetStore(
-        store.scope(state: \.recording, action: { .recording($0) })
-      ) { store in
-        RecordingView(store: store)
-      } else: {
-        RecordButton(permission: viewStore.audioRecorderPermission) {
-          viewStore.send(.recordButtonTapped, animation: .spring())
-        } settingsAction: {
-          viewStore.send(.openSettingsButtonTapped)
+      VStack(spacing: 0) {
+        MicSelectorView(store: store.scope(state: \.micSelector, action: { .micSelector($0) }))
+        Spacer()
+        IfLetStore(
+          store.scope(state: \.recording, action: { .recording($0) })
+        ) { store in
+          RecordingView(store: store)
+        } else: {
+          RecordButton(permission: viewStore.audioRecorderPermission) {
+            viewStore.send(.recordButtonTapped, animation: .spring())
+          } settingsAction: {
+            viewStore.send(.openSettingsButtonTapped)
+          }
+            .shadow(color: .DS.Shadow.primary, radius: 20)
         }
-        .shadow(color: .DS.Shadow.primary, radius: 20)
       }
-      .padding()
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-      .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+        .padding(.grid(4))
+        .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
     }
+      .screenRadialBackground()
     .navigationTitle("RecordScreen")
     .enableInjection()
   }

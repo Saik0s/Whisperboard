@@ -140,6 +140,7 @@ public struct RecordingListScreenView: View {
         }
       )
     }
+    .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
     .navigationViewStyle(.stack)
     .task {
       viewStore.send(.readStoredRecordings)
