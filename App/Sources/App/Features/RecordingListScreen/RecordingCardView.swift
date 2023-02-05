@@ -68,14 +68,14 @@ struct RecordingCardView: View {
           )
       }
 
-      // if viewStore.mode.isPlaying {
-      //   WaveformProgressView(
-      //     store: store.scope(
-      //       state: { $0.waveform },
-      //       action: { .waveform($0) }
-      //     )
-      //   )
-      // }
+      if viewStore.mode.isPlaying {
+        WaveformProgressView(
+          store: store.scope(
+            state: { $0.waveform },
+            action: { .waveform($0) }
+          )
+        )
+      }
     }
     .padding(.grid(4))
     .background(Color.DS.Background.secondary)
