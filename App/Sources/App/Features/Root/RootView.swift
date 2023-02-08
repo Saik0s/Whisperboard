@@ -32,7 +32,7 @@ struct Root: ReducerProtocol {
       Reduce<State, Action> { state, action in
         switch action {
         case let .recordScreen(.newRecordingCreated(recordingInfo)):
-          let recordingCard = RecordingCard.State(recordingInfo: recordingInfo, listIndex: state.recordingListScreen.recordings.count)
+          let recordingCard = RecordingCard.State(recordingInfo: recordingInfo)
           state.recordingListScreen.recordings.insert(recordingCard, at: 0)
           return .none
 

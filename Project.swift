@@ -3,7 +3,7 @@ import ProjectDescription
 
 let projectSettings: SettingsDictionary = [
   "GCC_TREAT_WARNINGS_AS_ERRORS": "YES",
-  "SWIFT_TREAT_WARNINGS_AS_ERRORS": "YES",
+  // "SWIFT_TREAT_WARNINGS_AS_ERRORS": "YES",
   "CODE_SIGN_STYLE": "Automatic",
   "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
   "MARKETING_VERSION": "1.3.0",

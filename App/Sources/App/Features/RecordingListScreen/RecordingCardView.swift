@@ -57,7 +57,7 @@ struct RecordingCardView: View {
             .font(.DS.captionM)
             .foregroundColor(.DS.Text.subdued)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+          .frame(maxWidth: .infinity, alignment: .leading)
 
         Text(viewStore.currentTimeString)
           .font(.DS.date)
@@ -68,19 +68,21 @@ struct RecordingCardView: View {
           )
       }
 
-//      if viewStore.mode.isPlaying {
-      WaveformProgressView(
-        store: store.scope(
-          state: { $0.waveform },
-          action: { .waveform($0) }
+      if viewStore.mode.isPlaying {
+        WaveformProgressView(
+          store: store.scope(
+            state: { $0.waveform },
+            action: { .waveform($0) }
+          )
         )
-      )
-//      }
+      }
     }
+      .multilineTextAlignment(.leading)
     .padding(.grid(4))
-    .background(viewStore.mode.isPlaying ? Color.DS.Background.tertiary : Color.DS.Background.secondary)
+    .background(Color.DS.Background.tertiary.opacity(viewStore.mode.isPlaying ? 0.7 : 0))
+    .background(Color.DS.Background.secondary)
     .cornerRadius(.grid(4))
-    .shadow(color: .DS.Background.primary.darken().opacity(0.25),
+    .shadow(color: .DS.Background.accentAlt.darken().opacity(0.25),
             radius: viewStore.mode.isPlaying ? 12 : 0,
             y: viewStore.mode.isPlaying ? 8 : 0)
     .animation(.easeIn(duration: 0.3), value: viewStore.mode.isPlaying)
