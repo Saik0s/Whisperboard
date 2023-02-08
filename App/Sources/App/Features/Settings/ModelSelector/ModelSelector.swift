@@ -154,6 +154,7 @@ struct ModelSelectorView: View {
   var body: some View {
     modelList()
       .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+      .screenRadialBackground()
       .enableInjection()
   }
 
@@ -179,19 +180,11 @@ struct ModelSelectorView: View {
       } header: {
         Text("Select transcription model")
       }
-      .overlay {
-        ZStack {
-          if viewStore.isLoading {
-            Color.DS.Shadow.primary.ignoresSafeArea()
-            ProgressView()
-          }
-        }
-      }
     }
     .formStyle(.grouped)
     .scrollContentBackground(.hidden)
+    .overlay(viewStore.isLoading ? LoadingOverlay() : nil)
     .shadow(style: .card)
-    .screenRadialBackground()
   }
 
   private func modelRow(for model: VoiceModel) -> some View {
@@ -220,6 +213,7 @@ struct ModelSelectorView: View {
           .cornerRadius(.grid(2))
       }
     }
+    .foregroundColor(model == viewStore.selectedModel ? Color.DS.Text.success : Color.DS.Text.base)
   }
 
   func contextMenu(for model: VoiceModel) -> ContextMenu<TupleView<(Button<Text>, Button<Text>)>> {
