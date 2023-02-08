@@ -28,6 +28,10 @@ extension StorageClient: DependencyKey {
       },
       waveFileURLWithName: { name in
         documentsURL.appending(path: name)
+      },
+      delete: { recording in
+        let url = documentsURL.appending(path: recording.fileName)
+        try FileManager.default.removeItem(at: url)
       }
     )
   }()

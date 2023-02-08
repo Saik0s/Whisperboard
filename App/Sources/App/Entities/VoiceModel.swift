@@ -77,4 +77,6 @@ enum VoiceModelType: String, CaseIterable {
       .url(for: .documentationDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
       .appending(path: "Models")
   }
+
+  static var `default`: VoiceModelType { .tiny }
 }

@@ -13,6 +13,7 @@ struct StorageClient {
   var createNewWhisperURL: () -> URL
   var audioFileURLWithName: (String) -> URL
   var waveFileURLWithName: (String) -> URL
+  var delete: @Sendable (RecordingInfo) async throws -> Void
 }
 
 // MARK: TestDependencyKey
@@ -42,7 +43,8 @@ extension StorageClient: TestDependencyKey {
     write: { _ in },
     createNewWhisperURL: { URL(filePath: "~/Downloads/1.wav") },
     audioFileURLWithName: { _ in URL(filePath: "~/Downloads/1.wav") },
-    waveFileURLWithName: { _ in URL(filePath: "~/Downloads/1.wav") }
+    waveFileURLWithName: { _ in URL(filePath: "~/Downloads/1.wav") },
+    delete: { _ in }
   )
 
   static let testValue = Self(
@@ -50,7 +52,8 @@ extension StorageClient: TestDependencyKey {
     write: unimplemented("\(Self.self).write"),
     createNewWhisperURL: unimplemented("\(Self.self).createNewWhisperURL"),
     audioFileURLWithName: unimplemented("\(Self.self).audioFileURLWithName"),
-    waveFileURLWithName: unimplemented("\(Self.self).waveFileURLWithName")
+    waveFileURLWithName: unimplemented("\(Self.self).waveFileURLWithName"),
+    delete: unimplemented("\(Self.self).delete")
   )
 }
 

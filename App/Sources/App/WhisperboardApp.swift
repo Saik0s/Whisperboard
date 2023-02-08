@@ -30,7 +30,7 @@ struct WhisperboardApp: App {
     Color.DS.Background.accentAlt = Color(DynamicColor(hexString: "#B11EF6"))
 
     Color.DS.Text.base = Color(DynamicColor(hexString: "#FFFFFF"))
-    Color.DS.Text.subdued = Color(DynamicColor(hexString: "#5E6272"))
+    Color.DS.Text.subdued = Color(DynamicColor(hexString: "#9195A8"))
     Color.DS.Text.accent = Color(DynamicColor(hexString: "#F85616"))
     Color.DS.Text.accentAlt = Color(DynamicColor(hexString: "#abe4fd"))
 
