@@ -115,10 +115,9 @@ public struct RecordingListScreenView: View {
             ) { cardStore in
               WithViewStore(cardStore) { cardViewStore in
                 RecordingCardView(store: cardStore)
-                  .offset(y: showListItems ? 0 : 100)
+                  .offset(y: showListItems ? 0 : 500)
                   .opacity(showListItems ? 1 : 0)
-                  .animation(.spring(response: 0.5, dampingFraction: 0.5).delay(Double(cardViewStore.listIndex) * 0.15),
-                             // .easeInOut(duration: 0.3).delay(Double(cardViewStore.listIndex) * 0.3),
+                  .animation(.spring(response: 0.6, dampingFraction: 0.75).delay(Double(cardViewStore.listIndex) * 0.15),
                              value: showListItems)
               }
             }

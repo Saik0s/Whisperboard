@@ -74,7 +74,6 @@ public struct WaveformProgress: ReducerProtocol {
         return .none
 
       case let .didTouchAtHorizontalLocation(horizontal):
-        log.debug(horizontal)
         state.progress = horizontal
         return .none
       }
@@ -102,10 +101,10 @@ public struct WaveformProgressView: View {
         .onTouchLocationPercent { horizontal, _ in
           viewStore.send(.didTouchAtHorizontalLocation(horizontal))
         }
-        .padding(.horizontal, .grid(1))
-        .frame(height: 50)
-        .frame(maxWidth: .infinity)
     }
+    .padding(.horizontal, .grid(1))
+    .frame(height: 50)
+    .frame(maxWidth: .infinity)
     .animation(.linear(duration: 0.1), value: viewStore.progress)
     .onAppear {
       viewStore.send(.didAppear)
@@ -115,24 +114,47 @@ public struct WaveformProgressView: View {
 
   @ViewBuilder
   private func waveImageView() -> some View {
-    if let imageURL = viewStore.waveFormImageURL,
-       let image = UIImage(contentsOfFile: imageURL.path) {
+    if let imageURL = viewStore.waveFormImageURL {
+      // let image = UIImage(contentsOfFile: imageURL.path) {
       ZStack {
-        Image(uiImage: image)
-          .resizable()
-        Image(uiImage: image)
-          .resizable()
-          .renderingMode(.template)
-          .foregroundColor(.DS.Text.subdued)
-          .mask(alignment: .leading) {
-            GeometryReader { geometry in
-              if viewStore.isPlaying {
-                Rectangle().frame(width: geometry.size.width * viewStore.progress)
-              } else {
-                Rectangle()
+        AsyncImage(url: imageURL) { image in
+          image
+            .resizable()
+            .renderingMode(.template)
+            .foregroundColor(.DS.Text.subdued)
+        } placeholder: {
+          ProgressView()
+        }
+        // Image(uiImage: image)
+        //   .resizable()
+        //   .renderingMode(.template)
+        //   .foregroundColor(.DS.Text.subdued)
+        AsyncImage(url: imageURL) { image in
+          image
+            .resizable()
+            .mask(alignment: .leading) {
+              GeometryReader { geometry in
+                if viewStore.isPlaying {
+                  Rectangle().frame(width: geometry.size.width * viewStore.progress)
+                } else {
+                  Rectangle()
+                }
               }
             }
-          }
+        } placeholder: {
+          ProgressView()
+        }
+        // Image(uiImage: image)
+        //   .resizable()
+        //   .mask(alignment: .leading) {
+        //     GeometryReader { geometry in
+        //       if viewStore.isPlaying {
+        //         Rectangle().frame(width: geometry.size.width * viewStore.progress)
+        //       } else {
+        //         Rectangle()
+        //       }
+        //     }
+        //   }
       }
     }
   }
