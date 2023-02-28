@@ -57,7 +57,7 @@ struct RecordingCardView: View {
             .font(.DS.captionM)
             .foregroundColor(.DS.Text.subdued)
         }
-          .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
 
         Text(viewStore.currentTimeString)
           .font(.DS.date)
@@ -77,7 +77,7 @@ struct RecordingCardView: View {
         )
       }
     }
-      .multilineTextAlignment(.leading)
+    .multilineTextAlignment(.leading)
     .padding(.grid(4))
     .background(Color.DS.Background.tertiary.opacity(viewStore.mode.isPlaying ? 0.7 : 0))
     .background(Color.DS.Background.secondary)
