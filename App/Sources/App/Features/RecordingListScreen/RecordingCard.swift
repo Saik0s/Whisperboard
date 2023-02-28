@@ -15,7 +15,7 @@ public struct RecordingCard: ReducerProtocol {
     var recordingInfo: RecordingInfo
     var mode = Mode.notPlaying
     var isTranscribing = false
-    var isExpanded = false
+    @BindingState var isExpanded = false
 
     var _waveform = WaveformProgress.State()
     var waveform: WaveformProgress.State {
@@ -34,7 +34,8 @@ public struct RecordingCard: ReducerProtocol {
     }
   }
 
-  public enum Action: Equatable {
+  public enum Action: BindableAction, Equatable {
+    case binding(BindingAction<State>)
     case audioPlayerFinished(TaskResult<Bool>)
     case playButtonTapped
     case progressUpdated(Double)
@@ -47,12 +48,17 @@ public struct RecordingCard: ReducerProtocol {
   private enum PlayID {}
 
   public var body: some ReducerProtocol<State, Action> {
+    BindingReducer()
+
     Scope(state: \.waveform, action: /Action.waveform) {
       WaveformProgress()
     }
 
     Reduce<State, Action> { state, action in
       switch action {
+      case .binding:
+        return .none
+
       case .audioPlayerFinished:
         state.mode = .notPlaying
         return .cancel(id: PlayID.self)

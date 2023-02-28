@@ -135,12 +135,15 @@ public struct RecordingListScreen: ReducerProtocol {
 // MARK: - RecordingListScreenView
 
 public struct RecordingListScreenView: View {
+  enum ViewMode: Hashable { case audio, text }
+
   @ObserveInjection var inject
 
   let store: StoreOf<RecordingListScreen>
   @ObservedObject var viewStore: ViewStoreOf<RecordingListScreen>
 
   @State var showListItems = false
+  @State var viewMode: ViewMode = .audio
 
   public init(store: StoreOf<RecordingListScreen>) {
     self.store = store
@@ -161,56 +164,15 @@ public struct RecordingListScreenView: View {
         //   .disableAutocorrection(true)
         // }
         // .padding(.horizontal, 16)
+        Picker(selection: $viewMode, label: Text("Display style")) {
+          Image(systemName: "waveform.path.ecg").tag(ViewMode.audio)
+          Image(systemName: "doc.text").tag(ViewMode.text)
+        }.pickerStyle(.segmented)
 
         ScrollView {
           LazyVStack(spacing: .grid(4)) {
             ForEachWithIndex(viewStore.recordings) { index, recording in
-              HStack(spacing: .grid(2)) {
-                if viewStore.editMode.isEditing {
-                  Button {
-                    viewStore.send(.delete(id: recording.id))
-                  } label: {
-                    Image(systemName: "multiply.circle.fill")
-                      .foregroundColor(.DS.Text.error)
-                  }
-                }
-
-                NavigationLink(
-                  destination: IfLetStore(
-                    self.store.scope(
-                      state: \.selection?.value,
-                      action: RecordingListScreen.Action.details
-                    )
-                  ) {
-                    RecordingDetailsView(store: $0)
-                      .navigationBarItems(
-                        trailing: HStack(spacing: .grid(4)) {
-                          Button { viewStore.send(.delete(id: recording.id)) } label: {
-                            Image(systemName: "trash.circle")
-                          }
-                        }
-                      )
-                  },
-                  tag: recording.id,
-                  selection: viewStore.binding(
-                    get: \.selection?.id,
-                    send: RecordingListScreen.Action.recordingSelected(id:)
-                  )
-                ) {
-                  IfLetStore(
-                    self.store.scope(
-                      state: { $0.recordings.first(where: { $0.id == recording.id }) },
-                      action: { RecordingListScreen.Action.recording(id: recording.id, action: $0) }
-                    )
-                  ) { cardStore in
-                    RecordingCardView(store: cardStore)
-                      .offset(y: showListItems ? 0 : 500)
-                      .opacity(showListItems ? 1 : 0)
-                      .animation(.spring(response: 0.6, dampingFraction: 0.75).delay(Double(index) * 0.15),
-                                 value: showListItems)
-                  }
-                }
-              }
+              RecordingRow(recording: recording, index: index)
             }
           }
           .padding(.grid(4))
@@ -241,6 +203,61 @@ public struct RecordingListScreenView: View {
       viewStore.send(.readStoredRecordings)
     }
     .enableInjection()
+  }
+}
+
+extension RecordingListScreenView {
+  private func RecordingRow(recording: RecordingCard.State, index: Int) -> some View {
+    HStack(spacing: .grid(2)) {
+      if viewStore.editMode.isEditing {
+        Button {
+          viewStore.send(.delete(id: recording.id))
+        } label: {
+          Image(systemName: "multiply.circle.fill")
+            .foregroundColor(.DS.Text.error)
+        }
+      }
+
+      NavigationLink(
+        destination: IfLetStore(
+          self.store.scope(
+            state: \.selection?.value,
+            action: RecordingListScreen.Action.details
+          )
+        ) {
+          RecordingDetailsView(store: $0)
+            .navigationBarItems(
+              trailing: HStack(spacing: .grid(4)) {
+                Button { viewStore.send(.delete(id: recording.id)) } label: {
+                  Image(systemName: "trash.circle")
+                }
+              }
+            )
+        },
+        tag: recording.id,
+        selection: viewStore.binding(
+          get: \.selection?.id,
+          send: RecordingListScreen.Action.recordingSelected(id:)
+        )
+      ) {
+        IfLetStore(
+          self.store.scope(
+            state: { $0.recordings.first(where: { $0.id == recording.id }) },
+            action: { RecordingListScreen.Action.recording(id: recording.id, action: $0) }
+          )
+        ) { cardStore in
+          if viewMode == .audio {
+            RecordingCardView(store: cardStore)
+          } else {
+            RecordingTextView(store: cardStore)
+          }
+        }
+        .offset(y: showListItems ? 0 : 500)
+        .opacity(showListItems ? 1 : 0)
+        .animation(.spring(response: 0.6, dampingFraction: 0.75).delay(Double(index) * 0.15),
+                   value: showListItems)
+      }
+    }
   }
 }
 
