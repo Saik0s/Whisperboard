@@ -1,12 +1,14 @@
 import Foundation
 import ProjectDescription
 
+let version = "1.4.0"
+
 let projectSettings: SettingsDictionary = [
   "GCC_TREAT_WARNINGS_AS_ERRORS": "YES",
   // "SWIFT_TREAT_WARNINGS_AS_ERRORS": "YES",
   "CODE_SIGN_STYLE": "Automatic",
   "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
-  "MARKETING_VERSION": "1.3.0",
+  "MARKETING_VERSION": SettingValue(stringLiteral: version),
 ]
 
 let debugSettings: SettingsDictionary = [
@@ -22,7 +24,7 @@ func appTarget(isHot: Bool = false) -> Target {
     bundleId: "me.igortarasenko.Whisperboard" + (isHot ? ".hot" : ""),
     deploymentTarget: .iOS(targetVersion: "16.0", devices: .iphone),
     infoPlist: .extendingDefault(with: [
-      "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+      "CFBundleShortVersionString": InfoPlist.Value.string(version),
       "CFBundleURLTypes": [
         [
           "CFBundleTypeRole": "Editor",
@@ -55,6 +57,8 @@ func appTarget(isHot: Bool = false) -> Target {
       .external(name: "OpenAI"),
       .external(name: "DSWaveformImage"),
       .external(name: "DSWaveformImageViews"),
+      .external(name: "Lottie"),
+      .external(name: "LottieUI"),
       .package(product: "whisper"),
     ] + (isHot ? [.package(product: "HotReloading")] : [])
   )
@@ -68,7 +72,6 @@ func keyboardTarget(isHot: Bool = false) -> Target {
     bundleId: "me.igortarasenko.Whisperboard\(isHot ? ".hot" : "").Keyboard",
     infoPlist: .extendingDefault(with: [
       "CFBundleDisplayName": "WhisperBoard\(isHot ? " Hot" : "") Keyboard",
-      "CFBundleShortVersionString": "$(MARKETING_VERSION)",
       "NSExtension": [
         "NSExtensionAttributes": [
           "PrimaryLanguage": "en-US",
@@ -79,6 +82,7 @@ func keyboardTarget(isHot: Bool = false) -> Target {
         "NSExtensionPointIdentifier": "com.apple.keyboard-service",
         "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).KeyboardViewController",
       ],
+      "CFBundleShortVersionString": InfoPlist.Value.string(version),
     ]),
     sources: .paths([.relativeToManifest("Keyboard/Sources/**")]),
     resources: [
@@ -116,6 +120,6 @@ let project = Project(
     keyboardTarget(isHot: true),
   ],
   resourceSynthesizers: [
-    .files(extensions: ["bin"]),
+    .files(extensions: ["bin", "json"]),
   ]
 )

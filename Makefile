@@ -11,3 +11,6 @@ build_debug:
 
 build_release:
 	tuist build --generate --configuration Release --build-output-path .build/
+
+format:
+	swiftformat . --config .swiftformat
