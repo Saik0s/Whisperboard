@@ -22,6 +22,7 @@ public struct RecordingListScreen: ReducerProtocol {
     case recording(id: RecordingCard.State.ID, action: RecordingCard.Action)
     case delete(id: RecordingInfo.ID)
     case plusButtonTapped
+    case addFileRecordings(urls: [URL])
     case deleteDialogConfirmed(id: RecordingInfo.ID)
     case details(action: RecordingDetails.Action)
     case recordingSelected(id: RecordingInfo.ID?)
@@ -52,7 +53,8 @@ public struct RecordingListScreen: ReducerProtocol {
         case let .setRecordings(.success(recordings)):
           state.recordings = recordings.map { info in
             RecordingCard.State(recordingInfo: info)
-          }.identifiedArray
+          }
+          .identifiedArray
           return .none
 
         case let .setRecordings(.failure(error)):
@@ -78,6 +80,21 @@ public struct RecordingListScreen: ReducerProtocol {
           return .none
 
         case .plusButtonTapped:
+          return .none
+
+        case let .addFileRecordings(urls):
+          let recordings = urls.map { url -> RecordingInfo in
+            let fileName = url.lastPathComponent
+            let newURL = storage.audioFileURLWithName(fileName)
+            do {
+              try FileManager.default.copyItem(at: url, to: newURL)
+            } catch {
+              log(error)
+            }
+            let recordingInfo = RecordingInfo(fileName: fileName, date: Date(), duration: 0)
+            return recordingInfo
+          }
+          state.recordings.append(contentsOf: recordings.map { RecordingCard.State(recordingInfo: $0) })
           return .none
 
         case let .deleteDialogConfirmed(id):
@@ -120,7 +137,8 @@ public struct RecordingListScreen: ReducerProtocol {
       }
       state.recordings = state.recordings.map { recordingCard in
         recordingCard.id == selection.id ? selection.value.recordingCard : recordingCard
-      }.identified()
+      }
+      .identified()
       return .none
     }
     .onChange(of: \.recordings) { recordings, _, _ -> EffectTask<Action> in
@@ -137,6 +155,8 @@ public struct RecordingListScreen: ReducerProtocol {
 public struct RecordingListScreenView: View {
   enum ViewMode: Hashable { case audio, text }
 
+  @Namespace var animation
+
   @ObserveInjection var inject
 
   let store: StoreOf<RecordingListScreen>
@@ -148,11 +168,17 @@ public struct RecordingListScreenView: View {
   public init(store: StoreOf<RecordingListScreen>) {
     self.store = store
     viewStore = ViewStore(store)
+
+    UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(Color.DS.Background.accent)
+    UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor.black], for: .selected)
+    UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor.white], for: .normal)
+    UISegmentedControl.appearance().backgroundColor = .clear
+    UISegmentedControl.appearance().setBackgroundImage(nil, for: .normal, barMetrics: .default)
   }
 
   public var body: some View {
     NavigationView {
-      VStack(alignment: .leading) {
+      VStack(alignment: .leading, spacing: 0) {
         // HStack {
         //   Image(systemName: "magnifyingglass")
         //   TextField(
@@ -164,10 +190,16 @@ public struct RecordingListScreenView: View {
         //   .disableAutocorrection(true)
         // }
         // .padding(.horizontal, 16)
+
         Picker(selection: $viewMode, label: Text("Display style")) {
-          Image(systemName: "waveform.path.ecg").tag(ViewMode.audio)
-          Image(systemName: "doc.text").tag(ViewMode.text)
-        }.pickerStyle(.segmented)
+          Image(systemName: "waveform.path.ecg")
+            .tag(ViewMode.audio)
+          Image(systemName: "doc.text")
+            .tag(ViewMode.text)
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal, .grid(4))
+        .padding(.vertical, .grid(6))
 
         ScrollView {
           LazyVStack(spacing: .grid(4)) {
@@ -184,12 +216,14 @@ public struct RecordingListScreenView: View {
       }
       .screenRadialBackground()
       .navigationTitle("Recordings")
+      .navigationBarTitleDisplayMode(.inline)
       .navigationBarItems(
-        trailing: HStack(spacing: .grid(4)) {
-          EditButton()
-          Button { viewStore.send(.plusButtonTapped) } label: {
-            Image(systemName: "plus")
-          }
+        leading: EditButton().tint(.DS.Text.base),
+        trailing: FilePicker(types: [.wav], allowMultiple: true) { urls in
+          viewStore.send(.addFileRecordings(urls: urls))
+        } label: {
+          Image(systemName: "plus")
+            .tint(.DS.Text.base)
         }
       )
       .environment(
@@ -248,14 +282,17 @@ extension RecordingListScreenView {
         ) { cardStore in
           if viewMode == .audio {
             RecordingCardView(store: cardStore)
+              .matchedGeometryEffect(id: "row\(recording.id)", in: animation)
           } else {
             RecordingTextView(store: cardStore)
+              .matchedGeometryEffect(id: "row\(recording.id)", in: animation)
           }
         }
         .offset(y: showListItems ? 0 : 500)
         .opacity(showListItems ? 1 : 0)
         .animation(.spring(response: 0.6, dampingFraction: 0.75).delay(Double(index) * 0.15),
                    value: showListItems)
+        .animation(.gentleBounce(), value: viewMode)
       }
     }
   }
@@ -264,14 +301,12 @@ extension RecordingListScreenView {
 #if DEBUG
   struct RecordingListScreenView_Previews: PreviewProvider {
     static var previews: some View {
-      NavigationView {
-        RecordingListScreenView(
-          store: Store(
-            initialState: RecordingListScreen.State(),
-            reducer: RecordingListScreen()
-          )
+      RecordingListScreenView(
+        store: Store(
+          initialState: RecordingListScreen.State(),
+          reducer: RecordingListScreen()
         )
-      }
+      )
     }
   }
 #endif

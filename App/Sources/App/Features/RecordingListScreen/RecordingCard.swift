@@ -40,8 +40,10 @@ public struct RecordingCard: ReducerProtocol {
     case playButtonTapped
     case progressUpdated(Double)
     case waveform(WaveformProgress.Action)
+    case transcribeTapped
   }
 
+  @Dependency(\.transcriber) var transcriber: TranscriberClient
   @Dependency(\.audioPlayer) var audioPlayer
   @Dependency(\.storage) var storage
 
@@ -84,6 +86,29 @@ public struct RecordingCard: ReducerProtocol {
 
       case .waveform:
         return .none
+
+      case .transcribeTapped:
+        let selectedModelName = UserDefaults.standard.selectedModelName
+        let modelType = VoiceModelType.allCases.first { $0.name == selectedModelName } ?? .default
+        let fileURL = storage.audioFileURLWithName(state.recordingInfo.fileName)
+        let modelURL = modelType.localURL
+
+        return .run { [recordingInfo = state.recordingInfo] send in
+          await send(.binding(.set(\.isTranscribing, true)))
+
+          do {
+            let text = try await transcriber.transcribeAudio(fileURL, modelURL)
+            let recordingInfo = recordingInfo.with { info in
+              info.text = text
+              info.isTranscribed = true
+            }
+            await send(.binding(.set(\.recordingInfo, recordingInfo)))
+          } catch {
+            log(error)
+          }
+
+          await send(.binding(.set(\.isTranscribing, false)))
+        }
       }
     }
   }
