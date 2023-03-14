@@ -95,8 +95,7 @@ struct RootView: View {
       }
       .task { viewStore.send(.settings(.modelSelector(.task))) }
     }
-    .accentColor(Color.DS.Background.accent)
-    .environment(\.colorScheme, .dark)
+    .accentColor(Color.DS.Text.accent)
   }
 }
 
