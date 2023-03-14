@@ -1,0 +1,167 @@
+{
+  "pins" : [
+    {
+      "identity" : "appdevutils",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Saik0s/AppDevUtils.git",
+      "state" : {
+        "revision" : "452270011affc84af148252277bf3786e374900f",
+        "version" : "0.2.0"
+      }
+    },
+    {
+      "identity" : "combine-schedulers",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/combine-schedulers",
+      "state" : {
+        "revision" : "882ac01eb7ef9e36d4467eb4b1151e74fcef85ab",
+        "version" : "0.9.1"
+      }
+    },
+    {
+      "identity" : "dswaveformimage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dmrschmidt/DSWaveformImage.git",
+      "state" : {
+        "revision" : "5814189fe74e7c2f76f07d941139c0758ea5b304",
+        "version" : "11.0.1"
+      }
+    },
+    {
+      "identity" : "dynamiccolor",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/yannickl/DynamicColor.git",
+      "state" : {
+        "revision" : "d9beca13ca85baa50ee29832d0db5129fba69630",
+        "version" : "5.0.1"
+      }
+    },
+    {
+      "identity" : "inject",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/krzysztofzablocki/Inject.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "abcc4b091fd384cfd09b149a60298b75dc87c5b9"
+      }
+    },
+    {
+      "identity" : "keyboardkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/KeyboardKit/KeyboardKit.git",
+      "state" : {
+        "revision" : "f5e6c5166feb785010f854437e367a40353c0f53",
+        "version" : "6.9.10"
+      }
+    },
+    {
+      "identity" : "lottie-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/airbnb/lottie-ios.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "8bf6161d81354b5fa231d0340f4e819f26b0153f"
+      }
+    },
+    {
+      "identity" : "lottieui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/jasudev/LottieUI.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "a147e5abba3c0918e8cca6f76d1d303264ba0ab9"
+      }
+    },
+    {
+      "identity" : "openai",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Saik0s/OpenAI.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "57f9e96ef5bb159695c5bb68ca155ccf7a7b25aa"
+      }
+    },
+    {
+      "identity" : "swift-case-paths",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-case-paths",
+      "state" : {
+        "revision" : "870133b7b2387df136ad301ec67b2e864b51dda1",
+        "version" : "0.14.0"
+      }
+    },
+    {
+      "identity" : "swift-clocks",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-clocks",
+      "state" : {
+        "revision" : "20b25ca0dd88ebfb9111ec937814ddc5a8880172",
+        "version" : "0.2.0"
+      }
+    },
+    {
+      "identity" : "swift-collections",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-collections",
+      "state" : {
+        "revision" : "937e904258d22af6e447a0b72c0bc67583ef64a2",
+        "version" : "1.0.4"
+      }
+    },
+    {
+      "identity" : "swift-composable-architecture",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-composable-architecture.git",
+      "state" : {
+        "revision" : "3e8eee1efe99d06e99426d421733b858b332186b",
+        "version" : "0.52.0"
+      }
+    },
+    {
+      "identity" : "swift-custom-dump",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-custom-dump",
+      "state" : {
+        "revision" : "de8ba65649e7ee317b9daf27dd5eebf34bd4be57",
+        "version" : "0.9.1"
+      }
+    },
+    {
+      "identity" : "swift-dependencies",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-dependencies",
+      "state" : {
+        "revision" : "6bb1034e8a1bfbf46dfb766b6c09b7b17e1cba10",
+        "version" : "0.2.0"
+      }
+    },
+    {
+      "identity" : "swift-identified-collections",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-identified-collections",
+      "state" : {
+        "revision" : "ad3932d28c2e0a009a0167089619526709ef6497",
+        "version" : "0.7.0"
+      }
+    },
+    {
+      "identity" : "swiftui-navigation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swiftui-navigation",
+      "state" : {
+        "revision" : "0a0e1b321d70ee6a464ecfe6b0136d9eff77ebfc",
+        "version" : "0.7.0"
+      }
+    },
+    {
+      "identity" : "xctest-dynamic-overlay",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
+      "state" : {
+        "revision" : "ab8c9f45843694dd16be4297e6d44c0634fd9913",
+        "version" : "0.8.4"
+      }
+    }
+  ],
+  "version" : 2
+}

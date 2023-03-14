@@ -79,7 +79,6 @@ playground.xcworkspace
 
 /Packages
 Package.pins
-Package.resolved
 .build/
 /*.xcodeproj
 .swiftpm/config/registries.json
@@ -121,3 +120,7 @@ Private/
 .prompt
 Whisperboard/Resources/*.bin
 App/Sources/App/Clients/Secrets.swift
+Tuist/Dependencies/SwiftPackageManager
+Tuist/Dependencies/graph.json
+**/Derived/
+Derived/
