@@ -23,12 +23,15 @@
     </a>
 </p>
 
+<h2 align="center">🚧 Work in progress 🚧</h2>
+
 ## Features
 
 - Easy-to-use voice recording and playback
-- Automatic transcription of recorded audio using Whisper from OpenAI
-- Custom keyboard with a button to quickly access the app for recording and transcription
+- Transcription of recorded audio using Whisper from OpenAI
+- Custom keyboard with a button to quickly access the app
 - Ability to save and share your recordings
+- Ability to select microphone for recording
 - Experimental improver of transcription using GPT3 from OpenAI
 
 ## Future Plans
@@ -37,7 +40,6 @@
 - History of transcriptions
 - Organize recordings in folders
 - Watch app
-- Customizable recording settings, including the ability to select microphone
 
 ## Installation
 
