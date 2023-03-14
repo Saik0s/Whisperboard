@@ -30,7 +30,7 @@ extension ModelDownloadClient {
               switch result {
               case let .success(url):
                 do {
-                  try FileManager.default.removeItem(at: destination)
+                  try? FileManager.default.removeItem(at: destination)
                   try FileManager.default.moveItem(at: url, to: destination)
                   continuation.yield(.success(fileURL: url))
                 } catch {

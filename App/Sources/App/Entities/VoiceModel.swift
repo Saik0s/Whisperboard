@@ -22,10 +22,10 @@ enum VoiceModelType: String, CaseIterable {
   case base
   case smallEN = "small.en"
   case small
-  // case mediumEN = "medium.en"
-  // case medium = "medium"
-  // case largeV1 = "large-v1"
-  // case large = "large"
+  case mediumEN = "medium.en"
+  case medium
+  case largeV1 = "large-v1"
+  case large
 
   var name: String { "ggml-\(rawValue).bin" }
 
@@ -37,10 +37,10 @@ enum VoiceModelType: String, CaseIterable {
     case .base: return "Base"
     case .smallEN: return "Small (English)"
     case .small: return "Small"
-      // case .mediumEN: return "Medium (English)"
-      // case .medium: return "Medium (Chinese)"
-      // case .largeV1: return "Large (English)"
-      // case .large: return "Large (Chinese)"
+    case .mediumEN: return "Medium (English)"
+    case .medium: return "Medium"
+    case .largeV1: return "Large (v1)"
+    case .large: return "Large"
     }
   }
 
@@ -49,8 +49,8 @@ enum VoiceModelType: String, CaseIterable {
     case .tinyEN, .tiny: return "75 MB"
     case .baseEN, .base: return "142 MB"
     case .smallEN, .small: return "466 MB"
-      // case .mediumEN, .medium: return "1.5 GB"
-      // case .largeV1, .large: return "2.9 GB"
+    case .mediumEN, .medium: return "1.5 GB"
+    case .largeV1, .large: return "2.9 GB"
     }
   }
 

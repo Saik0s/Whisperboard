@@ -48,8 +48,10 @@ func appTarget(isHot: Bool = false) -> Target {
     ]),
     sources: .paths([.relativeToManifest("App/Sources/**")]),
     resources: [
-      "App/Resources/**",
+      "App/Resources/Assets.xcassets",
+      "App/Resources/ggml-tiny.bin",
     ],
+    entitlements: "App/Resources/app.entitlements",
     dependencies: [
       .target(name: "WhisperBoardKeyboard" + (isHot ? "Hot" : "")),
       .external(name: "AppDevUtils"),
