@@ -16,21 +16,21 @@ let debugSettings: SettingsDictionary = [
   "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
 ]
 
-func appTarget(isHot: Bool = false) -> Target {
+func appTarget() -> Target {
   Target(
-    name: "WhisperBoard" + (isHot ? "Hot" : ""),
+    name: "WhisperBoard",
     platform: .iOS,
     product: .app,
-    bundleId: "me.igortarasenko.Whisperboard" + (isHot ? ".hot" : ""),
+    bundleId: "me.igortarasenko.Whisperboard",
     deploymentTarget: .iOS(targetVersion: "16.0", devices: .iphone),
     infoPlist: .extendingDefault(with: [
       "CFBundleShortVersionString": InfoPlist.Value.string(version),
       "CFBundleURLTypes": [
         [
           "CFBundleTypeRole": "Editor",
-          "CFBundleURLName": .string("WhisperBoard" + (isHot ? "Hot" : "")),
+          "CFBundleURLName": .string("WhisperBoard"),
           "CFBundleURLSchemes": [
-            .string("whisperboard" + (isHot ? "-hot" : "")),
+            .string("whisperboard"),
           ],
         ],
       ],
@@ -53,7 +53,7 @@ func appTarget(isHot: Bool = false) -> Target {
     ],
     entitlements: "App/Resources/app.entitlements",
     dependencies: [
-      .target(name: "WhisperBoardKeyboard" + (isHot ? "Hot" : "")),
+      .target(name: "WhisperBoardKeyboard"),
       .external(name: "AppDevUtils"),
       .external(name: "Inject"),
       .external(name: "OpenAI"),
@@ -62,18 +62,18 @@ func appTarget(isHot: Bool = false) -> Target {
       .external(name: "Lottie"),
       .external(name: "LottieUI"),
       .package(product: "whisper"),
-    ] + (isHot ? [.package(product: "HotReloading")] : [])
+    ]
   )
 }
 
-func keyboardTarget(isHot: Bool = false) -> Target {
+func keyboardTarget() -> Target {
   Target(
-    name: "WhisperBoardKeyboard" + (isHot ? "Hot" : ""),
+    name: "WhisperBoardKeyboard",
     platform: .iOS,
     product: .appExtension,
-    bundleId: "me.igortarasenko.Whisperboard\(isHot ? ".hot" : "").Keyboard",
+    bundleId: "me.igortarasenko.Whisperboard.Keyboard",
     infoPlist: .extendingDefault(with: [
-      "CFBundleDisplayName": "WhisperBoard\(isHot ? " Hot" : "") Keyboard",
+      "CFBundleDisplayName": "WhisperBoard Keyboard",
       "NSExtension": [
         "NSExtensionAttributes": [
           "PrimaryLanguage": "en-US",
@@ -107,7 +107,6 @@ let project = Project(
   ),
   packages: [
     .package(url: "https://github.com/ggerganov/whisper.spm", .branch("master")),
-    .package(url: "https://github.com/johnno1962/HotReloading", .branch("main")),
   ],
   settings: .settings(
     base: projectSettings,
@@ -117,9 +116,7 @@ let project = Project(
   ),
   targets: [
     appTarget(),
-    appTarget(isHot: true),
     keyboardTarget(),
-    keyboardTarget(isHot: true),
   ],
   resourceSynthesizers: [
     .files(extensions: ["bin", "json"]),
