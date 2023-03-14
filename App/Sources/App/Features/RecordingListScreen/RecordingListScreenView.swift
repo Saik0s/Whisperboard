@@ -170,7 +170,7 @@ public struct RecordingListScreenView: View {
     viewStore = ViewStore(store)
 
     UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(Color.DS.Background.accent)
-    UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor.black], for: .selected)
+    UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
     UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor.white], for: .normal)
     UISegmentedControl.appearance().backgroundColor = .clear
     UISegmentedControl.appearance().setBackgroundImage(nil, for: .normal, barMetrics: .default)
@@ -280,12 +280,12 @@ extension RecordingListScreenView {
             action: { RecordingListScreen.Action.recording(id: recording.id, action: $0) }
           )
         ) { cardStore in
-          if viewMode == .audio {
-            RecordingCardView(store: cardStore)
-              .matchedGeometryEffect(id: "row\(recording.id)", in: animation)
-          } else {
-            RecordingTextView(store: cardStore)
-              .matchedGeometryEffect(id: "row\(recording.id)", in: animation)
+          ZStack {
+            if viewMode == .audio {
+              RecordingCardView(store: cardStore)
+            } else {
+              RecordingTextView(store: cardStore)
+            }
           }
         }
         .offset(y: showListItems ? 0 : 500)
