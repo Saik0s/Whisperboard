@@ -148,7 +148,6 @@ public struct RecordScreenView: View {
       .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
     }
     .screenRadialBackground()
-    .navigationTitle("RecordScreen")
     .enableInjection()
   }
 }

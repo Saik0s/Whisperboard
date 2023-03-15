@@ -30,10 +30,13 @@ public struct MicSelector: ReducerProtocol {
       switch action {
       case .task:
         return .run { send in
-          for await mics in await audioRecorder.availableMicrophones() {
+          for await mics in try await audioRecorder.availableMicrophones() {
             log.debug(mics)
             await send(.micsUpdated(mics))
           }
+        } catch: { error, send in
+          log.error(error)
+          await send(.errorWhileSettingMic(error.equatable))
         }
 
       case let .micsUpdated(mics):
@@ -42,7 +45,10 @@ public struct MicSelector: ReducerProtocol {
 
       case .checkCurrentMic:
         return .task {
-          await .setCurrentMic(audioRecorder.currentMicrophone())
+          try await .setCurrentMic(audioRecorder.currentMicrophone())
+        } catch: { error in
+          log.error(error)
+          return .errorWhileSettingMic(error.equatable)
         }
 
       case let .setCurrentMic(mic):
@@ -51,13 +57,11 @@ public struct MicSelector: ReducerProtocol {
 
       case let .micSelected(mic):
         return .task {
-          do {
-            try await audioRecorder.setMicrophone(mic)
-            return .setCurrentMic(mic)
-          } catch {
-            log.error(error)
-            return .errorWhileSettingMic(error.equatable)
-          }
+          try await audioRecorder.setMicrophone(mic)
+          return .setCurrentMic(mic)
+        } catch: { error in
+          log.error(error)
+          return .errorWhileSettingMic(error.equatable)
         }
 
       case let .errorWhileSettingMic(error):

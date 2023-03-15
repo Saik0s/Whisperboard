@@ -12,6 +12,7 @@ public struct Recording: ReducerProtocol {
     var duration: TimeInterval = 0
     var mode: Mode = .recording
     var url: URL
+    var samples: [Float] = []
 
     enum Mode {
       case recording
@@ -24,8 +25,11 @@ public struct Recording: ReducerProtocol {
     case delegate(DelegateAction)
     case finalRecordingTime(TimeInterval)
     case task
-    case timerUpdated
+    case recordingStateUpdated(RecordingState)
     case stopButtonTapped
+    case pauseButtonTapped
+    case continueButtonTapped
+    case deleteButtonTapped
   }
 
   public enum DelegateAction: Equatable {
@@ -65,24 +69,41 @@ public struct Recording: ReducerProtocol {
         }
         await self.audioRecorder.stopRecording()
       }
+      .append(EffectTask.cancel(id: CancelID()))
+      .eraseToEffect()
 
     case .task:
-      return .run { [url = state.url] send in
-        async let startRecording: Void = send(
-          .audioRecorderDidFinish(
-            TaskResult { try await self.audioRecorder.startRecording(url) }
-          )
-        )
-        for await _ in self.clock.timer(interval: .seconds(1)) {
-          await send(.timerUpdated)
+      return .run { [url = state.url, audioRecorder] send in
+        await audioRecorder.startRecording(url)
+
+        for await recState in await audioRecorder.recordingState() {
+          await send(.recordingStateUpdated(recState))
         }
-        await startRecording
       }
       .cancellable(id: CancelID())
 
-    case .timerUpdated:
-      state.duration += 1
+    case let .recordingStateUpdated(.recording(duration, power)):
+      state.duration = duration
+      state.samples.append(power)
       return .none
+
+    case .recordingStateUpdated:
+      return .none
+
+    case .pauseButtonTapped:
+      return .fireAndForget { [audioRecorder] in
+        await audioRecorder.pauseRecording()
+      }
+
+    case .continueButtonTapped:
+      return .fireAndForget { [audioRecorder] in
+        await audioRecorder.continueRecording()
+      }
+
+    case .deleteButtonTapped:
+      return .fireAndForget { [audioRecorder] in
+        await audioRecorder.stopRecording()
+      }
     }
   }
 }
