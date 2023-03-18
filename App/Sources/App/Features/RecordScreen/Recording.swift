@@ -1,12 +1,12 @@
 import AppDevUtils
 import ComposableArchitecture
+import DSWaveformImage
+import DSWaveformImageViews
 import SwiftUI
 
 // MARK: - Recording
 
 public struct Recording: ReducerProtocol {
-  struct CancelID: Hashable {}
-
   public struct State: Equatable {
     var date: Date
     var duration: TimeInterval = 0
@@ -17,23 +17,25 @@ public struct Recording: ReducerProtocol {
     enum Mode {
       case recording
       case encoding
+      case paused
+      case removing
     }
   }
 
   public enum Action: Equatable {
-    case audioRecorderDidFinish(TaskResult<Bool>)
+    case task
     case delegate(DelegateAction)
     case finalRecordingTime(TimeInterval)
-    case task
-    case recordingStateUpdated(RecordingState)
     case stopButtonTapped
     case pauseButtonTapped
     case continueButtonTapped
     case deleteButtonTapped
+    case recordingStateUpdated(RecordingState)
   }
 
   public enum DelegateAction: Equatable {
     case didFinish(TaskResult<State>)
+    case didCancel
   }
 
   struct Failed: Equatable, Error {}
@@ -43,14 +45,17 @@ public struct Recording: ReducerProtocol {
 
   public func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
     switch action {
-    case .audioRecorderDidFinish(.success(true)):
-      return .task { [state] in .delegate(.didFinish(.success(state))) }
+    case .task:
+      state.mode = .recording
+      UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
-    case .audioRecorderDidFinish(.success(false)):
-      return .task { .delegate(.didFinish(.failure(Failed()))) }
+      return .run { [url = state.url, audioRecorder] send in
+        await audioRecorder.startRecording(url)
 
-    case let .audioRecorderDidFinish(.failure(error)):
-      return .task { .delegate(.didFinish(.failure(error))) }
+        for await recState in await audioRecorder.recordingState() {
+          await send(.recordingStateUpdated(recState))
+        }
+      }
 
     case .delegate:
       return .none
@@ -64,45 +69,56 @@ public struct Recording: ReducerProtocol {
       UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
       return .run { send in
-        if let currentTime = await self.audioRecorder.currentTime() {
-          await send(.finalRecordingTime(currentTime))
-        }
-        await self.audioRecorder.stopRecording()
+        await audioRecorder.stopRecording()
+        await send(.finalRecordingTime(audioRecorder.currentTime()))
       }
-      .append(EffectTask.cancel(id: CancelID()))
-      .eraseToEffect()
-
-    case .task:
-      return .run { [url = state.url, audioRecorder] send in
-        await audioRecorder.startRecording(url)
-
-        for await recState in await audioRecorder.recordingState() {
-          await send(.recordingStateUpdated(recState))
-        }
-      }
-      .cancellable(id: CancelID())
-
-    case let .recordingStateUpdated(.recording(duration, power)):
-      state.duration = duration
-      state.samples.append(power)
-      return .none
-
-    case .recordingStateUpdated:
-      return .none
 
     case .pauseButtonTapped:
+      state.mode = .paused
       return .fireAndForget { [audioRecorder] in
         await audioRecorder.pauseRecording()
       }
 
     case .continueButtonTapped:
+      state.mode = .recording
       return .fireAndForget { [audioRecorder] in
         await audioRecorder.continueRecording()
       }
 
     case .deleteButtonTapped:
+      state.mode = .removing
       return .fireAndForget { [audioRecorder] in
-        await audioRecorder.stopRecording()
+        await audioRecorder.removeCurrentRecording()
+      }
+
+    case let .recordingStateUpdated(.recording(duration, power)):
+      state.duration = duration
+      let linear = 1 - pow(10, power / 20)
+      state.samples.append(contentsOf: [linear, linear, linear])
+      return .none
+
+    case .recordingStateUpdated(.paused):
+      state.mode = .paused
+      return .none
+
+    case .recordingStateUpdated(.stopped):
+      state.mode = .encoding
+      return .none
+
+    case let .recordingStateUpdated(.error(error)):
+      return .task { .delegate(.didFinish(.failure(error))) }
+
+    case let .recordingStateUpdated(.finished(successfully)):
+      return .task { [state] in
+        guard state.mode == .encoding else {
+          return .delegate(.didCancel)
+        }
+
+        if successfully {
+          return .delegate(.didFinish(.success(state)))
+        } else {
+          return .delegate(.didFinish(.failure(Failed())))
+        }
       }
     }
   }
@@ -114,41 +130,77 @@ struct RecordingView: View {
   let store: StoreOf<Recording>
   @ObservedObject var viewStore: ViewStoreOf<Recording>
 
+  var currentTime: String {
+    dateComponentsFormatter.string(from: viewStore.duration) ?? ""
+  }
+
   init(store: StoreOf<Recording>) {
     self.store = store
     viewStore = ViewStore(store)
   }
 
   var body: some View {
-    VStack {
-      HStack {
-        VStack(spacing: 12) {
-          Text("Recording")
-            .font(.title)
-            .colorMultiply(Int(viewStore.duration).isMultiple(of: 2) ? Color.DS.Background.accent : Color.DS.Text.base)
-            .animation(.easeInOut(duration: 0.5), value: viewStore.duration)
+    VStack(spacing: .grid(3)) {
+      WaveformLiveCanvas(samples: viewStore.samples, configuration: Waveform.Configuration(
+        backgroundColor: .clear,
+        style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
+        dampening: .init(percentage: 0.125, sides: .both),
+        position: .middle,
+        scale: DSScreen.scale,
+        verticalScalingFactor: 0.95,
+        shouldAntialias: true
+      ))
+      .frame(maxWidth: .infinity)
 
-          if let formattedDuration = dateComponentsFormatter.string(from: viewStore.duration) {
-            Text(formattedDuration)
-              .font(.body.monospacedDigit().bold())
-              .foregroundColor(Color.DS.Stroke.base)
+      Text(currentTime)
+        .font(.DS.titleL)
+        .monospaced()
+        .foregroundColor(.DS.Text.accent)
+
+      HStack(spacing: .grid(8)) {
+        if viewStore.mode == .paused {
+          Button { viewStore.send(.deleteButtonTapped, animation: .default) }
+          label: { Image(systemName: "multiply").font(.DS.titleL) }
+            .frame(width: 50, height: 50)
+            .transition(.move(edge: .trailing)
+              .combined(with: .opacity))
+        }
+
+        ZStack {
+          if viewStore.mode == .recording {
+            Button { viewStore.send(.pauseButtonTapped, animation: .default) } label: {
+              Circle()
+                .fill(Color.DS.Background.accent)
+                .shadow(color: .DS.Background.accent.opacity(0.5), radius: 20)
+                .overlay(Image(systemName: "pause.fill")
+                  .font(.DS.titleL)
+                  .foregroundColor(.DS.Text.base))
+            }
+          } else if viewStore.mode == .paused {
+            Button { viewStore.send(.continueButtonTapped, animation: .default) } label: {
+              Circle()
+                .fill(Color.DS.Background.accent)
+                .overlay(Image(systemName: "mic")
+                  .font(.DS.titleL)
+                  .foregroundColor(.DS.Text.base))
+            }
           }
         }
-      }
-      .padding(.horizontal, .grid(13))
-      .padding(.vertical, .grid(6))
-      .background { Color.black.opacity(0.8).blur(radius: 40) }
+        .frame(width: 70, height: 70)
+        .zIndex(1)
 
-      Button { viewStore.send(.stopButtonTapped, animation: .default) } label: {
-        RoundedRectangle(cornerRadius: 4)
-          .fill(Color.DS.Background.accent)
+        if viewStore.mode == .paused {
+          Button { viewStore.send(.stopButtonTapped, animation: .default) }
+          label: { Image(systemName: "checkmark").font(.DS.titleL) }
+            .frame(width: 50, height: 50)
+            .transition(.move(edge: .leading)
+              .combined(with: .opacity))
+        }
       }
-      .frame(width: 70, height: 70)
-      .frame(maxWidth: .infinity, alignment: .center)
       .padding(.grid(3))
     }
     .task {
-      viewStore.send(.task)
+      await viewStore.send(.task).finish()
     }
   }
 }
@@ -157,33 +209,9 @@ struct RecordingView: View {
 
 struct Whispers_Previews: PreviewProvider {
   static var previews: some View {
-    VStack {
-      HStack {
-        VStack(spacing: 12) {
-          Text("Recording")
-            .font(.title)
-            .colorMultiply(Int(5).isMultiple(of: 2) ? Color.DS.Background.accent : Color.DS.Text.base)
-            .animation(.easeInOut(duration: 0.5), value: 5)
-
-          if let formattedDuration = dateComponentsFormatter.string(from: 5) {
-            Text(formattedDuration)
-              .font(.body.monospacedDigit().bold())
-              .foregroundColor(Color.DS.Text.base)
-          }
-        }
-      }
-      .padding(.horizontal, .grid(13))
-      .padding(.vertical, .grid(6))
-      .background { Color.black.opacity(0.7).blur(radius: 40) }
-
-      Button {} label: {
-        RoundedRectangle(cornerRadius: 4)
-          .fill(Color.DS.Background.accent)
-          .shadow(color: .DS.Shadow.primary, radius: 20)
-      }
-      .frame(width: 70, height: 70)
-      .frame(maxWidth: .infinity, alignment: .trailing)
-      .padding(.grid(3))
-    }
+    RecordingView(store: .init(
+      initialState: .init(date: Date(), url: URL(fileURLWithPath: "")),
+      reducer: Recording()
+    ))
   }
 }

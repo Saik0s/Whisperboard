@@ -19,7 +19,7 @@ struct WhisperboardApp: App {
   init() {
     configureDesignSystem()
 
-    Logger.Settings.format = "%C%t %F:%l %m%c"
+    Logger.Settings.format = "%C%t %F:%l %f %m%c"
   }
 
   private func configureDesignSystem() {

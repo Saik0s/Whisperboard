@@ -34,19 +34,19 @@ struct RecordingTextView: View {
         }
       }
     }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .fixedSize(horizontal: false, vertical: true)
-      .multilineTextAlignment(.leading)
-      .padding(.grid(4))
-      .foregroundColor(.DS.Text.base)
-      .background {
-        Color.DS.Background.secondary
-          .cornerRadius(.grid(4))
-          .shadow(color: .DS.Background.accentAlt.darken().opacity(0.25),
-                  radius: viewStore.mode.isPlaying ? 12 : 0,
-                  y: viewStore.mode.isPlaying ? 8 : 0)
-      }
-      .clipped()
-      .enableInjection()
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .fixedSize(horizontal: false, vertical: true)
+    .multilineTextAlignment(.leading)
+    .padding(.grid(4))
+    .foregroundColor(.DS.Text.base)
+    .background {
+      Color.DS.Background.secondary
+        .cornerRadius(.grid(4))
+        .shadow(color: .DS.Background.accentAlt.darken().opacity(0.25),
+                radius: viewStore.mode.isPlaying ? 12 : 0,
+                y: viewStore.mode.isPlaying ? 8 : 0)
+    }
+    .clipped()
+    .enableInjection()
   }
 }
