@@ -12,13 +12,9 @@ struct RecordButton: View {
       Button(action: action) {
         Circle()
           .fill(Color.DS.Background.accent)
-          .overlay {
-            Image(systemName: "mic")
-              .resizable()
-              .scaledToFit()
-              .frame(width: 30, height: 30)
-              .foregroundColor(Color.DS.Text.base)
-          }
+          .overlay(Image(systemName: "mic")
+            .font(.DS.titleL)
+            .foregroundColor(.DS.Text.base))
       }
       .frame(width: 70, height: 70)
       .frame(maxWidth: .infinity)

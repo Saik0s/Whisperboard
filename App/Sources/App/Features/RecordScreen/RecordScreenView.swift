@@ -42,11 +42,10 @@ public struct RecordScreen: ReducerProtocol {
       case .recordButtonTapped:
         switch state.audioRecorderPermission {
         case .undetermined:
-          UIImpactFeedbackGenerator(style: .light).impactOccurred()
-
           return .task {
             await .recordPermissionResponse(self.requestRecordPermission())
           }
+
         case .denied:
           state.alert = AlertState(
             title: TextState("Permission is required to record voice.")
@@ -66,12 +65,18 @@ public struct RecordScreen: ReducerProtocol {
           duration: recording.duration
         )
         return .task { .newRecordingCreated(recordingInfo) }
-          .merge(with: .cancel(id: Recording.CancelID()))
 
-      case .recording(.delegate(.didFinish(.failure))):
-        state.alert = AlertState(title: TextState("Voice recording failed."))
+      case let .recording(.delegate(.didFinish(.failure(error)))):
         state.recording = nil
-        return .cancel(id: Recording.CancelID())
+        state.alert = AlertState(
+          title: TextState("Voice recording failed."),
+          message: TextState(error.localizedDescription)
+        )
+        return .none
+
+      case let .recording(.delegate(.didCancel)):
+        state.recording = nil
+        return .none
 
       case .recording:
         return .none
@@ -80,13 +85,12 @@ public struct RecordScreen: ReducerProtocol {
         state.audioRecorderPermission = permission ? .allowed : .denied
         if permission {
           state.recording = newRecording
-          return .none
         } else {
           state.alert = AlertState(
             title: TextState("Permission is required to record voice.")
           )
-          return .none
         }
+        return .none
 
       case .openSettingsButtonTapped:
         return .fireAndForget {
@@ -137,11 +141,10 @@ public struct RecordScreenView: View {
           RecordingView(store: store)
         } else: {
           RecordButton(permission: viewStore.audioRecorderPermission) {
-            viewStore.send(.recordButtonTapped, animation: .spring())
+            viewStore.send(.recordButtonTapped, animation: .default)
           } settingsAction: {
             viewStore.send(.openSettingsButtonTapped)
           }
-          .shadow(color: .DS.Shadow.primary, radius: 20)
         }
       }
       .padding(.grid(4))
@@ -158,7 +161,7 @@ public struct RecordScreenView: View {
       NavigationView {
         RecordScreenView(
           store: Store(
-            initialState: RecordScreen.State(),
+            initialState: RecordScreen.State(recording: .init(date: Date(), url: URL(fileURLWithPath: "test"))),
             reducer: RecordScreen()
           )
         )
