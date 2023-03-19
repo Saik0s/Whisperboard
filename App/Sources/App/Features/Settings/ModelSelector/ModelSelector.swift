@@ -3,13 +3,6 @@ import ComposableArchitecture
 import Foundation
 import SwiftUI
 
-extension UserDefaults {
-  var selectedModelName: String? {
-    get { string(forKey: #function) }
-    set { set(newValue, forKey: #function) }
-  }
-}
-
 // MARK: - ModelSelector
 
 struct ModelSelector: ReducerProtocol {

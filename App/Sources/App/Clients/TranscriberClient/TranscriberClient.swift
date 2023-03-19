@@ -2,88 +2,151 @@ import AppDevUtils
 import Dependencies
 import Foundation
 
+// MARK: - TranscriptionProgress
+
+enum TranscriptionProgress {
+  case loadingModel
+  case started
+  case newSegment(String)
+  case finished(String)
+  case error(Error)
+}
+
 // MARK: - TranscriberClient
 
 struct TranscriberClient {
-  var loadModel: @Sendable (_ modelUrl: URL) async throws -> Void
-  var unloadModel: () -> Void
-  var transcribeAudio: @Sendable (_ audioURL: URL, _ modelUrl: URL) async throws -> String
+  var selectModel: @Sendable (_ model: VoiceModelType) -> Void
+  var getSelectedModel: @Sendable () -> VoiceModelType
+
+  var loadSelectedModel: @Sendable () async throws -> Void
+  var unloadSelectedModel: @Sendable () -> Void
+
+  var transcribeAudio: @Sendable (_ audioURL: URL, _ language: VoiceLanguage) -> AsyncStream<TranscriptionProgress>
 }
 
 // MARK: DependencyKey
 
 extension TranscriberClient: DependencyKey {
+  static var selectedModel: VoiceModelType {
+    get {
+      UserDefaults.standard.selectedModelName.flatMap { VoiceModelType(rawValue: $0) } ?? .default
+    }
+    set {
+      UserDefaults.standard.selectedModelName = newValue.rawValue
+    }
+  }
+
   static let liveValue: TranscriberClient = {
     let impl = TranscriberImpl()
 
     return TranscriberClient(
-      loadModel: { url in
-        try await impl.loadModel(modelUrl: url)
+      selectModel: { model in
+        selectedModel = model
       },
-      unloadModel: {
+      getSelectedModel: {
+        selectedModel
+      },
+      loadSelectedModel: {
+        try await impl.loadModel(model: selectedModel)
+      },
+      unloadSelectedModel: {
         impl.unloadModel()
       },
-      transcribeAudio: { audioURL, modelURL in
-        try await impl.transcribeAudio(audioURL, modelURL)
+      transcribeAudio: { audioURL, language in
+        AsyncStream { continuation in
+          Task.detached {
+            do {
+              continuation.yield(TranscriptionProgress.loadingModel)
+              try await impl.loadModel(model: selectedModel)
+
+              continuation.yield(TranscriptionProgress.started)
+              let text = try await impl.transcribeAudio(audioURL, language: language) { segment in
+                continuation.yield(.newSegment(segment))
+              }
+
+              continuation.yield(.finished(text))
+            } catch {
+              continuation.yield(.error(error))
+            }
+          }
+        }
       }
     )
   }()
 }
 
+// MARK: - TranscriberState
+
+enum TranscriberState: Equatable {
+  case idle
+  case loadingModel
+  case modelLoaded
+  case transcribing
+  case failed(EquatableErrorWrapper)
+}
+
+// MARK: - TranscriberError
+
+private enum TranscriberError: Error {
+  case couldNotLocateModel
+  case modelNotLoaded
+}
+
 // MARK: - TranscriberImpl
 
 final class TranscriberImpl {
-  var isLoadingModel = false
-  var isModelLoaded = false
-  var isTranscribing = false
-
-  private enum LoadError: Error {
-    case couldNotLocateModel
-    case somethingWrong
-  }
+  var state: TranscriberState = .idle
 
   private var whisperContext: WhisperContext?
+  private var model: VoiceModelType?
 
-  func loadModel(modelUrl: URL) async throws {
+  func loadModel(model: VoiceModelType) async throws {
     try await withCheckedThrowingContinuation { continuation in
-      isLoadingModel = true
+      self.model = model
+      state = .loadingModel
       do {
-        log("Loading model...")
-        whisperContext = try WhisperContext.createContext(path: modelUrl.path)
-        isModelLoaded = true
-        log("Loaded model \(modelUrl.lastPathComponent)")
+        log.verbose("Loading model...")
+        whisperContext = try WhisperContext.createContext(path: model.localURL.path)
+        state = .modelLoaded
+        log.verbose("Loaded model \(model.name)")
         continuation.resume()
       } catch {
+        state = .failed(error.equatable)
         continuation.resume(throwing: error)
       }
-      isLoadingModel = false
     }
   }
 
   func unloadModel() {
-    isModelLoaded = false
     whisperContext = nil
+    state = .idle
   }
 
-  func transcribeAudio(_ audioURL: URL, _ modelUrl: URL) async throws -> String {
-    if !isModelLoaded || whisperContext == nil {
-      try await loadModel(modelUrl: modelUrl)
+  /// Transcribes the audio file at the given URL.
+  /// Model should be loaded
+  func transcribeAudio(_ audioURL: URL, language: VoiceLanguage, newSegmentCallback: @escaping (String) -> Void) async throws -> String {
+    guard state == .modelLoaded, let whisperContext else {
+      throw TranscriberError.modelNotLoaded
     }
 
-    guard isModelLoaded, let whisperContext else {
-      throw LoadError.somethingWrong
+    state = .transcribing
+
+    do {
+      log.verbose("Reading wave samples...")
+      let data = try readAudioSamples(audioURL)
+
+      log.verbose("Transcribing data...")
+      try await whisperContext.fullTranscribe(samples: data, language: language, newSegmentCallback: newSegmentCallback)
+
+      let text = await whisperContext.getTranscription()
+      log.verbose("Done: \(text)")
+
+      return text
+    } catch {
+      state = .failed(error.equatable)
+      log.error(error)
+      throw error
     }
-
-    isTranscribing = true
-    defer { isTranscribing = false }
-
-    log("Reading wave samples...")
-    let data = try readAudioSamples(audioURL)
-    log("Transcribing data...")
-    await whisperContext.fullTranscribe(samples: data)
-    let text = await whisperContext.getTranscription()
-    log("Done: \(text)")
-    return text
   }
 
   private func readAudioSamples(_ url: URL) throws -> [Float] {
@@ -107,4 +170,11 @@ func decodeWaveFile(_ url: URL) throws -> [Float] {
     }
   }
   return floats
+}
+
+extension UserDefaults {
+  var selectedModelName: String? {
+    get { string(forKey: #function) }
+    set { set(newValue, forKey: #function) }
+  }
 }

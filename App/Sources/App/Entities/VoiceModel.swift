@@ -69,7 +69,7 @@ enum VoiceModelType: String, CaseIterable {
   }
 
   private static var srcURL: URL {
-    URL(string: "https://huggingface.co/datasets/ggerganov/whisper.cpp/resolve/main/")!
+    URL(staticString: "https://huggingface.co/datasets/ggerganov/whisper.cpp/resolve/main/")
   }
 
   static var localFolderURL: URL {
