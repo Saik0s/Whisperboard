@@ -105,6 +105,13 @@ final class TranscriberImpl {
   private var model: VoiceModelType?
 
   func loadModel(model: VoiceModelType) async throws {
+    if whisperContext != nil && model == self.model {
+      log.verbose("Model already loaded")
+      return
+    } else if whisperContext != nil {
+      unloadModel()
+    }
+
     try await withCheckedThrowingContinuation { continuation in
       self.model = model
       state = .loadingModel
@@ -122,6 +129,7 @@ final class TranscriberImpl {
   }
 
   func unloadModel() {
+    log.verbose("Unloading model...")
     whisperContext = nil
     state = .idle
   }
@@ -144,6 +152,8 @@ final class TranscriberImpl {
 
       let text = await whisperContext.getTranscription()
       log.verbose("Done: \(text)")
+
+      state = .modelLoaded
 
       return text
     } catch {

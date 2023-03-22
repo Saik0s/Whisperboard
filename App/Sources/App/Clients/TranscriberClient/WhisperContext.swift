@@ -39,12 +39,12 @@ actor WhisperContext {
     log.verbose("Selecting \(maxThreads) threads")
 
     var params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY)
-    params.print_realtime = true
+    params.print_realtime = false
     params.print_progress = false
-    params.print_timestamps = true
+    params.print_timestamps = false
     params.print_special = false
     params.translate = false
-    params.language = whisper_lang_str(language.id)
+    params.language = language.isAuto ? nil : whisper_lang_str(language.id)
     params.n_threads = Int32(maxThreads)
     params.offset_ms = 0
     params.no_context = true
