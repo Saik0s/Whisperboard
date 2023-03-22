@@ -9,4 +9,8 @@ struct VoiceLanguage {
 
 extension VoiceLanguage {
   static let auto = VoiceLanguage(id: 0, name: "auto")
+
+  var isAuto: Bool {
+    name == "auto"
+  }
 }
