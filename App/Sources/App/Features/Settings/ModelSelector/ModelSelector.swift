@@ -8,16 +8,15 @@ import SwiftUI
 struct ModelSelector: ReducerProtocol {
   struct State: Equatable {
     var models: [VoiceModel] = []
-    var selectedModel: VoiceModel?
-    var isLoading = false
+    var selectedModelType: VoiceModelType = .default
     var alert: AlertState<Action>?
   }
 
   enum Action: Equatable {
     case task
     case setModels([VoiceModel])
-    case modelSelected(VoiceModel)
-    case setSelectedModel(VoiceModel)
+    case modelRowTapped(VoiceModel)
+    case setSelectedModelType(VoiceModelType)
     case downloadModel(VoiceModel)
     case modelUpdated(VoiceModel)
     case deleteModel(VoiceModel)
@@ -25,8 +24,8 @@ struct ModelSelector: ReducerProtocol {
     case alertDismissed
   }
 
-  private var modelDownload: ModelDownloadClient { .live }
-  @Dependency(\.transcriber) var transcriber
+  @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
+  @Dependency(\.transcriber) var transcriber: TranscriberClient
 
   struct CancelDownloadID: Hashable {}
 
@@ -35,70 +34,52 @@ struct ModelSelector: ReducerProtocol {
       switch action {
       case .task:
         return .run { send in
-          let models = VoiceModelType.allCases
-            .map {
-              VoiceModel(
-                modelType: $0,
-                downloadProgress: FileManager.default.fileExists(atPath: $0.localURL.path) ? 1 : 0
-              )
-            }
-          await send(.setModels(models))
-          if let selectedModelName = UserDefaults.standard.selectedModelName,
-             let selectedModel = models.first(where: { $0.name == selectedModelName }), selectedModel.isDownloaded {
-            await send(.modelSelected(selectedModel))
-          } else if let model = models.first(where: { $0.isDownloaded }) {
-            await send(.modelSelected(model))
-          }
+          await send(.setModels(modelDownload.getModels()))
+          await send(.setSelectedModelType(transcriber.getSelectedModel()))
         }
 
       case let .setModels(models):
         state.models = models
         return .none
 
-      case let .modelSelected(model):
-        guard state.selectedModel != model else { return .none }
+      case let .modelRowTapped(model):
+        guard state.selectedModelType != model.modelType else {
+          return .none
+        }
 
         guard model.isDownloaded else {
           return .task { .downloadModel(model) }
         }
 
-        transcriber.unloadModel()
-
-        state.isLoading = true
         return .task {
-          .setSelectedModel(model)
+          .setSelectedModelType(model.modelType)
         }
 
-      case let .setSelectedModel(model):
-        state.isLoading = false
-        state.selectedModel = model
-        UserDefaults.standard.selectedModelName = model.name
-        return .none
+      case let .setSelectedModelType(modelType):
+        state.selectedModelType = modelType
+        return .fireAndForget {
+          transcriber.selectModel(modelType)
+        }
 
       case let .downloadModel(model):
         return .run { send in
           await send(.modelUpdated(model.with {
             $0.isDownloading = true
           }))
+
           for await downloadState in await modelDownload.downloadModel(model) {
-            switch downloadState {
-            case let .inProgress(progress):
-              await send(.modelUpdated(model.with {
-                $0.downloadProgress = progress
-                $0.isDownloading = true
-              }))
-            case let .success(fileURL):
-              log(fileURL)
-              await send(.modelUpdated(model.with {
-                $0.downloadProgress = 1
-                $0.isDownloading = false
-              }))
-            case let .failure(error):
+            await send(.modelUpdated(model.with {
+              $0.downloadProgress = downloadState.progress
+              $0.isDownloading = downloadState.isDownloading
+            }))
+
+            if let error = downloadState.error {
               log(error)
-              await send(.modelUpdated(model.with {
-                $0.downloadProgress = 0
-                $0.isDownloading = false
-              }))
+              await send(.loadError(error.localizedDescription))
+            }
+
+            if downloadState.isDownloaded {
+              await send(.setSelectedModelType(model.modelType))
             }
           }
         }
@@ -106,11 +87,10 @@ struct ModelSelector: ReducerProtocol {
         .cancellable(id: CancelDownloadID(), cancelInFlight: true)
 
       case let .modelUpdated(model):
-        return .task { [models = state.models] in
-          .setModels(models.map { m in
-            m.id == model.id ? model : m
-          })
+        state.models = state.models.map { m in
+          m.id == model.id ? model : m
         }
+        return .none
 
       case let .deleteModel(model):
         return .run { send in
@@ -120,9 +100,13 @@ struct ModelSelector: ReducerProtocol {
           }))
           try? FileManager.default.removeItem(at: model.modelType.localURL)
         }
+
       case let .loadError(error):
-        state.isLoading = false
-        log(error)
+        state.alert = .init(
+          title: TextState("Error"),
+          message: TextState(error),
+          dismissButton: .default(TextState("OK"), action: .send(Action.alertDismissed, animation: .default))
+        )
         return .none
 
       case .alertDismissed:
@@ -166,7 +150,7 @@ struct ModelSelectorView: View {
           modelRow(for: model)
             .frame(height: 40)
             .contentShape(Rectangle())
-            .onTapGesture { viewStore.send(.modelSelected(model)) }
+            .onTapGesture { viewStore.send(.modelRowTapped(model)) }
             .contextMenu(model.isDownloaded && model.modelType != .tiny ? contextMenu(for: model) : nil)
         }
         .listRowBackground(Color.DS.Background.secondary)
@@ -176,13 +160,12 @@ struct ModelSelectorView: View {
     }
     .formStyle(.grouped)
     .scrollContentBackground(.hidden)
-    .overlay(viewStore.isLoading ? LoadingOverlay() : nil)
     .shadow(style: .card)
   }
 
   private func modelRow(for model: VoiceModel) -> some View {
     HStack(spacing: .grid(4)) {
-      Image(systemName: model == viewStore.selectedModel ? "checkmark.circle.fill" : "circle")
+      Image(systemName: model.modelType == viewStore.selectedModelType ? "checkmark.circle.fill" : "circle")
         .font(.DS.headlineL)
         .opacity(model.isDownloaded ? 1 : 0.3)
 
@@ -206,12 +189,12 @@ struct ModelSelectorView: View {
           .cornerRadius(.grid(2))
       }
     }
-    .foregroundColor(model == viewStore.selectedModel ? Color.DS.Text.success : Color.DS.Text.base)
+    .foregroundColor(model.modelType == viewStore.selectedModelType ? Color.DS.Text.success : Color.DS.Text.base)
   }
 
   func contextMenu(for model: VoiceModel) -> ContextMenu<TupleView<(Button<Text>, Button<Text>)>> {
     ContextMenu {
-      Button(action: { viewStore.send(.modelSelected(model)) }) {
+      Button(action: { viewStore.send(.modelRowTapped(model)) }) {
         Text("Select")
       }
       Button(action: { viewStore.send(.deleteModel(model)) }) {
@@ -231,8 +214,9 @@ struct ModelSelector_Previews: PreviewProvider {
           models: [
             VoiceModel(modelType: .base),
             VoiceModel(modelType: .baseEN),
+            VoiceModel(modelType: .default),
           ],
-          selectedModel: nil
+          selectedModelType: .default
         ),
         reducer: ModelSelector()
       )

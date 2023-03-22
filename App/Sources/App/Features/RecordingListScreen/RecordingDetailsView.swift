@@ -7,7 +7,6 @@ import SwiftUI
 
 public struct RecordingDetails: ReducerProtocol {
   public struct State: Equatable {
-    var alert: AlertState<Action>?
     @BindingState var recordingCard: RecordingCard.State
   }
 
@@ -15,7 +14,6 @@ public struct RecordingDetails: ReducerProtocol {
     case binding(BindingAction<State>)
     case recordingCard(action: RecordingCard.Action)
     case transcribeTapped
-    case alertDismissed
     case retryTranscriptionTapped
     case improvedTranscription(String)
   }
@@ -39,32 +37,7 @@ public struct RecordingDetails: ReducerProtocol {
         return .none
 
       case .transcribeTapped:
-        let selectedModelName = UserDefaults.standard.selectedModelName
-        let modelType = VoiceModelType.allCases.first { $0.name == selectedModelName } ?? .default
-        let fileURL = storage.audioFileURLWithName(state.recordingCard.recordingInfo.fileName)
-        let modelURL = modelType.localURL
-
-        return .run { [recordingInfo = state.recordingCard.recordingInfo] send in
-          await send(.binding(.set(\.recordingCard.isTranscribing, true)))
-
-          do {
-            let text = try await transcriber.transcribeAudio(fileURL, modelURL)
-            let recordingInfo = recordingInfo.with { info in
-              info.text = text
-              info.isTranscribed = true
-            }
-            await send(.binding(.set(\.recordingCard.recordingInfo, recordingInfo)))
-          } catch {
-            log(error)
-            await send(.binding(.set(\.alert, AlertState(title: TextState("Error"), message: TextState(error.localizedDescription)))))
-          }
-
-          await send(.binding(.set(\.recordingCard.isTranscribing, false)))
-        }
-
-      case .alertDismissed:
-        state.alert = nil
-        return .none
+        return .send(.recordingCard(action: .transcribeTapped))
 
       case .retryTranscriptionTapped:
         return .send(.transcribeTapped)
@@ -109,7 +82,7 @@ public struct RecordingDetailsView: View {
 
         Spacer()
 
-        VStack(spacing: .grid(1)) {
+        VStack(spacing: .grid(2)) {
           Text("Transcription:")
             .font(.DS.headlineS)
             .foregroundColor(.DS.Text.subdued)
@@ -136,28 +109,44 @@ public struct RecordingDetailsView: View {
             HStack(spacing: .grid(2)) {
               CopyButton(text: viewStore.recordingCard.recordingInfo.text)
               ShareButton(text: viewStore.recordingCard.recordingInfo.text)
-              Button { viewStore.send(.retryTranscriptionTapped) } label: {
-                Image(systemName: "arrow.clockwise")
-                  .padding(.grid(1))
-              }
 
-              if viewStore.recordingCard.recordingInfo.text.isEmpty == false {
-                ImproveTranscriptionButton(text: viewStore.recordingCard.recordingInfo.text) {
-                  viewStore.send(.improvedTranscription($0))
+              if !viewStore.recordingCard.isTranscribing {
+                Button { viewStore.send(.retryTranscriptionTapped) } label: {
+                  Image(systemName: "arrow.clockwise")
+                    .padding(.grid(1))
                 }
               }
+
+              // if viewStore.recordingCard.recordingInfo.text.isEmpty == false && viewStore.recordingCard.isTranscribing == false {
+              //   ImproveTranscriptionButton(text: viewStore.recordingCard.recordingInfo.text) {
+              //     viewStore.send(.improvedTranscription($0))
+              //   }
+              // }
 
               Spacer()
             }
             .foregroundColor(Color.DS.Background.accent)
+            .font(.DS.titleM)
 
-            TextField("No transcription", text: viewStore.binding(\.$recordingCard.recordingInfo.text), axis: .vertical)
-              .focused($focusedField, equals: .text)
-              .lineLimit(nil)
-              .textFieldStyle(.roundedBorder)
-              .font(.DS.bodyM)
-              .foregroundColor(.DS.Text.base)
-              .background(Color.DS.Background.secondary)
+            ScrollView {
+              Text(viewStore.recordingCard.recordingInfo.text)
+                .font(.DS.bodyL)
+                .foregroundColor(viewStore.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
+                .lineLimit(nil)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+              if viewStore.recordingCard.isTranscribing {
+                ProgressView()
+              }
+            }
+
+            // TextField("No transcription", text: viewStore.binding(\.$recordingCard.recordingInfo.text), axis: .vertical)
+            //   .focused($focusedField, equals: .text)
+            //   .lineLimit(nil)
+            //   .textFieldStyle(.roundedBorder)
+            //   .font(.DS.bodyM)
+            //   .foregroundColor(.DS.Text.base)
+            //   .background(Color.DS.Background.secondary)
           }
         }
         .frame(maxHeight: .infinity, alignment: .top)
@@ -179,7 +168,6 @@ public struct RecordingDetailsView: View {
       }
       .padding(.grid(4))
       .screenRadialBackground()
-      .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
       .toolbar {
         ToolbarItem(placement: .keyboard) {
           Button("Done") {

@@ -53,7 +53,7 @@ actor WhisperContext {
 
     whisper_reset_timings(context)
     log.verbose("About to run whisper_full")
-    samples.withUnsafeBufferPointer { samples in
+    try samples.withUnsafeBufferPointer { samples in
       if whisper_full(context, params, samples.baseAddress, Int32(samples.count)) != 0 {
         log.error("Failed to run the model")
         throw WhisperError.cantRunModel

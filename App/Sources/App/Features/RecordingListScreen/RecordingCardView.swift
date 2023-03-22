@@ -85,6 +85,7 @@ struct RecordingCardView: View {
     .shadow(color: .DS.Background.accentAlt.darken().opacity(0.25),
             radius: viewStore.mode.isPlaying ? 12 : 0,
             y: viewStore.mode.isPlaying ? 8 : 0)
+    .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
     .animation(.easeIn(duration: 0.3), value: viewStore.mode.isPlaying)
     .enableInjection()
   }
