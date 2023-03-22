@@ -2,12 +2,14 @@ import AppDevUtils
 import Dependencies
 import Foundation
 
+typealias TranscriptionSegment = String
+
 // MARK: - TranscriptionProgress
 
 enum TranscriptionProgress {
   case loadingModel
   case started
-  case newSegment(String)
+  case newSegment(TranscriptionSegment)
   case finished(String)
   case error(Error)
 }
@@ -68,6 +70,8 @@ extension TranscriberClient: DependencyKey {
             } catch {
               continuation.yield(.error(error))
             }
+
+            continuation.finish()
           }
         }
       }
@@ -172,7 +176,7 @@ func decodeWaveFile(_ url: URL) throws -> [Float] {
   return floats
 }
 
-extension UserDefaults {
+private extension UserDefaults {
   var selectedModelName: String? {
     get { string(forKey: #function) }
     set { set(newValue, forKey: #function) }

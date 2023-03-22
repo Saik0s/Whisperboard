@@ -16,6 +16,7 @@ public struct RecordingCard: ReducerProtocol {
     var mode = Mode.notPlaying
     var isTranscribing = false
     @BindingState var isExpanded = false
+    var alert: AlertState<Action>?
 
     var _waveform = WaveformProgress.State()
     var waveform: WaveformProgress.State {
@@ -41,6 +42,7 @@ public struct RecordingCard: ReducerProtocol {
     case progressUpdated(Double)
     case waveform(WaveformProgress.Action)
     case transcribeTapped
+    case alertDismissed
   }
 
   @Dependency(\.transcriber) var transcriber: TranscriberClient
@@ -88,27 +90,26 @@ public struct RecordingCard: ReducerProtocol {
         return .none
 
       case .transcribeTapped:
-        let selectedModelName = UserDefaults.standard.selectedModelName
-        let modelType = VoiceModelType.allCases.first { $0.name == selectedModelName } ?? .default
         let fileURL = storage.audioFileURLWithName(state.recordingInfo.fileName)
-        let modelURL = modelType.localURL
 
-        return .run { [recordingInfo = state.recordingInfo] send in
+        return .run { send in
           await send(.binding(.set(\.isTranscribing, true)))
 
-          do {
-            let text = try await transcriber.transcribeAudio(fileURL, modelURL)
-            let recordingInfo = recordingInfo.with { info in
-              info.text = text
-              info.isTranscribed = true
-            }
-            await send(.binding(.set(\.recordingInfo, recordingInfo)))
-          } catch {
-            log(error)
+          for try await text in transcriber.transcribeAudio(url: fileURL, language: .auto) {
+            await send(.binding(.set(\.recordingInfo.text, text)))
           }
+          await send(.binding(.set(\.recordingInfo.isTranscribed, true)))
 
           await send(.binding(.set(\.isTranscribing, false)))
-        }
+        } catch: { error, send in
+          log.error(error)
+          await send(.binding(.set(\.alert, AlertState(title: TextState("Error"), message: TextState(error.localizedDescription)))))
+          await send(.binding(.set(\.isTranscribing, false)))
+        }.animation(.default)
+
+      case .alertDismissed:
+        state.alert = nil
+        return .none
       }
     }
   }
@@ -128,7 +129,11 @@ public struct RecordingCard: ReducerProtocol {
           break
         case let .error(error):
           log.error(error as Any)
-          // TODO: Show alert with error
+          await send(.binding(.set(\.alert,
+                                   AlertState(
+                                     title: TextState("Error"),
+                                     message: TextState(error?.localizedDescription ?? "Something went wrong.")
+                                   ))))
           await send(.audioPlayerFinished(.failure(error ?? NSError())), animation: .default)
         case let .finish(successful):
           await send(.audioPlayerFinished(.success(successful)), animation: .default)

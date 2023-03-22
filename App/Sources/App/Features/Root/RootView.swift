@@ -73,6 +73,7 @@ struct RootView: View {
     WithViewStore(store) { viewStore in
       TabView(selection: viewStore.binding(get: { $0.selectedTab }, send: Root.Action.selectTab)) {
         RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: Root.Action.recordingListScreen))
+          .accentColor(Color.DS.Text.base)
           .tabItem {
             Image(systemName: "list.bullet")
             Text("Recordings")
@@ -80,6 +81,7 @@ struct RootView: View {
           .tag(0)
 
         RecordScreenView(store: store.scope(state: { $0.recordScreen }, action: Root.Action.recordScreen))
+          .accentColor(Color.DS.Text.base)
           .tabItem {
             Image(systemName: "mic")
             Text("Record")
@@ -87,6 +89,7 @@ struct RootView: View {
           .tag(1)
 
         SettingsView(store: store.scope(state: { $0.settings }, action: Root.Action.settings))
+          .accentColor(Color.DS.Text.base)
           .tabItem {
             Image(systemName: "gear")
             Text("Settings")

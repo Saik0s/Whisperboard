@@ -1,14 +1,18 @@
 import AppDevUtils
+import Dependencies
 import Foundation
 
 // MARK: - ModelDownloadClient
 
 struct ModelDownloadClient {
-  var downloadModel: (_ model: VoiceModel) async -> AsyncStream<DownloadState>
+  var getModels: @Sendable () -> [VoiceModel]
+  var downloadModel: @Sendable (_ model: VoiceModel) async -> AsyncStream<DownloadState>
 }
 
-extension ModelDownloadClient {
-  static let live: Self = {
+// MARK: DependencyKey
+
+extension ModelDownloadClient: DependencyKey {
+  static let liveValue: Self = {
     let config: URLSessionConfiguration = .background(withIdentifier: "me.igortarasenko.whisperboard.background")
     config.isDiscretionary = false
 
@@ -16,6 +20,14 @@ extension ModelDownloadClient {
     let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
 
     return ModelDownloadClient(
+      getModels: {
+        VoiceModelType.allCases.map {
+          VoiceModel(
+            modelType: $0,
+            downloadProgress: FileManager.default.fileExists(atPath: $0.localURL.path) ? 1 : 0
+          )
+        }
+      },
       downloadModel: { model in
         AsyncStream { continuation in
           Task {
@@ -51,6 +63,13 @@ extension ModelDownloadClient {
       }
     )
   }()
+}
+
+extension DependencyValues {
+  var modelDownload: ModelDownloadClient {
+    get { self[ModelDownloadClient.self] }
+    set { self[ModelDownloadClient.self] = newValue }
+  }
 }
 
 // MARK: - DownloadTaskContainer
