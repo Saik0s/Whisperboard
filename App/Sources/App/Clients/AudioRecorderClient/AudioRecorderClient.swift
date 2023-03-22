@@ -101,7 +101,7 @@ private actor AudioRecorder {
   func activateSession() throws {
     log.info("")
     guard !isSessionActive else { return }
-    try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.allowBluetooth])
+    try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.allowBluetooth, .defaultToSpeaker])
     try AVAudioSession.sharedInstance().setActive(true)
     isSessionActive = true
   }
@@ -134,7 +134,7 @@ private actor AudioRecorder {
       recorder.record()
 
       DispatchQueue.main.async { [weak self] in
-        self?.timer = .scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
+        self?.timer = .scheduledTimer(withTimeInterval: 0.025, repeats: true) { [weak self] timer in
           guard let self, let recorder = self.recorder else {
             timer.invalidate()
             return
