@@ -31,7 +31,7 @@ extension AudioRecorderClient: DependencyKey {
     return Self(
       currentTime: { await audioRecorder.currentTime },
       requestRecordPermission: { await audioRecorder.requestPermission() },
-      recordingState: { await audioRecorder.recordingStateSubject.asAsyncStream() },
+      recordingState: { audioRecorder.recordingStateSubject.asAsyncStream() },
       startRecording: { url in await audioRecorder.start(url: url) },
       stopRecording: { await audioRecorder.stop() },
       pauseRecording: { await audioRecorder.pause() },
@@ -135,18 +135,9 @@ private actor AudioRecorder {
 
       DispatchQueue.main.async { [weak self] in
         self?.timer = .scheduledTimer(withTimeInterval: 0.025, repeats: true) { [weak self] timer in
-          guard let self, let recorder = self.recorder else {
-            timer.invalidate()
-            return
+          Task { [weak self] in
+            await self?.updateMeters()
           }
-
-          guard recorder.isRecording else { return }
-
-          recorder.updateMeters()
-          self.recordingStateSubject.send(.recording(
-            duration: recorder.currentTime,
-            power: recorder.averagePower(forChannel: 0)
-          ))
         }
       }
     } catch {
@@ -207,6 +198,24 @@ private actor AudioRecorder {
   func currentMicrophone() async throws -> Microphone? {
     try activateSession()
     return AVAudioSession.sharedInstance().currentRoute.inputs.first.map(Microphone.init)
+  }
+
+
+  private func updateMeters() async {
+          guard let recorder else {
+            await MainActor.run { 
+              timer?.invalidate()
+            }
+            return
+          }
+
+          guard recorder.isRecording else { return }
+
+          recorder.updateMeters()
+          recordingStateSubject.send(.recording(
+            duration: recorder.currentTime,
+            power: recorder.averagePower(forChannel: 0)
+          ))
   }
 }
 

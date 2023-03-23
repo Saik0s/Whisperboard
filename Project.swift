@@ -53,7 +53,6 @@ func appTarget() -> Target {
     ],
     entitlements: "App/Resources/app.entitlements",
     dependencies: [
-      .target(name: "WhisperBoardKeyboard"),
       .external(name: "AppDevUtils"),
       .external(name: "Inject"),
       .external(name: "OpenAI"),
@@ -62,36 +61,6 @@ func appTarget() -> Target {
       .external(name: "Lottie"),
       .external(name: "LottieUI"),
       .package(product: "whisper"),
-    ]
-  )
-}
-
-func keyboardTarget() -> Target {
-  Target(
-    name: "WhisperBoardKeyboard",
-    platform: .iOS,
-    product: .appExtension,
-    bundleId: "me.igortarasenko.Whisperboard.Keyboard",
-    infoPlist: .extendingDefault(with: [
-      "CFBundleDisplayName": "WhisperBoard Keyboard",
-      "NSExtension": [
-        "NSExtensionAttributes": [
-          "PrimaryLanguage": "en-US",
-          "PrefersRightToLeft": false,
-          "IsASCIICapable": false,
-          "RequestsOpenAccess": false,
-        ],
-        "NSExtensionPointIdentifier": "com.apple.keyboard-service",
-        "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).KeyboardViewController",
-      ],
-      "CFBundleShortVersionString": InfoPlist.Value.string(version),
-    ]),
-    sources: .paths([.relativeToManifest("Keyboard/Sources/**")]),
-    resources: [
-      "Keyboard/Resources/**",
-    ],
-    dependencies: [
-      .external(name: "KeyboardKit"),
     ]
   )
 }
@@ -116,7 +85,6 @@ let project = Project(
   ),
   targets: [
     appTarget(),
-    keyboardTarget(),
   ],
   resourceSynthesizers: [
     .files(extensions: ["bin", "json"]),
