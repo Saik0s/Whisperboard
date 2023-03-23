@@ -1,7 +1,7 @@
 import Dependencies
 import Foundation
 
-@preconcurrency import AVFoundation
+import AVFoundation
 
 // MARK: - AudioPlayerClient
 
