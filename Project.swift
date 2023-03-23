@@ -106,7 +106,7 @@ let project = Project(
     )
   ),
   packages: [
-    .package(url: "https://github.com/ggerganov/whisper.spm", .branch("master")),
+    .package(url: "https://github.com/ggerganov/whisper.spm", from: "1.2.1"),
   ],
   settings: .settings(
     base: projectSettings,
