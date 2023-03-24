@@ -5,7 +5,7 @@ let version = "1.5.0"
 
 let projectSettings: SettingsDictionary = [
   "GCC_TREAT_WARNINGS_AS_ERRORS": "YES",
-  // "SWIFT_TREAT_WARNINGS_AS_ERRORS": "YES",
+  "SWIFT_TREAT_WARNINGS_AS_ERRORS": "YES",
   "CODE_SIGN_STYLE": "Automatic",
   "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
   "MARKETING_VERSION": SettingValue(stringLiteral: version),
@@ -55,7 +55,6 @@ func appTarget() -> Target {
     dependencies: [
       .external(name: "AppDevUtils"),
       .external(name: "Inject"),
-      .external(name: "OpenAI"),
       .external(name: "DSWaveformImage"),
       .external(name: "DSWaveformImageViews"),
       .external(name: "Lottie"),

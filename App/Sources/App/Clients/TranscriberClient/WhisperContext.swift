@@ -29,7 +29,7 @@ actor WhisperContext {
   func fullTranscribe(samples: [Float], language: VoiceLanguage, newSegmentCallback: @escaping (String) -> Void) throws {
     WhisperContext.newSegmentCallback = newSegmentCallback
 
-    let newSegmentCallback: @convention(c) (OpaquePointer?, Int32, UnsafeMutableRawPointer?) -> Void = { [newSegmentCallback] context, _, _ in
+    let newSegmentCallback: @convention(c) (OpaquePointer?, Int32, UnsafeMutableRawPointer?) -> Void = { context, _, _ in
       let segmentText = String(cString: whisper_full_get_segment_text(context, whisper_full_n_segments(context) - 1))
       WhisperContext.newSegmentCallback?(segmentText)
     }

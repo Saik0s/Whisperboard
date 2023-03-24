@@ -1,7 +1,6 @@
+import AVFoundation
 import Dependencies
 import Foundation
-
-import AVFoundation
 
 // MARK: - AudioPlayerClient
 

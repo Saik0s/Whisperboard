@@ -64,19 +64,15 @@ public struct RecordingListScreen: ReducerProtocol {
         case .recording:
           return .none
 
-        case let .delete(indexSet):
-          state.alert = AlertState {
-            TextState("Confirmation")
-          } actions: {
-            ButtonState(role: .cancel) {
-              TextState("Cancel")
-            }
-            ButtonState(action: .deleteDialogConfirmed(id: indexSet)) {
-              TextState("Delete")
-            }
-          } message: {
-            TextState("Are you sure you want to delete this recording?")
+        case let .delete(id):
+          createDeleteConfirmationDialog(id: id, state: &state)
+          return .none
+
+        case .details(action: .delete):
+          guard let id = state.selection?.id else {
+            return .none
           }
+          createDeleteConfirmationDialog(id: id, state: &state)
           return .none
 
         case .plusButtonTapped:
@@ -148,6 +144,21 @@ public struct RecordingListScreen: ReducerProtocol {
       .cancellable(id: SavingRecordingsID(), cancelInFlight: true)
     }
   }
+
+  private func createDeleteConfirmationDialog(id: RecordingInfo.ID, state: inout State) {
+    state.alert = AlertState {
+      TextState("Confirmation")
+    } actions: {
+      ButtonState(role: .cancel) {
+        TextState("Cancel")
+      }
+      ButtonState(action: .deleteDialogConfirmed(id: id)) {
+        TextState("Delete")
+      }
+    } message: {
+      TextState("Are you sure you want to delete this recording?")
+    }
+  }
 }
 
 // MARK: - RecordingListScreenView
@@ -177,7 +188,7 @@ public struct RecordingListScreenView: View {
   }
 
   public var body: some View {
-    NavigationView {
+    NavigationStack {
       VStack(alignment: .leading, spacing: 0) {
         // HStack {
         //   Image(systemName: "magnifyingglass")
@@ -215,6 +226,22 @@ public struct RecordingListScreenView: View {
         }
       }
       .screenRadialBackground()
+
+      .navigationDestination(
+        isPresented: Binding(
+          get: { viewStore.selection != nil },
+          set: { if !$0 { viewStore.send(.recordingSelected(id: nil)) } }
+        )
+      ) {
+        IfLetStore(
+          self.store.scope(
+            state: \.selection?.value,
+            action: RecordingListScreen.Action.details
+          )
+        ) {
+          RecordingDetailsView(store: $0)
+        }
+      }
       .navigationTitle("Recordings")
       .navigationBarTitleDisplayMode(.inline)
       .navigationBarItems(
@@ -222,7 +249,7 @@ public struct RecordingListScreenView: View {
         trailing: FilePicker(types: [.wav], allowMultiple: true) { urls in
           viewStore.send(.addFileRecordings(urls: urls))
         } label: {
-          Image(systemName: "plus")
+          Image(systemName: "doc.badge.plus")
             .tint(.DS.Text.base)
         }
       )
@@ -252,28 +279,7 @@ extension RecordingListScreenView {
         }
       }
 
-      NavigationLink(
-        destination: IfLetStore(
-          self.store.scope(
-            state: \.selection?.value,
-            action: RecordingListScreen.Action.details
-          )
-        ) {
-          RecordingDetailsView(store: $0)
-            .navigationBarItems(
-              trailing: HStack(spacing: .grid(4)) {
-                Button { viewStore.send(.delete(id: recording.id)) } label: {
-                  Image(systemName: "trash.circle")
-                }
-              }
-            )
-        },
-        tag: recording.id,
-        selection: viewStore.binding(
-          get: \.selection?.id,
-          send: RecordingListScreen.Action.recordingSelected(id:)
-        )
-      ) {
+      Button { viewStore.send(.recordingSelected(id: recording.id)) } label: {
         IfLetStore(
           self.store.scope(
             state: { $0.recordings.first(where: { $0.id == recording.id }) },
