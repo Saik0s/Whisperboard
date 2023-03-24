@@ -82,23 +82,24 @@ public struct RecordingListScreen: ReducerProtocol {
           return .none
 
         case let .addFileRecordings(urls):
-          return .run { [currentRecordings = state.recordings] send in
+          return .run { send in
             await send(.binding(.set(\.$isImportingFiles, true)))
 
-            var recordings: [RecordingInfo] = []
             for url in urls {
               let newURL = storage.createNewWhisperURL()
+              log.verbose("Importing file from \(url) to \(newURL)")
               try await fileImport.importFile(url, newURL)
-              let fileName = newURL.lastPathComponent
-              let recordingInfo = RecordingInfo(fileName: fileName, date: Date(), duration: 0)
-              recordings.append(recordingInfo)
+
+              let newFileName = newURL.lastPathComponent
+              let oldFileName = url.lastPathComponent
+              let duration = try getFileDuration(url: newURL)
+              let recordingInfo = RecordingInfo(fileName: newFileName, title: oldFileName, date: Date(), duration: duration)
+              log.verbose("Adding recording info: \(recordingInfo)")
+              try await storage.addRecordingInfo(recordingInfo)
             }
 
-            let allRecordings = (currentRecordings.map(\.recordingInfo) + recordings).identifiedArray
-            try await storage.write(allRecordings)
-
-            await send(.setRecordings(.success(allRecordings)))
-            await send(.readStoredRecordings)
+            let recordings = try await storage.read()
+            await send(.setRecordings(.success(recordings)))
             await send(.binding(.set(\.$isImportingFiles, false)))
           } catch: { error, send in
             await send(.binding(.set(\.$isImportingFiles, false)))
@@ -228,6 +229,7 @@ public struct RecordingListScreenView: View {
           LazyVStack(spacing: .grid(4)) {
             ForEachWithIndex(viewStore.recordings) { index, recording in
               RecordingRow(recording: recording, index: index)
+                .tag(recording.id)
             }
           }
           .padding(.grid(4))
@@ -258,7 +260,7 @@ public struct RecordingListScreenView: View {
       .navigationBarTitleDisplayMode(.inline)
       .navigationBarItems(
         leading: EditButton().tint(.DS.Text.base),
-        trailing: FilePicker(types: [.wav], allowMultiple: true) { urls in
+        trailing: FilePicker(types: [.wav, .mp3, .mpeg4Audio], allowMultiple: true) { urls in
           viewStore.send(.addFileRecordings(urls: urls))
         } label: {
           Image(systemName: "doc.badge.plus")

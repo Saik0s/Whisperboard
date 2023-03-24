@@ -18,6 +18,12 @@ extension StorageClient: DependencyKey {
       write: { recordings in
         try await storage.write(recordings.elements)
       },
+      addRecordingInfo: { recording in
+        let dbURL = try storage.dbURL()
+        var storedRecordings = try [RecordingInfo].fromFile(path: dbURL.path)
+        storedRecordings.append(recording)
+        try await storage.write(storedRecordings)
+      },
       createNewWhisperURL: {
         let filename = UUID().uuidString + ".wav"
         let url = documentsURL.appending(path: filename)
@@ -54,6 +60,7 @@ private final class Storage {
 
     // If the database file does not exist, create an empty array and save it to the file
     if !FileManager.default.fileExists(atPath: dbURL.path) {
+      log.verbose("Database file does not exist, creating new database file")
       try [RecordingInfo]().saveToFile(path: dbURL.path)
     }
 
@@ -74,6 +81,7 @@ private final class Storage {
 
       // Otherwise, set the flag to true and create the recording info
       shouldWrite = true
+      log.verbose("Recording \(file) not found in database, creating new info for it")
       return try createInfo(fileName: file)
     }
 
@@ -91,27 +99,15 @@ private final class Storage {
   }
 
   func write(_ recordings: [RecordingInfo]) async throws {
-    let docURL = try documentsURL()
     let dbURL = try dbURL()
-
-    let existing = recordings.filter { whisper in
-      FileManager.default.fileExists(atPath: docURL.appending(path: whisper.fileName).path)
-    }
-
-    try existing.saveToFile(path: dbURL.path)
-  }
-
-  private func getFileDuration(url: URL) throws -> TimeInterval {
-    let audioPlayer = try AVAudioPlayer(contentsOf: url)
-    return audioPlayer.duration
+    try recordings.saveToFile(path: dbURL.path)
   }
 
   private func createInfo(fileName: String) throws -> RecordingInfo {
     let docURL = try documentsURL()
     let fileURL = docURL.appending(component: fileName)
-    // let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
-    // let date = attributes[.creationDate] as? Date ?? Date()
-    let date = Date()
+    let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
+    let date = attributes[.creationDate] as? Date ?? Date()
     let duration = try getFileDuration(url: fileURL)
     let recording = RecordingInfo(fileName: fileName, date: date, duration: duration)
     return recording
