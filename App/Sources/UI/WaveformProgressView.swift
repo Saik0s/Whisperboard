@@ -96,65 +96,49 @@ public struct WaveformProgressView: View {
   }
 
   public var body: some View {
-    ZStack {
-      waveImageView()
-        .onTouchLocationPercent { horizontal, _ in
-          viewStore.send(.didTouchAtHorizontalLocation(horizontal))
-        }
-    }
-    .padding(.horizontal, .grid(1))
-    .frame(height: 50)
-    .frame(maxWidth: .infinity)
-    .animation(.linear(duration: 0.1), value: viewStore.progress)
-    .onAppear {
-      viewStore.send(.didAppear)
-    }
-    .enableInjection()
+    Rectangle()
+      .fill(Color.clear)
+      .background {
+        waveImageView()
+      }
+      .frame(height: 50)
+      .frame(maxWidth: .infinity)
+      .padding(.horizontal, .grid(1))
+      .animation(.linear(duration: 0.1), value: viewStore.progress)
+      .onTouchLocationPercent { horizontal, _ in
+        viewStore.send(.didTouchAtHorizontalLocation(horizontal))
+      }
+      .onAppear {
+        viewStore.send(.didAppear)
+      }
+      .enableInjection()
   }
 
   @ViewBuilder
   private func waveImageView() -> some View {
-    if let imageURL = viewStore.waveFormImageURL {
-      // let image = UIImage(contentsOfFile: imageURL.path) {
-      ZStack {
-        AsyncImage(url: imageURL) { image in
-          image
-            .resizable()
-            .renderingMode(.template)
-            .foregroundColor(.DS.Text.subdued)
-        } placeholder: {
-          ProgressView()
-        }
-        // Image(uiImage: image)
-        //   .resizable()
-        //   .renderingMode(.template)
-        //   .foregroundColor(.DS.Text.subdued)
-        AsyncImage(url: imageURL) { image in
-          image
-            .resizable()
-            .mask(alignment: .leading) {
-              GeometryReader { geometry in
-                if viewStore.isPlaying {
-                  Rectangle().frame(width: geometry.size.width * viewStore.progress)
-                } else {
-                  Rectangle()
-                }
+    ZStack {
+      AsyncImage(url: viewStore.waveFormImageURL) { image in
+        image
+          .resizable()
+          .renderingMode(.template)
+          .foregroundColor(.DS.Text.subdued)
+      } placeholder: {
+        ProgressView()
+      }
+      AsyncImage(url: viewStore.waveFormImageURL) { image in
+        image
+          .resizable()
+          .mask(alignment: .leading) {
+            GeometryReader { geometry in
+              if viewStore.isPlaying {
+                Rectangle().frame(width: geometry.size.width * viewStore.progress)
+              } else {
+                Rectangle()
               }
             }
-        } placeholder: {
-          ProgressView()
-        }
-        // Image(uiImage: image)
-        //   .resizable()
-        //   .mask(alignment: .leading) {
-        //     GeometryReader { geometry in
-        //       if viewStore.isPlaying {
-        //         Rectangle().frame(width: geometry.size.width * viewStore.progress)
-        //       } else {
-        //         Rectangle()
-        //       }
-        //     }
-        //   }
+          }
+      } placeholder: {
+        ProgressView()
       }
     }
   }

@@ -74,7 +74,7 @@ public struct RecordScreen: ReducerProtocol {
         )
         return .none
 
-      case let .recording(.delegate(.didCancel)):
+      case .recording(.delegate(.didCancel)):
         state.recording = nil
         return .none
 

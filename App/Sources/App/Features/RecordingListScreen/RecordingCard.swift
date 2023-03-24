@@ -12,22 +12,25 @@ public struct RecordingCard: ReducerProtocol {
     }
 
     public var id: String { recordingInfo.id }
-    var recordingInfo: RecordingInfo
-    var mode = Mode.notPlaying
-    var isTranscribing = false
+    @BindingState var recordingInfo: RecordingInfo
+    @BindingState var mode = Mode.notPlaying
+    @BindingState var isTranscribing = false
     @BindingState var isExpanded = false
-    var alert: AlertState<Action>?
+    @BindingState var transcribingProgressText: String = ""
+    @BindingState var alert: AlertState<Action>?
 
-    var _waveform = WaveformProgress.State()
+    var waveFormImageURL: URL?
     var waveform: WaveformProgress.State {
       get {
-        _waveform
-          .with(\.fileName, setTo: recordingInfo.fileName)
-          .with(\.progress, setTo: mode.progress ?? 0)
-          .with(\.isPlaying, setTo: mode.isPlaying)
+        WaveformProgress.State(
+          fileName: recordingInfo.fileName,
+          progress: mode.progress ?? 0,
+          isPlaying: mode.isPlaying,
+          waveFormImageURL: waveFormImageURL
+        )
       }
       set {
-        _waveform = newValue
+        waveFormImageURL = newValue.waveFormImageURL
         if mode.isPlaying {
           mode = .playing(progress: newValue.progress)
         }
@@ -93,18 +96,23 @@ public struct RecordingCard: ReducerProtocol {
         let fileURL = storage.audioFileURLWithName(state.recordingInfo.fileName)
 
         return .run { send in
-          await send(.binding(.set(\.isTranscribing, true)))
+          await send(.binding(.set(\.$isTranscribing, true)))
+          await send(.binding(.set(\.$recordingInfo.isTranscribed, false)))
+          await send(.binding(.set(\.$recordingInfo.text, "")))
 
+          var lastText = ""
           for try await text in transcriber.transcribeAudio(url: fileURL, language: .auto) {
-            await send(.binding(.set(\.recordingInfo.text, text)))
+            await send(.binding(.set(\.$transcribingProgressText, text)))
+            lastText = text
           }
-          await send(.binding(.set(\.recordingInfo.isTranscribed, true)))
+          await send(.binding(.set(\.$recordingInfo.text, lastText)))
 
-          await send(.binding(.set(\.isTranscribing, false)))
+          await send(.binding(.set(\.$recordingInfo.isTranscribed, true)))
+          await send(.binding(.set(\.$isTranscribing, false)))
         } catch: { error, send in
           log.error(error)
-          await send(.binding(.set(\.alert, AlertState(title: TextState("Error"), message: TextState(error.localizedDescription)))))
-          await send(.binding(.set(\.isTranscribing, false)))
+          await send(.binding(.set(\.$alert, AlertState<Action>(title: TextState("Error"), message: TextState(error.localizedDescription)))))
+          await send(.binding(.set(\.$isTranscribing, false)))
         }.animation(.default)
 
       case .alertDismissed:
@@ -129,8 +137,8 @@ public struct RecordingCard: ReducerProtocol {
           break
         case let .error(error):
           log.error(error as Any)
-          await send(.binding(.set(\.alert,
-                                   AlertState(
+          await send(.binding(.set(\.$alert,
+                                   AlertState<Action>(
                                      title: TextState("Error"),
                                      message: TextState(error?.localizedDescription ?? "Something went wrong.")
                                    ))))

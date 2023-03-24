@@ -1,24 +1,44 @@
 import AppDevUtils
 import SwiftUI
 
-// MARK: - MyButtonStyle
+// MARK: - PrimaryButtonStyle
 
-struct MyButtonStyle: ButtonStyle {
+struct PrimaryButtonStyle: ButtonStyle {
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
-      .font(.DS.bodyM)
+      .font(.DS.headlineM)
+      .foregroundColor(.DS.Text.base)
       .padding(.grid(2))
-      .background(Color.DS.Background.accent)
-      .foregroundColor(Color.DS.Text.base)
-      .cornerRadius(5)
-      .shadow(color: Color.DS.Shadow.primary, radius: 0.5, x: 0, y: 1)
-      .overlay {
-        ZStack {
-          if configuration.isPressed {
-            Color.black.opacity(0.5)
-          }
-        }
+      .padding(.horizontal, .grid(2))
+      .background {
+        Color.DS.Background.accent
+          .continuousCornerRadius(.grid(2))
+          .shadow(color: Color.DS.Background.accent.opacity(configuration.isPressed ? 0 : 0.7), radius: 4, x: 0, y: 0)
       }
+      .scaleEffect(configuration.isPressed ? 0.95 : 1)
+  }
+}
+
+extension View {
+  func primaryButtonStyle() -> some View {
+    buttonStyle(PrimaryButtonStyle())
+  }
+}
+
+// MARK: - PrimaryButton
+
+struct PrimaryButton: View {
+  let action: () -> Void
+  let label: String
+
+  init(_ label: String, action: @escaping () -> Void) {
+    self.label = label
+    self.action = action
+  }
+
+  var body: some View {
+    Button(label, action: action)
+      .primaryButtonStyle()
   }
 }
 

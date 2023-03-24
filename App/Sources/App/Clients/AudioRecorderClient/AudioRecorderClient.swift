@@ -70,7 +70,7 @@ private actor AudioRecorder {
   var recorder: AVAudioRecorder?
   var isSessionActive = false
   let recordingStateSubject = ReplaySubject<RecordingState, Never>(1)
-  @MainActor  var timer: Timer?
+  @MainActor var timer: Timer?
 
   lazy var delegate: Delegate = .init(
     didFinishRecording: { [recordingStateSubject] successfully in
@@ -134,7 +134,7 @@ private actor AudioRecorder {
       recorder.record()
 
       DispatchQueue.main.async { [weak self] in
-        self?.timer = .scheduledTimer(withTimeInterval: 0.025, repeats: true) { [weak self] timer in
+        self?.timer = .scheduledTimer(withTimeInterval: 0.025, repeats: true) { [weak self] _ in
           Task { [weak self] in
             await self?.updateMeters()
           }
@@ -200,22 +200,21 @@ private actor AudioRecorder {
     return AVAudioSession.sharedInstance().currentRoute.inputs.first.map(Microphone.init)
   }
 
-
   private func updateMeters() async {
-          guard let recorder else {
-            await MainActor.run { 
-              timer?.invalidate()
-            }
-            return
-          }
+    guard let recorder else {
+      await MainActor.run {
+        timer?.invalidate()
+      }
+      return
+    }
 
-          guard recorder.isRecording else { return }
+    guard recorder.isRecording else { return }
 
-          recorder.updateMeters()
-          recordingStateSubject.send(.recording(
-            duration: recorder.currentTime,
-            power: recorder.averagePower(forChannel: 0)
-          ))
+    recorder.updateMeters()
+    recordingStateSubject.send(.recording(
+      duration: recorder.currentTime,
+      power: recorder.averagePower(forChannel: 0)
+    ))
   }
 }
 
