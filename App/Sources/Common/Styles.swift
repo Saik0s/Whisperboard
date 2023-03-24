@@ -42,6 +42,29 @@ struct PrimaryButton: View {
   }
 }
 
+struct IconButtonStyle: ButtonStyle {
+  var color: Color = .DS.Text.accent
+
+  func makeBody(configuration: Self.Configuration) -> some View {
+    configuration.label
+      .foregroundColor(color)
+      .font(.DS.titleM)
+      .fontWeight(.light)
+      .padding(.grid(1))
+      .scaleEffect(configuration.isPressed ? 0.95 : 1)
+  }
+}
+
+extension View {
+  func iconButtonStyle() -> some View {
+    buttonStyle(IconButtonStyle(color: .DS.Text.accent))
+  }
+
+  func secondaryIconButtonStyle() -> some View {
+    buttonStyle(IconButtonStyle(color: .DS.Text.base))
+  }
+}
+
 // MARK: - CardStyle
 
 public struct CardStyle: ViewModifier {

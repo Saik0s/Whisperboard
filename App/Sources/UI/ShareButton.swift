@@ -2,20 +2,23 @@ import AppDevUtils
 import SwiftUI
 import UIKit
 
-struct ShareButton: View {
-  var text: String
+struct ShareButton<Value, Label: View>: View {
+  var value: Value
+  var label: Label
+
+  init(_ value: Value, @ViewBuilder label: () -> Label) {
+    self.value = value
+    self.label = label()
+  }
 
   var body: some View {
     Button {
-      let text = text
-      let activityController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+      let activityController = UIActivityViewController(activityItems: [value], applicationActivities: nil)
 
       UIApplication.shared.topViewController?.present(activityController, animated: true, completion: nil)
       UINotificationFeedbackGenerator().notificationOccurred(.success)
     } label: {
-      Image(systemName: "paperplane")
-        .foregroundColor(Color.DS.Background.accent)
-        .padding(.grid(1))
+      label
     }
   }
 }
