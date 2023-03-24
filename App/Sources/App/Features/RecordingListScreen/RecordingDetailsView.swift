@@ -8,6 +8,7 @@ import SwiftUI
 public struct RecordingDetails: ReducerProtocol {
   public struct State: Equatable {
     @BindingState var recordingCard: RecordingCard.State
+    @BindingState var shareAudioFileURL: URL?
   }
 
   public enum Action: BindableAction, Equatable {
@@ -15,6 +16,7 @@ public struct RecordingDetails: ReducerProtocol {
     case recordingCard(action: RecordingCard.Action)
     case transcribeTapped
     case delete
+    case shareAudio
   }
 
   @Dependency(\.transcriber) var transcriber: TranscriberClient
@@ -27,7 +29,7 @@ public struct RecordingDetails: ReducerProtocol {
       RecordingCard()
     }
 
-    Reduce<State, Action> { _, action in
+    Reduce<State, Action> { state, action in
       switch action {
       case .binding:
         return .none
@@ -39,6 +41,10 @@ public struct RecordingDetails: ReducerProtocol {
         return .send(.recordingCard(action: .transcribeTapped))
 
       case .delete:
+        return .none
+
+      case .shareAudio:
+        state.shareAudioFileURL = storage.audioFileURLWithName(state.recordingCard.recordingInfo.fileName)
         return .none
       }
     }
@@ -87,22 +93,24 @@ public struct RecordingDetailsView: View {
         }
         .padding(.grid(4))
       } else {
-        HStack(spacing: .grid(2)) {
-          CopyButton(text: viewStore.recordingCard.recordingInfo.text)
-          ShareButton(text: viewStore.recordingCard.recordingInfo.text)
-
-          if !viewStore.recordingCard.isTranscribing {
-            Button { viewStore.send(.transcribeTapped) } label: {
-              Image(systemName: "arrow.clockwise")
-                .padding(.grid(1))
+        if !viewStore.recordingCard.isTranscribing {
+          HStack(spacing: .grid(2)) {
+            CopyButton(viewStore.recordingCard.recordingInfo.text) {
+              Image(systemName: "doc.on.clipboard")
             }
-          }
 
-          Spacer()
+            ShareButton(viewStore.recordingCard.recordingInfo.text) {
+              Image(systemName: "paperplane")
+            }
+
+            Button { viewStore.send(.transcribeTapped) } label: {
+              Image(systemName: "arrow.clockwise").padding(.grid(1))
+            }
+
+            Spacer()
+          }
+          .iconButtonStyle()
         }
-        .foregroundColor(Color.DS.Background.accent)
-        .font(.DS.titleM)
-        .fontWeight(.light)
 
         ScrollView {
           Text(viewStore.recordingCard.isTranscribing
@@ -142,6 +150,7 @@ public struct RecordingDetailsView: View {
     }
     .padding(.grid(4))
     .screenRadialBackground()
+    .shareSheet(item: viewStore.binding(\.$shareAudioFileURL))
     .toolbar {
       ToolbarItem(placement: .keyboard) {
         Button("Done") {
@@ -152,10 +161,14 @@ public struct RecordingDetailsView: View {
     }
     .navigationBarItems(
       trailing: HStack(spacing: .grid(4)) {
+        Button { viewStore.send(.shareAudio) } label: {
+          Image(systemName: "square.and.arrow.up")
+        }
+
         Button { viewStore.send(.delete) } label: {
           Image(systemName: "trash")
         }
-      }
+      }.secondaryIconButtonStyle()
     )
     .scrollContentBackground(.hidden)
     .navigationBarTitleDisplayMode(.inline)

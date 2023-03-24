@@ -12,6 +12,7 @@ public struct RecordingListScreen: ReducerProtocol {
     @BindingState var searchQuery = ""
     @BindingState var editMode: EditMode = .inactive
     var selection: Identified<RecordingInfo.ID, RecordingDetails.State>?
+    @BindingState var isImportingFiles = false
   }
 
   public enum Action: BindableAction, Equatable {
@@ -23,12 +24,14 @@ public struct RecordingListScreen: ReducerProtocol {
     case delete(id: RecordingInfo.ID)
     case plusButtonTapped
     case addFileRecordings(urls: [URL])
+    case failedToAddRecordings(error: EquatableErrorWrapper)
     case deleteDialogConfirmed(id: RecordingInfo.ID)
     case details(action: RecordingDetails.Action)
     case recordingSelected(id: RecordingInfo.ID?)
   }
 
   @Dependency(\.storage) var storage: StorageClient
+  @Dependency(\.fileImport) var fileImport: FileImportClient
 
   struct SavingRecordingsID: Hashable {}
 
@@ -79,18 +82,32 @@ public struct RecordingListScreen: ReducerProtocol {
           return .none
 
         case let .addFileRecordings(urls):
-          let recordings = urls.map { url -> RecordingInfo in
-            let fileName = url.lastPathComponent
-            let newURL = storage.audioFileURLWithName(fileName)
-            do {
-              try FileManager.default.copyItem(at: url, to: newURL)
-            } catch {
-              log(error)
+          return .run { [currentRecordings = state.recordings] send in
+            await send(.binding(.set(\.$isImportingFiles, true)))
+
+            var recordings: [RecordingInfo] = []
+            for url in urls {
+              let newURL = storage.createNewWhisperURL()
+              try await fileImport.importFile(url, newURL)
+              let fileName = newURL.lastPathComponent
+              let recordingInfo = RecordingInfo(fileName: fileName, date: Date(), duration: 0)
+              recordings.append(recordingInfo)
             }
-            let recordingInfo = RecordingInfo(fileName: fileName, date: Date(), duration: 0)
-            return recordingInfo
-          }
-          state.recordings.append(contentsOf: recordings.map { RecordingCard.State(recordingInfo: $0) })
+
+            let allRecordings = (currentRecordings.map(\.recordingInfo) + recordings).identifiedArray
+            try await storage.write(allRecordings)
+
+            await send(.setRecordings(.success(allRecordings)))
+            await send(.readStoredRecordings)
+            await send(.binding(.set(\.$isImportingFiles, false)))
+          } catch: { error, send in
+            await send(.binding(.set(\.$isImportingFiles, false)))
+            await send(.failedToAddRecordings(error: error.equatable))
+          }.animation(.gentleBounce())
+
+        case let .failedToAddRecordings(error):
+          log.error(error.error)
+          errorAlert(error: error.error, state: &state)
           return .none
 
         case let .deleteDialogConfirmed(id):
@@ -99,6 +116,9 @@ public struct RecordingListScreen: ReducerProtocol {
           }
 
           state.recordings.removeAll(where: { $0.id == id })
+          if state.selection?.id == id {
+            state.selection = nil
+          }
           return .fireAndForget {
             try await storage.delete(recording.recordingInfo)
           }
@@ -159,6 +179,10 @@ public struct RecordingListScreen: ReducerProtocol {
       TextState("Are you sure you want to delete this recording?")
     }
   }
+
+  private func errorAlert(error: Error, state: inout State) {
+    state.alert = AlertState(title: TextState("Something went wrong"), message: TextState(error.localizedDescription))
+  }
 }
 
 // MARK: - RecordingListScreenView
@@ -190,18 +214,6 @@ public struct RecordingListScreenView: View {
   public var body: some View {
     NavigationStack {
       VStack(alignment: .leading, spacing: 0) {
-        // HStack {
-        //   Image(systemName: "magnifyingglass")
-        //   TextField(
-        //     "Search for recording",
-        //     text: viewStore.binding(\.$searchQuery)
-        //   )
-        //   .textFieldStyle(.roundedBorder)
-        //   .autocapitalization(.none)
-        //   .disableAutocorrection(true)
-        // }
-        // .padding(.horizontal, 16)
-
         Picker(selection: $viewMode, label: Text("Display style")) {
           Image(systemName: "waveform.path.ecg")
             .tag(ViewMode.audio)
@@ -257,6 +269,11 @@ public struct RecordingListScreenView: View {
         \.editMode,
         viewStore.binding(\.$editMode)
       )
+    }
+    .overlay {
+      if viewStore.isImportingFiles {
+        Color.black.opacity(0.5).overlay(ProgressView())
+      }
     }
     .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
     .navigationViewStyle(.stack)
