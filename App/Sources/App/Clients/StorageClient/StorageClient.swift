@@ -10,6 +10,7 @@ import XCTestDynamicOverlay
 struct StorageClient {
   var read: @Sendable () async throws -> IdentifiedArrayOf<RecordingInfo>
   var write: @Sendable (IdentifiedArrayOf<RecordingInfo>) async throws -> Void
+  var addRecordingInfo: @Sendable (RecordingInfo) async throws -> Void
   var createNewWhisperURL: () -> URL
   var audioFileURLWithName: (String) -> URL
   var waveFileURLWithName: (String) -> URL
@@ -41,6 +42,7 @@ extension StorageClient: TestDependencyKey {
       ]
     },
     write: { _ in },
+    addRecordingInfo: { _ in },
     createNewWhisperURL: { URL(filePath: "~/Downloads/1.wav") },
     audioFileURLWithName: { _ in URL(filePath: "~/Downloads/1.wav") },
     waveFileURLWithName: { _ in URL(filePath: "~/Downloads/1.wav") },
@@ -50,6 +52,7 @@ extension StorageClient: TestDependencyKey {
   static let testValue = Self(
     read: unimplemented("\(Self.self).read"),
     write: unimplemented("\(Self.self).write"),
+    addRecordingInfo: unimplemented("\(Self.self).addRecordingInfo"),
     createNewWhisperURL: unimplemented("\(Self.self).createNewWhisperURL"),
     audioFileURLWithName: unimplemented("\(Self.self).audioFileURLWithName"),
     waveFileURLWithName: unimplemented("\(Self.self).waveFileURLWithName"),

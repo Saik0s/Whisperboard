@@ -5,6 +5,15 @@ import Dependencies
 import Foundation
 import XCTestDynamicOverlay
 
+enum AudioRecorderSettings {
+  static let whisper: [String: Any] = [
+    AVFormatIDKey: Int(kAudioFormatLinearPCM),
+    AVSampleRateKey: 16000.0,
+    AVNumberOfChannelsKey: 1,
+    AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
+  ]
+}
+
 // MARK: - AudioRecorderClient
 
 struct AudioRecorderClient {
@@ -60,13 +69,6 @@ enum AudioRecorderError: Error {
 // MARK: - AudioRecorder
 
 private actor AudioRecorder {
-  let settings: [String: Any] = [
-    AVFormatIDKey: Int(kAudioFormatLinearPCM),
-    AVSampleRateKey: 16000.0,
-    AVNumberOfChannelsKey: 1,
-    AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
-  ]
-
   var recorder: AVAudioRecorder?
   var isSessionActive = false
   let recordingStateSubject = ReplaySubject<RecordingState, Never>(1)
@@ -127,7 +129,7 @@ private actor AudioRecorder {
 
     do {
       try activateSession()
-      let recorder = try AVAudioRecorder(url: url, settings: settings)
+      let recorder = try AVAudioRecorder(url: url, settings: AudioRecorderSettings.whisper)
       self.recorder = recorder
       recorder.delegate = delegate
       recorder.isMeteringEnabled = true

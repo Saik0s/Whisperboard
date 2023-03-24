@@ -59,6 +59,7 @@ func appTarget() -> Target {
       .external(name: "DSWaveformImageViews"),
       .external(name: "Lottie"),
       .external(name: "LottieUI"),
+      .external(name: "AudioKit"),
       .package(product: "whisper"),
     ]
   )
