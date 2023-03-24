@@ -75,6 +75,7 @@ public struct RecordingDetailsView: View {
       TextField("Untitled", text: viewStore.binding(\.$recordingCard.recordingInfo.title))
         .focused($focusedField, equals: .title)
         .font(.DS.titleXL)
+        .minimumScaleFactor(0.01)
         .foregroundColor(.DS.Text.base)
 
       Text("Created: \(viewStore.recordingCard.recordingInfo.date.formatted(date: .abbreviated, time: .shortened))")

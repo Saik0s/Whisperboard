@@ -6,13 +6,28 @@ import SwiftUI
 // MARK: - RecordingListScreen
 
 public struct RecordingListScreen: ReducerProtocol {
+  public struct Row: Identifiable, Equatable {
+    public var id: RecordingInfo.ID { card.id }
+
+    var index: Int
+    var card: RecordingCard.State
+  }
+
   public struct State: Equatable {
-    var alert: AlertState<Action>?
     var recordings: IdentifiedArrayOf<RecordingCard.State> = []
-    @BindingState var searchQuery = ""
-    @BindingState var editMode: EditMode = .inactive
+    var recordingRows: IdentifiedArrayOf<Row> {
+      recordings
+        .enumerated()
+        .map(Row.init(index:card:))
+        .identifiedArray
+    }
+
     var selection: Identified<RecordingInfo.ID, RecordingDetails.State>?
+
+    @BindingState var editMode: EditMode = .inactive
     @BindingState var isImportingFiles = false
+
+    var alert: AlertState<Action>?
   }
 
   public enum Action: BindableAction, Equatable {
@@ -189,83 +204,57 @@ public struct RecordingListScreen: ReducerProtocol {
 // MARK: - RecordingListScreenView
 
 public struct RecordingListScreenView: View {
-  enum ViewMode: Hashable { case audio, text }
-
-  @Namespace var animation
-
   @ObserveInjection var inject
 
   let store: StoreOf<RecordingListScreen>
   @ObservedObject var viewStore: ViewStoreOf<RecordingListScreen>
 
   @State var showListItems = false
-  @State var viewMode: ViewMode = .audio
 
   public init(store: StoreOf<RecordingListScreen>) {
     self.store = store
     viewStore = ViewStore(store)
-
-    UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(Color.DS.Background.accent)
-    UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
-    UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor.white], for: .normal)
-    UISegmentedControl.appearance().backgroundColor = .clear
-    UISegmentedControl.appearance().setBackgroundImage(nil, for: .normal, barMetrics: .default)
   }
 
   public var body: some View {
     NavigationStack {
-      VStack(alignment: .leading, spacing: 0) {
-        Picker(selection: $viewMode, label: Text("Display style")) {
-          Image(systemName: "waveform.path.ecg")
-            .tag(ViewMode.audio)
-          Image(systemName: "doc.text")
-            .tag(ViewMode.text)
-        }
-        .pickerStyle(.segmented)
-        .padding(.horizontal, .grid(4))
-        .padding(.vertical, .grid(6))
-
-        ScrollView {
-          LazyVStack(spacing: .grid(4)) {
-            ForEachWithIndex(viewStore.recordings) { index, recording in
-              RecordingRow(recording: recording, index: index)
-                .tag(recording.id)
-            }
+      ScrollView {
+        LazyVStack(spacing: .grid(4)) {
+          ForEachStore(store.scope(
+            state: \.recordingRows,
+            action: RecordingListScreen.Action.recording(id:action:)
+          )) { store in
+            makeRecordingRow(store: store)
           }
-          .padding(.grid(4))
-          .onChange(of: viewStore.recordings.count) {
-            showListItems = $0 > 0
-          }
-          .animation(.default, value: viewStore.recordings.count)
         }
+        .padding(.grid(4))
+        .onChange(of: viewStore.recordings.count) {
+          showListItems = $0 > 0
+        }
+        .animation(.default, value: viewStore.recordings.count)
       }
       .screenRadialBackground()
 
-      .navigationDestination(
-        isPresented: Binding(
-          get: { viewStore.selection != nil },
-          set: { if !$0 { viewStore.send(.recordingSelected(id: nil)) } }
-        )
-      ) {
-        IfLetStore(
-          self.store.scope(
-            state: \.selection?.value,
-            action: RecordingListScreen.Action.details
-          )
-        ) {
+      .navigationDestination(isPresented: Binding(
+        get: { viewStore.selection != nil },
+        set: { if !$0 { viewStore.send(.recordingSelected(id: nil)) } }
+      )) {
+        IfLetStore(store.scope(
+          state: \.selection?.value,
+          action: RecordingListScreen.Action.details
+        )) {
           RecordingDetailsView(store: $0)
         }
       }
       .navigationTitle("Recordings")
       .navigationBarTitleDisplayMode(.inline)
       .navigationBarItems(
-        leading: EditButton().tint(.DS.Text.base),
+        leading: EditButton(),
         trailing: FilePicker(types: [.wav, .mp3, .mpeg4Audio], allowMultiple: true) { urls in
           viewStore.send(.addFileRecordings(urls: urls))
         } label: {
           Image(systemName: "doc.badge.plus")
-            .tint(.DS.Text.base)
-        }
+        }.secondaryIconButtonStyle()
       )
       .environment(
         \.editMode,
@@ -287,39 +276,31 @@ public struct RecordingListScreenView: View {
 }
 
 extension RecordingListScreenView {
-  private func RecordingRow(recording: RecordingCard.State, index: Int) -> some View {
-    HStack(spacing: .grid(2)) {
+  @ViewBuilder
+  private func makeRecordingRow(store: Store<RecordingListScreen.Row, RecordingCard.Action>) -> some View {
+    let index = ViewStore(store).index
+    let recordingId = ViewStore(store).id
+    let cardStore = store.scope(state: \.card)
+
+    HStack(spacing: .grid(4)) {
       if viewStore.editMode.isEditing {
-        Button {
-          viewStore.send(.delete(id: recording.id))
-        } label: {
+        Button { viewStore.send(.delete(id: recordingId)) } label: {
           Image(systemName: "multiply.circle.fill")
-            .foregroundColor(.DS.Text.error)
-        }
+        }.iconButtonStyle()
       }
 
-      Button { viewStore.send(.recordingSelected(id: recording.id)) } label: {
-        IfLetStore(
-          self.store.scope(
-            state: { $0.recordings.first(where: { $0.id == recording.id }) },
-            action: { RecordingListScreen.Action.recording(id: recording.id, action: $0) }
+      Button { viewStore.send(.recordingSelected(id: recordingId)) } label: {
+        RecordingCardView(store: cardStore)
+          .offset(y: showListItems ? 0 : 500)
+          .opacity(showListItems ? 1 : 0)
+          .animation(
+            .spring(response: 0.6, dampingFraction: 0.75)
+              .delay(Double(index) * 0.15),
+            value: showListItems
           )
-        ) { cardStore in
-          ZStack {
-            if viewMode == .audio {
-              RecordingCardView(store: cardStore)
-            } else {
-              RecordingTextView(store: cardStore)
-            }
-          }
-        }
-        .offset(y: showListItems ? 0 : 500)
-        .opacity(showListItems ? 1 : 0)
-        .animation(.spring(response: 0.6, dampingFraction: 0.75).delay(Double(index) * 0.15),
-                   value: showListItems)
-        .animation(.gentleBounce(), value: viewMode)
-      }
+      }.cardButtonStyle()
     }
+    .animation(.gentleBounce(), value: viewStore.editMode.isEditing)
   }
 }
 
