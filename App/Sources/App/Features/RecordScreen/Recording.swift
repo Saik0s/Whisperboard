@@ -161,6 +161,7 @@ struct RecordingView: View {
         if viewStore.mode == .paused {
           Button { viewStore.send(.deleteButtonTapped, animation: .default) }
           label: { Image(systemName: "multiply").font(.DS.titleL) }
+            .recordButtonStyle()
             .frame(width: 50, height: 50)
             .transition(.move(edge: .trailing)
               .combined(with: .opacity))
@@ -170,20 +171,22 @@ struct RecordingView: View {
           if viewStore.mode == .recording {
             Button { viewStore.send(.pauseButtonTapped, animation: .default) } label: {
               Circle()
-                .fill(Color.DS.Background.accent)
+                .fill(RadialGradient.accent)
                 .shadow(color: .DS.Background.accent.opacity(0.5), radius: 20)
                 .overlay(Image(systemName: "pause.fill")
                   .font(.DS.titleL)
                   .foregroundColor(.DS.Text.base))
             }
+            .recordButtonStyle()
           } else if viewStore.mode == .paused {
             Button { viewStore.send(.continueButtonTapped, animation: .default) } label: {
               Circle()
-                .fill(Color.DS.Background.accent)
+                .fill(RadialGradient.accent)
                 .overlay(Image(systemName: "mic")
                   .font(.DS.titleL)
                   .foregroundColor(.DS.Text.base))
             }
+            .recordButtonStyle()
           }
         }
         .frame(width: 70, height: 70)
@@ -192,6 +195,7 @@ struct RecordingView: View {
         if viewStore.mode == .paused {
           Button { viewStore.send(.stopButtonTapped, animation: .default) }
           label: { Image(systemName: "checkmark").font(.DS.titleL) }
+            .recordButtonStyle()
             .frame(width: 50, height: 50)
             .transition(.move(edge: .leading)
               .combined(with: .opacity))

@@ -75,16 +75,12 @@ struct RecordingCardView: View {
             action: { .waveform($0) }
           )
         )
+        .transition(.scale.combined(with: .opacity))
       }
     }
     .multilineTextAlignment(.leading)
     .padding(.grid(4))
-    .background(Color.DS.Background.tertiary.opacity(viewStore.mode.isPlaying ? 0.7 : 0))
-    .background(Color.DS.Background.secondary)
-    .cornerRadius(.grid(4))
-    .shadow(color: .DS.Background.accentAlt.darken().opacity(0.25),
-            radius: viewStore.mode.isPlaying ? 12 : 0,
-            y: viewStore.mode.isPlaying ? 8 : 0)
+    .cardStyle(isPrimary: viewStore.mode.isPlaying)
     .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
     .animation(.easeIn(duration: 0.3), value: viewStore.mode.isPlaying)
     .enableInjection()

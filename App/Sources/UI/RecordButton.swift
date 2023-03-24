@@ -11,11 +11,12 @@ struct RecordButton: View {
     ZStack {
       Button(action: action) {
         Circle()
-          .fill(Color.DS.Background.accent)
+          .fill(RadialGradient.accent)
           .overlay(Image(systemName: "mic")
-            .font(.DS.titleL)
-            .foregroundColor(.DS.Text.base))
+                     .font(.DS.titleL)
+                     .foregroundColor(.DS.Text.base))
       }
+        .recordButtonStyle()
       .frame(width: 70, height: 70)
       .frame(maxWidth: .infinity)
       .padding(.grid(3))
