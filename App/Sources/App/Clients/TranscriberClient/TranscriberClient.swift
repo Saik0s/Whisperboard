@@ -91,9 +91,25 @@ enum TranscriberState: Equatable {
 
 // MARK: - TranscriberError
 
-private enum TranscriberError: Error {
+enum TranscriberError: Error, CustomStringConvertible {
   case couldNotLocateModel
   case modelNotLoaded
+  case notEnoughMemory(available: UInt64, required: UInt64)
+
+  var localizedDescription: String {
+    switch self {
+    case .couldNotLocateModel:
+      return "Could not locate model"
+    case .modelNotLoaded:
+      return "Model not loaded"
+    case let .notEnoughMemory(available, required):
+      return "Not enough memory. Available: \(bytesToReadableString(bytes: available)), required: \(bytesToReadableString(bytes: required))"
+    }
+  }
+
+  var description: String {
+    localizedDescription
+  }
 }
 
 // MARK: - TranscriberImpl
@@ -110,6 +126,14 @@ final class TranscriberImpl {
       return
     } else if whisperContext != nil {
       unloadModel()
+    }
+
+    let memory = freeMemory()
+    log.info("Available memory: \(bytesToReadableString(bytes: availableMemory()))")
+    log.info("Free memory: \(bytesToReadableString(bytes: memory))")
+
+    guard memory > model.memoryRequired else {
+      throw TranscriberError.notEnoughMemory(available: memory, required: model.memoryRequired)
     }
 
     try await withCheckedThrowingContinuation { continuation in

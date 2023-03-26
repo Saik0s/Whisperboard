@@ -111,7 +111,7 @@ public struct RecordingCard: ReducerProtocol {
           await send(.binding(.set(\.$isTranscribing, false)))
         } catch: { error, send in
           log.error(error)
-          await send(.binding(.set(\.$alert, AlertState<Action>(title: TextState("Error"), message: TextState(error.localizedDescription)))))
+          await send(.binding(.set(\.$alert, AlertState<Action>(title: TextState("Error"), message: TextState(String(describing: error))))))
           await send(.binding(.set(\.$isTranscribing, false)))
         }.animation(.default)
 
