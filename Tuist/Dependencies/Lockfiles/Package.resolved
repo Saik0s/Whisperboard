@@ -55,42 +55,6 @@
       }
     },
     {
-      "identity" : "keyboardkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/KeyboardKit/KeyboardKit.git",
-      "state" : {
-        "revision" : "f5e6c5166feb785010f854437e367a40353c0f53",
-        "version" : "6.9.10"
-      }
-    },
-    {
-      "identity" : "lottie-ios",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/airbnb/lottie-ios.git",
-      "state" : {
-        "branch" : "master",
-        "revision" : "8bf6161d81354b5fa231d0340f4e819f26b0153f"
-      }
-    },
-    {
-      "identity" : "lottieui",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/jasudev/LottieUI.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "a147e5abba3c0918e8cca6f76d1d303264ba0ab9"
-      }
-    },
-    {
-      "identity" : "openai",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Saik0s/OpenAI.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "57f9e96ef5bb159695c5bb68ca155ccf7a7b25aa"
-      }
-    },
-    {
       "identity" : "swift-case-paths",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-case-paths",
@@ -160,6 +124,15 @@
       "state" : {
         "revision" : "47dd574b900ba5ba679f56ea00d4d282fc7305a6",
         "version" : "0.7.1"
+      }
+    },
+    {
+      "identity" : "whisper.spm",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ggerganov/whisper.spm",
+      "state" : {
+        "revision" : "92d4c5c9a07b726e35c20dc513532789919e00c4",
+        "version" : "1.2.1"
       }
     },
     {
