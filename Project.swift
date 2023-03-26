@@ -9,6 +9,8 @@ let projectSettings: SettingsDictionary = [
   "CODE_SIGN_STYLE": "Automatic",
   "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
   "MARKETING_VERSION": SettingValue(stringLiteral: version),
+  "CLANG_CXX_LANGUAGE_STANDARD": "c++11",
+  "OTHER_LDFLAGS": "-lc++ $(inherited)",
 ]
 
 let debugSettings: SettingsDictionary = [
@@ -57,10 +59,11 @@ func appTarget() -> Target {
       .external(name: "Inject"),
       .external(name: "DSWaveformImage"),
       .external(name: "DSWaveformImageViews"),
-      .external(name: "Lottie"),
-      .external(name: "LottieUI"),
+      // .external(name: "Lottie"),
+      // .external(name: "LottieUI"),
       .external(name: "AudioKit"),
-      .package(product: "whisper"),
+      .external(name: "whisper"),
+      // .package(product: "whisper"),
     ]
   )
 }
@@ -75,7 +78,7 @@ let project = Project(
     )
   ),
   packages: [
-    .package(url: "https://github.com/ggerganov/whisper.spm", from: "1.2.1"),
+    // .package(url: "https://github.com/ggerganov/whisper.spm", from: "1.2.1"),
   ],
   settings: .settings(
     base: projectSettings,
