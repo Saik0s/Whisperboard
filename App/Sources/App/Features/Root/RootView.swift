@@ -34,7 +34,11 @@ struct Root: ReducerProtocol {
         case let .recordScreen(.newRecordingCreated(recordingInfo)):
           let recordingCard = RecordingCard.State(recordingInfo: recordingInfo)
           state.recordingListScreen.recordings.insert(recordingCard, at: 0)
-          return .none
+          state.recordingListScreen.selection = nil
+          return .run { send in
+            await send(.selectTab(0))
+            await send(.recordingListScreen(.recordingSelected(id: recordingInfo.id)))
+          }
 
         default:
           return .none
