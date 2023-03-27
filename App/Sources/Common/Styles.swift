@@ -77,6 +77,28 @@ extension View {
   }
 }
 
+struct TertiaryButtonStyle: ButtonStyle {
+  func makeBody(configuration: Self.Configuration) -> some View {
+    configuration.label
+      .font(.DS.headlineS)
+      .foregroundColor(.DS.Text.accent)
+      .padding(.grid(2))
+      .padding(.horizontal, .grid(2))
+      .background {
+        Color.DS.Background.accent.opacity(0.2)
+          .continuousCornerRadius(.grid(2))
+      }
+      .scaleEffect(configuration.isPressed ? 0.95 : 1)
+      .animation(.gentleBounce(), value: configuration.isPressed)
+  }
+}
+
+extension View {
+  func tertiaryButtonStyle() -> some View {
+    buttonStyle(TertiaryButtonStyle())
+  }
+}
+
 // MARK: - IconButtonStyle
 
 struct IconButtonStyle: ButtonStyle {
@@ -85,9 +107,8 @@ struct IconButtonStyle: ButtonStyle {
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
       .foregroundColor(isPrimary ? .DS.Text.accent : .DS.Text.base)
-      .font(isPrimary ? .DS.titleM : .DS.titleS)
+      .font(isPrimary ? .DS.titleM : .DS.bodyM)
       .fontWeight(.light)
-      .padding(.grid(1))
       .scaleEffect(configuration.isPressed ? 0.95 : 1)
       .animation(.gentleBounce(), value: configuration.isPressed)
   }
@@ -182,7 +203,7 @@ public struct CardStyle: ViewModifier {
             .opacity(isPrimary ? 1 : 0)
         }
         .cornerRadius(.grid(4))
-        .shadow(color: .DS.Background.accentAlt.darken(by: 0.4).opacity(isPrimary ? 0.5 : 0),
+        .shadow(color: .DS.Background.accentAlt.darken(by: 0.4).opacity(isPrimary ? 1 : 0),
                 radius: isPrimary ? 50 : 5,
                 x: 0,
                 y: isPrimary ? 7 : 1)
