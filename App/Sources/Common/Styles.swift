@@ -48,6 +48,33 @@ struct PrimaryButton: View {
   }
 }
 
+struct SecondaryButtonStyle: ButtonStyle {
+  func makeBody(configuration: Self.Configuration) -> some View {
+    configuration.label
+      .font(.DS.headlineM)
+      .foregroundColor(.DS.Text.base)
+      .padding(.grid(2))
+      .padding(.horizontal, .grid(2))
+      .background {
+        LinearGradient.easedGradient(colors: [
+          Color.DS.Background.accentAlt.lighten(by: 0.03),
+          Color.DS.Background.accentAlt.darken(by: 0.07),
+          Color.DS.Background.accentAlt.darken(by: 0.1),
+        ], startPoint: .topLeading, endPoint: .bottomTrailing)
+        .continuousCornerRadius(.grid(2))
+        .shadow(color: Color.DS.Background.accentAlt.darken(by: 0.2).opacity(configuration.isPressed ? 0 : 0.7), radius: 4, x: 0, y: 0)
+      }
+      .scaleEffect(configuration.isPressed ? 0.95 : 1)
+      .animation(.gentleBounce(), value: configuration.isPressed)
+  }
+}
+
+extension View {
+  func secondaryButtonStyle() -> some View {
+    buttonStyle(SecondaryButtonStyle())
+  }
+}
+
 // MARK: - IconButtonStyle
 
 struct IconButtonStyle: ButtonStyle {

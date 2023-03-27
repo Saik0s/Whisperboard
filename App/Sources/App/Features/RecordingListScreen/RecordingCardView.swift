@@ -12,6 +12,9 @@ struct RecordingCardView: View {
     var currentTimeString: String
     var mode: RecordingCard.State.Mode
     var fileName: String
+    var isTranscribed: Bool
+    var isTranscribing: Bool
+    var transcription: String
   }
 
   @ObserveInjection var inject
@@ -29,7 +32,10 @@ struct RecordingCardView: View {
         dateString: state.recordingInfo.date.formatted(date: .abbreviated, time: .shortened),
         currentTimeString: dateComponentsFormatter.string(from: currentTime) ?? "",
         mode: state.mode,
-        fileName: state.recordingInfo.fileName
+        fileName: state.recordingInfo.fileName,
+        isTranscribed: state.recordingInfo.isTranscribed,
+        isTranscribing: state.isTranscribing,
+        transcription: state.recordingInfo.text.trimmingCharacters(in: .whitespacesAndNewlines)
       )
     })
   }
@@ -77,7 +83,35 @@ struct RecordingCardView: View {
         )
         .transition(.scale.combined(with: .opacity))
       }
+
+      if viewStore.isTranscribed {
+        VStack(alignment: .leading, spacing: .grid(2)) {
+          Text(viewStore.transcription)
+            .font(.DS.bodyS)
+            .foregroundColor(.DS.Text.base)
+            .lineLimit(3)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+          HStack(spacing: .grid(2)) {
+            CopyButton(viewStore.transcription) {
+              Image(systemName: "doc.on.clipboard").font(.DS.bodyS)
+            }
+
+            ShareButton(viewStore.transcription) {
+              Image(systemName: "paperplane").font(.DS.bodyS)
+            }
+          }.iconButtonStyle()
+        }
+      } else if viewStore.isTranscribing {
+        ProgressView()
+          .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
+          .scaleEffect(1.5)
+      } else {
+        Button("Transcribe") { viewStore.send(.transcribeTapped) }
+          .primaryButtonStyle()
+      }
     }
+    .animation(.easeInOut(duration: 0.3), value: [viewStore.isTranscribing, viewStore.isTranscribed])
     .multilineTextAlignment(.leading)
     .padding(.grid(4))
     .cardStyle(isPrimary: viewStore.mode.isPlaying)
