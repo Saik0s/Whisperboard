@@ -64,14 +64,18 @@ func appTarget() -> Target {
     dependencies: [
       .external(name: "AppDevUtils"),
       .external(name: "Inject"),
+
       .external(name: "DSWaveformImage"),
       .external(name: "DSWaveformImageViews"),
+      .external(name: "DynamicColor"),
       // .external(name: "Lottie"),
       // .external(name: "LottieUI"),
+
       .external(name: "AudioKit"),
       .external(name: "whisper"),
+
       .external(name: "ComposableArchitecture"),
-      .external(name: "DynamicColor"),
+      .external(name: "ComposablePresentation"),
     ]
   )
 }

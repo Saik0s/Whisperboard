@@ -91,6 +91,15 @@
       }
     },
     {
+      "identity" : "swift-composable-presentation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/darrarski/swift-composable-presentation.git",
+      "state" : {
+        "revision" : "b5e2df0c7bcdd66e32d3e80c765dbfe84300cbf5",
+        "version" : "0.16.0"
+      }
+    },
+    {
       "identity" : "swift-custom-dump",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-custom-dump",
