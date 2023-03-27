@@ -1,7 +1,5 @@
 import AppDevUtils
 import ComposableArchitecture
-import DSWaveformImage
-import DSWaveformImageViews
 import SwiftUI
 
 // MARK: - Recording
@@ -121,101 +119,5 @@ public struct Recording: ReducerProtocol {
         }
       }
     }
-  }
-}
-
-// MARK: - RecordingView
-
-struct RecordingView: View {
-  let store: StoreOf<Recording>
-  @ObservedObject var viewStore: ViewStoreOf<Recording>
-
-  var currentTime: String {
-    dateComponentsFormatter.string(from: viewStore.duration) ?? ""
-  }
-
-  init(store: StoreOf<Recording>) {
-    self.store = store
-    viewStore = ViewStore(store)
-  }
-
-  var body: some View {
-    VStack(spacing: .grid(3)) {
-      WaveformLiveCanvas(samples: viewStore.samples, configuration: Waveform.Configuration(
-        backgroundColor: .clear,
-        style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
-        dampening: .init(percentage: 0.125, sides: .both),
-        position: .middle,
-        scale: DSScreen.scale,
-        verticalScalingFactor: 0.95,
-        shouldAntialias: true
-      ))
-      .frame(maxWidth: .infinity)
-
-      Text(currentTime)
-        .font(.DS.titleL)
-        .monospaced()
-        .foregroundColor(.DS.Text.accent)
-
-      HStack(spacing: .grid(8)) {
-        if viewStore.mode == .paused {
-          Button { viewStore.send(.deleteButtonTapped, animation: .default) }
-          label: { Image(systemName: "multiply").font(.DS.titleL) }
-            .recordButtonStyle()
-            .frame(width: 50, height: 50)
-            .transition(.move(edge: .trailing)
-              .combined(with: .opacity))
-        }
-
-        ZStack {
-          if viewStore.mode == .recording {
-            Button { viewStore.send(.pauseButtonTapped, animation: .default) } label: {
-              Circle()
-                .fill(RadialGradient.accent)
-                .shadow(color: .DS.Background.accent.opacity(0.5), radius: 20)
-                .overlay(Image(systemName: "pause.fill")
-                  .font(.DS.titleL)
-                  .foregroundColor(.DS.Text.base))
-            }
-            .recordButtonStyle()
-          } else if viewStore.mode == .paused {
-            Button { viewStore.send(.continueButtonTapped, animation: .default) } label: {
-              Circle()
-                .fill(RadialGradient.accent)
-                .overlay(Image(systemName: "mic")
-                  .font(.DS.titleL)
-                  .foregroundColor(.DS.Text.base))
-            }
-            .recordButtonStyle()
-          }
-        }
-        .frame(width: 70, height: 70)
-        .zIndex(1)
-
-        if viewStore.mode == .paused {
-          Button { viewStore.send(.stopButtonTapped, animation: .default) }
-          label: { Image(systemName: "checkmark").font(.DS.titleL) }
-            .recordButtonStyle()
-            .frame(width: 50, height: 50)
-            .transition(.move(edge: .leading)
-              .combined(with: .opacity))
-        }
-      }
-      .padding(.grid(3))
-    }
-    .task {
-      await viewStore.send(.task).finish()
-    }
-  }
-}
-
-// MARK: - Whispers_Previews
-
-struct Whispers_Previews: PreviewProvider {
-  static var previews: some View {
-    RecordingView(store: .init(
-      initialState: .init(date: Date(), url: URL(fileURLWithPath: "")),
-      reducer: Recording()
-    ))
   }
 }

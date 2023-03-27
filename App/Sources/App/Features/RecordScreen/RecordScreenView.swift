@@ -8,57 +8,31 @@ import SwiftUI
 public struct RecordScreen: ReducerProtocol {
   public struct State: Equatable {
     var alert: AlertState<Action>?
-    var audioRecorderPermission = RecorderPermission.undetermined
-    var recording: Recording.State?
     var micSelector = MicSelector.State()
-
-    enum RecorderPermission {
-      case allowed
-      case denied
-      case undetermined
-    }
+    var recordingControls = RecordingControls.State()
   }
 
   public enum Action: Equatable {
-    case recordButtonTapped
-    case recordPermissionResponse(Bool)
-    case recording(Recording.Action)
-    case openSettingsButtonTapped
     case alertDismissed
-    case newRecordingCreated(RecordingInfo)
     case micSelector(MicSelector.Action)
+    case recordingControls(RecordingControls.Action)
+
+    // Delegate actions
+    case newRecordingCreated(RecordingInfo)
   }
 
-  @Dependency(\.audioRecorder.requestRecordPermission) var requestRecordPermission
-  @Dependency(\.date) var date
-  @Dependency(\.openSettings) var openSettings
-  @Dependency(\.storage) var storage
-
   public var body: some ReducerProtocol<State, Action> {
-    Scope(state: \.micSelector, action: /Action.micSelector) { MicSelector() }
+    Scope(state: \.micSelector, action: /Action.micSelector) {
+      MicSelector()
+    }
+
+    Scope(state: \.recordingControls, action: /Action.recordingControls) {
+      RecordingControls()
+    }
 
     Reduce<State, Action> { state, action in
       switch action {
-      case .recordButtonTapped:
-        switch state.audioRecorderPermission {
-        case .undetermined:
-          return .task {
-            await .recordPermissionResponse(self.requestRecordPermission())
-          }
-
-        case .denied:
-          state.alert = AlertState(
-            title: TextState("Permission is required to record voice.")
-          )
-          return .none
-
-        case .allowed:
-          state.recording = newRecording
-          return .none
-        }
-
-      case let .recording(.delegate(.didFinish(.success(recording)))):
-        state.recording = nil
+      case let .recordingControls(.recording(.delegate(.didFinish(.success(recording))))):
         let recordingInfo = RecordingInfo(
           fileName: recording.url.lastPathComponent,
           date: recording.date,
@@ -66,36 +40,15 @@ public struct RecordScreen: ReducerProtocol {
         )
         return .task { .newRecordingCreated(recordingInfo) }
 
-      case let .recording(.delegate(.didFinish(.failure(error)))):
-        state.recording = nil
+      case let .recordingControls(.recording(.delegate(.didFinish(.failure(error))))):
         state.alert = AlertState(
           title: TextState("Voice recording failed."),
           message: TextState(error.localizedDescription)
         )
         return .none
 
-      case .recording(.delegate(.didCancel)):
-        state.recording = nil
+      case .recordingControls:
         return .none
-
-      case .recording:
-        return .none
-
-      case let .recordPermissionResponse(permission):
-        state.audioRecorderPermission = permission ? .allowed : .denied
-        if permission {
-          state.recording = newRecording
-        } else {
-          state.alert = AlertState(
-            title: TextState("Permission is required to record voice.")
-          )
-        }
-        return .none
-
-      case .openSettingsButtonTapped:
-        return .fireAndForget {
-          await self.openSettings()
-        }
 
       case .alertDismissed:
         state.alert = nil
@@ -108,14 +61,6 @@ public struct RecordScreen: ReducerProtocol {
         return .none
       }
     }
-    .ifLet(\.recording, action: /Action.recording) { Recording() }
-  }
-
-  private var newRecording: Recording.State {
-    Recording.State(
-      date: date.now,
-      url: storage.createNewWhisperURL()
-    )
   }
 }
 
@@ -131,21 +76,11 @@ public struct RecordScreenView: View {
   }
 
   public var body: some View {
-    WithViewStore(store, observe: { $0 }) { viewStore in
+    WithViewStore(store, observe: { $0 }) { _ in
       VStack(spacing: 0) {
         MicSelectorView(store: store.scope(state: \.micSelector, action: { .micSelector($0) }))
         Spacer()
-        IfLetStore(
-          store.scope(state: \.recording, action: { .recording($0) })
-        ) { store in
-          RecordingView(store: store)
-        } else: {
-          RecordButton(permission: viewStore.audioRecorderPermission) {
-            viewStore.send(.recordButtonTapped, animation: .default)
-          } settingsAction: {
-            viewStore.send(.openSettingsButtonTapped)
-          }
-        }
+        RecordingControlsView(store: store.scope(state: \.recordingControls, action: { .recordingControls($0) }))
       }
       .padding(.grid(4))
       .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
@@ -161,7 +96,9 @@ public struct RecordScreenView: View {
       NavigationView {
         RecordScreenView(
           store: Store(
-            initialState: RecordScreen.State(recording: .init(date: Date(), url: URL(fileURLWithPath: "test"))),
+            initialState: RecordScreen.State(
+              recordingControls: .init(recording: .init(date: Date(), url: URL(fileURLWithPath: "test")))
+            ),
             reducer: RecordScreen()
           )
         )

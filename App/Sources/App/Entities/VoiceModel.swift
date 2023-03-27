@@ -59,8 +59,8 @@ enum VoiceModelType: String, CaseIterable {
     case .tinyEN, .tiny: return 125 * 1024 * 1024
     case .baseEN, .base: return 210 * 1024 * 1024
     case .smallEN, .small: return 600 * 1024 * 1024
-    case .mediumEN, .medium: return 1_700 * 1024 * 1024
-    case .largeV1, .large: return 3_300 * 1024 * 1024
+    case .mediumEN, .medium: return 1700 * 1024 * 1024
+    case .largeV1, .large: return 3300 * 1024 * 1024
     }
   }
 

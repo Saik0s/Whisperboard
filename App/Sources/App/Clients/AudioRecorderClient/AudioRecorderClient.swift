@@ -5,6 +5,8 @@ import Dependencies
 import Foundation
 import XCTestDynamicOverlay
 
+// MARK: - AudioRecorderSettings
+
 enum AudioRecorderSettings {
   static let whisper: [String: Any] = [
     AVFormatIDKey: Int(kAudioFormatLinearPCM),

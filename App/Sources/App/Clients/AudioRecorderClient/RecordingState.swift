@@ -1,5 +1,5 @@
-import Foundation
 import AppDevUtils
+import Foundation
 
 public enum RecordingState: Equatable {
   case recording(duration: TimeInterval, power: Float)

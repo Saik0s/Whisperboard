@@ -1,6 +1,6 @@
 import AppDevUtils
-import Dependencies
 import AudioKit
+import Dependencies
 import Foundation
 
 // MARK: - FileImportClient
@@ -40,7 +40,7 @@ private extension FormatConverter {
   func startAsync() async throws {
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
       start { error in
-        if let error = error {
+        if let error {
           continuation.resume(throwing: error)
         } else {
           continuation.resume()

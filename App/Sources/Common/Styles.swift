@@ -17,8 +17,8 @@ struct PrimaryButtonStyle: ButtonStyle {
           Color.DS.Background.accent.darken(by: 0.07),
           Color.DS.Background.accent.darken(by: 0.1),
         ], startPoint: .topLeading, endPoint: .bottomTrailing)
-        .continuousCornerRadius(.grid(2))
-        .shadow(color: Color.DS.Background.accent.darken(by: 0.2).opacity(configuration.isPressed ? 0 : 0.7), radius: 4, x: 0, y: 0)
+          .continuousCornerRadius(.grid(2))
+          .shadow(color: Color.DS.Background.accent.darken(by: 0.2).opacity(configuration.isPressed ? 0 : 0.7), radius: 4, x: 0, y: 0)
       }
       .scaleEffect(configuration.isPressed ? 0.95 : 1)
       .animation(.gentleBounce(), value: configuration.isPressed)
@@ -48,6 +48,8 @@ struct PrimaryButton: View {
   }
 }
 
+// MARK: - SecondaryButtonStyle
+
 struct SecondaryButtonStyle: ButtonStyle {
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
@@ -61,8 +63,8 @@ struct SecondaryButtonStyle: ButtonStyle {
           Color.DS.Background.accentAlt.darken(by: 0.07),
           Color.DS.Background.accentAlt.darken(by: 0.1),
         ], startPoint: .topLeading, endPoint: .bottomTrailing)
-        .continuousCornerRadius(.grid(2))
-        .shadow(color: Color.DS.Background.accentAlt.darken(by: 0.2).opacity(configuration.isPressed ? 0 : 0.7), radius: 4, x: 0, y: 0)
+          .continuousCornerRadius(.grid(2))
+          .shadow(color: Color.DS.Background.accentAlt.darken(by: 0.2).opacity(configuration.isPressed ? 0 : 0.7), radius: 4, x: 0, y: 0)
       }
       .scaleEffect(configuration.isPressed ? 0.95 : 1)
       .animation(.gentleBounce(), value: configuration.isPressed)
@@ -115,6 +117,8 @@ extension View {
     buttonStyle(CardButtonStyle())
   }
 }
+
+// MARK: - RecordButtonStyle
 
 struct RecordButtonStyle: ButtonStyle {
   func makeBody(configuration: Self.Configuration) -> some View {
