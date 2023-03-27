@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 
 struct RecordButton: View {
-  let permission: RecordScreen.State.RecorderPermission
+  let permission: RecordingControls.State.RecorderPermission
   let action: () -> Void
   let settingsAction: () -> Void
 
@@ -13,10 +13,10 @@ struct RecordButton: View {
         Circle()
           .fill(RadialGradient.accent)
           .overlay(Image(systemName: "mic")
-                     .font(.DS.titleL)
-                     .foregroundColor(.DS.Text.base))
+            .font(.DS.titleL)
+            .foregroundColor(.DS.Text.base))
       }
-        .recordButtonStyle()
+      .recordButtonStyle()
       .frame(width: 70, height: 70)
       .frame(maxWidth: .infinity)
       .padding(.grid(3))
