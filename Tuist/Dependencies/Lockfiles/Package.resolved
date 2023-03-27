@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Saik0s/AppDevUtils.git",
       "state" : {
-        "revision" : "452270011affc84af148252277bf3786e374900f",
-        "version" : "0.2.0"
+        "revision" : "28ad9dec6e1102499137c7f31f0f068065cebcf6",
+        "version" : "0.2.1"
       }
     },
     {

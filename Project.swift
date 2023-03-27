@@ -9,7 +9,6 @@ let projectSettings: SettingsDictionary = [
   "CODE_SIGN_STYLE": "Automatic",
   "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
   "MARKETING_VERSION": SettingValue(stringLiteral: version),
-  "CLANG_CXX_LANGUAGE_STANDARD": "c++11",
   "OTHER_LDFLAGS": "-lc++ $(inherited)",
 ]
 
@@ -45,6 +44,9 @@ func appTarget() -> Target {
       "UILaunchScreen": [
         "UILaunchScreen": [:],
       ],
+      "UISupportedInterfaceOrientations": [
+        "UIInterfaceOrientationPortrait",
+      ],
       "NSMicrophoneUsageDescription": "WhisperBoard uses the microphone to record voice and later transcribe it.",
       "UIUserInterfaceStyle": "Dark",
     ]),
@@ -63,7 +65,8 @@ func appTarget() -> Target {
       // .external(name: "LottieUI"),
       .external(name: "AudioKit"),
       .external(name: "whisper"),
-      // .package(product: "whisper"),
+      .external(name: "ComposableArchitecture"),
+      .external(name: "DynamicColor"),
     ]
   )
 }
@@ -77,9 +80,6 @@ let project = Project(
       tabWidth: 2
     )
   ),
-  packages: [
-    // .package(url: "https://github.com/ggerganov/whisper.spm", from: "1.2.1"),
-  ],
   settings: .settings(
     base: projectSettings,
     debug: debugSettings,

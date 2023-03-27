@@ -9,7 +9,7 @@ struct VoiceModel: Equatable, Identifiable, Then {
   var downloadProgress: Double = 0
 
   var id: String { name }
-  var name: String { modelType.name }
+  var name: String { modelType.fileName }
   var isDownloaded: Bool { downloadProgress >= 1 }
 }
 
@@ -27,7 +27,7 @@ enum VoiceModelType: String, CaseIterable {
   case largeV1 = "large-v1"
   case large
 
-  var name: String { "ggml-\(rawValue).bin" }
+  var fileName: String { "ggml-\(rawValue).bin" }
 
   var readableName: String {
     switch self {
@@ -56,16 +56,16 @@ enum VoiceModelType: String, CaseIterable {
 
   var memoryRequired: UInt64 {
     switch self {
-    case .tinyEN, .tiny: return 125_000_000
-    case .baseEN, .base: return 210_000_000
-    case .smallEN, .small: return 600_000_000
-    case .mediumEN, .medium: return 1_700_000_000
-    case .largeV1, .large: return 3_300_000_000
+    case .tinyEN, .tiny: return 125 * 1024 * 1024
+    case .baseEN, .base: return 210 * 1024 * 1024
+    case .smallEN, .small: return 600 * 1024 * 1024
+    case .mediumEN, .medium: return 1_700 * 1024 * 1024
+    case .largeV1, .large: return 3_300 * 1024 * 1024
     }
   }
 
   var remoteURL: URL {
-    VoiceModelType.srcURL.appending(component: name)
+    VoiceModelType.srcURL.appending(component: fileName)
   }
 
   var localURL: URL {
@@ -74,7 +74,7 @@ enum VoiceModelType: String, CaseIterable {
       return Files.App.Resources.ggmlTinyBin.url
 
     default:
-      return VoiceModelType.localFolderURL.appending(component: name)
+      return VoiceModelType.localFolderURL.appending(component: fileName)
     }
   }
 
