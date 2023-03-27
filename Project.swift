@@ -15,6 +15,11 @@ let projectSettings: SettingsDictionary = [
 let debugSettings: SettingsDictionary = [
   "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -enable-actor-data-race-checks",
   "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
+  "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/App/Sources/Common/Bridging.h",
+]
+
+let releaseSettings: SettingsDictionary = [
+  "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/App/Sources/Common/Bridging.h",
 ]
 
 func appTarget() -> Target {
@@ -83,7 +88,7 @@ let project = Project(
   settings: .settings(
     base: projectSettings,
     debug: debugSettings,
-    release: [:],
+    release: releaseSettings,
     defaultSettings: .recommended
   ),
   targets: [
