@@ -9,7 +9,7 @@ let packages: [Package] = [
   .package(url: "https://github.com/ggerganov/whisper.spm", from: "1.2.1"),
   .package(url: "https://github.com/yannickl/DynamicColor.git", from: "5.0.1"),
   .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "0.52.0"),
-  .package(url: "https://github.com/darrarski/swift-composable-presentation.git", from: "0.16.0"),
+  // .package(url: "https://github.com/darrarski/swift-composable-presentation.git", from: "0.16.0"),
 ]
 
 let dependencies = Dependencies(

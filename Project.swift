@@ -75,7 +75,7 @@ func appTarget() -> Target {
       .external(name: "whisper"),
 
       .external(name: "ComposableArchitecture"),
-      .external(name: "ComposablePresentation"),
+      // .external(name: "ComposablePresentation"),
     ]
   )
 }
