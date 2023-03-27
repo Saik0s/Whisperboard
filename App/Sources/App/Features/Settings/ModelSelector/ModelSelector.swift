@@ -74,7 +74,7 @@ struct ModelSelector: ReducerProtocol {
             }))
 
             if let error = downloadState.error {
-              log(error)
+              log.error(error)
               await send(.loadError(error.localizedDescription))
             }
 

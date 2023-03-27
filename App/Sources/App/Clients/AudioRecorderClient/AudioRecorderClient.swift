@@ -143,7 +143,7 @@ private actor AudioRecorder {
         }
       }
     } catch {
-      log(error)
+      log.error(error)
       recordingStateSubject.send(.error(error.equatable))
     }
   }

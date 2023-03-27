@@ -143,7 +143,7 @@ final class TranscriberImpl {
         log.verbose("Loading model...")
         whisperContext = try WhisperContext.createContext(path: model.localURL.path)
         state = .modelLoaded
-        log.verbose("Loaded model \(model.name)")
+        log.verbose("Loaded model \(model.fileName)")
         continuation.resume()
       } catch {
         state = .failed(error.equatable)
