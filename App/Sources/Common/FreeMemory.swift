@@ -3,8 +3,12 @@ import os
 import OSLog
 
 func freeMemory() -> UInt64 {
-  let size = os_proc_available_memory()
-  return UInt64(size)
+  #if targetEnvironment(simulator)
+    return availableMemory()
+  #else
+    let size = os_proc_available_memory()
+    return UInt64(size)
+  #endif
 }
 
 func availableMemory() -> UInt64 {
