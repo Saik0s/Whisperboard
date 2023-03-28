@@ -68,6 +68,7 @@ func appTarget() -> Target {
       .external(name: "DSWaveformImage"),
       .external(name: "DSWaveformImageViews"),
       .external(name: "DynamicColor"),
+      .external(name: "Setting"),
       // .external(name: "Lottie"),
       // .external(name: "LottieUI"),
 
