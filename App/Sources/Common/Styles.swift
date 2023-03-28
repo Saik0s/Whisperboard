@@ -77,6 +77,8 @@ extension View {
   }
 }
 
+// MARK: - TertiaryButtonStyle
+
 struct TertiaryButtonStyle: ButtonStyle {
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label

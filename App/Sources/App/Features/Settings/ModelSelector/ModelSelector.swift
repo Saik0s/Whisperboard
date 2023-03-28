@@ -131,7 +131,7 @@ struct ModelSelectorView: View {
   var body: some View {
     modelList()
       .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
-      .screenRadialBackground()
+      // .screenRadialBackground()
       .enableInjection()
   }
 

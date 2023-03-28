@@ -8,14 +8,14 @@ struct Root: ReducerProtocol {
   struct State: Equatable {
     var recordingListScreen = RecordingListScreen.State()
     var recordScreen = RecordScreen.State()
-    var settings = Settings.State()
+    var settings = SettingsScreen.State()
     var selectedTab = 0
   }
 
   enum Action: Equatable {
     case recordingListScreen(RecordingListScreen.Action)
     case recordScreen(RecordScreen.Action)
-    case settings(Settings.Action)
+    case settings(SettingsScreen.Action)
     case selectTab(Int)
   }
 
@@ -47,7 +47,7 @@ struct Root: ReducerProtocol {
     }
 
     Scope(state: \.settings, action: /Action.settings) {
-      Settings()
+      SettingsScreen()
     }
 
     Reduce { state, action in
@@ -92,7 +92,7 @@ struct RootView: View {
           }
           .tag(1)
 
-        SettingsView(store: store.scope(state: { $0.settings }, action: Root.Action.settings))
+        SettingsScreenView(store: store.scope(state: { $0.settings }, action: Root.Action.settings))
           .accentColor(Color.DS.Text.base)
           .tabItem {
             Image(systemName: "gear")
