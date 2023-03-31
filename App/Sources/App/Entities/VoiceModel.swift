@@ -90,3 +90,9 @@ enum VoiceModelType: String, CaseIterable {
 
   static var `default`: VoiceModelType { .tiny }
 }
+
+#if DEBUG
+extension VoiceModel {
+  static let fixture = VoiceModel(modelType: .tiny)
+}
+#endif

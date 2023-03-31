@@ -9,12 +9,16 @@ import SwiftUI
 struct SettingsScreen: ReducerProtocol {
   struct State: Equatable {
     var modelSelector = ModelSelector.State()
+    var availableLanguages: [String] = []
+    @BindingState var selectedLanguageIndex: Int = 0
   }
 
   enum Action: BindableAction, Equatable {
     case binding(BindingAction<State>)
     case modelSelector(ModelSelector.Action)
     case task
+    case fetchAvailableLanguages
+    case setLanguage
   }
 
   var body: some ReducerProtocol<State, Action> {
@@ -24,9 +28,17 @@ struct SettingsScreen: ReducerProtocol {
       ModelSelector()
     }
 
-    Reduce { _, action in
+    Reduce { state, action in
       switch action {
       case .task:
+        return .none
+
+      case .fetchAvailableLanguages:
+        state.availableLanguages = transcriptionClient.getAvailableLanguages()
+        return .none
+
+      case .setLanguage:
+        settingsClient.setLanguage(state.availableLanguages[state.selectedLanguageIndex])
         return .none
 
       default:
@@ -50,47 +62,36 @@ struct SettingsScreenView: View {
   }
 
   var body: some View {
-    // TODO: Rewrite model selector to use SettingStack
     SettingStack {
       SettingPage(title: "Settings") {
-        SettingCustomView {
-          ModelSelectorView(store: store.scope(state: \.modelSelector, action: SettingsScreen.Action.modelSelector))
-            .frame(minHeight: UIScreen.main.bounds.height)
-            .frame(maxHeight: .infinity)
-            .fixedSize(horizontal: false, vertical: true)
+        SettingGroup(header: "Transcription") {
+          SettingCustomView {
+            SettingText(title: "Whisper is an automatic speech recognition (ASR) model developed by OpenAI. It uses deep learning techniques to transcribe spoken language into text. It is designed to be more accurate and efficient than traditional ASR models.\n\nThere are several different Whisper models available, each with different capabilities. The main difference between them is the size of the model, which affects the accuracy and efficiency of the transcription.")
+              .font(.DS.footnote)
+          }
+          SettingPage(title: "Model picker") {
+            SettingCustomView {
+              ModelSelectorView(store: store.scope(state: \.modelSelector, action: SettingsScreen.Action.modelSelector))
+            }
+          }
+          SettingPicker(
+           title: "Language",
+            choices: viewStore.availableLanguages,
+            selectedIndex: viewStore.binding(\.selectedLanguageIndex)
+          )
         }
-        //   SettingGroup(header: "Transcription") {
-        //     SettingPage(title: "Model picker") {
-        //       SettingCustomView {
-        //         ModelSelectorView(store: store.scope(state: \.modelSelector, action: SettingsScreen.Action.modelSelector))
-        //       }
-        //     }
-        //   }
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .navigationBarTitle("Settings")
-    .task { viewStore.send(.task) }
+    .task {
+      viewStore.send(.task)
+      viewStore.send(.fetchAvailableLanguages)
+    }
+    .onChange(of: viewStore.selectedLanguageIndex) { _ in
+      viewStore.send(.setLanguage)
+    }
     .enableInjection()
-
-    // NavigationView {
-    //   List {
-    //     Section(header: Text("Transcription")) {
-    //       NavigationLink(destination: ModelSelectorView(store: store.scope(state: \.modelSelector, action: SettingsScreen.Action.modelSelector))) {
-    //         HStack(spacing: .grid(4)) {
-    //           Text("🤖")
-    //           Text("Transcription Model")
-    //         }
-    //       }
-    //     }
-    //     .listRowBackground(Color.DS.Background.secondary)
-    //   }
-    //   .screenRadialBackground()
-    // }
-    // .scrollContentBackground(.hidden)
-    // .navigationBarTitle("Settings")
-    // .task { viewStore.send(.task) }
-    // .enableInjection()
   }
 }
 
