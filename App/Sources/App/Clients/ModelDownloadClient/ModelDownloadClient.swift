@@ -6,7 +6,8 @@ import Foundation
 
 struct ModelDownloadClient {
   var getModels: @Sendable () -> [VoiceModel]
-  var downloadModel: @Sendable (_ model: VoiceModel) async -> AsyncStream<DownloadState>
+  var downloadModel: @Sendable (_ model: VoiceModelType) async -> AsyncStream<DownloadState>
+  var deleteModel: @Sendable (_ model: VoiceModelType) -> Void
 }
 
 // MARK: DependencyKey
@@ -28,13 +29,13 @@ extension ModelDownloadClient: DependencyKey {
           )
         }
       },
-      downloadModel: { model in
+      downloadModel: { modelType in
         AsyncStream { continuation in
           Task {
             try FileManager.default.createDirectory(at: VoiceModelType.localFolderURL, withIntermediateDirectories: true)
-            let destination = model.modelType.localURL
+            let destination = modelType.localURL
 
-            let task = session.downloadTask(with: model.modelType.remoteURL)
+            let task = session.downloadTask(with: modelType.remoteURL)
 
             delegate.addDownloadTask(task) {
               continuation.yield(.inProgress($0))
@@ -60,6 +61,9 @@ extension ModelDownloadClient: DependencyKey {
             task.resume()
           }
         }
+      },
+      deleteModel: { modelType in
+        try? FileManager.default.removeItem(at: modelType.localURL)
       }
     )
   }()
