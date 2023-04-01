@@ -1,8 +1,8 @@
 import AppDevUtils
 import ComposableArchitecture
 import Foundation
-import SwiftUI
 import Setting
+import SwiftUI
 
 // MARK: - ModelSelector
 
@@ -28,7 +28,8 @@ struct ModelSelector: ReducerProtocol {
         let selected = transcriber.getSelectedModel()
         state.modelRows = modelDownload.getModels().map { model in
           ModelRow.State(model: model, isSelected: model.modelType == selected)
-        }.identifiedArray
+        }
+        .identifiedArray
         return .none
 
       case let .modelRow(_, action: .loadError(error)):
@@ -72,10 +73,8 @@ struct ModelSelectorView: View {
 
   @ViewBuilder
   private func modelList() -> some View {
-    SettingPage(title: "Model Selector") {
-      ForEachStore(store.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
-        ModelRowView(store: modelRowStore)
-      }
+    ForEachStore(store.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
+      ModelRowView(store: modelRowStore)
     }
   }
 }
