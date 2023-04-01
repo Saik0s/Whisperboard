@@ -2,6 +2,7 @@ import AppDevUtils
 import ComposableArchitecture
 import Foundation
 import SwiftUI
+import Setting
 
 // MARK: - ModelSelector
 
@@ -71,9 +72,10 @@ struct ModelSelectorView: View {
 
   @ViewBuilder
   private func modelList() -> some View {
-
-    ForEachStore(store.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
-      ModelRowView(store: modelRowStore)
+    SettingPage(title: "Model Selector") {
+      ForEachStore(store.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
+        ModelRowView(store: modelRowStore)
+      }
     }
   }
 }

@@ -89,13 +89,18 @@ struct ModelRowView: View {
     HStack {
       Toggle("", isOn: viewStore.binding(get: { $0.isSelected }, send: { _ in .selectModelTapped }))
         .toggleStyle(RadioButtonStyle())
-      Text(viewStore.model.modelType.rawValue)
-        .font(.DS.headlineM)
-        .foregroundColor(Color.DS.Text.base)
-      Text(viewStore.model.modelType.sizeLabel)
-        .font(.DS.captionS)
-        .foregroundColor(Color.DS.Text.subdued)
+
+      VStack(alignment: .leading, spacing: .grid(2)) {
+        Text(viewStore.model.modelType.rawValue)
+          .font(.DS.headlineM)
+          .foregroundColor(Color.DS.Text.base)
+        Text(viewStore.model.modelType.sizeLabel)
+          .font(.DS.captionS)
+          .foregroundColor(Color.DS.Text.subdued)
+      }
+
       Spacer()
+
       if viewStore.model.isDownloading {
         ProgressView(value: viewStore.model.downloadProgress)
       } else if viewStore.model.isDownloaded == false {
@@ -128,8 +133,6 @@ struct RadioButtonStyle: ToggleStyle {
   func makeBody(configuration: Configuration) -> some View {
     Button(action: { configuration.isOn.toggle() }) {
       HStack {
-        configuration.label
-        Spacer()
         Image(systemName: configuration.isOn ? "largecircle.fill.circle" : "circle")
           .foregroundColor(configuration.isOn ? .accentColor : .secondary)
       }
