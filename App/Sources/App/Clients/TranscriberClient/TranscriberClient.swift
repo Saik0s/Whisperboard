@@ -24,6 +24,8 @@ struct TranscriberClient {
   var unloadSelectedModel: @Sendable () -> Void
 
   var transcribeAudio: @Sendable (_ audioURL: URL, _ language: VoiceLanguage) -> AsyncStream<TranscriptionProgress>
+
+  var getAvailableLanguages: @Sendable () -> [VoiceLanguage]
 }
 
 // MARK: DependencyKey
@@ -74,6 +76,9 @@ extension TranscriberClient: DependencyKey {
             continuation.finish()
           }
         }
+      },
+      getAvailableLanguages: {
+        impl.getAvailableLanguages()
       }
     )
   }()
@@ -185,6 +190,10 @@ final class TranscriberImpl {
       log.error(error)
       throw error
     }
+  }
+
+  func getAvailableLanguages() -> [VoiceLanguage] {
+    WhisperContext.getAvailableLanguages()
   }
 
   private func readAudioSamples(_ url: URL) throws -> [Float] {
