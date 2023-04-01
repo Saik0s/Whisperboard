@@ -8,8 +8,16 @@ import Foundation
 
 struct SettingsClient {
   var settingsPublisher: @Sendable () -> AnyPublisher<Settings, Error>
-  var settings: @Sendable () async -> Settings
+  var settings: @Sendable () -> Settings
   var updateSettings: @Sendable (Settings) async throws -> Void
+}
+
+extension SettingsClient {
+  func setValue<Value: Codable>(_ value: Value, forKey keyPath: WritableKeyPath<Settings, Value>) async throws {
+    var settings = settings()
+    settings[keyPath: keyPath] = value
+    try await updateSettings(settings)
+  }
 }
 
 // MARK: DependencyKey

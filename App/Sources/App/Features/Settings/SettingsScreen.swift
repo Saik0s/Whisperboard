@@ -9,8 +9,11 @@ import SwiftUI
 struct SettingsScreen: ReducerProtocol {
   struct State: Equatable {
     var modelSelector = ModelSelector.State()
-    var availableLanguages: [String] = []
-    @BindingState var selectedLanguageIndex: Int = 0
+
+    var availableLanguages: IdentifiedArrayOf<VoiceLanguage> = []
+    @BindingState var selectedLanguage: VoiceLanguage = .auto
+
+    var alert: AlertState<Action>?
   }
 
   enum Action: BindableAction, Equatable {
@@ -18,8 +21,14 @@ struct SettingsScreen: ReducerProtocol {
     case modelSelector(ModelSelector.Action)
     case task
     case fetchAvailableLanguages
-    case setLanguage
+    case setLanguage(VoiceLanguage)
+
+    case showError(EquatableErrorWrapper)
+    case dismissAlert
   }
+
+  @Dependency(\.transcriber) var transcriber: TranscriberClient
+  @Dependency(\.settings) var settingsClient: SettingsClient
 
   var body: some ReducerProtocol<State, Action> {
     BindingReducer()
@@ -28,20 +37,40 @@ struct SettingsScreen: ReducerProtocol {
       ModelSelector()
     }
 
-    Reduce { state, action in
+    Reduce<State, Action> { state, action in
       switch action {
-      case .task:
+      case .binding:
         return .none
+
+      case .modelSelector:
+        return .none
+
+      case .task:
+        return .send(.fetchAvailableLanguages)
 
       case .fetchAvailableLanguages:
-        state.availableLanguages = transcriptionClient.getAvailableLanguages()
+        state.availableLanguages = transcriber.getAvailableLanguages().identifiedArray
+        state.selectedLanguage = settingsClient.settings().voiceLanguage
         return .none
 
-      case .setLanguage:
-        settingsClient.setLanguage(state.availableLanguages[state.selectedLanguageIndex])
+      case let .setLanguage(language):
+        state.selectedLanguage = language
+        return .run { _ in
+          try await settingsClient.setValue(language, forKey: \.voiceLanguage)
+        } catch: { error, send in
+          await send(.showError(error.equatable))
+        }
+
+      case let .showError(error):
+        state.alert = .init(
+          title: TextState("Error"),
+          message: TextState(String(describing: error)),
+          dismissButton: .default(TextState("OK"), action: .send(Action.dismissAlert, animation: .default))
+        )
         return .none
 
-      default:
+      case .dismissAlert:
+        state.alert = nil
         return .none
       }
     }
@@ -66,31 +95,32 @@ struct SettingsScreenView: View {
       SettingPage(title: "Settings") {
         SettingGroup(header: "Transcription") {
           SettingCustomView {
-            SettingText(title: "Whisper is an automatic speech recognition (ASR) model developed by OpenAI. It uses deep learning techniques to transcribe spoken language into text. It is designed to be more accurate and efficient than traditional ASR models.\n\nThere are several different Whisper models available, each with different capabilities. The main difference between them is the size of the model, which affects the accuracy and efficiency of the transcription.")
-              .font(.DS.footnote)
+            SettingText(
+              title: "Whisper is an automatic speech recognition (ASR) model developed by OpenAI. It uses deep learning techniques to transcribe spoken language into text. It is designed to be more accurate and efficient than traditional ASR models.\n\nThere are several different Whisper models available, each with different capabilities. The main difference between them is the size of the model, which affects the accuracy and efficiency of the transcription."
+            )
+            .font(.DS.footnote)
           }
+
           SettingPage(title: "Model picker") {
             SettingCustomView {
               ModelSelectorView(store: store.scope(state: \.modelSelector, action: SettingsScreen.Action.modelSelector))
             }
           }
+
           SettingPicker(
-           title: "Language",
-            choices: viewStore.availableLanguages,
-            selectedIndex: viewStore.binding(\.selectedLanguageIndex)
+            title: "Language",
+            choices: viewStore.availableLanguages.map(\.name.titleCased),
+            selectedIndex: viewStore.binding(
+              get: { $0.availableLanguages.firstIndex(of: $0.selectedLanguage) ?? 0 },
+              send: { .setLanguage(viewStore.availableLanguages[$0]) }
+            )
           )
         }
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .navigationBarTitle("Settings")
-    .task {
-      viewStore.send(.task)
-      viewStore.send(.fetchAvailableLanguages)
-    }
-    .onChange(of: viewStore.selectedLanguageIndex) { _ in
-      viewStore.send(.setLanguage)
-    }
+    .task { viewStore.send(.task) }
     .enableInjection()
   }
 }
