@@ -92,20 +92,9 @@ struct SettingsScreenView: View {
 
   var body: some View {
     SettingStack {
-      SettingPage(title: "Settings") {
-        SettingGroup(header: "Transcription") {
-          SettingCustomView {
-            SettingText(
-              title: "Whisper is an automatic speech recognition (ASR) model developed by OpenAI. It uses deep learning techniques to transcribe spoken language into text. It is designed to be more accurate and efficient than traditional ASR models.\n\nThere are several different Whisper models available, each with different capabilities. The main difference between them is the size of the model, which affects the accuracy and efficiency of the transcription."
-            )
-            .font(.DS.footnote)
-          }
-
-          SettingPage(title: "Model picker") {
-            SettingCustomView {
-              ModelSelectorView(store: store.scope(state: \.modelSelector, action: SettingsScreen.Action.modelSelector))
-            }
-          }
+      SettingPage(title: "Settings", backgroundColor: .DS.Background.primary) {
+        SettingGroup(header: "Transcription", backgroundColor: .DS.Background.secondary) {
+          ModelSelectorSettingPage(store: store.scope(state: \.modelSelector, action: SettingsScreen.Action.modelSelector))
 
           SettingPicker(
             title: "Language",
@@ -113,6 +102,9 @@ struct SettingsScreenView: View {
             selectedIndex: viewStore.binding(
               get: { $0.availableLanguages.firstIndex(of: $0.selectedLanguage) ?? 0 },
               send: { .setLanguage(viewStore.availableLanguages[$0]) }
+            ),
+            choicesConfiguration: .init(
+              groupBackgroundColor: .DS.Background.secondary
             )
           )
         }
