@@ -22,6 +22,7 @@ struct SettingsScreen: ReducerProtocol {
     case task
     case fetchAvailableLanguages
     case setLanguage(VoiceLanguage)
+    case openGitHub
 
     case showError(EquatableErrorWrapper)
     case dismissAlert
@@ -29,6 +30,7 @@ struct SettingsScreen: ReducerProtocol {
 
   @Dependency(\.transcriber) var transcriber: TranscriberClient
   @Dependency(\.settings) var settingsClient: SettingsClient
+  @Dependency(\.openURL) var openURL: OpenURLEffect
 
   var body: some ReducerProtocol<State, Action> {
     BindingReducer()
@@ -59,6 +61,11 @@ struct SettingsScreen: ReducerProtocol {
           try await settingsClient.setValue(language, forKey: \.voiceLanguage)
         } catch: { error, send in
           await send(.showError(error.equatable))
+        }
+
+      case .openGitHub:
+        return .fireAndForget {
+          await openURL(URL(staticString: "https://github.com/Saik0s/Whisperboard"))
         }
 
       case let .showError(error):
@@ -107,6 +114,81 @@ struct SettingsScreenView: View {
               groupBackgroundColor: .DS.Background.secondary
             )
           )
+        }
+        SettingGroup(header: "Storage", backgroundColor: .DS.Background.secondary) {
+          SettingCustomView {
+            VStack(alignment: .leading, spacing: .grid(1)) {
+              HStack(spacing: 0) {
+                Text("Taken: 2.5 GB")
+                  .font(.DS.bodyM)
+                  .foregroundColor(.DS.Text.base)
+                Spacer()
+                Text("Available: 7.5 GB")
+                  .font(.DS.bodyM)
+                  .foregroundColor(.DS.Text.base)
+              }
+
+              GeometryReader { geometry in
+                HStack(spacing: 0) {
+                  LinearGradient.easedGradient(
+                    colors: [
+                      .systemPurple,
+                      .systemOrange,
+                    ],
+                    startPoint: .bottomLeading,
+                    endPoint: .topTrailing
+                  )
+                  .frame(width: geometry.size.width * 0.25)
+                  Color.DS.Background.tertiary
+                }
+              }
+              .frame(height: .grid(4))
+              .continuousCornerRadius(.grid(1))
+            }
+            .padding(.horizontal, .grid(4))
+            .padding(.vertical, .grid(2))
+          }
+
+          SettingButton(title: "Delete Storage", indicator: "trash") {}
+        }
+
+        SettingCustomView(id: "Custom Footer", titleForSearch: "Welcome to Setting!") {
+          Button { viewStore.send(.openGitHub) } label: {
+            Text("Saik0s/Whisperboard")
+              .foregroundColor(.white)
+              .font(.DS.headlineL)
+              .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
+              .frame(maxWidth: .infinity)
+              .padding(.grid(5))
+              .background {
+                LinearGradient.easedGradient(
+                  colors: [
+                    .systemPurple,
+                    .systemRed,
+                  ],
+                  startPoint: .bottomLeading,
+                  endPoint: .topTrailing
+                )
+              }
+              .cornerRadius(.grid(3))
+              .padding(.horizontal, .grid(4))
+          }
+          .padding(.top, .grid(4))
+          .frame(maxHeight: .infinity, alignment: .bottom)
+
+          VStack(spacing: .grid(1)) {
+            Text("Version: 1.0.0")
+              .font(.DS.bodyM)
+              .foregroundColor(.DS.Text.subdued)
+            Text("Build: 123")
+              .font(.DS.bodyM)
+              .foregroundColor(.DS.Text.subdued)
+            Image(systemName: "mic.fill")
+              .font(.DS.headlineL)
+              .foregroundColor(.DS.Text.subdued)
+              .opacity(0.5)
+          }
+          .frame(maxWidth: .infinity)
         }
       }
     }
