@@ -24,7 +24,6 @@ enum VoiceModelType: String, CaseIterable {
   case small
   case mediumEN = "medium.en"
   case medium
-  case largeV1 = "large-v1"
   case large
 
   var fileName: String { "ggml-\(rawValue).bin" }
@@ -39,10 +38,24 @@ enum VoiceModelType: String, CaseIterable {
     case .small: return "Small"
     case .mediumEN: return "Medium (English)"
     case .medium: return "Medium"
-    case .largeV1: return "Large (v1)"
     case .large: return "Large"
     }
   }
+
+  var modelDescription: String {
+    switch self {
+    case .tinyEN: return "The English-specific version of the tiny model."
+    case .tiny: return "A fast, compact model with decent accuracy."
+    case .baseEN: return "The English-specific version of the base model."
+    case .base: return "A larger model that provides better accuracy at the cost of some speed."
+    case .smallEN: return "The English-specific version of the small model."
+    case .small: return "A well-balanced model, offering a good compromise between size and accuracy."
+    case .mediumEN: return "The English-specific version of the medium model."
+    case .medium: return "A more powerful model with even better accuracy."
+    case .large: return "The largest and most accurate model available, but it's also the slowest and most resource-intensive."
+    }
+  }
+
 
   var sizeLabel: String {
     switch self {
@@ -50,7 +63,7 @@ enum VoiceModelType: String, CaseIterable {
     case .baseEN, .base: return "142 MB"
     case .smallEN, .small: return "466 MB"
     case .mediumEN, .medium: return "1.5 GB"
-    case .largeV1, .large: return "2.9 GB"
+    case .large: return "2.9 GB"
     }
   }
 
@@ -60,7 +73,7 @@ enum VoiceModelType: String, CaseIterable {
     case .baseEN, .base: return 210 * 1024 * 1024
     case .smallEN, .small: return 600 * 1024 * 1024
     case .mediumEN, .medium: return 1700 * 1024 * 1024
-    case .largeV1, .large: return 3300 * 1024 * 1024
+    case .large: return 3300 * 1024 * 1024
     }
   }
 

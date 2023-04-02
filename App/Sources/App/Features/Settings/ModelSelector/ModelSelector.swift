@@ -25,11 +25,7 @@ struct ModelSelector: ReducerProtocol {
     Reduce<State, Action> { state, action in
       switch action {
       case .task:
-        let selected = transcriber.getSelectedModel()
-        state.modelRows = modelDownload.getModels().map { model in
-          ModelRow.State(model: model, isSelected: model.modelType == selected)
-        }
-        .identifiedArray
+        reloadSelectedModel(state: &state)
         return .none
 
       case let .modelRow(_, action: .loadError(error)):
@@ -38,6 +34,10 @@ struct ModelSelector: ReducerProtocol {
           message: TextState(error),
           dismissButton: .default(TextState("OK"), action: .send(Action.alertDismissed, animation: .default))
         )
+        return .none
+
+      case .modelRow(_, action: .selectModelTapped):
+        reloadSelectedModel(state: &state)
         return .none
 
       case .alertDismissed:
@@ -52,29 +52,36 @@ struct ModelSelector: ReducerProtocol {
       ModelRow()
     }
   }
+
+  private func reloadSelectedModel(state: inout State) {
+    let selected = transcriber.getSelectedModel()
+    state.modelRows = modelDownload.getModels().map { model in
+      ModelRow.State(model: model, isSelected: model.modelType == selected)
+    }.identifiedArray
+  }
 }
 
-// MARK: - ModelSelectorView
+func ModelSelectorSettingPage(store: StoreOf<ModelSelector>) -> SettingPage {
+  SettingPage(
+    title: "Model Selector",
+    backgroundColor: .DS.Background.primary,
+    previewConfiguration: .init(icon: .system(icon: "square.and.arrow.down", backgroundColor: .systemPurple))
+  ) {
+    SettingGroup(backgroundColor: .DS.Background.secondary) {
+      SettingCustomView(id: "header") {
+        SettingText(
+          title: "Whisper ASR, by OpenAI, is an advanced system that converts spoken words into written text. It's perfect for transcribing conversations or speeches.\n\nThere are various versions to choose from:"
+        )
+      }
 
-struct ModelSelectorView: View {
-  let store: StoreOf<ModelSelector>
-  @ObservedObject var viewStore: ViewStoreOf<ModelSelector>
-
-  init(store: StoreOf<ModelSelector>) {
-    self.store = store
-    viewStore = ViewStore(store)
-  }
-
-  var body: some View {
-    modelList()
-      .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
-      .enableInjection()
-  }
-
-  @ViewBuilder
-  private func modelList() -> some View {
-    ForEachStore(store.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
-      ModelRowView(store: modelRowStore)
+      SettingCustomView(id: "models") {
+        WithViewStore(store) { _ in
+          ForEachStore(store.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
+            ModelRowView(store: modelRowStore)
+          }
+          .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+        }
+      }
     }
   }
 }
@@ -83,20 +90,22 @@ struct ModelSelectorView: View {
 
 struct ModelSelector_Previews: PreviewProvider {
   static var previews: some View {
-    ModelSelectorView(
-      store: Store(
-        initialState: ModelSelector.State(
-          modelRows: [
-            VoiceModel(modelType: .base),
-            VoiceModel(modelType: .baseEN),
-            VoiceModel(modelType: .default),
-          ]
-          .map { ModelRow.State(model: $0, isSelected: false) }
-          .identifiedArray
-        ),
-        reducer: ModelSelector()
+    SettingStack {
+      ModelSelectorSettingPage(
+        store: Store(
+          initialState: ModelSelector.State(
+            modelRows: [
+              VoiceModel(modelType: .base),
+              VoiceModel(modelType: .baseEN),
+              VoiceModel(modelType: .default),
+            ]
+            .map { ModelRow.State(model: $0, isSelected: false) }
+            .identifiedArray
+          ),
+          reducer: ModelSelector()
+        )
       )
-    )
+    }
     .previewPreset()
   }
 }

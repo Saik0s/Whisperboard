@@ -1,5 +1,6 @@
 import AppDevUtils
 import ComposableArchitecture
+import Inject
 import SwiftUI
 
 // MARK: - ModelRow
@@ -39,6 +40,7 @@ struct ModelRow: ReducerProtocol {
               await send(.modelUpdated(VoiceModel(modelType: modelType, isDownloading: true, downloadProgress: progress)))
             case .success:
               await send(.modelUpdated(VoiceModel(modelType: modelType, isDownloading: false, downloadProgress: 1)))
+              await send(.selectModelTapped)
             case let .failure(error):
               await send(.loadError(error.localizedDescription))
             }
@@ -50,6 +52,7 @@ struct ModelRow: ReducerProtocol {
         guard state.isSelected == false else {
           return .none
         }
+        state.isSelected = true
         transcriber.selectModel(state.model.modelType)
         return .none
 
@@ -77,6 +80,8 @@ struct ModelRow: ReducerProtocol {
 // MARK: - ModelRowView
 
 struct ModelRowView: View {
+  @ObserveInjection var inject
+
   let store: StoreOf<ModelRow>
   @ObservedObject var viewStore: ViewStoreOf<ModelRow>
 
@@ -86,33 +91,42 @@ struct ModelRowView: View {
   }
 
   var body: some View {
-    HStack {
-      Toggle("", isOn: viewStore.binding(get: { $0.isSelected }, send: { _ in .selectModelTapped }))
-        .toggleStyle(RadioButtonStyle())
+    HStack(spacing: .grid(2)) {
+      VStack(alignment: .leading, spacing: .grid(1)) {
+        HStack(spacing: .grid(1)) {
+          Text(viewStore.model.modelType.readableName)
+            .font(.DS.headlineM)
+            .foregroundColor(Color.DS.Text.base)
 
-      VStack(alignment: .leading, spacing: .grid(2)) {
-        Text(viewStore.model.modelType.rawValue)
-          .font(.DS.headlineM)
-          .foregroundColor(Color.DS.Text.base)
-        Text(viewStore.model.modelType.sizeLabel)
-          .font(.DS.captionS)
+          Text(viewStore.model.modelType.sizeLabel)
+            .font(.DS.captionM)
+            .foregroundColor(Color.DS.Text.subdued)
+        }
+
+        Text(viewStore.model.modelType.modelDescription)
+          .font(.DS.bodyM)
           .foregroundColor(Color.DS.Text.subdued)
       }
-
-      Spacer()
+      .frame(maxWidth: .infinity, alignment: .leading)
 
       if viewStore.model.isDownloading {
         ProgressView(value: viewStore.model.downloadProgress)
       } else if viewStore.model.isDownloaded == false {
         Button("Download") { viewStore.send(.downloadModelTapped) }
           .secondaryButtonStyle()
+      } else {
+        Button("Active") { viewStore.send(.selectModelTapped) }
+          .activeButtonStyle(isActive: viewStore.isSelected)
       }
     }
     .foregroundColor(viewStore.isSelected ? Color.DS.Text.success : Color.DS.Text.base)
-    .frame(height: 40)
+    .padding(.horizontal, .grid(4))
+    .padding(.vertical, .grid(2))
     .contentShape(Rectangle())
     .onTapGesture { viewStore.send(.selectModelTapped) }
     .contextMenu(viewStore.model.isDownloaded && viewStore.model.modelType != .tiny ? contextMenuBuilder() : nil)
+    .animation(.easeInOut(duration: 0.2), value: viewStore.state)
+    .enableInjection()
   }
 
   func contextMenuBuilder() -> ContextMenu<TupleView<(Button<Text>, Button<Text>)>> {
@@ -127,6 +141,38 @@ struct ModelRowView: View {
   }
 }
 
+// MARK: - ActiveButtonStyle
+
+struct ActiveButtonStyle: ButtonStyle {
+  var isActive: Bool
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .padding(.horizontal, .grid(4))
+      .padding(.vertical, .grid(2))
+      .font(.DS.headlineS)
+      .background {
+        LinearGradient.easedGradient(colors: [
+          Color.DS.Background.success.lighten(by: 0.03),
+          Color.DS.Background.success.darken(by: 0.07),
+          Color.DS.Background.success.darken(by: 0.1),
+        ], startPoint: .topLeading, endPoint: .bottomTrailing)
+          .continuousCornerRadius(.grid(2))
+          .shadow(color: Color.DS.Background.success.darken(by: 0.2).opacity(configuration.isPressed ? 0 : 0.7), radius: 4, x: 0, y: 0)
+          .opacity(isActive ? 1 : 0)
+      }
+      .addBorder(Color.DS.Background.success.opacity(isActive ? 0 : 0.3), width: 2, cornerRadius: .grid(2))
+      .foregroundColor(isActive ? Color.DS.Text.base : Color.DS.Text.subdued)
+      .cornerRadius(.grid(2))
+  }
+}
+
+extension View {
+  func activeButtonStyle(isActive: Bool) -> some View {
+    buttonStyle(ActiveButtonStyle(isActive: isActive))
+  }
+}
+
 // MARK: - RadioButtonStyle
 
 struct RadioButtonStyle: ToggleStyle {
@@ -134,7 +180,7 @@ struct RadioButtonStyle: ToggleStyle {
     Button(action: { configuration.isOn.toggle() }) {
       HStack {
         Image(systemName: configuration.isOn ? "largecircle.fill.circle" : "circle")
-          .foregroundColor(configuration.isOn ? .accentColor : .secondary)
+          .foregroundColor(configuration.isOn ? .systemGreen : .systemGray)
       }
     }
   }
