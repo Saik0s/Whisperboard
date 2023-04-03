@@ -84,7 +84,7 @@ struct SettingsScreen: ReducerProtocol {
 
       case .openPersonalWebsite:
         return .fireAndForget {
-          await openURL(URL(staticString: "https://www.alexanderweiss.dev"))
+          await openURL(URL(staticString: "https://igortarasenko.me"))
         }
 
       case .deleteStorageTapped:
