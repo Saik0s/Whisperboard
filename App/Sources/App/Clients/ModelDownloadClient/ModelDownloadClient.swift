@@ -32,6 +32,17 @@ extension ModelDownloadClient: DependencyKey {
       downloadModel: { modelType in
         AsyncStream { continuation in
           Task {
+            // TODO: remove after some time, it is just to clean up old models folder
+            if UserDefaults.standard.bool(forKey: "didCleanUpOldModelsFolder") == false {
+              let oldModelsFolder = try? FileManager.default
+                .url(for: .documentationDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+                .appending(path: "Models")
+              if let oldModelsFolder = oldModelsFolder, FileManager.default.fileExists(atPath: oldModelsFolder.path) {
+                try? FileManager.default.removeItem(at: oldModelsFolder)
+              }
+              UserDefaults.standard.set(true, forKey: "didCleanUpOldModelsFolder")
+            }
+
             try FileManager.default.createDirectory(at: VoiceModelType.localFolderURL, withIntermediateDirectories: true)
             let destination = modelType.localURL
 
