@@ -54,6 +54,10 @@ func appTarget() -> Target {
       ],
       "NSMicrophoneUsageDescription": "WhisperBoard uses the microphone to record voice and later transcribe it.",
       "UIUserInterfaceStyle": "Dark",
+      "UIBackgroundModes": [
+        "audio",
+        "processing",
+      ],
     ]),
     sources: .paths([.relativeToManifest("App/Sources/**")]),
     resources: [
