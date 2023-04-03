@@ -67,9 +67,8 @@ public struct RecordingListScreen: ReducerProtocol {
 
         case let .setRecordings(.success(recordings)):
           state.recordings = recordings.map { info in
-            RecordingCard.State(recordingInfo: info)
-          }
-          .identifiedArray
+            state.recordings[id: info.id] ?? RecordingCard.State(recordingInfo: info)
+          }.identifiedArray
           return .none
 
         case let .setRecordings(.failure(error)):
@@ -226,6 +225,11 @@ public struct RecordingListScreenView: View {
         }
         .animation(.default, value: viewStore.recordings.count)
       }
+      .background {
+        if viewStore.recordings.isEmpty {
+          EmptyStateView()
+        }
+      }
       .screenRadialBackground()
 
       .navigationDestination(isPresented: Binding(
@@ -265,6 +269,9 @@ public struct RecordingListScreenView: View {
     .task {
       viewStore.send(.readStoredRecordings)
     }
+    .onAppear {
+      viewStore.send(.readStoredRecordings)
+    }
     .enableInjection()
   }
 }
@@ -295,6 +302,36 @@ extension RecordingListScreenView {
       }.cardButtonStyle()
     }
     .animation(.gentleBounce(), value: viewStore.editMode.isEditing)
+  }
+}
+
+// MARK: - EmptyStateView
+
+struct EmptyStateView: View {
+  @ObserveInjection var inject
+
+  var body: some View {
+    VStack(spacing: .grid(4)) {
+      WithInlineState(initialValue: 0) { state in
+        Image(systemName: "waveform.path.ecg")
+          .font(.system(size: 100))
+          .foregroundColor(.DS.Text.accent)
+          .shadow(color: .DS.Text.accent.opacity(state.wrappedValue), radius: 20 * state.wrappedValue, x: 0, y: 0)
+          .animateForever(using: .easeInOut(duration: 2), autoreverses: true) {
+            state.wrappedValue = 1
+          }
+      }
+      VStack(spacing: .grid(1)) {
+        Text("No recordings yet")
+          .font(.DS.headlineL)
+          .foregroundColor(.DS.Text.base)
+        Text("Your new recordings will appear here")
+          .font(.DS.bodyM)
+          .foregroundColor(.DS.Text.base)
+      }
+    }
+      .padding(.grid(4))
+    .enableInjection()
   }
 }
 

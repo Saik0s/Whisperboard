@@ -94,7 +94,6 @@ struct RootView: View {
       }
       .toolbarBackground(.hidden, for: .tabBar)
     }
-
     .accentColor(Color.DS.Text.base)
     .safeAreaInset(edge: .bottom) {
       HStack {
