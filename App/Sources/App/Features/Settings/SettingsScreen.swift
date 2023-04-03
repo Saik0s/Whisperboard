@@ -31,6 +31,9 @@ struct SettingsScreen: ReducerProtocol {
     case openPersonalWebsite
     case deleteStorageTapped
     case deleteDialogConfirmed
+    case rateAppTapped
+    case reportBugTapped
+    case suggestFeatureTapped
 
     case showError(EquatableErrorWrapper)
   }
@@ -102,6 +105,21 @@ struct SettingsScreen: ReducerProtocol {
       case let .showError(error):
         state.alert = .error(error)
         return .none
+
+      case .rateAppTapped:
+        return .fireAndForget {
+          await openURL(build.appStoreReviewURL())
+        }
+
+      case .reportBugTapped:
+        return .fireAndForget {
+          await openURL(build.bugReportURL())
+        }
+
+      case .suggestFeatureTapped:
+        return .fireAndForget {
+          await openURL(build.featureRequestURL())
+        }
       }
     }
   }
@@ -210,6 +228,20 @@ struct SettingsScreenView: View {
 
           SettingButton(icon: .system(icon: "trash", backgroundColor: .systemRed.darken(by: 0.1)), title: "Delete Storage", indicator: nil) {
             viewStore.send(.deleteStorageTapped)
+          }
+        }
+
+        SettingGroup(backgroundColor: .DS.Background.secondary) {
+          SettingButton(icon: .system(icon: "star.fill", backgroundColor: .systemYellow.darken(by: 0.05)), title: "Rate the App") {
+            viewStore.send(.rateAppTapped)
+          }
+
+          SettingButton(icon: .system(icon: "exclamationmark.triangle", backgroundColor: .systemRed), title: "Report a Bug") {
+            viewStore.send(.reportBugTapped)
+          }
+
+          SettingButton(icon: .system(icon: "sparkles", backgroundColor: .systemPurple.darken(by: 0.1)), title: "Suggest New Feature") {
+            viewStore.send(.suggestFeatureTapped)
           }
         }
 
