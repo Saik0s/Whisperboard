@@ -94,6 +94,11 @@ public struct RecordingCard: ReducerProtocol {
         return .none
 
       case .transcribeTapped:
+        guard transcriber.transcriberState().isIdle else {
+          state.alert = .error(message: "Transcription is already in progress")
+          return .none
+        }
+
         let fileURL = storage.audioFileURLWithName(state.recordingInfo.fileName)
 
         return .run { send in

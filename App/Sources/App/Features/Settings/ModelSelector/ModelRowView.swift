@@ -18,6 +18,7 @@ struct ModelRow: ReducerProtocol {
     case modelUpdated(VoiceModel)
     case loadError(String)
     case deleteModelTapped
+    case cancelDownloadTapped
   }
 
   @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
@@ -72,6 +73,10 @@ struct ModelRow: ReducerProtocol {
         log.error(error)
         state.model.isDownloading = false
         return .none
+
+      case .cancelDownloadTapped:
+        state.model.isDownloading = false
+        return .cancel(id: CancelDownloadID())
       }
     }
   }
@@ -91,32 +96,39 @@ struct ModelRowView: View {
   }
 
   var body: some View {
-    HStack(spacing: .grid(2)) {
-      VStack(alignment: .leading, spacing: .grid(1)) {
-        HStack(spacing: .grid(1)) {
-          Text(viewStore.model.modelType.readableName)
-            .font(.DS.headlineM)
-            .foregroundColor(Color.DS.Text.base)
+    VStack(spacing: .grid(2)) {
+      HStack(spacing: .grid(2)) {
+        VStack(alignment: .leading, spacing: .grid(1)) {
+          HStack(spacing: .grid(1)) {
+            Text(viewStore.model.modelType.readableName)
+              .font(.DS.headlineM)
+              .foregroundColor(Color.DS.Text.base)
 
-          Text(viewStore.model.modelType.sizeLabel)
-            .font(.DS.captionM)
+            Text(viewStore.model.modelType.sizeLabel)
+              .font(.DS.captionM)
+              .foregroundColor(Color.DS.Text.subdued)
+          }
+
+          Text(viewStore.model.modelType.modelDescription)
+            .font(.DS.bodyM)
             .foregroundColor(Color.DS.Text.subdued)
         }
+          .frame(maxWidth: .infinity, alignment: .leading)
 
-        Text(viewStore.model.modelType.modelDescription)
-          .font(.DS.bodyM)
-          .foregroundColor(Color.DS.Text.subdued)
+        if viewStore.model.isDownloading {
+          Button("Cancel") { viewStore.send(.cancelDownloadTapped) }
+            .tertiaryButtonStyle()
+        } else if viewStore.model.isDownloaded == false {
+          Button("Download") { viewStore.send(.downloadModelTapped) }
+            .secondaryButtonStyle()
+        } else {
+          Button("Active") { viewStore.send(.selectModelTapped) }
+            .activeButtonStyle(isActive: viewStore.isSelected)
+        }
       }
-      .frame(maxWidth: .infinity, alignment: .leading)
 
       if viewStore.model.isDownloading {
         ProgressView(value: viewStore.model.downloadProgress)
-      } else if viewStore.model.isDownloaded == false {
-        Button("Download") { viewStore.send(.downloadModelTapped) }
-          .secondaryButtonStyle()
-      } else {
-        Button("Active") { viewStore.send(.selectModelTapped) }
-          .activeButtonStyle(isActive: viewStore.isSelected)
       }
     }
     .foregroundColor(viewStore.isSelected ? Color.DS.Text.success : Color.DS.Text.base)

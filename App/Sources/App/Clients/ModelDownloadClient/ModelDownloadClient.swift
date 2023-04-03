@@ -59,6 +59,12 @@ extension ModelDownloadClient: DependencyKey {
 
             continuation.yield(.inProgress(0))
             task.resume()
+
+            continuation.onTermination = { termination in
+              if termination == .cancelled {
+                task.cancel()
+              }
+            }
           }
         }
       },

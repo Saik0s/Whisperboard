@@ -8,4 +8,12 @@ public extension AlertState {
       buttons: [ .default(TextState("OK")) ]
     )
   }
+
+  static func error(message: String) -> Self {
+    Self(
+      title: TextState("Error"),
+      message: TextState(message),
+      buttons: [ .default(TextState("OK")) ]
+    )
+  }
 }
