@@ -28,7 +28,7 @@ func appTarget() -> Target {
     platform: .iOS,
     product: .app,
     bundleId: "me.igortarasenko.Whisperboard",
-    deploymentTarget: .iOS(targetVersion: "16.0", devices: .iphone),
+    deploymentTarget: .iOS(targetVersion: "16.0", devices: [.iphone, .ipad]),
     infoPlist: .extendingDefault(with: [
       "CFBundleShortVersionString": InfoPlist.Value.string(version),
       "CFBundleURLTypes": [
@@ -51,6 +51,12 @@ func appTarget() -> Target {
       ],
       "UISupportedInterfaceOrientations": [
         "UIInterfaceOrientationPortrait",
+      ],
+      "UISupportedInterfaceOrientations~ipad": [
+        "UIInterfaceOrientationPortrait",
+        "UIInterfaceOrientationPortraitUpsideDown",
+        "UIInterfaceOrientationLandscapeLeft",
+        "UIInterfaceOrientationLandscapeRight",
       ],
       "NSMicrophoneUsageDescription": "WhisperBoard uses the microphone to record voice and later transcribe it.",
       "UIUserInterfaceStyle": "Dark",
