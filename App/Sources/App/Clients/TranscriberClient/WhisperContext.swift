@@ -86,7 +86,7 @@ actor WhisperContext {
 
     return (0 ... maxLangID).map { id in
       let name = String(cString: whisper_lang_str(id))
-      return VoiceLanguage(id: id, name: name)
+      return VoiceLanguage(id: id, code: name)
     }
   }
 }

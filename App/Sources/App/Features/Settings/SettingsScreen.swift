@@ -12,6 +12,11 @@ struct SettingsScreen: ReducerProtocol {
 
     var availableLanguages: IdentifiedArrayOf<VoiceLanguage> = []
     @BindingState var selectedLanguage: VoiceLanguage = .auto
+    var appVersion: String = ""
+    var buildNumber: String = ""
+    var freeSpace: String = ""
+    var takenSpace: String = ""
+    var takenSpacePercentage: Double = 0
 
     var alert: AlertState<Action>?
   }
@@ -23,6 +28,8 @@ struct SettingsScreen: ReducerProtocol {
     case fetchAvailableLanguages
     case setLanguage(VoiceLanguage)
     case openGitHub
+    case openPersonalWebsite
+    case deleteStorageTapped
 
     case showError(EquatableErrorWrapper)
     case dismissAlert
@@ -31,6 +38,8 @@ struct SettingsScreen: ReducerProtocol {
   @Dependency(\.transcriber) var transcriber: TranscriberClient
   @Dependency(\.settings) var settingsClient: SettingsClient
   @Dependency(\.openURL) var openURL: OpenURLEffect
+  @Dependency(\.build) var build: BuildClient
+  @Dependency(\.diskSpace) var diskSpace: DiskSpaceClient
 
   var body: some ReducerProtocol<State, Action> {
     BindingReducer()
@@ -48,6 +57,11 @@ struct SettingsScreen: ReducerProtocol {
         return .none
 
       case .task:
+        state.appVersion = build.version()
+        state.buildNumber = build.buildNumber()
+        state.freeSpace = diskSpace.freeSpace().readableString
+        state.takenSpace = diskSpace.takenSpace().readableString
+        state.takenSpacePercentage = 1 - Double(diskSpace.freeSpace()) / Double(diskSpace.freeSpace() + diskSpace.takenSpace())
         return .send(.fetchAvailableLanguages)
 
       case .fetchAvailableLanguages:
@@ -65,15 +79,24 @@ struct SettingsScreen: ReducerProtocol {
 
       case .openGitHub:
         return .fireAndForget {
-          await openURL(URL(staticString: "https://github.com/Saik0s/Whisperboard"))
+          await openURL(build.githubURL())
+        }
+
+      case .openPersonalWebsite:
+        return .fireAndForget {
+          await openURL(URL(staticString: "https://www.alexanderweiss.dev"))
+        }
+
+      case .deleteStorageTapped:
+        return .run { send in
+          try await diskSpace.deleteStorage()
+          await send(.task)
+        } catch: { error, send in
+          await send(.showError(error.equatable))
         }
 
       case let .showError(error):
-        state.alert = .init(
-          title: TextState("Error"),
-          message: TextState(String(describing: error)),
-          dismissButton: .default(TextState("OK"), action: .send(Action.dismissAlert, animation: .default))
-        )
+        state.alert = .error(error)
         return .none
 
       case .dismissAlert:
@@ -115,15 +138,16 @@ struct SettingsScreenView: View {
             )
           )
         }
+
         SettingGroup(header: "Storage", backgroundColor: .DS.Background.secondary) {
           SettingCustomView {
             VStack(alignment: .leading, spacing: .grid(1)) {
               HStack(spacing: 0) {
-                Text("Taken: 2.5 GB")
+                Text("Taken: \(viewStore.takenSpace)")
                   .font(.DS.bodyM)
                   .foregroundColor(.DS.Text.base)
                 Spacer()
-                Text("Available: 7.5 GB")
+                Text("Available: \(viewStore.freeSpace)")
                   .font(.DS.bodyM)
                   .foregroundColor(.DS.Text.base)
               }
@@ -138,7 +162,7 @@ struct SettingsScreenView: View {
                     startPoint: .bottomLeading,
                     endPoint: .topTrailing
                   )
-                  .frame(width: geometry.size.width * 0.25)
+                  .frame(width: geometry.size.width * viewStore.takenSpacePercentage)
                   Color.DS.Background.tertiary
                 }
               }
@@ -149,18 +173,19 @@ struct SettingsScreenView: View {
             .padding(.vertical, .grid(2))
           }
 
-          SettingButton(title: "Delete Storage", indicator: "trash") {}
+          SettingButton(title: "Delete Storage", indicator: "trash") {
+            viewStore.send(.deleteStorageTapped)
+          }
         }
 
-        SettingCustomView(id: "Custom Footer", titleForSearch: "Welcome to Setting!") {
-          Button { viewStore.send(.openGitHub) } label: {
-            Text("Saik0s/Whisperboard")
-              .foregroundColor(.white)
-              .font(.DS.headlineL)
-              .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
-              .frame(maxWidth: .infinity)
-              .padding(.grid(5))
-              .background {
+        SettingCustomView(id: "Footer", titleForSearch: "GitHub") {
+          VStack(spacing: .grid(1)) {
+            Text("v\(viewStore.appVersion)(\(viewStore.buildNumber))")
+              .font(.DS.bodyM)
+              .foregroundColor(.DS.Text.subdued)
+            Text("Made with ❤ in Amsterdam")
+              .font(.DS.bodyM)
+              .mask {
                 LinearGradient.easedGradient(
                   colors: [
                     .systemPurple,
@@ -170,24 +195,20 @@ struct SettingsScreenView: View {
                   endPoint: .topTrailing
                 )
               }
-              .cornerRadius(.grid(3))
-              .padding(.horizontal, .grid(4))
+            Button { viewStore.send(.openPersonalWebsite) } label: {
+              Text("by Igor Tarasenko")
+                .font(.DS.bodyM)
+                .foregroundColor(.DS.Text.accentAlt)
+            }
           }
-          .padding(.top, .grid(4))
-          .frame(maxHeight: .infinity, alignment: .bottom)
+          .frame(maxWidth: .infinity)
 
-          VStack(spacing: .grid(1)) {
-            Text("Version: 1.0.0")
-              .font(.DS.bodyM)
-              .foregroundColor(.DS.Text.subdued)
-            Text("Build: 123")
-              .font(.DS.bodyM)
-              .foregroundColor(.DS.Text.subdued)
-            Image(systemName: "mic.fill")
-              .font(.DS.headlineL)
-              .foregroundColor(.DS.Text.subdued)
-              .opacity(0.5)
+          HStack(spacing: .grid(1)) {
+            Button("Saik0s/Whisperboard") {
+              viewStore.send(.openGitHub)
+            }
           }
+          .buttonStyle(SmallButtonStyle())
           .frame(maxWidth: .infinity)
         }
       }
@@ -196,6 +217,23 @@ struct SettingsScreenView: View {
     .navigationBarTitle("Settings")
     .task { viewStore.send(.task) }
     .enableInjection()
+  }
+}
+
+// MARK: - SmallButtonStyle
+
+struct SmallButtonStyle: ButtonStyle {
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .font(.DS.bodyM)
+      .foregroundColor(.DS.Text.accentAlt)
+      .padding(.horizontal, .grid(2))
+      .padding(.vertical, .grid(1))
+      .background(
+        RoundedRectangle(cornerRadius: .grid(1))
+          .fill(Color.DS.Background.accentAlt.opacity(0.2))
+      )
+      .scaleEffect(configuration.isPressed ? 0.95 : 1)
   }
 }
 

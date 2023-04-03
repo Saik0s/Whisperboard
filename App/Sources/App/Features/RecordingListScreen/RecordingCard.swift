@@ -51,6 +51,7 @@ public struct RecordingCard: ReducerProtocol {
   @Dependency(\.transcriber) var transcriber: TranscriberClient
   @Dependency(\.audioPlayer) var audioPlayer
   @Dependency(\.storage) var storage
+  @Dependency(\.settings) var settings: SettingsClient
 
   private enum PlayID {}
 
@@ -101,7 +102,7 @@ public struct RecordingCard: ReducerProtocol {
           await send(.binding(.set(\.$recordingInfo.text, "")))
 
           var lastText = ""
-          for try await text in transcriber.transcribeAudio(url: fileURL, language: .auto) {
+          for try await text in transcriber.transcribeAudio(url: fileURL, language: settings.settings().voiceLanguage) {
             await send(.binding(.set(\.$transcribingProgressText, text)))
             lastText = text
           }

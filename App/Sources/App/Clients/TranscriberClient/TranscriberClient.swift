@@ -1,6 +1,7 @@
 import AppDevUtils
 import Dependencies
 import Foundation
+import Combine
 
 typealias TranscriptionSegment = String
 
@@ -24,6 +25,8 @@ struct TranscriberClient {
   var unloadSelectedModel: @Sendable () -> Void
 
   var transcribeAudio: @Sendable (_ audioURL: URL, _ language: VoiceLanguage) -> AsyncStream<TranscriptionProgress>
+  var transcriberState: @Sendable () -> TranscriberState
+  var transcriberStateStream: @Sendable () -> AsyncStream<TranscriberState>
 
   var getAvailableLanguages: @Sendable () -> [VoiceLanguage]
 }
@@ -73,13 +76,19 @@ extension TranscriberClient: DependencyKey {
               continuation.yield(.error(error))
             }
 
+            continuation.onTermination = { termination in
+              if termination == .cancelled {
+                continuation.yield(.error(TranscriberError.cancelled))
+              }
+            }
+
             continuation.finish()
           }
         }
       },
-      getAvailableLanguages: {
-        impl.getAvailableLanguages()
-      }
+      transcriberState: { impl.state.value },
+      transcriberStateStream: { impl.state.asAsyncStream() },
+      getAvailableLanguages: { impl.getAvailableLanguages() }
     )
   }()
 }
@@ -94,12 +103,24 @@ enum TranscriberState: Equatable {
   case failed(EquatableErrorWrapper)
 }
 
+extension TranscriberState {
+  var isTranscribing: Bool {
+    switch self {
+    case .transcribing:
+      return true
+    default:
+      return false
+    }
+  }
+}
+
 // MARK: - TranscriberError
 
 enum TranscriberError: Error, CustomStringConvertible {
   case couldNotLocateModel
   case modelNotLoaded
   case notEnoughMemory(available: UInt64, required: UInt64)
+  case cancelled
 
   var localizedDescription: String {
     switch self {
@@ -109,6 +130,8 @@ enum TranscriberError: Error, CustomStringConvertible {
       return "Model not loaded"
     case let .notEnoughMemory(available, required):
       return "Not enough memory. Available: \(bytesToReadableString(bytes: available)), required: \(bytesToReadableString(bytes: required))"
+    case .cancelled:
+      return "Cancelled"
     }
   }
 
@@ -120,7 +143,7 @@ enum TranscriberError: Error, CustomStringConvertible {
 // MARK: - TranscriberImpl
 
 final class TranscriberImpl {
-  var state: TranscriberState = .idle
+  let state: CurrentValueSubject<TranscriberState, Never> = CurrentValueSubject(.idle)
 
   private var whisperContext: WhisperContext?
   private var model: VoiceModelType?
@@ -143,15 +166,15 @@ final class TranscriberImpl {
 
     try await withCheckedThrowingContinuation { continuation in
       self.model = model
-      state = .loadingModel
+      state.value = .loadingModel
       do {
         log.verbose("Loading model...")
         whisperContext = try WhisperContext.createContext(path: model.localURL.path)
-        state = .modelLoaded
+        state.value = .modelLoaded
         log.verbose("Loaded model \(model.fileName)")
         continuation.resume()
       } catch {
-        state = .failed(error.equatable)
+        state.value = .failed(error.equatable)
         continuation.resume(throwing: error)
       }
     }
@@ -160,17 +183,17 @@ final class TranscriberImpl {
   func unloadModel() {
     log.verbose("Unloading model...")
     whisperContext = nil
-    state = .idle
+    state.value = .idle
   }
 
   /// Transcribes the audio file at the given URL.
   /// Model should be loaded
   func transcribeAudio(_ audioURL: URL, language: VoiceLanguage, newSegmentCallback: @escaping (String) -> Void) async throws -> String {
-    guard state == .modelLoaded, let whisperContext else {
+    guard state.value == .modelLoaded, let whisperContext else {
       throw TranscriberError.modelNotLoaded
     }
 
-    state = .transcribing
+    state.value = .transcribing
 
     do {
       log.verbose("Reading wave samples...")
@@ -182,11 +205,11 @@ final class TranscriberImpl {
       let text = await whisperContext.getTranscription()
       log.verbose("Done: \(text)")
 
-      state = .modelLoaded
+      state.value = .modelLoaded
 
       return text
     } catch {
-      state = .failed(error.equatable)
+      state.value = .failed(error.equatable)
       log.error(error)
       throw error
     }
