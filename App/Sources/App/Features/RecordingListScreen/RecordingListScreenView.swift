@@ -330,7 +330,7 @@ struct EmptyStateView: View {
           .foregroundColor(.DS.Text.base)
       }
     }
-      .padding(.grid(4))
+    .padding(.grid(4))
     .enableInjection()
   }
 }
