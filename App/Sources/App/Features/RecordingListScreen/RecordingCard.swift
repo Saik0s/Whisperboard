@@ -45,7 +45,6 @@ public struct RecordingCard: ReducerProtocol {
     case progressUpdated(Double)
     case waveform(WaveformProgress.Action)
     case transcribeTapped
-    case alertDismissed
   }
 
   @Dependency(\.transcriber) var transcriber: TranscriberClient
@@ -120,10 +119,6 @@ public struct RecordingCard: ReducerProtocol {
           await send(.binding(.set(\.$alert, AlertState<Action>(title: TextState("Error"), message: TextState(String(describing: error))))))
           await send(.binding(.set(\.$isTranscribing, false)))
         }.animation(.default)
-
-      case .alertDismissed:
-        state.alert = nil
-        return .none
       }
     }
   }

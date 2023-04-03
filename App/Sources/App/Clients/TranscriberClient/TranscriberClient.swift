@@ -1,7 +1,7 @@
 import AppDevUtils
+import Combine
 import Dependencies
 import Foundation
-import Combine
 
 typealias TranscriptionSegment = String
 
@@ -91,7 +91,9 @@ extension TranscriberClient: DependencyKey {
       },
       transcriberState: { impl.state.value },
       transcriberStateStream: { impl.state.asAsyncStream() },
-      getAvailableLanguages: { impl.getAvailableLanguages() }
+      getAvailableLanguages: {
+        [.auto] + impl.getAvailableLanguages()
+      }
     )
   }()
 }
@@ -118,7 +120,7 @@ extension TranscriberState {
 
   var isIdle: Bool {
     switch self {
-    case .idle, .failed:
+    case .idle, .failed, .modelLoaded:
       return true
     default:
       return false

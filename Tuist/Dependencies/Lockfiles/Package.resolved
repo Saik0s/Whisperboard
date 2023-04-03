@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/AudioKit/AudioKit.git",
       "state" : {
-        "revision" : "ca4dae8383dfe3f2ad11633644e1d2c3ea45d183",
-        "version" : "5.6.0"
+        "revision" : "c30a151fea40696ad0a45c60c2bba29112bb4279",
+        "version" : "5.6.1"
       }
     },
     {
@@ -57,10 +57,10 @@
     {
       "identity" : "setting",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/aheze/Setting.git",
+      "location" : "https://github.com/Saik0s/Setting.git",
       "state" : {
-        "revision" : "a9db747de0ad6dbe425ec61e003944cd329ba62a",
-        "version" : "1.0.0"
+        "branch" : "main",
+        "revision" : "68374fd0e86dfdd4c205450a05de642e54030239"
       }
     },
     {

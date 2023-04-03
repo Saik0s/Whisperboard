@@ -7,13 +7,13 @@ import SwiftUI
 
 public struct RecordScreen: ReducerProtocol {
   public struct State: Equatable {
-    var alert: AlertState<Action>?
+    @BindingState var alert: AlertState<Action>?
     var micSelector = MicSelector.State()
     var recordingControls = RecordingControls.State()
   }
 
-  public enum Action: Equatable {
-    case alertDismissed
+  public enum Action: Equatable, BindableAction {
+    case binding(BindingAction<State>)
     case micSelector(MicSelector.Action)
     case recordingControls(RecordingControls.Action)
 
@@ -50,15 +50,14 @@ public struct RecordScreen: ReducerProtocol {
       case .recordingControls:
         return .none
 
-      case .alertDismissed:
-        state.alert = nil
-        return .none
-
       case .newRecordingCreated:
         return .none
 
       case .micSelector:
         return .none
+
+        case .binding:
+          return .none
       }
     }
   }
@@ -83,7 +82,7 @@ public struct RecordScreenView: View {
         RecordingControlsView(store: store.scope(state: \.recordingControls, action: { .recordingControls($0) }))
       }
       .padding(.grid(4))
-      .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+      .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     }
     .screenRadialBackground()
     .enableInjection()

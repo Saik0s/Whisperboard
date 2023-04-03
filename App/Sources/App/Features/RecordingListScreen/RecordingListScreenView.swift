@@ -27,12 +27,11 @@ public struct RecordingListScreen: ReducerProtocol {
     @BindingState var editMode: EditMode = .inactive
     @BindingState var isImportingFiles = false
 
-    var alert: AlertState<Action>?
+    @BindingState var alert: AlertState<Action>?
   }
 
   public enum Action: BindableAction, Equatable {
     case binding(BindingAction<State>)
-    case alertDismissed
     case readStoredRecordings
     case setRecordings(TaskResult<IdentifiedArrayOf<RecordingInfo>>)
     case recording(id: RecordingCard.State.ID, action: RecordingCard.Action)
@@ -57,10 +56,6 @@ public struct RecordingListScreen: ReducerProtocol {
       Reduce<State, Action> { state, action in
         switch action {
         case .binding:
-          return .none
-
-        case .alertDismissed:
-          state.alert = nil
           return .none
 
         case .readStoredRecordings:
@@ -123,7 +118,7 @@ public struct RecordingListScreen: ReducerProtocol {
 
         case let .failedToAddRecordings(error):
           log.error(error.error)
-          errorAlert(error: error.error, state: &state)
+          state.alert = .error(error)
           return .none
 
         case let .deleteDialogConfirmed(id):
@@ -188,16 +183,12 @@ public struct RecordingListScreen: ReducerProtocol {
       ButtonState(role: .cancel) {
         TextState("Cancel")
       }
-      ButtonState(action: .deleteDialogConfirmed(id: id)) {
+      ButtonState(role: .destructive, action: .deleteDialogConfirmed(id: id)) {
         TextState("Delete")
       }
     } message: {
       TextState("Are you sure you want to delete this recording?")
     }
-  }
-
-  private func errorAlert(error: Error, state: inout State) {
-    state.alert = AlertState(title: TextState("Something went wrong"), message: TextState(error.localizedDescription))
   }
 }
 
@@ -266,7 +257,7 @@ public struct RecordingListScreenView: View {
         Color.black.opacity(0.5).overlay(ProgressView())
       }
     }
-    .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+    .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .navigationViewStyle(.stack)
     .task {
       viewStore.send(.readStoredRecordings)

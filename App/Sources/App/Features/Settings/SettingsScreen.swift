@@ -18,7 +18,7 @@ struct SettingsScreen: ReducerProtocol {
     var takenSpace: String = ""
     var takenSpacePercentage: Double = 0
 
-    var alert: AlertState<Action>?
+    @BindingState var alert: AlertState<Action>?
   }
 
   enum Action: BindableAction, Equatable {
@@ -30,9 +30,9 @@ struct SettingsScreen: ReducerProtocol {
     case openGitHub
     case openPersonalWebsite
     case deleteStorageTapped
+    case deleteDialogConfirmed
 
     case showError(EquatableErrorWrapper)
-    case dismissAlert
   }
 
   @Dependency(\.transcriber) var transcriber: TranscriberClient
@@ -84,10 +84,14 @@ struct SettingsScreen: ReducerProtocol {
 
       case .openPersonalWebsite:
         return .fireAndForget {
-          await openURL(URL(staticString: "https://igortarasenko.me"))
+          await openURL(build.personalWebsiteURL())
         }
 
       case .deleteStorageTapped:
+        createDeleteConfirmationDialog(state: &state)
+        return .none
+
+      case .deleteDialogConfirmed:
         return .run { send in
           try await diskSpace.deleteStorage()
           await send(.task)
@@ -98,11 +102,22 @@ struct SettingsScreen: ReducerProtocol {
       case let .showError(error):
         state.alert = .error(error)
         return .none
-
-      case .dismissAlert:
-        state.alert = nil
-        return .none
       }
+    }
+  }
+
+  private func createDeleteConfirmationDialog(state: inout State) {
+    state.alert = AlertState {
+      TextState("Confirmation")
+    } actions: {
+      ButtonState(role: .cancel) {
+        TextState("Cancel")
+      }
+      ButtonState(role: .destructive, action: .deleteDialogConfirmed) {
+        TextState("Delete")
+      }
+    } message: {
+      TextState("Are you sure you want to delete all recordings and all downloaded models?")
     }
   }
 }
@@ -115,6 +130,10 @@ struct SettingsScreenView: View {
   let store: StoreOf<SettingsScreen>
   @ObservedObject var viewStore: ViewStoreOf<SettingsScreen>
 
+  var modelSelectorStore: StoreOf<ModelSelector> {
+    store.scope(state: \.modelSelector, action: SettingsScreen.Action.modelSelector)
+  }
+
   init(store: StoreOf<SettingsScreen>) {
     self.store = store
     viewStore = ViewStore(store)
@@ -124,9 +143,25 @@ struct SettingsScreenView: View {
     SettingStack {
       SettingPage(title: "Settings", backgroundColor: .DS.Background.primary) {
         SettingGroup(header: "Transcription", backgroundColor: .DS.Background.secondary) {
-          ModelSelectorSettingPage(store: store.scope(state: \.modelSelector, action: SettingsScreen.Action.modelSelector))
+          SettingPage(
+            title: "Models",
+            selectedChoice: viewStore.modelSelector.selectedModel.readableName,
+            backgroundColor: .DS.Background.primary,
+            previewConfiguration: .init(icon: .system(icon: "square.and.arrow.down", backgroundColor: .systemBlue))
+          ) {
+            SettingGroup(footer: .modelSelectorFooter) {}
+
+            SettingGroup(header: "Whisper models", backgroundColor: .DS.Background.secondary) {
+              SettingCustomView(id: "models") {
+                ForEachStore(modelSelectorStore.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
+                  ModelRowView(store: modelRowStore)
+                }
+              }
+            }
+          }
 
           SettingPicker(
+            icon: .system(icon: "globe", backgroundColor: .systemGreen.darken(by: 0.1)),
             title: "Language",
             choices: viewStore.availableLanguages.map(\.name.titleCased),
             selectedIndex: viewStore.binding(
@@ -173,7 +208,7 @@ struct SettingsScreenView: View {
             .padding(.vertical, .grid(2))
           }
 
-          SettingButton(title: "Delete Storage", indicator: "trash") {
+          SettingButton(icon: .system(icon: "trash", backgroundColor: .systemRed.darken(by: 0.1)), title: "Delete Storage", indicator: nil) {
             viewStore.send(.deleteStorageTapped)
           }
         }
@@ -183,7 +218,7 @@ struct SettingsScreenView: View {
             Text("v\(viewStore.appVersion)(\(viewStore.buildNumber))")
               .font(.DS.bodyM)
               .foregroundColor(.DS.Text.subdued)
-            Text("Made with ❤ in Amsterdam")
+            Text("Made with ♥ in Amsterdam")
               .font(.DS.bodyM)
               .mask {
                 LinearGradient.easedGradient(
@@ -215,7 +250,10 @@ struct SettingsScreenView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .navigationBarTitle("Settings")
+    .alert(modelSelectorStore.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
+    .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .task { viewStore.send(.task) }
+    .onAppear { viewStore.send(.modelSelector(.onAppear)) }
     .enableInjection()
   }
 }
@@ -235,6 +273,14 @@ struct SmallButtonStyle: ButtonStyle {
       )
       .scaleEffect(configuration.isPressed ? 0.95 : 1)
   }
+}
+
+private extension String {
+  static let modelSelectorFooter = """
+  Whisper ASR, by OpenAI, is an advanced system that converts spoken words into written text. It's perfect for transcribing conversations or speeches.
+
+  The model is a neural network that takes an audio file as input and outputs a sequence of characters.
+  """
 }
 
 // MARK: - SettingsScreen_Previews

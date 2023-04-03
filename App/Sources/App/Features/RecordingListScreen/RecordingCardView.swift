@@ -127,7 +127,7 @@ struct RecordingCardView: View {
     .multilineTextAlignment(.leading)
     .padding(.grid(4))
     .cardStyle(isPrimary: viewStore.mode.isPlaying)
-    .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+    .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .animation(.easeIn(duration: 0.3), value: viewStore.mode.isPlaying)
     .enableInjection()
   }
