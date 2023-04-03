@@ -3,7 +3,8 @@ import SwiftUI
 import XCTestDynamicOverlay
 
 extension DependencyValues {
-  var openSettings: @Sendable () async -> Void {
+  var openSettings: @Sendable ()
+    async -> Void {
     get { self[OpenSettingsKey.self] }
     set { self[OpenSettingsKey.self] = newValue }
   }

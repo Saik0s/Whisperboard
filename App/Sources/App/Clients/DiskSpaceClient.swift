@@ -1,6 +1,6 @@
+import AppDevUtils
 import Dependencies
 import Foundation
-import AppDevUtils
 
 // MARK: - DiskSpaceClient
 
@@ -84,8 +84,7 @@ extension URL {
   func directoryTotalAllocatedSize(includingSubfolders: Bool = false) throws -> Int? {
     guard try isDirectoryAndReachable() else { return nil }
     if includingSubfolders {
-      guard
-        let urls = FileManager.default.enumerator(at: self, includingPropertiesForKeys: nil)?.allObjects as? [URL] else { return nil }
+      guard let urls = FileManager.default.enumerator(at: self, includingPropertiesForKeys: nil)?.allObjects as? [URL] else { return nil }
       return try urls.lazy.reduce(0) {
         (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey]).totalFileAllocatedSize ?? 0) + $0
       }

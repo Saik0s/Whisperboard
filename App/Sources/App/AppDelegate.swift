@@ -1,13 +1,13 @@
-import Foundation
-import UIKit
-import SwiftUI
 import ComposableArchitecture
 import Dependencies
+import Foundation
+import SwiftUI
+import UIKit
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
   var backgroundTask: UIBackgroundTaskIdentifier = .invalid
 
-  func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+  func application(_: UIApplication, didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
     true
   }
 

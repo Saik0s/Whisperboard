@@ -5,7 +5,7 @@ public extension AlertState {
     Self(
       title: TextState("Something went wrong"),
       message: TextState(error.localizedDescription),
-      buttons: [ .default(TextState("OK")) ]
+      buttons: [.default(TextState("OK"))]
     )
   }
 
@@ -13,7 +13,7 @@ public extension AlertState {
     Self(
       title: TextState("Something went wrong"),
       message: TextState(message),
-      buttons: [ .default(TextState("OK")) ]
+      buttons: [.default(TextState("OK"))]
     )
   }
 }

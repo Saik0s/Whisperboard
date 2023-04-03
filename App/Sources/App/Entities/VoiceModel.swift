@@ -56,7 +56,6 @@ enum VoiceModelType: String, CaseIterable {
     }
   }
 
-
   var sizeLabel: String {
     switch self {
     case .tinyEN, .tiny: return "75 MB"
@@ -105,7 +104,7 @@ enum VoiceModelType: String, CaseIterable {
 }
 
 #if DEBUG
-extension VoiceModel {
-  static let fixture = VoiceModel(modelType: .tiny)
-}
+  extension VoiceModel {
+    static let fixture = VoiceModel(modelType: .tiny)
+  }
 #endif

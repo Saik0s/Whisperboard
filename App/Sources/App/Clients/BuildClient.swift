@@ -1,6 +1,8 @@
-import Foundation
-import Dependencies
 import ComposableArchitecture
+import Dependencies
+import Foundation
+
+// MARK: - BuildClient
 
 struct BuildClient {
   var version: () -> String
@@ -8,6 +10,8 @@ struct BuildClient {
   var githubURL: () -> URL
   var personalWebsiteURL: () -> URL
 }
+
+// MARK: DependencyKey
 
 extension BuildClient: DependencyKey {
   static var liveValue: Self {
