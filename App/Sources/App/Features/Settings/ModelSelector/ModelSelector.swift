@@ -67,23 +67,21 @@ func ModelSelectorSettingPage(store: StoreOf<ModelSelector>) -> SettingPage {
     backgroundColor: .DS.Background.primary,
     previewConfiguration: .init(icon: .system(icon: "square.and.arrow.down", backgroundColor: .systemPurple))
   ) {
-    SettingGroup(backgroundColor: .DS.Background.secondary) {
-      SettingCustomView(id: "header") {
-        SettingText(
-          title: "Whisper ASR, by OpenAI, is an advanced system that converts spoken words into written text. It's perfect for transcribing conversations or speeches.\n\nThere are various versions to choose from:"
-        )
-      }
-
+    SettingGroup(footer: .modelSelectorFooter, backgroundColor: .DS.Background.secondary) {
       SettingCustomView(id: "models") {
-        WithViewStore(store) { _ in
-          ForEachStore(store.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
-            ModelRowView(store: modelRowStore)
-          }
-          .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+        ForEachStore(store.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
+          ModelRowView(store: modelRowStore)
         }
+        .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
       }
     }
   }
+}
+
+private extension String {
+  static let modelSelectorFooter = """
+  Whisper ASR, by OpenAI, is an advanced system that converts spoken words into written text. It's perfect for transcribing conversations or speeches.
+  """
 }
 
 // MARK: - ModelSelector_Previews

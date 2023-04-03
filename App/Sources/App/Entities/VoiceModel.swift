@@ -97,7 +97,7 @@ enum VoiceModelType: String, CaseIterable {
 
   static var localFolderURL: URL {
     try! FileManager.default
-      .url(for: .documentationDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+      .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
       .appending(path: "Models")
   }
 

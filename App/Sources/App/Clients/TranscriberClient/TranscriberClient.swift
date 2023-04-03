@@ -51,7 +51,10 @@ extension TranscriberClient: DependencyKey {
         selectedModel = model
       },
       getSelectedModel: {
-        selectedModel
+        if !FileManager.default.fileExists(atPath: selectedModel.localURL.path) {
+          selectedModel = .default
+        }
+        return selectedModel
       },
       loadSelectedModel: {
         try await impl.loadModel(model: selectedModel)
@@ -107,6 +110,15 @@ extension TranscriberState {
   var isTranscribing: Bool {
     switch self {
     case .transcribing:
+      return true
+    default:
+      return false
+    }
+  }
+
+  var isIdle: Bool {
+    switch self {
+    case .idle, .failed:
       return true
     default:
       return false
