@@ -1,7 +1,7 @@
 import Foundation
 import ProjectDescription
 
-let version = "1.7.2"
+let version = "1.7.3"
 
 let projectSettings: SettingsDictionary = [
   "GCC_TREAT_WARNINGS_AS_ERRORS": "YES",
@@ -63,6 +63,9 @@ func appTarget() -> Target {
       "UIBackgroundModes": [
         "audio",
         "processing",
+      ],
+      "BGTaskSchedulerPermittedIdentifiers": [
+        "$(PRODUCT_BUNDLE_IDENTIFIER)",
       ],
     ]),
     sources: .paths([.relativeToManifest("App/Sources/**")]),
