@@ -10,17 +10,17 @@ public struct MicSelector: ReducerProtocol {
   public struct State: Equatable {
     var mics: [Microphone] = []
     var currentMic: Microphone?
-    var alert: AlertState<Action>?
+    @BindingState var alert: AlertState<Action>?
   }
 
-  public enum Action: Equatable {
+  public enum Action: Equatable, BindableAction {
+    case binding(BindingAction<State>)
     case task
     case micsUpdated([Microphone])
     case checkCurrentMic
     case setCurrentMic(Microphone?)
     case micSelected(Microphone)
     case errorWhileSettingMic(EquatableErrorWrapper)
-    case alertDismissed
   }
 
   @Dependency(\.audioRecorder) var audioRecorder: AudioRecorderClient
@@ -65,14 +65,10 @@ public struct MicSelector: ReducerProtocol {
         }
 
       case let .errorWhileSettingMic(error):
-        state.alert = AlertState(
-          title: TextState("Error while setting microphone"),
-          message: TextState(error.localizedDescription)
-        )
+        state.alert = .error(error)
         return .none
 
-      case .alertDismissed:
-        state.alert = nil
+      case .binding:
         return .none
       }
     }
@@ -117,7 +113,7 @@ public struct MicSelectorView: View {
         }
       }
       .fixedSize(horizontal: true, vertical: false)
-      .alert(store.scope(state: \.alert), dismiss: .alertDismissed)
+      .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
       .task { viewStore.send(.task) }
     }
     .enableInjection()

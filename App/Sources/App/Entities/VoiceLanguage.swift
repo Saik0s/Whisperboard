@@ -16,7 +16,7 @@ struct VoiceLanguage: Codable, Hashable, Identifiable {
 }
 
 extension VoiceLanguage {
-  static let auto = VoiceLanguage(id: 0, code: "auto")
+  static let auto = VoiceLanguage(id: -1, code: "auto")
 
   var isAuto: Bool {
     code == "auto"

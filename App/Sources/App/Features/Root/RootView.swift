@@ -100,7 +100,6 @@ struct RootView: View {
           }
           .tag(2)
       }
-      .task { viewStore.send(.settings(.modelSelector(.task))) }
     }
     .accentColor(Color.DS.Text.accent)
   }
