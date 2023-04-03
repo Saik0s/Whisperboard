@@ -50,6 +50,8 @@ public struct RecordingListScreen: ReducerProtocol {
   struct SavingRecordingsID: Hashable {}
 
   public var body: some ReducerProtocol<State, Action> {
+    BindingReducer()
+
     CombineReducers {
       BindingReducer<State, Action>()
 
@@ -245,7 +247,8 @@ public struct RecordingListScreenView: View {
           viewStore.send(.addFileRecordings(urls: urls))
         } label: {
           Image(systemName: "doc.badge.plus")
-        }.secondaryIconButtonStyle()
+        }
+        .secondaryIconButtonStyle()
       )
       .environment(
         \.editMode,

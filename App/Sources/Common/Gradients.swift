@@ -37,8 +37,9 @@ public extension RadialGradient {
 public extension View {
   @ViewBuilder
   func screenRadialBackground() -> some View {
-    background {
+    ZStack {
       ScreenRadialBackgroundView()
+      self
     }
   }
 }

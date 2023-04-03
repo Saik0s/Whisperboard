@@ -26,6 +26,8 @@ struct ModelSelector: ReducerProtocol {
   @Dependency(\.transcriber) var transcriber: TranscriberClient
 
   var body: some ReducerProtocol<State, Action> {
+    BindingReducer()
+
     Reduce<State, Action> { state, action in
       switch action {
       case .onAppear:

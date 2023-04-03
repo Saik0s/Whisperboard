@@ -280,8 +280,6 @@ struct SettingsScreenView: View {
         }
       }
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .navigationBarTitle("Settings")
     .alert(modelSelectorStore.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .task { viewStore.send(.task) }

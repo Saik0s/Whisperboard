@@ -90,8 +90,7 @@ private actor AudioRecorder {
   )
 
   var currentTime: TimeInterval {
-    guard let recorder, recorder.isRecording else { return 0 }
-    return recorder.currentTime
+    recorder?.currentTime ?? 0
   }
 
   func requestPermission() async -> Bool {
