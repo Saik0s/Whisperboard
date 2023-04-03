@@ -1,5 +1,6 @@
 import AppDevUtils
 import ComposableArchitecture
+import Inject
 import SwiftUI
 
 // MARK: - Root
@@ -65,6 +66,8 @@ struct Root: ReducerProtocol {
 // MARK: - RootView
 
 struct RootView: View {
+  @ObserveInjection var inject
+
   let store: StoreOf<Root>
   @ObservedObject var viewStore: ViewStoreOf<Root>
 
@@ -73,35 +76,73 @@ struct RootView: View {
     viewStore = ViewStore(store)
   }
 
+  private var selectedTab: Int {
+    viewStore.selectedTab
+  }
+
   var body: some View {
-    WithViewStore(store) { viewStore in
-      TabView(selection: viewStore.binding(get: { $0.selectedTab }, send: Root.Action.selectTab)) {
+    TabView {
+      ZStack {
         RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: Root.Action.recordingListScreen))
-          .accentColor(Color.DS.Text.base)
-          .tabItem {
-            Image(systemName: "list.bullet")
-            Text("Recordings")
-          }
-          .tag(0)
+          .opacity(selectedTab == 0 ? 1 : 0)
 
-        RecordScreenView(store: store.scope(state: { $0.recordScreen }, action: Root.Action.recordScreen))
-          .accentColor(Color.DS.Text.base)
-          .tabItem {
-            Image(systemName: "mic")
-            Text("Record")
-          }
-          .tag(1)
+        RecordScreenView(store: store.scope(state: \.recordScreen, action: Root.Action.recordScreen))
+          .opacity(selectedTab == 1 ? 1 : 0)
 
-        SettingsScreenView(store: store.scope(state: { $0.settings }, action: Root.Action.settings))
-          .accentColor(Color.DS.Text.base)
-          .tabItem {
-            Image(systemName: "gear")
-            Text("Settings")
-          }
-          .tag(2)
+        SettingsScreenView(store: store.scope(state: \.settings, action: Root.Action.settings))
+          .opacity(selectedTab == 2 ? 1 : 0)
       }
+      .toolbarBackground(.hidden, for: .tabBar)
     }
-    .accentColor(Color.DS.Text.accent)
+
+    .accentColor(Color.DS.Text.base)
+    .safeAreaInset(edge: .bottom) {
+      HStack {
+        if selectedTab != 1 { Spacer() }
+
+        TabBarItem(icon: "list.bullet", tag: 0, selectedTab: viewStore.binding(get: \.selectedTab, send: Root.Action.selectTab))
+
+        Spacer()
+
+        TabBarItem(icon: "mic", tag: 1, selectedTab: viewStore.binding(get: \.selectedTab, send: Root.Action.selectTab))
+          .offset(y: selectedTab == 1 ? -20 : 0)
+          .opacity(selectedTab == 1 ? 0 : 1)
+
+        Spacer()
+
+        TabBarItem(icon: "gear", tag: 2, selectedTab: viewStore.binding(get: \.selectedTab, send: Root.Action.selectTab))
+
+        if selectedTab != 1 { Spacer() }
+      }
+      .background(.ultraThinMaterial.opacity(selectedTab == 1 ? 0 : 1))
+      .cornerRadius(25.0)
+      .padding(.horizontal, selectedTab == 1 ? 16 : 64)
+      .frame(height: 50.0)
+    }
+    .animation(.gentleBounce(), value: selectedTab)
+    .enableInjection()
+  }
+}
+
+// MARK: - TabBarItem
+
+struct TabBarItem: View {
+  let icon: String
+  let tag: Int
+  @Binding var selectedTab: Int
+
+  var body: some View {
+    Button(action: {
+      withAnimation(.gentleBounce()) {
+        selectedTab = tag
+      }
+    }) {
+      Image(systemName: icon)
+        .font(selectedTab == tag ? .DS.headlineM.weight(.bold) : .DS.headlineM.weight(.light))
+        .frame(width: 50, height: 50)
+        .foregroundColor(selectedTab == tag ? Color.DS.Text.accent : Color.DS.Text.base)
+        .cornerRadius(10)
+    }
   }
 }
 

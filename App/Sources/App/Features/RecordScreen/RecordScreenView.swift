@@ -21,7 +21,11 @@ public struct RecordScreen: ReducerProtocol {
     case newRecordingCreated(RecordingInfo)
   }
 
+  @Dependency(\.storage) var storage: StorageClient
+
   public var body: some ReducerProtocol<State, Action> {
+    BindingReducer()
+
     Scope(state: \.micSelector, action: /Action.micSelector) {
       MicSelector()
     }
@@ -38,7 +42,14 @@ public struct RecordScreen: ReducerProtocol {
           date: recording.date,
           duration: recording.duration
         )
-        return .task { .newRecordingCreated(recordingInfo) }
+
+        return .task {
+          log.verbose("Adding recording info: \(recordingInfo)")
+          try await storage.addRecordingInfo(recordingInfo)
+          return .newRecordingCreated(recordingInfo)
+        } catch: { error in
+          .binding(.set(\.$alert, .error(error)))
+        }
 
       case let .recordingControls(.recording(.delegate(.didFinish(.failure(error))))):
         state.alert = AlertState(
@@ -81,7 +92,9 @@ public struct RecordScreenView: View {
         Spacer()
         RecordingControlsView(store: store.scope(state: \.recordingControls, action: { .recordingControls($0) }))
       }
-      .padding(.grid(4))
+      .padding(.top, .grid(4))
+      .padding(.horizontal, .grid(4))
+      .padding(.bottom, -50)
       .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     }
     .screenRadialBackground()

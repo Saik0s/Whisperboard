@@ -67,8 +67,8 @@ public struct Recording: ReducerProtocol {
       UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
       return .run { send in
-        await audioRecorder.stopRecording()
         await send(.finalRecordingTime(audioRecorder.currentTime()))
+        await audioRecorder.stopRecording()
       }
 
     case .pauseButtonTapped:

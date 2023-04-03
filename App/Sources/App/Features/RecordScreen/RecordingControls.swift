@@ -16,7 +16,7 @@ public struct RecordingControls: ReducerProtocol {
       case undetermined
     }
 
-    var alert: AlertState<Action>?
+    @BindingState var alert: AlertState<Action>?
     var recording: Recording.State?
     var audioRecorderPermission = RecorderPermission.undetermined
 
@@ -25,7 +25,8 @@ public struct RecordingControls: ReducerProtocol {
     }
   }
 
-  public enum Action: Equatable {
+  public enum Action: Equatable, BindableAction {
+    case binding(BindingAction<State>)
     case recordPermissionResponse(Bool)
     case openSettingsButtonTapped
     case recordButtonTapped
@@ -38,6 +39,8 @@ public struct RecordingControls: ReducerProtocol {
   @Dependency(\.storage) var storage
 
   public var body: some ReducerProtocolOf<Self> {
+    BindingReducer()
+
     Reduce<State, Action> { state, action in
       switch action {
       case .recordButtonTapped:
@@ -85,6 +88,9 @@ public struct RecordingControls: ReducerProtocol {
         return .fireAndForget {
           await self.openSettings()
         }
+
+      case .binding:
+        return .none
       }
     }
     .ifLet(\.recording, action: /Action.recording) { Recording() }
@@ -194,7 +200,7 @@ public struct RecordingControlsView: View {
               .combined(with: .opacity))
         }
       }
-      .padding(.grid(3))
+      .padding(.horizontal, .grid(3))
     }
     .enableInjection()
   }
