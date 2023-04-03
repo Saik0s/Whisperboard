@@ -93,6 +93,7 @@ struct RootView: View {
           .opacity(selectedTab == 2 ? 1 : 0)
       }
       .toolbarBackground(.hidden, for: .tabBar)
+      .toolbar(selectedTab == 1 ? .hidden : .visible, for: .tabBar)
     }
     .accentColor(Color.DS.Text.base)
     .safeAreaInset(edge: .bottom) {

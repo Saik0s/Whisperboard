@@ -94,7 +94,8 @@ public struct RecordScreenView: View {
       }
       .padding(.top, .grid(4))
       .padding(.horizontal, .grid(4))
-      .padding(.bottom, -50)
+      .padding(.bottom, .grid(8))
+      .ignoresSafeArea(edges: .bottom)
       .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     }
     .screenRadialBackground()
