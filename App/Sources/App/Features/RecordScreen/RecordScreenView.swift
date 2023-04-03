@@ -56,8 +56,8 @@ public struct RecordScreen: ReducerProtocol {
       case .micSelector:
         return .none
 
-        case .binding:
-          return .none
+      case .binding:
+        return .none
       }
     }
   }

@@ -113,7 +113,7 @@ struct ModelRowView: View {
             .font(.DS.bodyM)
             .foregroundColor(Color.DS.Text.subdued)
         }
-          .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
 
         if viewStore.model.isDownloading {
           Button("Cancel") { viewStore.send(.cancelDownloadTapped) }
