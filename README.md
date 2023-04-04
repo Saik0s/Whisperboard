@@ -23,8 +23,6 @@
     </a>
 </p>
 
-<h2 align="center">🚧 Work in progress 🚧</h2>
-
 ## Features
 
 - Easy-to-use voice recording and playback
