@@ -12,8 +12,8 @@
 <hr />
 
 <div align="center">
-<img src=".github/screenshot1.jpg" width="200">
-<img src=".github/screenshot2.jpg" width="200">
+<img src=".github/screenshot1.png" width="200">
+<img src=".github/screenshot2.png" width="200">
 </div>
 <p>
     <img src="https://img.shields.io/badge/License-GPL3-blue.svg" />
