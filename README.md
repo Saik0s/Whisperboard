@@ -15,29 +15,35 @@
 <img src=".github/screenshot1.png" width="200">
 <img src=".github/screenshot2.png" width="200">
 </div>
-<p>
-    <img src="https://img.shields.io/badge/License-GPL3-blue.svg" />
+<hr />
+<p align="center">
     <img src="https://img.shields.io/badge/Platforms-iOS-3876D3.svg" />
     <a href="https://twitter.com/sa1k0s">
         <img src="https://img.shields.io/badge/Contact-@sa1k0s-purple.svg?style=flat" alt="Twitter: @sa1k0s" />
     </a>
+    <img src="https://img.shields.io/github/commit-activity/w/Saik0s/Whisperboard?style=flat" alt="Commit Activity">
+    <img src="https://img.shields.io/github/license/Saik0s/Whisperboard?style=flat" alt="License">
+    <img src="https://img.shields.io/badge/Powered%20by-Tuist-blue" alt="Powered by Tuist">
 </p>
 
 ## Features
 
 - Easy-to-use voice recording and playback
 - Transcription of recorded audio using Whisper from OpenAI
-- Custom keyboard with a button to quickly access the app
-- Ability to save and share your recordings
-- Ability to select microphone for recording
-- Experimental improver of transcription using GPT3 from OpenAI
+- Import and export audio files
+- Select microphone for recording
+- Model selection screen with the ability to download any Whisper model
 
 ## Future Plans
 
-- Split recorded audio into chunks separated by silence for on the fly transcription
-- History of transcriptions
-- Organize recordings in folders
-- Watch app
+- [ ] Optimize the transcription process by eliminating silent portions of audio, which can reduce the processing time and improve overall efficiency.
+- [ ] Implement resumable transcription so that users can continue transcribing after the app has been terminated during the transcription process.
+- [ ] Enable background transcription when the app is minimized, allowing users to perform other tasks while the transcription proceeds.
+- [ ] Improve visualization of the current state of the transcription process, providing users with a clearer understanding of its progress.
+- [ ] Provide an estimated time remaining for the transcription to complete, helping users plan accordingly.
+- [ ] Introduce a transcription queue that allows users to select multiple files for transcription, streamlining the process for bulk transcriptions.
+- [ ] Implement real-time transcription using smaller, more efficient models, offering users faster results.
+- [ ] Offer an additional remote transcription option to enhance user experience with larger models, potentially providing more accurate transcriptions or faster processing times.
 
 ## Installation
 
@@ -53,3 +59,4 @@ This project is licensed under the GPL-3.0 license.
 
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp)
 - [OpenAI Whisper](https://github.com/openai/whisper)
+- [The Composable Architecture](https://github.com/pointfreeco/swift-composable-architecture)
