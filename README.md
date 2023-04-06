@@ -56,7 +56,7 @@
 This project is licensed under the GPL-3.0 license.
 
 ## Links
-
+<a href="https://www.buymeacoffee.com/saik0s" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp)
 - [OpenAI Whisper](https://github.com/openai/whisper)
 - [The Composable Architecture](https://github.com/pointfreeco/swift-composable-architecture)
