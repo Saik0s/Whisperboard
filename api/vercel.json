@@ -1,0 +1,10 @@
+{
+    "functions": {
+        "api/wrapper.ts": {
+            "memory": 1024,
+            "maxDuration": 60
+        }
+    },
+    "public": false,
+    "outputDirectory": ""
+}

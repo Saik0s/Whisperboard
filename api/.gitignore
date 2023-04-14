@@ -1,0 +1,15 @@
+# Node.js specific
+node_modules/
+npm-debug.log*
+
+# Vercel specific
+.vercel
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.envrc
+test.py
+dist
