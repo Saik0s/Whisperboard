@@ -14,20 +14,27 @@ struct Root: ReducerProtocol {
   }
 
   enum Action: Equatable {
+    case task
     case recordingListScreen(RecordingListScreen.Action)
     case recordScreen(RecordScreen.Action)
     case settings(SettingsScreen.Action)
     case selectTab(Int)
   }
 
-  var body: some ReducerProtocol<State, Action> {
-    Scope(state: \.recordingListScreen, action: /Action.recordingListScreen) {
-      RecordingListScreen()
-    }
+  @Dependency(\.transcriber) var transcriber: TranscriberClient
 
+  var body: some ReducerProtocol<State, Action> {
     CombineReducers {
+      Scope(state: \.recordingListScreen, action: /Action.recordingListScreen) {
+        RecordingListScreen()
+      }
+
       Scope(state: \.recordScreen, action: /Action.recordScreen) {
         RecordScreen()
+      }
+
+      Scope(state: \.settings, action: /Action.settings) {
+        SettingsScreen()
       }
 
       Reduce<State, Action> { state, action in
@@ -45,19 +52,29 @@ struct Root: ReducerProtocol {
           return .none
         }
       }
-    }
 
-    Scope(state: \.settings, action: /Action.settings) {
-      SettingsScreen()
-    }
+      Reduce { state, action in
+        switch action {
+        case .task:
+          return .fireAndForget { @MainActor in
+            for await state in transcriber.transcriberStateStream() {
+              switch state {
+              case .transcribing, .loadingModel:
+                UIApplication.shared.isIdleTimerDisabled = true
 
-    Reduce { state, action in
-      switch action {
-      case let .selectTab(tab):
-        state.selectedTab = tab
-        return .none
-      default:
-        return .none
+              default:
+                UIApplication.shared.isIdleTimerDisabled = false
+              }
+            }
+          }
+
+        case let .selectTab(tab):
+          state.selectedTab = tab
+          return .none
+
+        default:
+          return .none
+        }
       }
     }
   }
@@ -120,6 +137,7 @@ struct RootView: View {
       .frame(height: 50.0)
     }
     .animation(.gentleBounce(), value: selectedTab)
+    .task { viewStore.send(.task) }
     .enableInjection()
   }
 }
