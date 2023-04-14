@@ -92,7 +92,7 @@ extension TranscriberClient: DependencyKey {
       transcriberState: { impl.state.value },
       transcriberStateStream: { impl.state.asAsyncStream() },
       getAvailableLanguages: {
-        [.auto] + impl.getAvailableLanguages()
+        [.auto] + impl.getAvailableLanguages().sorted { $0.name < $1.name }
       }
     )
   }()
