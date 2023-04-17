@@ -54,6 +54,11 @@ private final class Storage {
     try documentsURL().appendingPathComponent("recordings.json")
   }
 
+  func containerGroupURL() -> URL? {
+    let appGroupName = "group.whisperboard"
+    return FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName)?.appending(component: "share")
+  }
+
   func read() async throws -> [RecordingInfo] {
     let docURL = try documentsURL()
     let dbURL = try dbURL()
@@ -65,11 +70,14 @@ private final class Storage {
     }
 
     // Get the recordings stored in the database file
-    let storedRecordings = try [RecordingInfo].fromFile(path: dbURL.path)
+    var storedRecordings = try [RecordingInfo].fromFile(path: dbURL.path)
+
+    // If there are files in shared container, move them to the documents directory
+    let sharedRecordings = moveSharedFiles(to: docURL)
+    storedRecordings.append(contentsOf: sharedRecordings)
+
     // Get the files in the documents directory with the .wav extension
-    let recordingFiles = try FileManager.default
-      .contentsOfDirectory(atPath: docURL.path)
-      .filter { $0.hasSuffix(".wav") }
+    let recordingFiles = try FileManager.default.contentsOfDirectory(atPath: docURL.path).filter { $0.hasSuffix(".wav") }
 
     // Initialize a flag to track if the database file should be written to
     var shouldWrite = false
@@ -95,6 +103,33 @@ private final class Storage {
       try recordings.saveToFile(path: dbURL.path)
     }
 
+    return recordings
+  }
+
+  private func moveSharedFiles(to docURL: URL) -> [RecordingInfo] {
+    var recordings: [RecordingInfo] = []
+    if let containerGroupURL = containerGroupURL(), FileManager.default.fileExists(atPath: containerGroupURL.path) {
+      do {
+        for file in try FileManager.default.contentsOfDirectory(atPath: containerGroupURL.path) {
+          let sourceURL = containerGroupURL.appendingPathComponent(file)
+          let newFileName = UUID().uuidString + ".wav"
+          let destinationURL = docURL.appending(path: newFileName)
+          try FileManager.default.moveItem(at: sourceURL, to: destinationURL)
+          let duration = try getFileDuration(url: destinationURL)
+          let recording = RecordingInfo(
+            fileName: newFileName,
+            title: sourceURL.deletingPathExtension().lastPathComponent,
+            date: Date(),
+            duration: duration
+          )
+          recordings.append(recording)
+          log.info("successfully moved file \(file) to \(destinationURL.path)")
+          log.info(recording)
+        }
+      } catch {
+        log.error(error)
+      }
+    }
     return recordings
   }
 
