@@ -4,17 +4,14 @@ import DynamicColor
 import SwiftUI
 
 @main
+@MainActor
 struct WhisperboardApp: App {
-  @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+  @State var store = Store(initialState: Root.State(), reducer: Root())
+  @State var backgroundClient = BackgroundProcessingClient(task: .transcription)
 
   var body: some Scene {
     WindowGroup {
-      RootView(
-        store: Store(
-          initialState: Root.State(),
-          reducer: Root()
-        )
-      )
+      RootView(store: store)
     }
   }
 

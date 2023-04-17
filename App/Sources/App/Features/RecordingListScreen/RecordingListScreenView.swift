@@ -15,12 +15,7 @@ public struct RecordingListScreen: ReducerProtocol {
 
   public struct State: Equatable {
     var recordings: IdentifiedArrayOf<RecordingCard.State> = []
-    var recordingRows: IdentifiedArrayOf<Row> {
-      recordings
-        .enumerated()
-        .map(Row.init(index:card:))
-        .identifiedArray
-    }
+    @BindingState var recordingRows: IdentifiedArrayOf<Row> = []
 
     var selection: Identified<RecordingInfo.ID, RecordingDetails.State>?
 
@@ -36,7 +31,6 @@ public struct RecordingListScreen: ReducerProtocol {
     case setRecordings(TaskResult<IdentifiedArrayOf<RecordingInfo>>)
     case recording(id: RecordingCard.State.ID, action: RecordingCard.Action)
     case delete(id: RecordingInfo.ID)
-    case plusButtonTapped
     case addFileRecordings(urls: [URL])
     case failedToAddRecordings(error: EquatableErrorWrapper)
     case deleteDialogConfirmed(id: RecordingInfo.ID)
@@ -50,8 +44,6 @@ public struct RecordingListScreen: ReducerProtocol {
   struct SavingRecordingsID: Hashable {}
 
   public var body: some ReducerProtocol<State, Action> {
-    BindingReducer()
-
     CombineReducers {
       BindingReducer<State, Action>()
 
@@ -72,6 +64,7 @@ public struct RecordingListScreen: ReducerProtocol {
           return .none
 
         case let .setRecordings(.failure(error)):
+          log.error(error)
           state.alert = AlertState(title: TextState("Failed to read recordings."), message: TextState(error.localizedDescription))
           return .none
 
@@ -87,9 +80,6 @@ public struct RecordingListScreen: ReducerProtocol {
             return .none
           }
           createDeleteConfirmationDialog(id: id, state: &state)
-          return .none
-
-        case .plusButtonTapped:
           return .none
 
         case let .addFileRecordings(urls):
@@ -109,8 +99,7 @@ public struct RecordingListScreen: ReducerProtocol {
               try await storage.addRecordingInfo(recordingInfo)
             }
 
-            let recordings = try await storage.read()
-            await send(.setRecordings(.success(recordings)))
+            await send(.readStoredRecordings)
             await send(.binding(.set(\.$isImportingFiles, false)))
           } catch: { error, send in
             await send(.binding(.set(\.$isImportingFiles, false)))
@@ -169,11 +158,16 @@ public struct RecordingListScreen: ReducerProtocol {
       .identified()
       return .none
     }
-    .onChange(of: \.recordings) { recordings, _, _ -> EffectTask<Action> in
-      .fireAndForget {
-        try await storage.write(recordings.map(\.recordingInfo).identifiedArray)
+    .onChange(of: \.recordings) { recordings, _, action -> EffectTask<Action> in
+      let recordingRows = recordings.enumerated().map(Row.init(index:card:)).identifiedArray
+
+      return .run { send in
+        await send(.binding(.set(\.$recordingRows, recordingRows)))
+        if case .setRecordings = action {
+        } else {
+          try await storage.write(recordings.map(\.recordingInfo).identifiedArray)
+        }
       }
-      .cancellable(id: SavingRecordingsID(), cancelInFlight: true)
     }
   }
 
@@ -195,6 +189,7 @@ public struct RecordingListScreen: ReducerProtocol {
 
 // MARK: - RecordingListScreenView
 
+@MainActor
 public struct RecordingListScreenView: View {
   @ObserveInjection var inject
 
@@ -266,10 +261,7 @@ public struct RecordingListScreenView: View {
     }
     .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .navigationViewStyle(.stack)
-    .task {
-      viewStore.send(.readStoredRecordings)
-    }
-    .onAppear {
+    .onBecomeVisible {
       viewStore.send(.readStoredRecordings)
     }
     .enableInjection()
@@ -277,13 +269,12 @@ public struct RecordingListScreenView: View {
 }
 
 extension RecordingListScreenView {
-  @ViewBuilder
   private func makeRecordingRow(store: Store<RecordingListScreen.Row, RecordingCard.Action>) -> some View {
     let index = ViewStore(store).index
     let recordingId = ViewStore(store).id
     let cardStore = store.scope(state: \.card)
 
-    HStack(spacing: .grid(4)) {
+    return HStack(spacing: .grid(4)) {
       if viewStore.editMode.isEditing {
         Button { viewStore.send(.delete(id: recordingId)) } label: {
           Image(systemName: "multiply.circle.fill")
