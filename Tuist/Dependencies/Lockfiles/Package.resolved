@@ -55,6 +55,15 @@
       }
     },
     {
+      "identity" : "popovers",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/aheze/Popovers.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "0269cf9cb7dbdea58bb4f24987efd06443687322"
+      }
+    },
+    {
       "identity" : "setting",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Saik0s/Setting.git",

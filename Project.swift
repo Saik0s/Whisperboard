@@ -75,6 +75,8 @@ func appTarget() -> Target {
     ],
     entitlements: "App/Resources/app.entitlements",
     dependencies: [
+      .target(name: "ShareExtension"),
+
       .external(name: "AppDevUtils"),
       .external(name: "Inject"),
 
@@ -82,6 +84,7 @@ func appTarget() -> Target {
       .external(name: "DSWaveformImageViews"),
       .external(name: "DynamicColor"),
       .external(name: "Setting"),
+      .external(name: "Popovers"),
       // .external(name: "Lottie"),
       // .external(name: "LottieUI"),
 
@@ -90,6 +93,48 @@ func appTarget() -> Target {
 
       .external(name: "ComposableArchitecture"),
       // .external(name: "ComposablePresentation"),
+    ]
+  )
+}
+
+func shareExtensionTarget() -> Target {
+  Target(
+    name: "ShareExtension",
+    platform: .iOS,
+    product: .appExtension,
+    bundleId: "me.igortarasenko.Whisperboard.ShareExtension",
+    infoPlist: .extendingDefault(with: [
+      "CFBundleDisplayName": "$(PRODUCT_NAME)",
+      "NSExtension": [
+        "NSExtensionPointIdentifier": "com.apple.share-services",
+        "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).ShareViewController",
+        "NSExtensionAttributes": [
+          "NSExtensionActivationRule": """
+          SUBQUERY (
+              extensionItems,
+              $extensionItem,
+              SUBQUERY (
+                  $extensionItem.attachments,
+                  $attachment,
+                  ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.audio" ||
+                  ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.mpeg-4-audio" ||
+                  ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.mp3" ||
+                  ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.microsoft.windows-media-wma" ||
+                  ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.aifc-audio" ||
+                  ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.aiff-audio" ||
+                  ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.midi-audio" ||
+                  ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.ac3-audio" ||
+                  ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.microsoft.waveform-audio"
+              ).@count == $extensionItem.attachments.@count
+          ).@count == 1
+          """,
+        ],
+      ],
+    ]),
+    sources: "ShareExtension/ShareViewController.swift",
+    entitlements: "ShareExtension/ShareExtension.entitlements",
+    dependencies: [
+      .external(name: "AudioKit"),
     ]
   )
 }
@@ -111,6 +156,7 @@ let project = Project(
   ),
   targets: [
     appTarget(),
+    shareExtensionTarget(),
   ],
   resourceSynthesizers: [
     .files(extensions: ["bin", "json"]),
