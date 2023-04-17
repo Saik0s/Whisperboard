@@ -4,6 +4,7 @@ import Dependencies
 import Foundation
 
 typealias TranscriptionSegment = String
+typealias FileName = String
 
 // MARK: - TranscriptionProgress
 
@@ -13,6 +14,33 @@ enum TranscriptionProgress {
   case newSegment(TranscriptionSegment)
   case finished(String)
   case error(Error)
+}
+
+// MARK: - TranscriberState
+
+enum TranscriberState: Equatable {
+  case idle
+  case loadingModel
+  case modelLoaded
+  case transcribing
+  case failed(EquatableErrorWrapper)
+}
+
+// MARK: - TranscriberError
+
+enum TranscriberError: Error, CustomStringConvertible {
+  case couldNotLocateModel
+  case modelNotLoaded
+  case notEnoughMemory(available: UInt64, required: UInt64)
+  case cancelled
+}
+
+struct TranscriptionState {
+  enum State { case starting, loadingModel, transcribing, finished, error }
+
+  var state: State = .starting
+  var segments: [TranscriptionSegment] = []
+  var text: String = ""
 }
 
 // MARK: - TranscriberClient
@@ -27,6 +55,8 @@ struct TranscriberClient {
   var transcribeAudio: @Sendable (_ audioURL: URL, _ language: VoiceLanguage) -> AsyncStream<TranscriptionProgress>
   var transcriberState: @Sendable () -> TranscriberState
   var transcriberStateStream: @Sendable () -> AsyncStream<TranscriberState>
+
+  var getTranscriptionStateStream: @Sendable (_ fileName: FileName) -> AsyncStream<TranscriptionState?>
 
   var getAvailableLanguages: @Sendable () -> [VoiceLanguage]
 }
@@ -45,113 +75,79 @@ extension TranscriberClient: DependencyKey {
 
   static let liveValue: TranscriberClient = {
     let impl = TranscriberImpl()
+    let transcriptionStatesSubject = CurrentValueSubject<[FileName: TranscriptionState], Never>([:])
 
     return TranscriberClient(
       selectModel: { model in
         selectedModel = model
       },
+
       getSelectedModel: {
         if !FileManager.default.fileExists(atPath: selectedModel.localURL.path) {
           selectedModel = .default
         }
         return selectedModel
       },
+
       loadSelectedModel: {
         try await impl.loadModel(model: selectedModel)
       },
+
       unloadSelectedModel: {
         impl.unloadModel()
       },
+
       transcribeAudio: { audioURL, language in
         AsyncStream { continuation in
-          Task.detached {
+          let task = Task {
+            let fileName = audioURL.lastPathComponent
+            transcriptionStatesSubject.value[fileName] = TranscriptionState()
             do {
               continuation.yield(TranscriptionProgress.loadingModel)
+              transcriptionStatesSubject.value[fileName]?.state = .loadingModel
               try await impl.loadModel(model: selectedModel)
 
               continuation.yield(TranscriptionProgress.started)
+              transcriptionStatesSubject.value[fileName]?.state = .transcribing
               let text = try await impl.transcribeAudio(audioURL, language: language) { segment in
+                transcriptionStatesSubject.value[fileName]?.segments.append(segment)
                 continuation.yield(.newSegment(segment))
               }
 
+              transcriptionStatesSubject.value[fileName]?.state = .finished
+              transcriptionStatesSubject.value[fileName]?.text = text
               continuation.yield(.finished(text))
             } catch {
+              transcriptionStatesSubject.value[fileName]?.state = .error
               continuation.yield(.error(error))
-            }
-
-            continuation.onTermination = { termination in
-              if termination == .cancelled {
-                continuation.yield(.error(TranscriberError.cancelled))
-              }
             }
 
             continuation.finish()
           }
+
+          continuation.onTermination = { termination in
+            if termination == .cancelled {
+              task.cancel()
+              continuation.yield(.error(TranscriberError.cancelled))
+              continuation.finish()
+            }
+          }
         }
       },
+
       transcriberState: { impl.state.value },
+
       transcriberStateStream: { impl.state.asAsyncStream() },
+
+      getTranscriptionStateStream: { fileName in
+        transcriptionStatesSubject.map { $0[fileName] }.asAsyncStream()
+      },
+
       getAvailableLanguages: {
         [.auto] + impl.getAvailableLanguages().sorted { $0.name < $1.name }
       }
     )
   }()
-}
-
-// MARK: - TranscriberState
-
-enum TranscriberState: Equatable {
-  case idle
-  case loadingModel
-  case modelLoaded
-  case transcribing
-  case failed(EquatableErrorWrapper)
-}
-
-extension TranscriberState {
-  var isTranscribing: Bool {
-    switch self {
-    case .transcribing:
-      return true
-    default:
-      return false
-    }
-  }
-
-  var isIdle: Bool {
-    switch self {
-    case .idle, .failed, .modelLoaded:
-      return true
-    default:
-      return false
-    }
-  }
-}
-
-// MARK: - TranscriberError
-
-enum TranscriberError: Error, CustomStringConvertible {
-  case couldNotLocateModel
-  case modelNotLoaded
-  case notEnoughMemory(available: UInt64, required: UInt64)
-  case cancelled
-
-  var localizedDescription: String {
-    switch self {
-    case .couldNotLocateModel:
-      return "Could not locate model"
-    case .modelNotLoaded:
-      return "Model not loaded"
-    case let .notEnoughMemory(available, required):
-      return "Not enough memory. Available: \(bytesToReadableString(bytes: available)), required: \(bytesToReadableString(bytes: required))"
-    case .cancelled:
-      return "Cancelled"
-    }
-  }
-
-  var description: String {
-    localizedDescription
-  }
 }
 
 // MARK: - TranscriberImpl
@@ -235,6 +231,45 @@ final class TranscriberImpl {
 
   private func readAudioSamples(_ url: URL) throws -> [Float] {
     try decodeWaveFile(url)
+  }
+}
+
+extension TranscriberState {
+  var isTranscribing: Bool {
+    switch self {
+    case .transcribing, .loadingModel:
+      return true
+    default:
+      return false
+    }
+  }
+
+  var isIdle: Bool {
+    switch self {
+    case .idle, .failed, .modelLoaded:
+      return true
+    default:
+      return false
+    }
+  }
+}
+
+extension TranscriberError {
+  var localizedDescription: String {
+    switch self {
+    case .couldNotLocateModel:
+      return "Could not locate model"
+    case .modelNotLoaded:
+      return "Model not loaded"
+    case let .notEnoughMemory(available, required):
+      return "Not enough memory. Available: \(bytesToReadableString(bytes: available)), required: \(bytesToReadableString(bytes: required))"
+    case .cancelled:
+      return "Cancelled"
+    }
+  }
+
+  var description: String {
+    localizedDescription
   }
 }
 

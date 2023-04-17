@@ -3,7 +3,7 @@ import Foundation
 extension TranscriberClient {
   func transcribeAudio(url: URL, language: VoiceLanguage) -> AsyncThrowingStream<String, Error> {
     AsyncThrowingStream { continuation in
-      Task.detached {
+      Task {
         var segments: [TranscriptionSegment] = []
         var text = ""
 
