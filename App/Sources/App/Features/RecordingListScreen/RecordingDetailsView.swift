@@ -14,7 +14,6 @@ public struct RecordingDetails: ReducerProtocol {
   public enum Action: BindableAction, Equatable {
     case binding(BindingAction<State>)
     case recordingCard(action: RecordingCard.Action)
-    case transcribeTapped
     case delete
     case shareAudio
   }
@@ -36,9 +35,6 @@ public struct RecordingDetails: ReducerProtocol {
 
       case .recordingCard:
         return .none
-
-      case .transcribeTapped:
-        return .send(.recordingCard(action: .transcribeTapped))
 
       case .delete:
         return .none
@@ -90,7 +86,7 @@ public struct RecordingDetailsView: View {
 
       if viewStore.recordingCard.recordingInfo.isTranscribed == false && viewStore.recordingCard.isTranscribing == false {
         PrimaryButton("Transcribe") {
-          viewStore.send(.transcribeTapped)
+          viewStore.send(.recordingCard(action: .transcribeTapped))
         }
         .padding(.grid(4))
       } else {
@@ -104,7 +100,7 @@ public struct RecordingDetailsView: View {
               Image(systemName: "paperplane")
             }
 
-            Button { viewStore.send(.transcribeTapped) } label: {
+            Button { viewStore.send(.recordingCard(action: .transcribeTapped)) } label: {
               Image(systemName: "arrow.clockwise").padding(.grid(1))
             }
 
@@ -173,6 +169,7 @@ public struct RecordingDetailsView: View {
     )
     .scrollContentBackground(.hidden)
     .navigationBarTitleDisplayMode(.inline)
+    .task { await viewStore.send(.recordingCard(action: .task)).finish() }
     .enableInjection()
   }
 }

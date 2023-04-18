@@ -1,8 +1,10 @@
 import AppDevUtils
 import AVFoundation
+import Combine
 import ComposableArchitecture
 import Dependencies
 import Foundation
+import UIKit
 
 // MARK: - StorageClient + DependencyKey
 
@@ -13,31 +15,52 @@ extension StorageClient: DependencyKey {
 
     return Self(
       read: {
-        try await storage.read().identifiedArray
+        storage.currentRecordingsSubject.value?.identifiedArray ?? []
       },
+
+      readStream: {
+        storage.currentRecordingsSubject
+          .catch { error in
+            log.error("Could not read recordings: \(error)")
+            return Just([RecordingInfo]())
+          }
+          .map(\.identifiedArray)
+          .asAsyncStream()
+      },
+
       write: { recordings in
-        try await storage.write(recordings.elements)
+        storage.write(recordings.elements)
       },
+
       addRecordingInfo: { recording in
-        let dbURL = try storage.dbURL()
-        var storedRecordings = try [RecordingInfo].fromFile(path: dbURL.path)
-        storedRecordings.append(recording)
-        try await storage.write(storedRecordings)
+        let newRecordings = (storage.currentRecordingsSubject.value ?? []) + [recording]
+        storage.write(newRecordings)
       },
+
       createNewWhisperURL: {
         let filename = UUID().uuidString + ".wav"
         let url = documentsURL.appending(path: filename)
         return url
       },
+
       audioFileURLWithName: { name in
         documentsURL.appending(path: name)
       },
+
       waveFileURLWithName: { name in
         documentsURL.appending(path: name)
       },
-      delete: { recording in
+
+      delete: { recordingId in
+        let recordings = storage.currentRecordingsSubject.value ?? []
+        guard let recording = recordings.identifiedArray[id: recordingId] else {
+          return
+        }
+
         let url = documentsURL.appending(path: recording.fileName)
         try FileManager.default.removeItem(at: url)
+        let newRecordings = recordings.filter { $0.id != recordingId }
+        storage.write(newRecordings)
       }
     )
   }()
@@ -46,6 +69,22 @@ extension StorageClient: DependencyKey {
 // MARK: - Storage
 
 private final class Storage {
+  lazy var currentRecordingsSubject: CodableValueSubject<[RecordingInfo]> = { () -> CodableValueSubject<[RecordingInfo]> in
+    do {
+      let url = try self.dbURL()
+      let recordings = try self.read()
+      return CodableValueSubject<[RecordingInfo]>(fileURL: url).then { $0.send(recordings) }
+    } catch {
+      assertionFailure("Could not create current recordings subject: \(error)")
+      log.error("Could not create current recordings subject: \(error)")
+      return CodableValueSubject<[RecordingInfo]>(fileURL: URL(fileURLWithPath: "~/Documents/recordings.json"))
+    }
+  }()
+
+  init() { 
+    subscribeToDidBecomeActiveNotifications()
+  }
+
   func documentsURL() throws -> URL {
     try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
   }
@@ -59,7 +98,7 @@ private final class Storage {
     return FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName)?.appending(component: "share")
   }
 
-  func read() async throws -> [RecordingInfo] {
+  func read() throws -> [RecordingInfo] {
     let docURL = try documentsURL()
     let dbURL = try dbURL()
 
@@ -106,6 +145,10 @@ private final class Storage {
     return recordings
   }
 
+  func write(_ recordings: [RecordingInfo]) {
+    currentRecordingsSubject.send(recordings)
+  }
+
   private func moveSharedFiles(to docURL: URL) -> [RecordingInfo] {
     var recordings: [RecordingInfo] = []
     if let containerGroupURL = containerGroupURL(), FileManager.default.fileExists(atPath: containerGroupURL.path) {
@@ -133,11 +176,6 @@ private final class Storage {
     return recordings
   }
 
-  func write(_ recordings: [RecordingInfo]) async throws {
-    let dbURL = try dbURL()
-    try recordings.saveToFile(path: dbURL.path)
-  }
-
   private func createInfo(fileName: String) throws -> RecordingInfo {
     let docURL = try documentsURL()
     let fileURL = docURL.appending(component: fileName)
@@ -147,4 +185,20 @@ private final class Storage {
     let recording = RecordingInfo(fileName: fileName, date: date, duration: duration)
     return recording
   }
+
+  private func subscribeToDidBecomeActiveNotifications() {
+    NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: nil) { [weak self] _ in
+      guard let self = self else { return }
+      do {
+        let recordings = try self.read()
+        self.write(recordings)
+      } catch {
+        log.error(error)
+      }
+    }
+  }
 }
+
+// MARK: - CodableValueSubject + Then
+
+extension CodableValueSubject: Then {}

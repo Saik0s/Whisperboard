@@ -124,3 +124,4 @@ Tuist/Dependencies/SwiftPackageManager
 Tuist/Dependencies/graph.json
 **/Derived/
 Derived/
+analyzer.py

@@ -14,7 +14,7 @@ extension LongTask {
       @Dependency(\.storage) var storage: StorageClient
       @Dependency(\.settings) var settings: SettingsClient
 
-      guard let recordingInfo = try await storage.read()[id: id] else {
+      guard let recordingInfo = storage.read()[id: id] else {
         throw LongTaskTranscriptError.noRecordingInfo
       }
 

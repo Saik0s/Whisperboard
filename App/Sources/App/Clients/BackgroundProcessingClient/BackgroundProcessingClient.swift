@@ -1,20 +1,50 @@
 import AppDevUtils
 import BackgroundTasks
+import Dependencies
 import Foundation
 import SwiftUI
 import UIKit
 
 // MARK: - BackgroundProcessingClient
 
-///
-/// let task = LongTask<Int>(identifier: "com.example.task") { state in
-///   // Perform the long task
-/// }
-/// let processingClient = BackgroundProcessingClient(task: task)
-/// processingClient.startTask(0)
-///
 @MainActor
-final class BackgroundProcessingClient<State: Codable> {
+struct BackgroundProcessingClient {
+  var startTask: (RecordingInfo.ID) -> Void
+  var removeAndCancelAllTasks: () -> Void
+  var registerBackgroundTask: () -> Void
+}
+
+// MARK: DependencyKey
+
+extension BackgroundProcessingClient: DependencyKey {
+  static let liveValue: BackgroundProcessingClient = {
+    let client = BackgroundProcessingClientImpl(task: .transcription)
+
+    return BackgroundProcessingClient(
+      startTask: { recordingId in
+        client.startTask(recordingId)
+      },
+      removeAndCancelAllTasks: {
+        client.removeAndCancelAllTasks()
+      },
+      registerBackgroundTask: {
+        client.registerBackgroundTask()
+      }
+    )
+  }()
+}
+
+extension DependencyValues {
+  var backgroundProcessingClient: BackgroundProcessingClient {
+    get { self[BackgroundProcessingClient.self] }
+    set { self[BackgroundProcessingClient.self] = newValue }
+  }
+}
+
+// MARK: - BackgroundProcessingClientImpl
+
+@MainActor
+final class BackgroundProcessingClientImpl<State: Codable> {
   typealias T = LongTask<State>
 
   private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
@@ -30,7 +60,6 @@ final class BackgroundProcessingClient<State: Codable> {
 
   init(task: T) {
     self.task = task
-    registerBackgroundTask()
   }
 
   func startTask(_ taskState: State) {
@@ -45,9 +74,7 @@ final class BackgroundProcessingClient<State: Codable> {
     resetBackgroundTask()
   }
 
-  // MARK: - Private
-
-  private func registerBackgroundTask() {
+  func registerBackgroundTask() {
     let isRegistered = BGTaskScheduler.shared.register(forTaskWithIdentifier: task.identifier, using: nil) { [weak self] task in
       guard let self else {
         task.setTaskCompleted(success: false)
@@ -76,6 +103,8 @@ final class BackgroundProcessingClient<State: Codable> {
     }
   }
 
+  // MARK: - Private
+
   private func executeNextTask() async {
     guard let taskState = taskQueue.first, !isExecutingTask else {
       log.info("No tasks(\(taskQueue.count)) to execute or already executing a task(\(isExecutingTask))")
@@ -91,6 +120,7 @@ final class BackgroundProcessingClient<State: Codable> {
     scheduleBackgroundTask()
     do {
       try await task.performTask(taskState)
+      isExecutingTask = false
       await taskCompleted()
     } catch {
       log.error(error)
@@ -107,6 +137,7 @@ final class BackgroundProcessingClient<State: Codable> {
     isExecutingTask = true
 
     try await task.performTask(taskState)
+    isExecutingTask = false
     try await executeNextTaskWithoutScheduling()
   }
 
@@ -133,6 +164,7 @@ final class BackgroundProcessingClient<State: Codable> {
   }
 
   private func taskFailed() {
+    isExecutingTask = false
     resetBackgroundTask()
   }
 
