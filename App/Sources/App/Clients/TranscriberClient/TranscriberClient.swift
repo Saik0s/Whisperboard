@@ -2,6 +2,7 @@ import AppDevUtils
 import Combine
 import Dependencies
 import Foundation
+import os.log
 
 typealias TranscriptionSegment = String
 typealias FileName = String
@@ -23,6 +24,7 @@ enum TranscriberState: Equatable {
   case loadingModel
   case modelLoaded
   case transcribing
+  case finished
   case failed(EquatableErrorWrapper)
 }
 
@@ -35,8 +37,8 @@ enum TranscriberError: Error, CustomStringConvertible {
   case cancelled
 }
 
-struct TranscriptionState {
-  enum State { case starting, loadingModel, transcribing, finished, error }
+struct TranscriptionState: Equatable {
+  enum State: Equatable { case starting, loadingModel, transcribing, finished, error }
 
   var state: State = .starting
   var segments: [TranscriptionSegment] = []
@@ -99,26 +101,33 @@ extension TranscriberClient: DependencyKey {
 
       transcribeAudio: { audioURL, language in
         AsyncStream { continuation in
+          let fileName = audioURL.lastPathComponent
+
           let task = Task {
-            let fileName = audioURL.lastPathComponent
-            transcriptionStatesSubject.value[fileName] = TranscriptionState()
+            var transcriptionState = TranscriptionState() {
+              didSet {
+                log.debug("New transcription file: \(fileName) state: \(transcriptionState)")
+                transcriptionStatesSubject.value[fileName] = transcriptionState
+              }
+            }
+            transcriptionStatesSubject.value[fileName] = transcriptionState
             do {
               continuation.yield(TranscriptionProgress.loadingModel)
-              transcriptionStatesSubject.value[fileName]?.state = .loadingModel
+              transcriptionState.state = .loadingModel
               try await impl.loadModel(model: selectedModel)
 
               continuation.yield(TranscriptionProgress.started)
-              transcriptionStatesSubject.value[fileName]?.state = .transcribing
+              transcriptionState.state = .transcribing
               let text = try await impl.transcribeAudio(audioURL, language: language) { segment in
-                transcriptionStatesSubject.value[fileName]?.segments.append(segment)
+                transcriptionState.segments.append(segment)
                 continuation.yield(.newSegment(segment))
               }
 
-              transcriptionStatesSubject.value[fileName]?.state = .finished
-              transcriptionStatesSubject.value[fileName]?.text = text
+              transcriptionState.state = .finished
+              transcriptionState.text = text
               continuation.yield(.finished(text))
             } catch {
-              transcriptionStatesSubject.value[fileName]?.state = .error
+              transcriptionState.state = .error
               continuation.yield(.error(error))
             }
 
@@ -127,6 +136,7 @@ extension TranscriberClient: DependencyKey {
 
           continuation.onTermination = { termination in
             if termination == .cancelled {
+              transcriptionStatesSubject.value[fileName] = nil
               task.cancel()
               continuation.yield(.error(TranscriberError.cancelled))
               continuation.finish()
@@ -140,7 +150,17 @@ extension TranscriberClient: DependencyKey {
       transcriberStateStream: { impl.state.asAsyncStream() },
 
       getTranscriptionStateStream: { fileName in
-        transcriptionStatesSubject.map { $0[fileName] }.asAsyncStream()
+        transcriptionStatesSubject.map { $0[fileName] }
+          .handleEvents(receiveSubscription: { _ in
+            log.debug("Subscribed to transcription state stream for file \(fileName)")
+          }, receiveOutput: { state in
+            log.debug("Got new transcription state for file \(fileName): \(String(describing: state))")
+          }, receiveCompletion: { completion in
+            log.debug("Completed transcription state stream for file \(fileName): \(String(describing: completion))")
+          }, receiveCancel: {
+            log.debug("Cancelled transcription state stream for file \(fileName)")
+          })
+          .removeDuplicates().asAsyncStream()
       },
 
       getAvailableLanguages: {
@@ -215,7 +235,7 @@ final class TranscriberImpl {
       let text = await whisperContext.getTranscription()
       log.verbose("Done: \(text)")
 
-      state.value = .modelLoaded
+      state.value = .finished
 
       return text
     } catch {
@@ -237,7 +257,7 @@ final class TranscriberImpl {
 extension TranscriberState {
   var isTranscribing: Bool {
     switch self {
-    case .transcribing, .loadingModel:
+    case .transcribing, .modelLoaded, .loadingModel:
       return true
     default:
       return false
@@ -246,7 +266,7 @@ extension TranscriberState {
 
   var isIdle: Bool {
     switch self {
-    case .idle, .failed, .modelLoaded:
+    case .idle, .failed, .finished:
       return true
     default:
       return false

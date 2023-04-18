@@ -39,6 +39,7 @@ public struct RecordingCard: ReducerProtocol {
   }
 
   public enum Action: BindableAction, Equatable {
+    case task
     case binding(BindingAction<State>)
     case audioPlayerFinished(TaskResult<Bool>)
     case playButtonTapped
@@ -51,6 +52,7 @@ public struct RecordingCard: ReducerProtocol {
   @Dependency(\.audioPlayer) var audioPlayer
   @Dependency(\.storage) var storage
   @Dependency(\.settings) var settings: SettingsClient
+  @Dependency(\.backgroundProcessingClient) var backgroundProcessingClient: BackgroundProcessingClient
 
   private enum PlayID {}
 
@@ -63,6 +65,9 @@ public struct RecordingCard: ReducerProtocol {
 
     Reduce<State, Action> { state, action in
       switch action {
+      case .task:
+        return subscribeToTranscriptionState(filename: state.recordingInfo.fileName)
+
       case .binding:
         return .none
 
@@ -98,27 +103,37 @@ public struct RecordingCard: ReducerProtocol {
           return .none
         }
 
-        let fileURL = storage.audioFileURLWithName(state.recordingInfo.fileName)
-
-        return .run { send in
-          await send(.binding(.set(\.$isTranscribing, true)))
-          await send(.binding(.set(\.$recordingInfo.isTranscribed, false)))
-          await send(.binding(.set(\.$recordingInfo.text, "")))
-
-          var lastText = ""
-          for try await text in transcriber.transcribeAudio(url: fileURL, language: settings.settings().voiceLanguage) {
-            await send(.binding(.set(\.$transcribingProgressText, text)))
-            lastText = text
+        return .fireAndForget { [recordingId = state.recordingInfo.id] in
+          Task { @MainActor in
+            backgroundProcessingClient.startTask(recordingId)
           }
-          await send(.binding(.set(\.$recordingInfo.text, lastText)))
+        }
+      }
+    }
+  }
 
-          await send(.binding(.set(\.$recordingInfo.isTranscribed, true)))
+  private func subscribeToTranscriptionState(filename: String) -> EffectTask<Action> {
+    .run { send in
+      for await state in transcriber.getTranscriptionStateStream(filename) {
+        log.debug("Transcription state: \(state?.state.message ?? "nil")")
+        if let state {
+          switch state.state {
+          case .starting, .loadingModel, .transcribing:
+            await send(.binding(.set(\.$isTranscribing, true)))
+            var currentText = state.segments.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+            currentText = currentText.isEmpty ? state.state.message : currentText
+            await send(.binding(.set(\.$transcribingProgressText, currentText)))
+          case .finished:
+            await send(.binding(.set(\.$isTranscribing, false)))
+            await send(.binding(.set(\.$recordingInfo.text, state.text)))
+            await send(.binding(.set(\.$recordingInfo.isTranscribed, true)))
+          case .error:
+            await send(.binding(.set(\.$isTranscribing, false)))
+            await send(.binding(.set(\.$alert, .error(message: state.state.message))))
+          }
+        } else {
           await send(.binding(.set(\.$isTranscribing, false)))
-        } catch: { error, send in
-          log.error(error)
-          await send(.binding(.set(\.$alert, AlertState<Action>(title: TextState("Error"), message: TextState(String(describing: error))))))
-          await send(.binding(.set(\.$isTranscribing, false)))
-        }.animation(.default)
+        }
       }
     }
   }
@@ -162,5 +177,22 @@ extension RecordingCard.State.Mode {
   var progress: Double? {
     if case let .playing(progress) = self { return progress }
     return nil
+  }
+}
+
+extension TranscriptionState.State {
+  var message: String {
+    switch self {
+    case .starting:
+      return "Starting transcription..."
+    case .loadingModel:
+      return "Loading model..."
+    case .transcribing:
+      return "Transcribing..."
+    case .finished:
+      return "Finished"
+    case .error:
+      return "Error"
+    }
   }
 }

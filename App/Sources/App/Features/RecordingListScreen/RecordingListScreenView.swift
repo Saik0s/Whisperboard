@@ -14,7 +14,6 @@ public struct RecordingListScreen: ReducerProtocol {
   }
 
   public struct State: Equatable {
-    var recordings: IdentifiedArrayOf<RecordingCard.State> = []
     @BindingState var recordingRows: IdentifiedArrayOf<Row> = []
 
     var selection: Identified<RecordingInfo.ID, RecordingDetails.State>?
@@ -26,9 +25,9 @@ public struct RecordingListScreen: ReducerProtocol {
   }
 
   public enum Action: BindableAction, Equatable {
+    case task
     case binding(BindingAction<State>)
-    case readStoredRecordings
-    case setRecordings(TaskResult<IdentifiedArrayOf<RecordingInfo>>)
+    case setRecordings(IdentifiedArrayOf<RecordingInfo>)
     case recording(id: RecordingCard.State.ID, action: RecordingCard.Action)
     case delete(id: RecordingInfo.ID)
     case addFileRecordings(urls: [URL])
@@ -47,25 +46,41 @@ public struct RecordingListScreen: ReducerProtocol {
     CombineReducers {
       BindingReducer<State, Action>()
 
+      EmptyReducer()
+        .forEach(\.recordingRows, action: /Action.recording(id:action:)) {
+          Scope(state: \.card, action: /.self) {
+            RecordingCard()
+          }
+        }
+
+      EmptyReducer()
+        .ifLet(\.selection, action: /Action.details) {
+          Scope(state: \Identified<RecordingInfo.ID, RecordingDetails.State>.value, action: /.self) {
+            RecordingDetails()
+          }
+        }
+
       Reduce<State, Action> { state, action in
         switch action {
+        case .task:
+          return .run { send in
+            for await recordings in storage.readStream() {
+              log.debug("Received recordings: \(recordings)")
+              await send(.setRecordings(recordings))
+            }
+          }
+
         case .binding:
           return .none
 
-        case .readStoredRecordings:
-          return .task {
-            await .setRecordings(TaskResult { try await storage.read() })
+        case let .setRecordings(recordings):
+          state.recordingRows = recordings.map { info in
+            state.recordingRows[id: info.id]?.card ?? RecordingCard.State(recordingInfo: info)
           }
+          .enumerated()
+          .map(Row.init(index:card:))
+          .identifiedArray
 
-        case let .setRecordings(.success(recordings)):
-          state.recordings = recordings.map { info in
-            state.recordings[id: info.id] ?? RecordingCard.State(recordingInfo: info)
-          }.identifiedArray
-          return .none
-
-        case let .setRecordings(.failure(error)):
-          log.error(error)
-          state.alert = AlertState(title: TextState("Failed to read recordings."), message: TextState(error.localizedDescription))
           return .none
 
         case .recording:
@@ -99,7 +114,6 @@ public struct RecordingListScreen: ReducerProtocol {
               try await storage.addRecordingInfo(recordingInfo)
             }
 
-            await send(.readStoredRecordings)
             await send(.binding(.set(\.$isImportingFiles, false)))
           } catch: { error, send in
             await send(.binding(.set(\.$isImportingFiles, false)))
@@ -112,17 +126,17 @@ public struct RecordingListScreen: ReducerProtocol {
           return .none
 
         case let .deleteDialogConfirmed(id):
-          guard let recording = state.recordings.first(where: { $0.id == id }) else {
-            return .none
-          }
-
-          state.recordings.removeAll(where: { $0.id == id })
           if state.selection?.id == id {
             state.selection = nil
           }
-          return .fireAndForget {
-            try await storage.delete(recording.recordingInfo)
+
+          do {
+            try storage.delete(id)
+          } catch {
+            log.error(error)
+            state.alert = .error(error)
           }
+          return .none
 
         case .details:
           return .none
@@ -133,42 +147,33 @@ public struct RecordingListScreen: ReducerProtocol {
             return .none
           }
 
-          state.selection = state.recordings.first(where: { $0.id == id }).map { recording in
-            Identified(RecordingDetails.State(recordingCard: recording), id: id)
+          state.selection = state.recordingRows.first(where: { $0.id == id }).map { row in
+            Identified(RecordingDetails.State(recordingCard: row.card), id: id)
           }
           return .none
         }
       }
     }
-    .forEach(\.recordings, action: /Action.recording(id:action:)) {
-      RecordingCard()
-    }
-    .ifLet(\.selection, action: /Action.details) {
-      Scope(state: \Identified<RecordingInfo.ID, RecordingDetails.State>.value, action: /.self) {
-        RecordingDetails()
-      }
-    }
-    .onChange(of: \.selection) { selection, state, _ -> EffectTask<Action> in
-      guard let selection else {
-        return .none
-      }
-      state.recordings = state.recordings.map { recordingCard in
-        recordingCard.id == selection.id ? selection.value.recordingCard : recordingCard
-      }
-      .identified()
-      return .none
-    }
-    .onChange(of: \.recordings) { recordings, _, action -> EffectTask<Action> in
-      let recordingRows = recordings.enumerated().map(Row.init(index:card:)).identifiedArray
 
-      return .run { send in
-        await send(.binding(.set(\.$recordingRows, recordingRows)))
-        if case .setRecordings = action {
-        } else {
-          try await storage.write(recordings.map(\.recordingInfo).identifiedArray)
-        }
-      }
-    }
+    // // Sync changes between detailed screen and current list screen
+    // .onChange(of: \.selection) { selection, state, _ -> EffectTask<Action> in
+    //   guard let selection else { return .none }
+    //
+    //   state.recordingRows = state.recordingRows.map { row in
+    //     row.id == selection.id ? Row(index: row.index, card: selection.value.recordingCard) : row
+    //   }.identified()
+    //
+    //   return .none
+    // }
+
+    // // Make sure all changes are saved to disk
+    // .onChange(of: \.recordingRows) { recordingRows, _, action -> EffectTask<Action> in
+    //   if case .setRecordings = action {
+    //   } else {
+    //     storage.write(recordingRows.map(\.card.recordingInfo).identifiedArray)
+    //   }
+    //   return .none
+    // }
   }
 
   private func createDeleteConfirmationDialog(id: RecordingInfo.ID, state: inout State) {
@@ -215,13 +220,13 @@ public struct RecordingListScreenView: View {
           }
         }
         .padding(.grid(4))
-        .onChange(of: viewStore.recordings.count) {
+        .onChange(of: viewStore.recordingRows.count) {
           showListItems = $0 > 0
         }
-        .animation(.default, value: viewStore.recordings.count)
+        .animation(.default, value: viewStore.recordingRows.count)
       }
       .background {
-        if viewStore.recordings.isEmpty {
+        if viewStore.recordingRows.isEmpty {
           EmptyStateView()
         }
       }
@@ -261,38 +266,36 @@ public struct RecordingListScreenView: View {
     }
     .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .navigationViewStyle(.stack)
-    .onBecomeVisible {
-      viewStore.send(.readStoredRecordings)
-    }
+    .task { viewStore.send(.task) }
     .enableInjection()
   }
 }
 
 extension RecordingListScreenView {
   private func makeRecordingRow(store: Store<RecordingListScreen.Row, RecordingCard.Action>) -> some View {
-    let index = ViewStore(store).index
-    let recordingId = ViewStore(store).id
-    let cardStore = store.scope(state: \.card)
+    WithViewStore(store) { rowViewStore in
+      HStack(spacing: .grid(4)) {
+        if viewStore.editMode.isEditing {
+          Button { viewStore.send(.delete(id: rowViewStore.id)) } label: {
+            Image(systemName: "multiply.circle.fill")
+          }
+          .iconButtonStyle()
+        }
 
-    return HStack(spacing: .grid(4)) {
-      if viewStore.editMode.isEditing {
-        Button { viewStore.send(.delete(id: recordingId)) } label: {
-          Image(systemName: "multiply.circle.fill")
-        }.iconButtonStyle()
+        Button { viewStore.send(.recordingSelected(id: rowViewStore.id)) } label: {
+          RecordingCardView(store: store.scope(state: \.card))
+            .offset(y: showListItems ? 0 : 500)
+            .opacity(showListItems ? 1 : 0)
+            .animation(
+              .spring(response: 0.6, dampingFraction: 0.75)
+                .delay(Double(rowViewStore.index) * 0.15),
+              value: showListItems
+            )
+        }
+        .cardButtonStyle()
       }
-
-      Button { viewStore.send(.recordingSelected(id: recordingId)) } label: {
-        RecordingCardView(store: cardStore)
-          .offset(y: showListItems ? 0 : 500)
-          .opacity(showListItems ? 1 : 0)
-          .animation(
-            .spring(response: 0.6, dampingFraction: 0.75)
-              .delay(Double(index) * 0.15),
-            value: showListItems
-          )
-      }.cardButtonStyle()
+      .animation(.gentleBounce(), value: viewStore.editMode.isEditing)
     }
-    .animation(.gentleBounce(), value: viewStore.editMode.isEditing)
   }
 }
 

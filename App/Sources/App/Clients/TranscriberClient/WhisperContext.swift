@@ -33,7 +33,6 @@ actor WhisperContext {
 
     let newSegmentCallback: @convention(c) (OpaquePointer?, Int32, UnsafeMutableRawPointer?) -> Void = { context, _, _ in
       let segmentText = String(cString: whisper_full_get_segment_text(context, whisper_full_n_segments(context) - 1))
-      log.verbose("New segment: \(segmentText)")
       WhisperContext.newSegmentCallback?(segmentText)
 
       // TODO: extract token data

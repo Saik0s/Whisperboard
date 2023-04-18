@@ -4,18 +4,16 @@ import DynamicColor
 import SwiftUI
 
 @main
-@MainActor
 struct WhisperboardApp: App {
-  @State var store = Store(initialState: Root.State(), reducer: Root())
-  @State var backgroundClient = BackgroundProcessingClient(task: .transcription)
-
   var body: some Scene {
     WindowGroup {
-      RootView(store: store)
+      RootView(store: Store(initialState: Root.State(), reducer: Root().signpost()))
     }
   }
 
   init() {
+    @Dependency(\.backgroundProcessingClient) var backgroundProcessingClient: BackgroundProcessingClient
+    backgroundProcessingClient.registerBackgroundTask()
     configureDesignSystem()
 
     Logger.Settings.format = "%C%t %F:%l %f %m%c"

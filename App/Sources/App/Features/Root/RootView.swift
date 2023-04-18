@@ -40,8 +40,6 @@ struct Root: ReducerProtocol {
       Reduce<State, Action> { state, action in
         switch action {
         case let .recordScreen(.newRecordingCreated(recordingInfo)):
-          let recordingCard = RecordingCard.State(recordingInfo: recordingInfo)
-          state.recordingListScreen.recordings.insert(recordingCard, at: 0)
           state.recordingListScreen.selection = nil
           return .run { send in
             await send(.selectTab(0))
@@ -59,7 +57,7 @@ struct Root: ReducerProtocol {
           return .fireAndForget { @MainActor in
             for await state in transcriber.transcriberStateStream() {
               switch state {
-              case .transcribing, .loadingModel:
+              case .transcribing, .loadingModel, .modelLoaded:
                 UIApplication.shared.isIdleTimerDisabled = true
 
               default:

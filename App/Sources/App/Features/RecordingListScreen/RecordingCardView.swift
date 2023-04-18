@@ -6,38 +6,14 @@ import SwiftUI
 // MARK: - RecordingCardView
 
 struct RecordingCardView: View {
-  struct ViewState: Equatable {
-    var title: String
-    var dateString: String
-    var currentTimeString: String
-    var mode: RecordingCard.State.Mode
-    var fileName: String
-    var isTranscribed: Bool
-    var isTranscribing: Bool
-    var transcription: String
-  }
-
   @ObserveInjection var inject
 
   let store: StoreOf<RecordingCard>
-  @ObservedObject var viewStore: ViewStore<ViewState, RecordingCard.Action>
+  @ObservedObject var viewStore: ViewStoreOf<RecordingCard>
 
   init(store: StoreOf<RecordingCard>) {
     self.store = store
-    viewStore = ViewStore(store.scope { state in
-      let currentTime = state.mode.progress.map { $0 * state.recordingInfo.duration } ?? state.recordingInfo.duration
-
-      return ViewState(
-        title: state.recordingInfo.title,
-        dateString: state.recordingInfo.date.formatted(date: .abbreviated, time: .shortened),
-        currentTimeString: dateComponentsFormatter.string(from: currentTime) ?? "",
-        mode: state.mode,
-        fileName: state.recordingInfo.fileName,
-        isTranscribed: state.recordingInfo.isTranscribed,
-        isTranscribing: state.isTranscribing,
-        transcription: state.recordingInfo.text.trimmingCharacters(in: .whitespacesAndNewlines)
-      )
-    })
+    viewStore = ViewStore(store)
   }
 
   var body: some View {
@@ -48,13 +24,13 @@ struct RecordingCardView: View {
         }
 
         VStack(alignment: .leading, spacing: .grid(1)) {
-          if viewStore.title.isEmpty {
+          if viewStore.recordingInfo.title.isEmpty {
             Text("Untitled")
               .font(.DS.headlineS)
               .foregroundColor(.DS.Text.subdued)
               .opacity(0.5)
           } else {
-            Text(viewStore.title)
+            Text(viewStore.recordingInfo.title)
               .font(.DS.headlineS)
               .foregroundColor(.DS.Text.base)
           }
@@ -84,7 +60,7 @@ struct RecordingCardView: View {
         .transition(.scale.combined(with: .opacity))
       }
 
-      if viewStore.isTranscribed {
+      if viewStore.recordingInfo.isTranscribed {
         VStack(alignment: .leading, spacing: .grid(2)) {
           Text(viewStore.transcription)
             .font(.DS.bodyS)
@@ -123,12 +99,28 @@ struct RecordingCardView: View {
           .tertiaryButtonStyle()
       }
     }
-    .animation(.easeInOut(duration: 0.3), value: [viewStore.isTranscribing, viewStore.isTranscribed])
+    .animation(.easeInOut(duration: 0.3), value: [viewStore.isTranscribing, viewStore.recordingInfo.isTranscribed])
     .multilineTextAlignment(.leading)
     .padding(.grid(4))
     .cardStyle(isPrimary: viewStore.mode.isPlaying)
     .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .animation(.easeIn(duration: 0.3), value: viewStore.mode.isPlaying)
+    .task { await viewStore.send(.task).finish() }
     .enableInjection()
+  }
+}
+
+private extension RecordingCard.State {
+  var dateString: String {
+    recordingInfo.date.formatted(date: .abbreviated, time: .shortened)
+  }
+
+  var currentTimeString: String {
+    let currentTime = mode.progress.map { $0 * recordingInfo.duration } ?? recordingInfo.duration
+    return dateComponentsFormatter.string(from: currentTime) ?? ""
+  }
+
+  var transcription: String {
+    recordingInfo.text.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 }
