@@ -40,7 +40,7 @@ public struct RecordingDetails: ReducerProtocol {
         return .none
 
       case .shareAudio:
-        state.shareAudioFileURL = storage.audioFileURLWithName(state.recordingCard.recordingInfo.fileName)
+        state.shareAudioFileURL = storage.audioFileURLWithName(state.recordingCard.recordingEnvelop.fileName)
         return .none
       }
     }
@@ -63,18 +63,24 @@ public struct RecordingDetailsView: View {
 
   public init(store: StoreOf<RecordingDetails>) {
     self.store = store
-    viewStore = ViewStore(store)
+    viewStore = ViewStore(store) { $0 }
   }
 
   public var body: some View {
     VStack(spacing: .grid(2)) {
-      TextField("Untitled", text: viewStore.binding(\.$recordingCard.recordingInfo.title))
-        .focused($focusedField, equals: .title)
-        .font(.DS.titleXL)
-        .minimumScaleFactor(0.01)
-        .foregroundColor(.DS.Text.base)
+      TextField(
+        "Untitled",
+        text: viewStore.binding(
+          get: { $0.recordingCard.recordingEnvelop.title },
+          send: { RecordingDetails.Action.recordingCard(action: .titleChanged($0)) }
+        )
+      )
+      .focused($focusedField, equals: .title)
+      .font(.DS.titleXL)
+      .minimumScaleFactor(0.01)
+      .foregroundColor(.DS.Text.base)
 
-      Text("Created: \(viewStore.recordingCard.recordingInfo.date.formatted(date: .abbreviated, time: .shortened))")
+      Text("Created: \(viewStore.recordingCard.recordingEnvelop.date.formatted(date: .abbreviated, time: .shortened))")
         .font(.DS.captionS)
         .foregroundColor(.DS.Text.subdued)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -84,19 +90,20 @@ public struct RecordingDetailsView: View {
         .foregroundColor(.DS.Text.subdued)
         .frame(maxWidth: .infinity, alignment: .leading)
 
-      if viewStore.recordingCard.recordingInfo.isTranscribed == false && viewStore.recordingCard.isTranscribing == false {
+      if viewStore.recordingCard.recordingEnvelop.isTranscribed == false
+        && viewStore.recordingCard.recordingEnvelop.transcriptionState?.isTranscribing != true {
         PrimaryButton("Transcribe") {
           viewStore.send(.recordingCard(action: .transcribeTapped))
-        }
-        .padding(.grid(4))
+        }.padding(.grid(4))
+
       } else {
         if !viewStore.recordingCard.isTranscribing {
           HStack(spacing: .grid(2)) {
-            CopyButton(viewStore.recordingCard.recordingInfo.text) {
+            CopyButton(viewStore.recordingCard.recordingEnvelop.text) {
               Image(systemName: "doc.on.clipboard")
             }
 
-            ShareButton(viewStore.recordingCard.recordingInfo.text) {
+            ShareButton(viewStore.recordingCard.recordingEnvelop.text) {
               Image(systemName: "paperplane")
             }
 
@@ -105,14 +112,13 @@ public struct RecordingDetailsView: View {
             }
 
             Spacer()
-          }
-          .iconButtonStyle()
+          }.iconButtonStyle()
         }
 
         ScrollView {
           Text(viewStore.recordingCard.isTranscribing
             ? viewStore.recordingCard.transcribingProgressText
-            : viewStore.recordingCard.recordingInfo.text)
+            : viewStore.recordingCard.recordingEnvelop.text)
             .font(.DS.bodyL)
             .foregroundColor(viewStore.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
             .lineLimit(nil)
@@ -123,7 +129,7 @@ public struct RecordingDetailsView: View {
           }
         }
 
-        // TextField("No transcription", text: viewStore.binding(\.$recordingCard.recordingInfo.text), axis: .vertical)
+        // TextField("No transcription", text: viewStore.binding(\.$recordingCard.recordingEnvelop.text), axis: .vertical)
         //   .focused($focusedField, equals: .text)
         //   .lineLimit(nil)
         //   .textFieldStyle(.roundedBorder)
@@ -180,7 +186,7 @@ public struct RecordingDetailsView: View {
       NavigationView {
         RecordingDetailsView(
           store: Store(
-            initialState: RecordingDetails.State(recordingCard: .init(recordingInfo: .mock)),
+            initialState: RecordingDetails.State(recordingCard: .init(recordingEnvelop: .mock)),
             reducer: RecordingDetails()
           )
         )

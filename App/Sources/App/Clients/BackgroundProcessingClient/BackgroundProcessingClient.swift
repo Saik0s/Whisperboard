@@ -7,7 +7,6 @@ import UIKit
 
 // MARK: - BackgroundProcessingClient
 
-@MainActor
 struct BackgroundProcessingClient {
   var startTask: (RecordingInfo.ID) -> Void
   var removeAndCancelAllTasks: () -> Void
@@ -18,7 +17,7 @@ struct BackgroundProcessingClient {
 
 extension BackgroundProcessingClient: DependencyKey {
   static let liveValue: BackgroundProcessingClient = {
-    let client = BackgroundProcessingClientImpl(task: .transcription)
+    let client = BackgroundProcessingClientImpl(longTask: .transcription)
 
     return BackgroundProcessingClient(
       startTask: { recordingId in
@@ -43,7 +42,6 @@ extension DependencyValues {
 
 // MARK: - BackgroundProcessingClientImpl
 
-@MainActor
 final class BackgroundProcessingClientImpl<State: Codable> {
   typealias T = LongTask<State>
 
@@ -56,26 +54,30 @@ final class BackgroundProcessingClientImpl<State: Codable> {
     set { UserDefaults.standard.encode(newValue, forKey: #function) }
   }
 
-  private let task: T
+  private let longTask: T
+  private var currentTask: Task<Void, Error>?
 
-  init(task: T) {
-    self.task = task
+  init(longTask: T) {
+    self.longTask = longTask
   }
 
   func startTask(_ taskState: State) {
+    log.debug("Adding task to queue: \(taskState)")
     taskQueue.append(taskState)
-    Task {
+    currentTask = Task {
       await executeNextTask()
     }
   }
 
   func removeAndCancelAllTasks() {
+    currentTask?.cancel()
+    currentTask = nil
     taskQueue.removeAll()
     resetBackgroundTask()
   }
 
   func registerBackgroundTask() {
-    let isRegistered = BGTaskScheduler.shared.register(forTaskWithIdentifier: task.identifier, using: nil) { [weak self] task in
+    let isRegistered = BGTaskScheduler.shared.register(forTaskWithIdentifier: longTask.identifier, using: nil) { [weak self] task in
       guard let self else {
         task.setTaskCompleted(success: false)
         return
@@ -99,7 +101,13 @@ final class BackgroundProcessingClientImpl<State: Codable> {
     if isRegistered {
       log.info("Background task registered")
     } else {
-      log.error("Failed to register background task with identifier: \(task.identifier)")
+      log.error("Failed to register background task with identifier: \(longTask.identifier)")
+    }
+
+    if !taskQueue.isEmpty {
+      Task {
+        await executeNextTask()
+      }
     }
   }
 
@@ -113,16 +121,20 @@ final class BackgroundProcessingClientImpl<State: Codable> {
 
     isExecutingTask = true
 
-    backgroundTaskID = UIApplication.shared.beginBackgroundTask {
+    backgroundTaskID = await UIApplication.shared.beginBackgroundTask {
       self.endBackgroundTask()
     }
 
     scheduleBackgroundTask()
     do {
-      try await task.performTask(taskState)
+      try await longTask.performTask(taskState)
+      if !taskQueue.isEmpty {
+        taskQueue.removeFirst()
+      }
       isExecutingTask = false
       await taskCompleted()
     } catch {
+      customAssertionFailure()
       log.error(error)
       taskFailed()
     }
@@ -136,7 +148,7 @@ final class BackgroundProcessingClientImpl<State: Codable> {
 
     isExecutingTask = true
 
-    try await task.performTask(taskState)
+    try await longTask.performTask(taskState)
     isExecutingTask = false
     try await executeNextTaskWithoutScheduling()
   }
@@ -144,7 +156,7 @@ final class BackgroundProcessingClientImpl<State: Codable> {
   private func scheduleBackgroundTask() {
     assert(!backgroundTaskScheduled)
 
-    let taskRequest = BGProcessingTaskRequest(identifier: task.identifier)
+    let taskRequest = BGProcessingTaskRequest(identifier: longTask.identifier)
     taskRequest.requiresNetworkConnectivity = false
     taskRequest.requiresExternalPower = false
     taskRequest.earliestBeginDate = Date(timeIntervalSinceNow: 1)
@@ -160,7 +172,9 @@ final class BackgroundProcessingClientImpl<State: Codable> {
 
   private func taskCompleted() async {
     resetBackgroundTask()
-    await executeNextTask()
+    if !taskQueue.isEmpty {
+      await executeNextTask()
+    }
   }
 
   private func taskFailed() {
@@ -180,7 +194,7 @@ final class BackgroundProcessingClientImpl<State: Codable> {
 
   private func removeScheduledBackgroundTask() {
     if backgroundTaskScheduled {
-      BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: task.identifier)
+      BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: longTask.identifier)
       backgroundTaskScheduled = false
     }
   }

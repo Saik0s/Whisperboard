@@ -11,21 +11,15 @@ import UIKit
 extension StorageClient: DependencyKey {
   static let liveValue: Self = {
     let storage = Storage()
-    let documentsURL = (try? storage.documentsURL()) ?? URL(fileURLWithPath: "~/Documents")
+    let documentsURL = (try? Storage.documentsURL()) ?? URL(fileURLWithPath: "~/Documents")
 
     return Self(
       read: {
-        storage.currentRecordingsSubject.value?.identifiedArray ?? []
+        storage.currentRecordingsSubject.value.identifiedArray
       },
 
-      readStream: {
-        storage.currentRecordingsSubject
-          .catch { error in
-            log.error("Could not read recordings: \(error)")
-            return Just([RecordingInfo]())
-          }
-          .map(\.identifiedArray)
-          .asAsyncStream()
+      recordingsInfoStream: {
+        storage.currentRecordingsSubject.replaceError(with: []).eraseToAnyPublisher()
       },
 
       write: { recordings in
@@ -33,7 +27,7 @@ extension StorageClient: DependencyKey {
       },
 
       addRecordingInfo: { recording in
-        let newRecordings = (storage.currentRecordingsSubject.value ?? []) + [recording]
+        let newRecordings = (storage.currentRecordingsSubject.value) + [recording]
         storage.write(newRecordings)
       },
 
@@ -52,7 +46,7 @@ extension StorageClient: DependencyKey {
       },
 
       delete: { recordingId in
-        let recordings = storage.currentRecordingsSubject.value ?? []
+        let recordings = storage.currentRecordingsSubject.value
         guard let recording = recordings.identifiedArray[id: recordingId] else {
           return
         }
@@ -61,6 +55,20 @@ extension StorageClient: DependencyKey {
         try FileManager.default.removeItem(at: url)
         let newRecordings = recordings.filter { $0.id != recordingId }
         storage.write(newRecordings)
+
+      },
+
+      update: { id, updater in
+        var recordings = storage.currentRecordingsSubject.value.identifiedArray
+        guard var recording = recordings[id: id] else {
+          customAssertionFailure()
+          return
+        }
+
+        updater(&recording)
+
+        recordings[id: id] = recording
+        storage.write(recordings.elements)
       }
     )
   }()
@@ -69,27 +77,38 @@ extension StorageClient: DependencyKey {
 // MARK: - Storage
 
 private final class Storage {
-  lazy var currentRecordingsSubject: CodableValueSubject<[RecordingInfo]> = { () -> CodableValueSubject<[RecordingInfo]> in
-    do {
-      let url = try self.dbURL()
-      let recordings = try self.read()
-      return CodableValueSubject<[RecordingInfo]>(fileURL: url).then { $0.send(recordings) }
-    } catch {
-      assertionFailure("Could not create current recordings subject: \(error)")
-      log.error("Could not create current recordings subject: \(error)")
-      return CodableValueSubject<[RecordingInfo]>(fileURL: URL(fileURLWithPath: "~/Documents/recordings.json"))
-    }
-  }()
+  let currentRecordingsSubject: CurrentValueSubject<[RecordingInfo], Never>
 
-  init() { 
+  private let cancellable: AnyCancellable
+
+  init() {
+    let subject = CurrentValueSubject<[RecordingInfo], Never>([])
+    cancellable = subject.dropFirst().sink { recordings in
+      do {
+        let fileURL = try Self.dbURL()
+        try recordings.write(toFile: fileURL, encoder: JSONEncoder())
+      } catch {
+        customAssertionFailure()
+        log.error(error)
+      }
+    }
+    currentRecordingsSubject = subject
+
+    do {
+      try currentRecordingsSubject.send(read())
+    } catch {
+      customAssertionFailure()
+      log.error(error)
+    }
+
     subscribeToDidBecomeActiveNotifications()
   }
 
-  func documentsURL() throws -> URL {
+  static func documentsURL() throws -> URL {
     try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
   }
 
-  func dbURL() throws -> URL {
+  static func dbURL() throws -> URL {
     try documentsURL().appendingPathComponent("recordings.json")
   }
 
@@ -99,8 +118,8 @@ private final class Storage {
   }
 
   func read() throws -> [RecordingInfo] {
-    let docURL = try documentsURL()
-    let dbURL = try dbURL()
+    let docURL = try Self.documentsURL()
+    let dbURL = try Self.dbURL()
 
     // If the database file does not exist, create an empty array and save it to the file
     if !FileManager.default.fileExists(atPath: dbURL.path) {
@@ -177,7 +196,7 @@ private final class Storage {
   }
 
   private func createInfo(fileName: String) throws -> RecordingInfo {
-    let docURL = try documentsURL()
+    let docURL = try Storage.documentsURL()
     let fileURL = docURL.appending(component: fileName)
     let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
     let date = attributes[.creationDate] as? Date ?? Date()
@@ -188,7 +207,7 @@ private final class Storage {
 
   private func subscribeToDidBecomeActiveNotifications() {
     NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: nil) { [weak self] _ in
-      guard let self = self else { return }
+      guard let self else { return }
       do {
         let recordings = try self.read()
         self.write(recordings)

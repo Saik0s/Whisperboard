@@ -88,7 +88,7 @@ struct RootView: View {
 
   init(store: StoreOf<Root>) {
     self.store = store
-    viewStore = ViewStore(store)
+    viewStore = ViewStore(store) { $0 }
   }
 
   private var selectedTab: Int {

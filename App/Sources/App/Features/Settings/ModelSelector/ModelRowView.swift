@@ -65,9 +65,9 @@ struct ModelRow: ReducerProtocol {
         guard state.model.isDownloaded else {
           return .none
         }
-        return .fireAndForget { [state] in
-          modelDownload.deleteModel(state.model.modelType)
-        }
+
+        modelDownload.deleteModel(state.model.modelType)
+        return .none
 
       case let .loadError(error):
         log.error(error)
@@ -92,7 +92,7 @@ struct ModelRowView: View {
 
   init(store: StoreOf<ModelRow>) {
     self.store = store
-    viewStore = ViewStore(store)
+    viewStore = ViewStore(store) { $0 }
   }
 
   var body: some View {

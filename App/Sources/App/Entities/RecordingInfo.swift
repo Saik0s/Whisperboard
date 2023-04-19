@@ -4,7 +4,7 @@ import Foundation
 // MARK: - RecordingInfo
 
 public struct RecordingInfo: Identifiable, Hashable, Then, Codable {
-  public var fileName: String = UUID().uuidString + ".wav"
+  public var fileName: String
   public var title = ""
   public var date: Date
   public var duration: TimeInterval
@@ -12,6 +12,22 @@ public struct RecordingInfo: Identifiable, Hashable, Then, Codable {
   public var isTranscribed = false
 
   public var id: String { fileName }
+
+  public init(
+    fileName: String, // = UUID().uuidString + ".wav",
+    title: String = "",
+    date: Date = Date(),
+    duration: TimeInterval = 0,
+    text: String = "",
+    isTranscribed: Bool = false
+  ) {
+    self.fileName = fileName
+    self.title = title
+    self.date = date
+    self.duration = duration
+    self.text = text
+    self.isTranscribed = isTranscribed
+  }
 }
 
 #if DEBUG
@@ -105,7 +121,7 @@ public struct RecordingInfo: Identifiable, Hashable, Then, Codable {
         duration: 21,
         text: "1. How to Build a Successful Startup, 2. Exploring the Depths of Space, 3. The History of Coffee, 4. Mindfulness and Meditation Techniques, and 5. The Future of Renewable Energy.",
         isTranscribed: true
-      )
+      ),
     ]
   }
 #endif

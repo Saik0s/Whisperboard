@@ -7,7 +7,7 @@ import SwiftUI
 struct WhisperboardApp: App {
   var body: some Scene {
     WindowGroup {
-      RootView(store: Store(initialState: Root.State(), reducer: Root().signpost()))
+      RootView(store: Store(initialState: Root.State(), reducer: Root()))
     }
   }
 
@@ -16,7 +16,7 @@ struct WhisperboardApp: App {
     backgroundProcessingClient.registerBackgroundTask()
     configureDesignSystem()
 
-    Logger.Settings.format = "%C%t %F:%l %f %m%c"
+    Logger.Settings.format = "%C%t %F:%l %m%c"
   }
 
   private func configureDesignSystem() {

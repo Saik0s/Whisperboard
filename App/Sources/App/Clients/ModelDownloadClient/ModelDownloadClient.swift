@@ -37,7 +37,7 @@ extension ModelDownloadClient: DependencyKey {
               let oldModelsFolder = try? FileManager.default
                 .url(for: .documentationDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
                 .appending(path: "Models")
-              if let oldModelsFolder = oldModelsFolder, FileManager.default.fileExists(atPath: oldModelsFolder.path) {
+              if let oldModelsFolder, FileManager.default.fileExists(atPath: oldModelsFolder.path) {
                 try? FileManager.default.removeItem(at: oldModelsFolder)
               }
               UserDefaults.standard.set(true, forKey: "didCleanUpOldModelsFolder")

@@ -92,7 +92,7 @@ public struct WaveformProgressView: View {
 
   public init(store: StoreOf<WaveformProgress>) {
     self.store = store
-    viewStore = ViewStore(store)
+    viewStore = ViewStore(store) { $0 }
   }
 
   public var body: some View {
