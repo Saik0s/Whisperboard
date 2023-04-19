@@ -47,7 +47,7 @@ public struct RecordingControls: ReducerProtocol {
         switch state.audioRecorderPermission {
         case .undetermined:
           return .task {
-            await .recordPermissionResponse(self.requestRecordPermission())
+            await .recordPermissionResponse(requestRecordPermission())
           }
 
         case .denied:
@@ -86,7 +86,7 @@ public struct RecordingControls: ReducerProtocol {
 
       case .openSettingsButtonTapped:
         return .fireAndForget {
-          await self.openSettings()
+          await openSettings()
         }
 
       case .binding:
@@ -129,7 +129,7 @@ public struct RecordingControlsView: View {
 
   public init(store: StoreOf<RecordingControls>) {
     self.store = store
-    viewStore = ViewStore(store)
+    viewStore = ViewStore(store) { $0 }
   }
 
   public var body: some View {

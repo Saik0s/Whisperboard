@@ -1,6 +1,8 @@
-import Foundation
-import Dependencies
 import AppDevUtils
+import Dependencies
+import Foundation
+
+// MARK: - LongTaskTranscriptError
 
 enum LongTaskTranscriptError: Error {
   case noRecordingInfo
@@ -20,20 +22,10 @@ extension LongTask {
 
       let fileURL = storage.audioFileURLWithName(recordingInfo.fileName)
       let language = settings.settings().voiceLanguage
-      for await progress in transcriber.transcribeAudio(fileURL, language) {
-        switch progress {
-        case .loadingModel:
-          log.verbose("Loading model...")
-        case .started:
-          log.verbose("Transcribing...")
-        case let .newSegment(segment):
-          log.verbose("New segment: \(segment)")
-        case let .finished(finalText):
-          log.verbose("Finished: \(finalText)")
-        case let .error(error):
-          log.verbose("Error: \(error)")
-          throw LongTaskTranscriptError.failedToTranscribe
-        }
+      let text = try await transcriber.transcribeAudio(fileURL, language)
+      try storage.update(recordingInfo.id) {
+        $0.text = text
+        $0.isTranscribed = true
       }
     }
   }

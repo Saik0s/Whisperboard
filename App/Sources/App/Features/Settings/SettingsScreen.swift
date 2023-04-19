@@ -154,7 +154,7 @@ struct SettingsScreenView: View {
 
   init(store: StoreOf<SettingsScreen>) {
     self.store = store
-    viewStore = ViewStore(store)
+    viewStore = ViewStore(store) { $0 }
   }
 
   var body: some View {

@@ -1,34 +1,27 @@
 import AppDevUtils
+import Combine
 import ComposableArchitecture
+import Dependencies
 import Inject
 import SwiftUI
 
 // MARK: - RecordingListScreen
 
 public struct RecordingListScreen: ReducerProtocol {
-  public struct Row: Identifiable, Equatable {
-    public var id: RecordingInfo.ID { card.id }
-
-    var index: Int
-    var card: RecordingCard.State
-  }
-
   public struct State: Equatable {
-    @BindingState var recordingRows: IdentifiedArrayOf<Row> = []
-
+    var recordingCards: IdentifiedArrayOf<RecordingCard.State> = []
     var selection: Identified<RecordingInfo.ID, RecordingDetails.State>?
 
     @BindingState var editMode: EditMode = .inactive
     @BindingState var isImportingFiles = false
-
     @BindingState var alert: AlertState<Action>?
   }
 
   public enum Action: BindableAction, Equatable {
     case task
     case binding(BindingAction<State>)
-    case setRecordings(IdentifiedArrayOf<RecordingInfo>)
-    case recording(id: RecordingCard.State.ID, action: RecordingCard.Action)
+    case receivedRecordings([RecordingEnvelop])
+    case recordingCard(id: RecordingCard.State.ID, action: RecordingCard.Action)
     case delete(id: RecordingInfo.ID)
     case addFileRecordings(urls: [URL])
     case failedToAddRecordings(error: EquatableErrorWrapper)
@@ -39,6 +32,7 @@ public struct RecordingListScreen: ReducerProtocol {
 
   @Dependency(\.storage) var storage: StorageClient
   @Dependency(\.fileImport) var fileImport: FileImportClient
+  @Dependency(\.recordingsStream) var recordingsStream: @Sendable () -> AnyPublisher<[RecordingEnvelop], Never>
 
   struct SavingRecordingsID: Hashable {}
 
@@ -46,44 +40,30 @@ public struct RecordingListScreen: ReducerProtocol {
     CombineReducers {
       BindingReducer<State, Action>()
 
-      EmptyReducer()
-        .forEach(\.recordingRows, action: /Action.recording(id:action:)) {
-          Scope(state: \.card, action: /.self) {
-            RecordingCard()
-          }
-        }
-
-      EmptyReducer()
-        .ifLet(\.selection, action: /Action.details) {
-          Scope(state: \Identified<RecordingInfo.ID, RecordingDetails.State>.value, action: /.self) {
-            RecordingDetails()
-          }
-        }
-
       Reduce<State, Action> { state, action in
         switch action {
         case .task:
           return .run { send in
-            for await recordings in storage.readStream() {
-              log.debug("Received recordings: \(recordings)")
-              await send(.setRecordings(recordings))
+            for await envelops in recordingsStream().asAsyncStream() {
+              await send(.receivedRecordings(envelops))
             }
           }
+
+        case let .receivedRecordings(envelops):
+          state.recordingCards = envelops.map { envelop in
+            guard var card = state.recordingCards[id: envelop.id] else {
+              return RecordingCard.State(recordingEnvelop: envelop)
+            }
+            card.recordingEnvelop = envelop
+            return card
+          }.identifiedArray
+
+          return .none
 
         case .binding:
           return .none
 
-        case let .setRecordings(recordings):
-          state.recordingRows = recordings.map { info in
-            state.recordingRows[id: info.id]?.card ?? RecordingCard.State(recordingInfo: info)
-          }
-          .enumerated()
-          .map(Row.init(index:card:))
-          .identifiedArray
-
-          return .none
-
-        case .recording:
+        case .recordingCard:
           return .none
 
         case let .delete(id):
@@ -109,9 +89,9 @@ public struct RecordingListScreen: ReducerProtocol {
               let newFileName = newURL.lastPathComponent
               let oldFileName = url.lastPathComponent
               let duration = try getFileDuration(url: newURL)
-              let recordingInfo = RecordingInfo(fileName: newFileName, title: oldFileName, date: Date(), duration: duration)
-              log.verbose("Adding recording info: \(recordingInfo)")
-              try await storage.addRecordingInfo(recordingInfo)
+              let recordingEnvelop = RecordingInfo(fileName: newFileName, title: oldFileName, date: Date(), duration: duration)
+              log.verbose("Adding recording info: \(recordingEnvelop)")
+              try await storage.addRecordingInfo(recordingEnvelop)
             }
 
             await send(.binding(.set(\.$isImportingFiles, false)))
@@ -147,11 +127,19 @@ public struct RecordingListScreen: ReducerProtocol {
             return .none
           }
 
-          state.selection = state.recordingRows.first(where: { $0.id == id }).map { row in
-            Identified(RecordingDetails.State(recordingCard: row.card), id: id)
+          state.selection = state.recordingCards.first(where: { $0.id == id }).map { card in
+            Identified(RecordingDetails.State(recordingCard: card), id: id)
           }
           return .none
         }
+      }
+    }
+    .forEach(\.recordingCards, action: /Action.recordingCard(id:action:)) {
+      RecordingCard()
+    }
+    .ifLet(\.selection, action: /Action.details) {
+      Scope(state: \Identified<RecordingInfo.ID, RecordingDetails.State>.value, action: /.self) {
+        RecordingDetails()
       }
     }
 
@@ -159,7 +147,7 @@ public struct RecordingListScreen: ReducerProtocol {
     // .onChange(of: \.selection) { selection, state, _ -> EffectTask<Action> in
     //   guard let selection else { return .none }
     //
-    //   state.recordingRows = state.recordingRows.map { row in
+    //   state.recordingCards = state.recordingCards.map { row in
     //     row.id == selection.id ? Row(index: row.index, card: selection.value.recordingCard) : row
     //   }.identified()
     //
@@ -167,10 +155,10 @@ public struct RecordingListScreen: ReducerProtocol {
     // }
 
     // // Make sure all changes are saved to disk
-    // .onChange(of: \.recordingRows) { recordingRows, _, action -> EffectTask<Action> in
+    // .onChange(of: \.recordingCards) { recordingCards, _, action -> EffectTask<Action> in
     //   if case .setRecordings = action {
     //   } else {
-    //     storage.write(recordingRows.map(\.card.recordingInfo).identifiedArray)
+    //     storage.write(recordingCards.map(\.card.recordingEnvelop).identifiedArray)
     //   }
     //   return .none
     // }
@@ -205,28 +193,38 @@ public struct RecordingListScreenView: View {
 
   public init(store: StoreOf<RecordingListScreen>) {
     self.store = store
-    viewStore = ViewStore(store)
+    viewStore = ViewStore(store) { $0 }
   }
 
   public var body: some View {
     NavigationStack {
       ScrollView {
-        LazyVStack(spacing: .grid(4)) {
-          ForEachStore(store.scope(
-            state: \.recordingRows,
-            action: RecordingListScreen.Action.recording(id:action:)
-          )) { store in
-            makeRecordingRow(store: store)
+        VStack(spacing: .grid(4)) {
+          ForEach(Array(viewStore.recordingCards.enumerated()), id: \.element.id) { index, card in
+            IfLetStore(store.scope(
+              state: \.recordingCards[id: card.id],
+              action: { RecordingListScreen.Action.recordingCard(id: card.id, action: $0) }
+            )) { store in
+              makeRecordingCard(store: store, index: index, id: card.id)
+            } else: {
+              ProgressView()
+            }
           }
+          // ForEachStore(store.scope(
+          //   state: \.recordingCards,
+          //   action: RecordingListScreen.Action.recording(id:action:)
+          // )) { store in
+          //   makeRecordingCard(store: store)
+          // }
         }
         .padding(.grid(4))
-        .onChange(of: viewStore.recordingRows.count) {
+        .onChange(of: viewStore.recordingCards.count) {
           showListItems = $0 > 0
         }
-        .animation(.default, value: viewStore.recordingRows.count)
+        .animation(.default, value: viewStore.recordingCards.count)
       }
       .background {
-        if viewStore.recordingRows.isEmpty {
+        if viewStore.recordingCards.isEmpty {
           EmptyStateView()
         }
       }
@@ -266,34 +264,32 @@ public struct RecordingListScreenView: View {
     }
     .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .navigationViewStyle(.stack)
-    .task { viewStore.send(.task) }
+    .task { await viewStore.send(.task).finish() }
     .enableInjection()
   }
 }
 
 extension RecordingListScreenView {
-  private func makeRecordingRow(store: Store<RecordingListScreen.Row, RecordingCard.Action>) -> some View {
-    WithViewStore(store) { rowViewStore in
-      HStack(spacing: .grid(4)) {
-        if viewStore.editMode.isEditing {
-          Button { viewStore.send(.delete(id: rowViewStore.id)) } label: {
-            Image(systemName: "multiply.circle.fill")
-          }
-          .iconButtonStyle()
+  private func makeRecordingCard(store: StoreOf<RecordingCard>, index: Int, id: RecordingCard.State.ID) -> some View {
+    HStack(spacing: .grid(4)) {
+      if viewStore.editMode.isEditing {
+        Button { viewStore.send(.delete(id: id)) } label: {
+          Image(systemName: "multiply.circle.fill")
         }
-
-        Button { viewStore.send(.recordingSelected(id: rowViewStore.id)) } label: {
-          RecordingCardView(store: store.scope(state: \.card))
-            .offset(y: showListItems ? 0 : 500)
-            .opacity(showListItems ? 1 : 0)
-            .animation(
-              .spring(response: 0.6, dampingFraction: 0.75)
-                .delay(Double(rowViewStore.index) * 0.15),
-              value: showListItems
-            )
-        }
-        .cardButtonStyle()
+        .iconButtonStyle()
       }
+
+      Button { viewStore.send(.recordingSelected(id: id)) } label: {
+        RecordingCardView(store: store)
+          .offset(y: showListItems ? 0 : 500)
+          .opacity(showListItems ? 1 : 0)
+          .animation(
+            .spring(response: 0.6, dampingFraction: 0.75)
+              .delay(Double(index) * 0.15),
+            value: showListItems
+          )
+      }
+      .cardButtonStyle()
       .animation(.gentleBounce(), value: viewStore.editMode.isEditing)
     }
   }
@@ -306,7 +302,7 @@ struct EmptyStateView: View {
 
   var body: some View {
     VStack(spacing: .grid(4)) {
-      WithInlineState(initialValue: 0) { state in
+      WithInlineState(initialValue: 0.0) { state in
         Image(systemName: "waveform.path.ecg")
           .font(.system(size: 100))
           .foregroundColor(.DS.Text.accent)

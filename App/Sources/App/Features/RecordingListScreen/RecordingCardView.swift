@@ -13,7 +13,7 @@ struct RecordingCardView: View {
 
   init(store: StoreOf<RecordingCard>) {
     self.store = store
-    viewStore = ViewStore(store)
+    viewStore = ViewStore(store) { $0 }
   }
 
   var body: some View {
@@ -24,13 +24,13 @@ struct RecordingCardView: View {
         }
 
         VStack(alignment: .leading, spacing: .grid(1)) {
-          if viewStore.recordingInfo.title.isEmpty {
+          if viewStore.recordingEnvelop.title.isEmpty {
             Text("Untitled")
               .font(.DS.headlineS)
               .foregroundColor(.DS.Text.subdued)
               .opacity(0.5)
           } else {
-            Text(viewStore.recordingInfo.title)
+            Text(viewStore.recordingEnvelop.title)
               .font(.DS.headlineS)
               .foregroundColor(.DS.Text.base)
           }
@@ -60,7 +60,7 @@ struct RecordingCardView: View {
         .transition(.scale.combined(with: .opacity))
       }
 
-      if viewStore.recordingInfo.isTranscribed {
+      if viewStore.recordingEnvelop.isTranscribed {
         VStack(alignment: .leading, spacing: .grid(2)) {
           Text(viewStore.transcription)
             .font(.DS.bodyS)
@@ -94,12 +94,23 @@ struct RecordingCardView: View {
         ProgressView()
           .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
           .scaleEffect(1.5)
+          .frame(maxWidth: .infinity, alignment: .center)
+          .padding(.vertical, .grid(2))
+          .overlay(alignment: .trailing) {
+            Button("Cancel") {
+              viewStore.send(.cancelTranscriptionTapped)
+            }
+            .tertiaryButtonStyle()
+            .padding(.grid(4))
+            .transition(.move(edge: .trailing))
+          }
       } else {
-        Button("Transcribe") { viewStore.send(.transcribeTapped) }
-          .tertiaryButtonStyle()
+        Button("Transcribe") {
+          viewStore.send(.transcribeTapped)
+        }.tertiaryButtonStyle()
       }
     }
-    .animation(.easeInOut(duration: 0.3), value: [viewStore.isTranscribing, viewStore.recordingInfo.isTranscribed])
+    .animation(.easeInOut(duration: 0.3), value: [viewStore.isTranscribing, viewStore.recordingEnvelop.isTranscribed])
     .multilineTextAlignment(.leading)
     .padding(.grid(4))
     .cardStyle(isPrimary: viewStore.mode.isPlaying)
@@ -112,15 +123,15 @@ struct RecordingCardView: View {
 
 private extension RecordingCard.State {
   var dateString: String {
-    recordingInfo.date.formatted(date: .abbreviated, time: .shortened)
+    recordingEnvelop.date.formatted(date: .abbreviated, time: .shortened)
   }
 
   var currentTimeString: String {
-    let currentTime = mode.progress.map { $0 * recordingInfo.duration } ?? recordingInfo.duration
+    let currentTime = mode.progress.map { $0 * recordingEnvelop.duration } ?? recordingEnvelop.duration
     return dateComponentsFormatter.string(from: currentTime) ?? ""
   }
 
   var transcription: String {
-    recordingInfo.text.trimmingCharacters(in: .whitespacesAndNewlines)
+    recordingEnvelop.text.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 }

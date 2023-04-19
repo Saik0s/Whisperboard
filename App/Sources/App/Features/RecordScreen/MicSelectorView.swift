@@ -89,7 +89,7 @@ public struct MicSelectorView: View {
   }
 
   public var body: some View {
-    WithViewStore(self.store, observe: { $0 }) { viewStore in
+    WithViewStore(store, observe: { $0 }) { viewStore in
       VStack(spacing: 0) {
         ForEach(viewStore.mics, id: \.id) { mic in
           Button(action: { viewStore.send(.micSelected(mic)) }) {

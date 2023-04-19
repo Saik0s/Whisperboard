@@ -1,5 +1,5 @@
-import SwiftUI
 import AppDevUtils
+import SwiftUI
 
 extension View {
   func onBecomeVisible(perform action: @escaping () -> Void) -> some View {
