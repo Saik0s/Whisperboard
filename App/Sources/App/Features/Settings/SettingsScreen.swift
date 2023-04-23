@@ -17,6 +17,7 @@ struct SettingsScreen: ReducerProtocol {
     var freeSpace: String = ""
     var takenSpace: String = ""
     var takenSpacePercentage: Double = 0
+    @BindingState var isParallelEnabled: Bool = false
 
     @BindingState var alert: AlertState<Action>?
   }
@@ -25,8 +26,8 @@ struct SettingsScreen: ReducerProtocol {
     case binding(BindingAction<State>)
     case modelSelector(ModelSelector.Action)
     case task
-    case fetchAvailableLanguages
     case setLanguage(VoiceLanguage)
+    case parallelSwitchTapped(Bool)
     case openGitHub
     case openPersonalWebsite
     case deleteStorageTapped
@@ -65,17 +66,23 @@ struct SettingsScreen: ReducerProtocol {
         state.freeSpace = diskSpace.freeSpace().readableString
         state.takenSpace = diskSpace.takenSpace().readableString
         state.takenSpacePercentage = 1 - Double(diskSpace.freeSpace()) / Double(diskSpace.freeSpace() + diskSpace.takenSpace())
-        return .send(.fetchAvailableLanguages)
-
-      case .fetchAvailableLanguages:
         state.availableLanguages = transcriber.getAvailableLanguages().identifiedArray
         state.selectedLanguage = settingsClient.settings().voiceLanguage
+        state.isParallelEnabled = settingsClient.settings().isParallelEnabled
         return .none
 
       case let .setLanguage(language):
         state.selectedLanguage = language
         return .run { _ in
           try await settingsClient.setValue(language, forKey: \.voiceLanguage)
+        } catch: { error, send in
+          await send(.showError(error.equatable))
+        }
+
+      case let .parallelSwitchTapped(switchState):
+        state.isParallelEnabled = switchState
+        return .run { [isParallelEnabled = state.isParallelEnabled] _ in
+          try await settingsClient.setValue(isParallelEnabled, forKey: \.isParallelEnabled)
         } catch: { error, send in
           await send(.showError(error.equatable))
         }
@@ -190,6 +197,13 @@ struct SettingsScreenView: View {
               groupBackgroundColor: .DS.Background.secondary
             )
           )
+
+          #if DEBUG
+            SettingToggle(title: "Parallel chunks transcription", isOn: viewStore.binding(
+              get: \.isParallelEnabled,
+              send: { .parallelSwitchTapped($0) }
+            ))
+          #endif
         }
 
         SettingGroup(header: "Storage", backgroundColor: .DS.Background.secondary) {

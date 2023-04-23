@@ -29,8 +29,9 @@ extension ModelDownloadClient: DependencyKey {
           )
         }
       },
+
       downloadModel: { modelType in
-        AsyncStream { continuation in
+        AsyncStream<DownloadState> { continuation in
           Task {
             // TODO: remove after some time, it is just to clean up old models folder
             if UserDefaults.standard.bool(forKey: "didCleanUpOldModelsFolder") == false {
@@ -79,6 +80,7 @@ extension ModelDownloadClient: DependencyKey {
           }
         }
       },
+
       deleteModel: { modelType in
         try? FileManager.default.removeItem(at: modelType.localURL)
       }
