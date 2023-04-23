@@ -32,9 +32,11 @@ public struct RecordingListScreen: ReducerProtocol {
 
   @Dependency(\.storage) var storage: StorageClient
   @Dependency(\.fileImport) var fileImport: FileImportClient
-  @Dependency(\.recordingsStream) var recordingsStream: @Sendable () -> AnyPublisher<[RecordingEnvelop], Never>
+  @Dependency(\.recordingsStream) var recordingsStream: @Sendable ()
+    -> AnyPublisher<[RecordingEnvelop], Never>
 
   struct SavingRecordingsID: Hashable {}
+  struct StreamID: Hashable {}
 
   public var body: some ReducerProtocol<State, Action> {
     CombineReducers {
@@ -44,10 +46,10 @@ public struct RecordingListScreen: ReducerProtocol {
         switch action {
         case .task:
           return .run { send in
-            for await envelops in recordingsStream().asAsyncStream() {
+            for await envelops in recordingsStream().values {
               await send(.receivedRecordings(envelops))
             }
-          }
+          }.cancellable(id: StreamID(), cancelInFlight: true)
 
         case let .receivedRecordings(envelops):
           state.recordingCards = envelops.map { envelop in
@@ -57,6 +59,13 @@ public struct RecordingListScreen: ReducerProtocol {
             card.recordingEnvelop = envelop
             return card
           }.identifiedArray
+
+          state.selection = state.selection.flatMap { selection -> Identified<RecordingInfo.ID, RecordingDetails.State>? in
+            guard let card = state.recordingCards.first(where: { $0.id == selection.id }) else {
+              return nil
+            }
+            return Identified(RecordingDetails.State(recordingCard: card), id: selection.id)
+          }
 
           return .none
 
@@ -221,6 +230,7 @@ public struct RecordingListScreenView: View {
         .onChange(of: viewStore.recordingCards.count) {
           showListItems = $0 > 0
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .animation(.default, value: viewStore.recordingCards.count)
       }
       .background {
@@ -299,18 +309,17 @@ extension RecordingListScreenView {
 
 struct EmptyStateView: View {
   @ObserveInjection var inject
+  @State private var isAnimating = false
 
   var body: some View {
     VStack(spacing: .grid(4)) {
-      WithInlineState(initialValue: 0.0) { state in
-        Image(systemName: "waveform.path.ecg")
-          .font(.system(size: 100))
-          .foregroundColor(.DS.Text.accent)
-          .shadow(color: .DS.Text.accent.opacity(state.wrappedValue), radius: 20 * state.wrappedValue, x: 0, y: 0)
-          .animateForever(using: .easeInOut(duration: 2), autoreverses: true) {
-            state.wrappedValue = 1
-          }
-      }
+      Image(systemName: "waveform.path.ecg")
+        .font(.system(size: 100))
+        .foregroundColor(.DS.Text.accent)
+        .shadow(color: .DS.Text.accent.opacity(isAnimating ? 1 : 0), radius: isAnimating ? 20 : 0, x: 0, y: 0)
+        .animateForever(using: .easeInOut(duration: 2), autoreverses: true) {
+          isAnimating = true
+        }
       VStack(spacing: .grid(1)) {
         Text("No recordings yet")
           .font(.DS.headlineL)
