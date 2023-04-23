@@ -35,7 +35,9 @@ actor WhisperContext {
       let segmentIndex = whisper_full_n_segments(context) - 1
       let segmentText = String(cString: whisper_full_get_segment_text(context, segmentIndex))
       log.verbose("New segment: \(segmentText) id: \(segmentIndex)")
-      WhisperContext.newSegmentCallback?(segmentText)
+      DispatchQueue.main.async {
+        WhisperContext.newSegmentCallback?(segmentText)
+      }
 
       // TODO: extract token data
       // // Get number of tokens in the specified segment.

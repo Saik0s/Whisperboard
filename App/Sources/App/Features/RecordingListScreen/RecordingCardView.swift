@@ -60,7 +60,7 @@ struct RecordingCardView: View {
         .transition(.scale.combined(with: .opacity))
       }
 
-      if viewStore.recordingEnvelop.isTranscribed {
+      if viewStore.recordingEnvelop.isTranscribed && !viewStore.isTranscribing {
         VStack(alignment: .leading, spacing: .grid(2)) {
           Text(viewStore.transcription)
             .font(.DS.bodyS)
@@ -96,14 +96,15 @@ struct RecordingCardView: View {
           .scaleEffect(1.5)
           .frame(maxWidth: .infinity, alignment: .center)
           .padding(.vertical, .grid(2))
-          .overlay(alignment: .trailing) {
-            Button("Cancel") {
-              viewStore.send(.cancelTranscriptionTapped)
-            }
-            .tertiaryButtonStyle()
-            .padding(.grid(4))
-            .transition(.move(edge: .trailing))
-          }
+        // TODO: Implement cancel transcription https://github.com/ggerganov/whisper.cpp/blob/master/examples/main/main.cpp#L793
+        // .overlay(alignment: .trailing) {
+        //   Button("Cancel") {
+        //     viewStore.send(.cancelTranscriptionTapped)
+        //   }
+        //   .tertiaryButtonStyle()
+        //   .padding(.grid(4))
+        //   .transition(.move(edge: .trailing))
+        // }
       } else {
         Button("Transcribe") {
           viewStore.send(.transcribeTapped)

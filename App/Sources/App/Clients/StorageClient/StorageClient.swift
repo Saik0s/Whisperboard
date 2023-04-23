@@ -10,7 +10,7 @@ import XCTestDynamicOverlay
 
 struct StorageClient {
   var read: @Sendable () -> IdentifiedArrayOf<RecordingInfo>
-  var recordingsInfoStream: @Sendable () -> AnyPublisher<[RecordingInfo], Never>
+  var recordingsInfoStream: AnyPublisher<[RecordingInfo], Never>
   var write: @Sendable (IdentifiedArrayOf<RecordingInfo>) -> Void
   var addRecordingInfo: @Sendable (RecordingInfo) async throws -> Void
   var createNewWhisperURL: () -> URL

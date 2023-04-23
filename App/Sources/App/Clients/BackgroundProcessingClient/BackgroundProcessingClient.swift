@@ -8,9 +8,9 @@ import UIKit
 // MARK: - BackgroundProcessingClient
 
 struct BackgroundProcessingClient {
-  var startTask: (RecordingInfo.ID) -> Void
-  var removeAndCancelAllTasks: () -> Void
-  var registerBackgroundTask: () -> Void
+  var startTask: @Sendable (RecordingInfo.ID) async throws -> Void
+  var removeAndCancelAllTasks: @Sendable () -> Void
+  var registerBackgroundTask: @Sendable () -> Void
 }
 
 // MARK: DependencyKey
@@ -21,7 +21,7 @@ extension BackgroundProcessingClient: DependencyKey {
 
     return BackgroundProcessingClient(
       startTask: { recordingId in
-        client.startTask(recordingId)
+        try await client.startTask(recordingId)
       },
       removeAndCancelAllTasks: {
         client.removeAndCancelAllTasks()
@@ -40,6 +40,13 @@ extension DependencyValues {
   }
 }
 
+// MARK: - BackgroundProcessingClientError
+
+enum BackgroundProcessingClientError: Error {
+  case noTasksInQueue
+  case alreadyExecutingTask
+}
+
 // MARK: - BackgroundProcessingClientImpl
 
 final class BackgroundProcessingClientImpl<State: Codable> {
@@ -55,23 +62,21 @@ final class BackgroundProcessingClientImpl<State: Codable> {
   }
 
   private let longTask: T
-  private var currentTask: Task<Void, Error>?
 
   init(longTask: T) {
     self.longTask = longTask
   }
 
-  func startTask(_ taskState: State) {
+  func startTask(_ taskState: State) async throws {
+    guard taskQueue.isEmpty else {
+      throw BackgroundProcessingClientError.alreadyExecutingTask
+    }
     log.debug("Adding task to queue: \(taskState)")
     taskQueue.append(taskState)
-    currentTask = Task {
-      await executeNextTask()
-    }
+    try await executeNextTask()
   }
 
   func removeAndCancelAllTasks() {
-    currentTask?.cancel()
-    currentTask = nil
     taskQueue.removeAll()
     resetBackgroundTask()
   }
@@ -106,17 +111,21 @@ final class BackgroundProcessingClientImpl<State: Codable> {
 
     if !taskQueue.isEmpty {
       Task {
-        await executeNextTask()
+        do {
+          try await executeNextTask()
+        } catch {
+          log.error(error)
+        }
       }
     }
   }
 
   // MARK: - Private
 
-  private func executeNextTask() async {
+  private func executeNextTask() async throws {
     guard let taskState = taskQueue.first, !isExecutingTask else {
-      log.info("No tasks(\(taskQueue.count)) to execute or already executing a task(\(isExecutingTask))")
-      return
+      log.warning("No tasks(\(taskQueue.count)) to execute or already executing a task(\(isExecutingTask))")
+      throw BackgroundProcessingClientError.noTasksInQueue
     }
 
     isExecutingTask = true
@@ -124,26 +133,27 @@ final class BackgroundProcessingClientImpl<State: Codable> {
     backgroundTaskID = await UIApplication.shared.beginBackgroundTask {
       self.endBackgroundTask()
     }
-
     scheduleBackgroundTask()
+
     do {
       try await longTask.performTask(taskState)
       if !taskQueue.isEmpty {
         taskQueue.removeFirst()
       }
       isExecutingTask = false
-      await taskCompleted()
+      try await taskCompleted()
     } catch {
       customAssertionFailure()
       log.error(error)
       taskFailed()
+      throw error
     }
   }
 
   private func executeNextTaskWithoutScheduling() async throws {
     guard let taskState = taskQueue.first, !isExecutingTask else {
-      log.info("No tasks(\(taskQueue.count)) to execute or already executing a task(\(isExecutingTask))")
-      return
+      log.warning("No tasks(\(taskQueue.count)) to execute or already executing a task(\(isExecutingTask))")
+      throw BackgroundProcessingClientError.noTasksInQueue
     }
 
     isExecutingTask = true
@@ -170,10 +180,10 @@ final class BackgroundProcessingClientImpl<State: Codable> {
     }
   }
 
-  private func taskCompleted() async {
+  private func taskCompleted() async throws {
     resetBackgroundTask()
     if !taskQueue.isEmpty {
-      await executeNextTask()
+      try await executeNextTask()
     }
   }
 
@@ -193,9 +203,7 @@ final class BackgroundProcessingClientImpl<State: Codable> {
   }
 
   private func removeScheduledBackgroundTask() {
-    if backgroundTaskScheduled {
-      BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: longTask.identifier)
-      backgroundTaskScheduled = false
-    }
+    BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: longTask.identifier)
+    backgroundTaskScheduled = false
   }
 }

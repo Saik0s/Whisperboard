@@ -2,53 +2,30 @@ import Combine
 import Dependencies
 import Foundation
 
-// MARK: - RecordingEnvelop
-
-@dynamicMemberLookup
-public struct RecordingEnvelop: Hashable {
-  let recordingInfo: RecordingInfo
-  let transcriptionState: TranscriptionState?
-
-  public init(_ recordingInfo: RecordingInfo, _ transcriptionState: TranscriptionState?) {
-    self.recordingInfo = recordingInfo
-    self.transcriptionState = transcriptionState
-  }
-
-  public subscript<Subject>(dynamicMember keyPath: KeyPath<RecordingInfo, Subject>) -> Subject {
-    recordingInfo[keyPath: keyPath]
-  }
-
-  public subscript<Subject>(dynamicMember keyPath: KeyPath<TranscriptionState?, Subject>) -> Subject {
-    transcriptionState[keyPath: keyPath]
-  }
-}
-
 extension DependencyValues {
-  var recordingsStream: @Sendable () -> AnyPublisher<[RecordingEnvelop], Never> {
+  var recordingsStream: AnyPublisher<[RecordingEnvelop], Never> {
     get { self[RecordingsStreamKey.self] }
     set { self[RecordingsStreamKey.self] = newValue }
   }
 
   private enum RecordingsStreamKey: DependencyKey {
-    typealias Value = @Sendable () -> AnyPublisher<[RecordingEnvelop], Never>
+    typealias Value = AnyPublisher<[RecordingEnvelop], Never>
 
-    static let liveValue: @Sendable () -> AnyPublisher<[RecordingEnvelop], Never> = {
+    static let liveValue: AnyPublisher<[RecordingEnvelop], Never> = {
       @Dependency(\.transcriber) var transcriber: TranscriberClient
       @Dependency(\.storage) var storage: StorageClient
 
-      let transcriptions = transcriber.transcriptionStateStream()
-
-      return storage
-        .recordingsInfoStream()
-        .combineLatest(transcriptions) { (info: [RecordingInfo], state: [FileName: TranscriptionState]) in
+      return storage.recordingsInfoStream
+        .combineLatest(transcriber.transcriptionStateStream) { (info: [RecordingInfo], state: [FileName: TranscriptionState]) in
           info.map { (currentInfo: RecordingInfo) in
             RecordingEnvelop(currentInfo, state[currentInfo.fileName])
           }
         }
         .receive(on: RunLoop.main)
         .removeDuplicates()
+        .throttle(for: 0.1, scheduler: RunLoop.main, latest: true)
         .eraseToAnyPublisher()
-    }
+    }()
   }
 }
 

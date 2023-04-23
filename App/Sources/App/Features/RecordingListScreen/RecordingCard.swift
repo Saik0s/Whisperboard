@@ -60,6 +60,7 @@ public struct RecordingCard: ReducerProtocol {
   @Dependency(\.backgroundProcessingClient) var backgroundProcessingClient: BackgroundProcessingClient
 
   private enum PlayID {}
+  private struct TranscriptionID: Hashable { let id: String }
 
   public var body: some ReducerProtocol<State, Action> {
     BindingReducer()
@@ -104,18 +105,17 @@ public struct RecordingCard: ReducerProtocol {
 
       case .transcribeTapped:
         log.debug("Transcribe tapped for recording \(state.recordingEnvelop.id)")
-        guard transcriber.transcriberState().isIdle else {
-          state.alert = .error(message: "Transcription is already in progress")
-          return .none
-        }
-
-        backgroundProcessingClient.startTask(state.recordingEnvelop.id)
-        return .none
+        return .run { [id = state.recordingEnvelop.id] _ in
+          try await backgroundProcessingClient.startTask(id)
+        } catch: { error, send in
+          await send(.binding(.set(\.$alert, .error(error))))
+        }.cancellable(id: TranscriptionID(id: state.recordingEnvelop.id))
 
       case .cancelTranscriptionTapped:
-        transcriber.unloadSelectedModel()
-        backgroundProcessingClient.removeAndCancelAllTasks()
-        return .none
+        return .fireAndForget(priority: .utility) {
+          transcriber.unloadSelectedModel()
+          backgroundProcessingClient.removeAndCancelAllTasks()
+        }.merge(with: .cancel(id: TranscriptionID(id: state.recordingEnvelop.id)))
 
       case let .titleChanged(title):
         do {
@@ -144,11 +144,7 @@ public struct RecordingCard: ReducerProtocol {
           break
         case let .error(error):
           log.error(error as Any)
-          await send(.binding(.set(\.$alert,
-                                   AlertState<Action>(
-                                     title: TextState("Error"),
-                                     message: TextState(error?.localizedDescription ?? "Something went wrong.")
-                                   ))))
+          await send(.binding(.set(\.$alert, .error(message: "Failed to play audio"))))
           await send(.audioPlayerFinished(.failure(error ?? NSError())), animation: .default)
         case let .finish(successful):
           await send(.audioPlayerFinished(.success(successful)), animation: .default)
@@ -180,10 +176,6 @@ extension TranscriptionState.State {
       return "Loading model..."
     case .transcribing:
       return "Transcribing..."
-    case .finished:
-      return "Finished"
-    case .error:
-      return "Error"
     }
   }
 }
