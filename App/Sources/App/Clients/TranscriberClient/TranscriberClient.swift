@@ -1,5 +1,6 @@
 import AppDevUtils
 import Combine
+import ComposableArchitecture
 import Dependencies
 import Foundation
 import os.log
@@ -40,7 +41,7 @@ enum TranscriberError: Error, CustomStringConvertible {
 // MARK: - TranscriptionState
 
 public struct TranscriptionState: Hashable {
-  enum State: Hashable { case starting, loadingModel, transcribing, finished, error }
+  enum State: Hashable { case starting, loadingModel, transcribing }
 
   var state: State = .starting
   var segments: [TranscriptionSegment] = []
@@ -53,14 +54,12 @@ struct TranscriberClient {
   var selectModel: @Sendable (_ model: VoiceModelType) -> Void
   var getSelectedModel: @Sendable () -> VoiceModelType
 
-  var loadSelectedModel: @Sendable () async throws -> Void
   var unloadSelectedModel: @Sendable () -> Void
 
   var transcribeAudio: @Sendable (_ audioURL: URL, _ language: VoiceLanguage) async throws -> String
   var transcriberState: @Sendable () -> TranscriberState
-  var transcriberStateStream: @Sendable () -> AsyncStream<TranscriberState>
 
-  var transcriptionStateStream: @Sendable () -> AnyPublisher<[FileName: TranscriptionState], Never>
+  var transcriptionStateStream: AnyPublisher<[FileName: TranscriptionState], Never>
 
   var getAvailableLanguages: @Sendable () -> [VoiceLanguage]
 }
@@ -69,17 +68,14 @@ struct TranscriberClient {
 
 extension TranscriberClient: DependencyKey {
   static var selectedModel: VoiceModelType {
-    get {
-      UserDefaults.standard.selectedModelName.flatMap { VoiceModelType(rawValue: $0) } ?? .default
-    }
-    set {
-      UserDefaults.standard.selectedModelName = newValue.rawValue
-    }
+    get { UserDefaults.standard.selectedModelName.flatMap { VoiceModelType(rawValue: $0) } ?? .default }
+    set { UserDefaults.standard.selectedModelName = newValue.rawValue }
   }
 
   static let liveValue: TranscriberClient = {
     let impl = TranscriberImpl()
     let transcriptionStatesSubject = CurrentValueSubject<[FileName: TranscriptionState], Never>([:])
+    let state: CurrentValueSubject<TranscriberState, Never> = CurrentValueSubject(.idle)
 
     return TranscriberClient(
       selectModel: { model in
@@ -93,51 +89,40 @@ extension TranscriberClient: DependencyKey {
         return selectedModel
       },
 
-      loadSelectedModel: {
-        try await impl.loadModel(model: selectedModel)
-      },
-
       unloadSelectedModel: {
         impl.unloadModel()
       },
 
       transcribeAudio: { audioURL, language in
         let fileName = audioURL.lastPathComponent
-        log.debug("Transcribing \(fileName)...")
-        var transcriptionState = TranscriptionState()
-        transcriptionStatesSubject.value[fileName] = transcriptionState
+        log.verbose("Transcribing \(fileName)...")
 
-        do {
-          transcriptionState.state = .loadingModel
-          transcriptionStatesSubject.value[fileName] = transcriptionState
-          try await impl.loadModel(model: selectedModel)
-
-          transcriptionState.state = .transcribing
-          transcriptionStatesSubject.value[fileName] = transcriptionState
-          let text = try await impl.transcribeAudio(audioURL, language: language) { segment in
-            transcriptionState.segments.append(segment)
-            transcriptionStatesSubject.value[fileName] = transcriptionState
-          }
-
-          transcriptionState.state = .finished
-          transcriptionState.finalText = text
-          transcriptionStatesSubject.value[fileName] = transcriptionState
-          return text
-        } catch {
-          transcriptionState.state = .error
-          transcriptionStatesSubject.value[fileName] = transcriptionState
-          throw error
+        var transcriptionState: TranscriptionState {
+          get { transcriptionStatesSubject.value[fileName] ?? TranscriptionState() }
+          set { transcriptionStatesSubject.value[fileName] = newValue }
         }
+
+        defer {
+          transcriptionStatesSubject.value.removeValue(forKey: fileName)
+        }
+
+        transcriptionState.state = .loadingModel
+        try await impl.loadModel(model: selectedModel)
+
+        transcriptionState.state = .transcribing
+        let text = try await impl.transcribeAudio(audioURL, language: language) { segment in
+          transcriptionState.segments.append(segment)
+        }
+
+        return text
       },
 
-      transcriberState: { impl.state.value },
+      transcriberState: { state.value },
 
-      transcriberStateStream: { impl.state.asAsyncStream() },
-
-      transcriptionStateStream: { transcriptionStatesSubject.eraseToAnyPublisher() },
+      transcriptionStateStream: transcriptionStatesSubject.eraseToAnyPublisher(),
 
       getAvailableLanguages: {
-        [.auto] + impl.getAvailableLanguages().sorted { $0.name < $1.name }
+        [.auto] + WhisperContext.getAvailableLanguages().sorted { $0.name < $1.name }
       }
     )
   }()
@@ -146,8 +131,6 @@ extension TranscriberClient: DependencyKey {
 // MARK: - TranscriberImpl
 
 final class TranscriberImpl {
-  let state: CurrentValueSubject<TranscriberState, Never> = CurrentValueSubject(.idle)
-
   private var whisperContext: WhisperContext?
   private var model: VoiceModelType?
 
@@ -167,20 +150,11 @@ final class TranscriberImpl {
       throw TranscriberError.notEnoughMemory(available: memory, required: model.memoryRequired)
     }
 
-    try await withCheckedThrowingContinuation { continuation in
-      self.model = model
-      state.value = .loadingModel
-      do {
-        log.verbose("Loading model...")
-        whisperContext = try WhisperContext.createContext(path: model.localURL.path)
-        state.value = .modelLoaded
-        log.verbose("Loaded model \(model.fileName)")
-        continuation.resume()
-      } catch {
-        state.value = .failed(error.equatable)
-        continuation.resume(throwing: error)
-      }
-    }
+    self.model = model
+
+    log.verbose("Loading model...")
+    whisperContext = try WhisperContext.createContext(path: model.localURL.path)
+    log.verbose("Loaded model \(model.fileName)")
   }
 
   func unloadModel() {
@@ -189,41 +163,26 @@ final class TranscriberImpl {
     whisperContext = nil
     Task {
       await tmpContext?.unloadContext()
-      state.value = .idle
     }
   }
 
   /// Transcribes the audio file at the given URL.
   /// Model should be loaded
   func transcribeAudio(_ audioURL: URL, language: VoiceLanguage, newSegmentCallback: @escaping (String) -> Void) async throws -> String {
-    guard state.value == .modelLoaded, let whisperContext else {
+    guard let whisperContext else {
       throw TranscriberError.modelNotLoaded
     }
 
-    state.value = .transcribing
+    log.verbose("Reading wave samples...")
+    let data = try readAudioSamples(audioURL)
 
-    do {
-      log.verbose("Reading wave samples...")
-      let data = try readAudioSamples(audioURL)
+    log.verbose("Transcribing data...")
+    try await whisperContext.fullTranscribe(samples: data, language: language, newSegmentCallback: newSegmentCallback)
 
-      log.verbose("Transcribing data...")
-      try await whisperContext.fullTranscribe(samples: data, language: language, newSegmentCallback: newSegmentCallback)
+    let text = await whisperContext.getTranscription()
+    log.verbose("Done: \(text)")
 
-      let text = await whisperContext.getTranscription()
-      log.verbose("Done: \(text)")
-
-      state.value = .finished
-
-      return text
-    } catch {
-      state.value = .failed(error.equatable)
-      log.error(error)
-      throw error
-    }
-  }
-
-  func getAvailableLanguages() -> [VoiceLanguage] {
-    WhisperContext.getAvailableLanguages()
+    return text
   }
 
   private func readAudioSamples(_ url: URL) throws -> [Float] {
@@ -234,7 +193,7 @@ final class TranscriberImpl {
 extension TranscriberState {
   var isTranscribing: Bool {
     switch self {
-    case .transcribing, .modelLoaded, .loadingModel:
+    case .transcribing, .loadingModel:
       return true
     default:
       return false
@@ -243,7 +202,16 @@ extension TranscriberState {
 
   var isIdle: Bool {
     switch self {
-    case .idle, .failed, .finished:
+    case .idle, .failed, .finished, .modelLoaded:
+      return true
+    default:
+      return false
+    }
+  }
+
+  var isModelLoaded: Bool {
+    switch self {
+    case .modelLoaded, .finished:
       return true
     default:
       return false
@@ -273,14 +241,6 @@ extension TranscriberError {
 extension TranscriptionState {
   var isTranscribing: Bool {
     state == .starting || state == .loadingModel || state == .transcribing
-  }
-
-  var isFinished: Bool {
-    state == .finished
-  }
-
-  var isError: Bool {
-    state == .error
   }
 }
 

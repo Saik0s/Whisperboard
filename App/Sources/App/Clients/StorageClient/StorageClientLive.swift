@@ -18,9 +18,7 @@ extension StorageClient: DependencyKey {
         storage.currentRecordingsSubject.value.identifiedArray
       },
 
-      recordingsInfoStream: {
-        storage.currentRecordingsSubject.replaceError(with: []).eraseToAnyPublisher()
-      },
+      recordingsInfoStream: storage.currentRecordingsSubject.replaceError(with: []).eraseToAnyPublisher(),
 
       write: { recordings in
         storage.write(recordings.elements)

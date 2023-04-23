@@ -10,16 +10,28 @@ import SwiftUI
 public struct RecordingListScreen: ReducerProtocol {
   public struct State: Equatable {
     var recordingCards: IdentifiedArrayOf<RecordingCard.State> = []
-    var selection: Identified<RecordingInfo.ID, RecordingDetails.State>?
+    var selectedId: RecordingInfo.ID? = nil
 
     @BindingState var editMode: EditMode = .inactive
     @BindingState var isImportingFiles = false
     @BindingState var alert: AlertState<Action>?
+
+    var shareAudioFileURL: URL?
+    var selection: Identified<RecordingInfo.ID, RecordingDetails.State>? {
+      get {
+        guard let id = selectedId, let card = recordingCards.first(where: { $0.id == id }) else { return nil }
+        return Identified(RecordingDetails.State(recordingCard: card, shareAudioFileURL: shareAudioFileURL), id: id)
+      }
+      set {
+        selectedId = newValue?.id
+        shareAudioFileURL = newValue?.shareAudioFileURL
+      }
+    }
   }
 
   public enum Action: BindableAction, Equatable {
-    case task
     case binding(BindingAction<State>)
+    case task
     case receivedRecordings([RecordingEnvelop])
     case recordingCard(id: RecordingCard.State.ID, action: RecordingCard.Action)
     case delete(id: RecordingInfo.ID)
@@ -32,8 +44,7 @@ public struct RecordingListScreen: ReducerProtocol {
 
   @Dependency(\.storage) var storage: StorageClient
   @Dependency(\.fileImport) var fileImport: FileImportClient
-  @Dependency(\.recordingsStream) var recordingsStream: @Sendable ()
-    -> AnyPublisher<[RecordingEnvelop], Never>
+  @Dependency(\.recordingsStream) var recordingsStream: AnyPublisher<[RecordingEnvelop], Never>
 
   struct SavingRecordingsID: Hashable {}
   struct StreamID: Hashable {}
@@ -46,16 +57,14 @@ public struct RecordingListScreen: ReducerProtocol {
         switch action {
         case .task:
           return .run { send in
-            for await envelops in recordingsStream().values {
+            for await envelops in recordingsStream.values {
               await send(.receivedRecordings(envelops))
             }
           }.cancellable(id: StreamID(), cancelInFlight: true)
 
         case let .receivedRecordings(envelops):
           state.recordingCards = envelops.map { envelop in
-            guard var card = state.recordingCards[id: envelop.id] else {
-              return RecordingCard.State(recordingEnvelop: envelop)
-            }
+            var card = state.recordingCards[id: envelop.id] ?? RecordingCard.State(recordingEnvelop: envelop)
             card.recordingEnvelop = envelop
             return card
           }.identifiedArray
@@ -151,26 +160,6 @@ public struct RecordingListScreen: ReducerProtocol {
         RecordingDetails()
       }
     }
-
-    // // Sync changes between detailed screen and current list screen
-    // .onChange(of: \.selection) { selection, state, _ -> EffectTask<Action> in
-    //   guard let selection else { return .none }
-    //
-    //   state.recordingCards = state.recordingCards.map { row in
-    //     row.id == selection.id ? Row(index: row.index, card: selection.value.recordingCard) : row
-    //   }.identified()
-    //
-    //   return .none
-    // }
-
-    // // Make sure all changes are saved to disk
-    // .onChange(of: \.recordingCards) { recordingCards, _, action -> EffectTask<Action> in
-    //   if case .setRecordings = action {
-    //   } else {
-    //     storage.write(recordingCards.map(\.card.recordingEnvelop).identifiedArray)
-    //   }
-    //   return .none
-    // }
   }
 
   private func createDeleteConfirmationDialog(id: RecordingInfo.ID, state: inout State) {
@@ -219,12 +208,6 @@ public struct RecordingListScreenView: View {
               ProgressView()
             }
           }
-          // ForEachStore(store.scope(
-          //   state: \.recordingCards,
-          //   action: RecordingListScreen.Action.recording(id:action:)
-          // )) { store in
-          //   makeRecordingCard(store: store)
-          // }
         }
         .padding(.grid(4))
         .onChange(of: viewStore.recordingCards.count) {

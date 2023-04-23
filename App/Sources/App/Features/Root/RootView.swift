@@ -1,4 +1,5 @@
 import AppDevUtils
+import Combine
 import ComposableArchitecture
 import Inject
 import SwiftUI
@@ -22,6 +23,7 @@ struct Root: ReducerProtocol {
   }
 
   @Dependency(\.transcriber) var transcriber: TranscriberClient
+  @Dependency(\.recordingsStream) var recordingsStream: AnyPublisher<[RecordingEnvelop], Never>
 
   var body: some ReducerProtocol<State, Action> {
     CombineReducers {
@@ -55,14 +57,8 @@ struct Root: ReducerProtocol {
         switch action {
         case .task:
           return .fireAndForget { @MainActor in
-            for await state in transcriber.transcriberStateStream() {
-              switch state {
-              case .transcribing, .loadingModel, .modelLoaded:
-                UIApplication.shared.isIdleTimerDisabled = true
-
-              default:
-                UIApplication.shared.isIdleTimerDisabled = false
-              }
+            for await state in transcriber.transcriptionStateStream.values {
+              UIApplication.shared.isIdleTimerDisabled = !state.isEmpty
             }
           }
 
