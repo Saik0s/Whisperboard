@@ -114,7 +114,7 @@
       "location" : "https://github.com/pointfreeco/swift-composable-architecture.git",
       "state" : {
         "branch" : "prerelease/1.0",
-        "revision" : "647c93a15e9ecbbeded84412647db83af5e2a205"
+        "revision" : "99a84e2e914be9afac2dfd5e53cc56476dfacb52"
       }
     },
     {
@@ -167,8 +167,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
       "state" : {
-        "revision" : "ab8c9f45843694dd16be4297e6d44c0634fd9913",
-        "version" : "0.8.4"
+        "revision" : "4af50b38daf0037cfbab15514a241224c3f62f98",
+        "version" : "0.8.5"
       }
     }
   ],
