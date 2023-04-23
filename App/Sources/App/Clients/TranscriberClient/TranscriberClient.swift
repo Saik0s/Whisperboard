@@ -56,7 +56,7 @@ struct TranscriberClient {
 
   var unloadSelectedModel: @Sendable () -> Void
 
-  var transcribeAudio: @Sendable (_ audioURL: URL, _ language: VoiceLanguage) async throws -> String
+  var transcribeAudio: @Sendable (_ audioURL: URL, _ language: VoiceLanguage, _ isParallel: Bool) async throws -> String
   var transcriberState: @Sendable () -> TranscriberState
 
   var transcriptionStateStream: AnyPublisher<[FileName: TranscriptionState], Never>
@@ -93,7 +93,7 @@ extension TranscriberClient: DependencyKey {
         impl.unloadModel()
       },
 
-      transcribeAudio: { audioURL, language in
+      transcribeAudio: { audioURL, language, isParallel in
         let fileName = audioURL.lastPathComponent
         log.verbose("Transcribing \(fileName)...")
 
@@ -110,10 +110,11 @@ extension TranscriberClient: DependencyKey {
         try await impl.loadModel(model: selectedModel)
 
         transcriptionState.state = .transcribing
-        let text = try await impl.transcribeAudio(audioURL, language: language) { segment in
+        let text = try await impl.transcribeAudio(audioURL, language: language, isParallel: isParallel) { segment in
           transcriptionState.segments.append(segment)
         }
 
+        transcriptionStatesSubject.value.removeValue(forKey: fileName)
         return text
       },
 
@@ -168,7 +169,7 @@ final class TranscriberImpl {
 
   /// Transcribes the audio file at the given URL.
   /// Model should be loaded
-  func transcribeAudio(_ audioURL: URL, language: VoiceLanguage, newSegmentCallback: @escaping (String) -> Void) async throws -> String {
+  func transcribeAudio(_ audioURL: URL, language: VoiceLanguage, isParallel: Bool, newSegmentCallback: @escaping (String) -> Void) async throws -> String {
     guard let whisperContext else {
       throw TranscriberError.modelNotLoaded
     }
@@ -177,7 +178,7 @@ final class TranscriberImpl {
     let data = try readAudioSamples(audioURL)
 
     log.verbose("Transcribing data...")
-    try await whisperContext.fullTranscribe(samples: data, language: language, newSegmentCallback: newSegmentCallback)
+    try await whisperContext.fullTranscribe(samples: data, language: language, isParallel: isParallel, newSegmentCallback: newSegmentCallback)
 
     let text = await whisperContext.getTranscription()
     log.verbose("Done: \(text)")

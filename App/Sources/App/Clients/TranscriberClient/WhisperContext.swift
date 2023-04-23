@@ -27,7 +27,7 @@ actor WhisperContext {
     whisper_free(context)
   }
 
-  func fullTranscribe(samples: [Float], language: VoiceLanguage, newSegmentCallback: @escaping (String) -> Void) throws {
+  func fullTranscribe(samples: [Float], language: VoiceLanguage, isParallel: Bool, newSegmentCallback: @escaping (String) -> Void) throws {
     // TODO: Make it a dictionary
     WhisperContext.newSegmentCallback = newSegmentCallback
 
@@ -74,11 +74,20 @@ actor WhisperContext {
     whisper_reset_timings(context)
     log.verbose("About to run whisper_full")
     try samples.withUnsafeBufferPointer { samples in
-      if whisper_full(context, params, samples.baseAddress, Int32(samples.count)) != 0 {
-        log.error("Failed to run the model")
-        throw WhisperError.cantRunModel
+      if isParallel {
+        if whisper_full_parallel(context, params, samples.baseAddress, Int32(samples.count), Int32(maxThreads)) != 0 {
+          log.error("Failed to run the model in parallel")
+          throw WhisperError.cantRunModel
+        } else {
+          whisper_print_timings(context)
+        }
       } else {
-        whisper_print_timings(context)
+        if whisper_full(context, params, samples.baseAddress, Int32(samples.count)) != 0 {
+          log.error("Failed to run the model")
+          throw WhisperError.cantRunModel
+        } else {
+          whisper_print_timings(context)
+        }
       }
     }
   }

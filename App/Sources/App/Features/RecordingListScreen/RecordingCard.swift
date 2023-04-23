@@ -108,7 +108,7 @@ public struct RecordingCard: ReducerProtocol {
         return .run { [id = state.recordingEnvelop.id] _ in
           try await backgroundProcessingClient.startTask(id)
         } catch: { error, send in
-          await send(.binding(.set(\.$alert, .error(error))))
+          await send(.binding(.set(\.$alert, .error(message: "Another transcription in progress"))))
         }.cancellable(id: TranscriptionID(id: state.recordingEnvelop.id))
 
       case .cancelTranscriptionTapped:

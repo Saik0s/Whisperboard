@@ -1,4 +1,5 @@
 import AppDevUtils
+import AsyncAlgorithms
 import ComposableArchitecture
 import Inject
 import SwiftUI
@@ -35,7 +36,7 @@ struct ModelRow: ReducerProtocol {
         }
         state.model.isDownloading = true
         return .run { [modelType = state.model.modelType] send in
-          for await downloadState in await modelDownload.downloadModel(modelType) {
+          for try await downloadState in await modelDownload.downloadModel(modelType).throttle(for: .seconds(0.1)) {
             switch downloadState {
             case let .inProgress(progress):
               await send(.modelUpdated(VoiceModel(modelType: modelType, isDownloading: true, downloadProgress: progress)))
@@ -46,8 +47,9 @@ struct ModelRow: ReducerProtocol {
               await send(.loadError(error.localizedDescription))
             }
           }
-        }
-        .cancellable(id: CancelDownloadID(), cancelInFlight: true)
+        } catch: { error, send in
+          await send(.loadError(error.localizedDescription))
+        }.cancellable(id: CancelDownloadID(), cancelInFlight: true)
 
       case .selectModelTapped:
         guard state.isSelected == false else {
