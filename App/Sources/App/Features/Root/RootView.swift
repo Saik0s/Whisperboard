@@ -111,7 +111,10 @@ struct RootView: View {
       HStack {
         if selectedTab != 1 { Spacer() }
 
-        TabBarItem(icon: "list.bullet", tag: 0, selectedTab: viewStore.binding(get: \.selectedTab, send: Root.Action.selectTab))
+        if viewStore.recordScreen.recordingControls.recording == nil {
+          TabBarItem(icon: "list.bullet", tag: 0, selectedTab: viewStore.binding(get: \.selectedTab, send: Root.Action.selectTab))
+            .transition(.move(edge: .leading))
+        }
 
         Spacer()
 
@@ -121,7 +124,10 @@ struct RootView: View {
 
         Spacer()
 
-        TabBarItem(icon: "gear", tag: 2, selectedTab: viewStore.binding(get: \.selectedTab, send: Root.Action.selectTab))
+        if viewStore.recordScreen.recordingControls.recording == nil {
+          TabBarItem(icon: "gear", tag: 2, selectedTab: viewStore.binding(get: \.selectedTab, send: Root.Action.selectTab))
+            .transition(.move(edge: .trailing))
+        }
 
         if selectedTab != 1 { Spacer() }
       }
@@ -129,6 +135,7 @@ struct RootView: View {
       .cornerRadius(25.0)
       .padding(.horizontal, selectedTab == 1 ? 16 : 64)
       .frame(height: 50.0)
+      .animation(.gentleBounce(), value: viewStore.recordScreen.recordingControls.recording == nil)
     }
     .animation(.gentleBounce(), value: selectedTab)
     .task { viewStore.send(.task) }
