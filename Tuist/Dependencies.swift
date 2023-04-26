@@ -19,6 +19,7 @@ let packages: [Package] = [
 let dependencies = Dependencies(
   swiftPackageManager: SwiftPackageManagerDependencies(
     packages,
+    // productTypes: ["AppDevUtils": .framework],
     targetSettings: [
       "whisper": [
         "OTHER_CFLAGS": "-O3 -DNDEBUG -DGGML_USE_ACCELERATE $(inherited)",
