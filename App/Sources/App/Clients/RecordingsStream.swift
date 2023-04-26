@@ -15,16 +15,17 @@ extension DependencyValues {
       @Dependency(\.transcriber) var transcriber: TranscriberClient
       @Dependency(\.storage) var storage: StorageClient
 
-      return storage.recordingsInfoStream
-        .combineLatest(transcriber.transcriptionStateStream) { (info: [RecordingInfo], state: [FileName: TranscriptionState]) in
-          info.map { (currentInfo: RecordingInfo) in
-            RecordingEnvelop(currentInfo, state[currentInfo.fileName])
-          }
+      return Publishers.CombineLatest(
+        storage.recordingsInfoStream,
+        transcriber.transcriptionStateStream
+      ).map { (info: [RecordingInfo], state: [FileName: TranscriptionState]) in
+        info.map { (currentInfo: RecordingInfo) in
+          RecordingEnvelop(currentInfo, state[currentInfo.fileName])
         }
-        .receive(on: RunLoop.main)
-        .removeDuplicates()
-        .throttle(for: 0.1, scheduler: RunLoop.main, latest: true)
-        .eraseToAnyPublisher()
+      }
+      .receive(on: RunLoop.main)
+      .shareReplay(1)
+      .eraseToAnyPublisher()
     }()
   }
 }
