@@ -7,7 +7,7 @@ import SwiftUI
 
 public struct RecordingDetails: ReducerProtocol {
   public struct State: Equatable {
-    @BindingState var recordingCard: RecordingCard.State
+    var recordingCard: RecordingCard.State
     @BindingState var shareAudioFileURL: URL?
   }
 
