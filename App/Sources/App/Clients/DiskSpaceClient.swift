@@ -60,7 +60,10 @@ extension DiskSpaceClient: DependencyKey {
 
   static func deleteStorage() async throws {
     let fileURL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-    try FileManager.default.removeItem(at: fileURL)
+    let contents = try FileManager.default.contentsOfDirectory(at: fileURL, includingPropertiesForKeys: nil, options: [])
+    for item in contents {
+      try FileManager.default.removeItem(at: item)
+    }
   }
 }
 
