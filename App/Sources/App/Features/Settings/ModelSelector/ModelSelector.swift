@@ -38,6 +38,10 @@ struct ModelSelector: ReducerProtocol {
         state.alert = .error(message: message)
         return .none
 
+      case .modelRow(_, action: .didRemoveModel):
+        reloadSelectedModel(state: &state)
+        return .none
+
       case .modelRow(_, action: .selectModelTapped):
         reloadSelectedModel(state: &state)
         return .none

@@ -10,6 +10,7 @@ struct ModelRow: ReducerProtocol {
   struct State: Equatable, Identifiable {
     var model: VoiceModel
     var isSelected: Bool
+    var isRemovingModel: Bool = false
     var id: VoiceModel.ID { model.id }
   }
 
@@ -20,6 +21,7 @@ struct ModelRow: ReducerProtocol {
     case loadError(String)
     case deleteModelTapped
     case cancelDownloadTapped
+    case didRemoveModel
   }
 
   @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
@@ -31,12 +33,11 @@ struct ModelRow: ReducerProtocol {
     Reduce<State, Action> { state, action in
       switch action {
       case .downloadModelTapped:
-        guard state.model.isDownloading == false else {
-          return .none
-        }
+        guard !state.model.isDownloading else { return .none }
         state.model.isDownloading = true
+
         return .run { [modelType = state.model.modelType] send in
-          for try await downloadState in await modelDownload.downloadModel(modelType).throttle(for: .seconds(0.1)) {
+          for try await downloadState in await modelDownload.downloadModel(modelType).throttle(for: .seconds(0.3), latest: true) {
             switch downloadState {
             case let .inProgress(progress):
               await send(.modelUpdated(VoiceModel(modelType: modelType, isDownloading: true, downloadProgress: progress)))
@@ -52,9 +53,7 @@ struct ModelRow: ReducerProtocol {
         }.cancellable(id: CancelDownloadID(), cancelInFlight: true)
 
       case .selectModelTapped:
-        guard state.isSelected == false else {
-          return .none
-        }
+        guard state.isSelected == false else { return .none }
         state.isSelected = true
         transcriber.selectModel(state.model.modelType)
         return .none
@@ -64,11 +63,16 @@ struct ModelRow: ReducerProtocol {
         return .none
 
       case .deleteModelTapped:
-        guard state.model.isDownloaded else {
-          return .none
+        guard state.model.isDownloaded else { return .none }
+
+        state.isRemovingModel = true
+        return .task(priority: .background) { [modelType = state.model.modelType] in
+          modelDownload.deleteModel(modelType)
+          return .didRemoveModel
         }
 
-        modelDownload.deleteModel(state.model.modelType)
+      case .didRemoveModel:
+        state.isRemovingModel = false
         return .none
 
       case let .loadError(error):
@@ -117,7 +121,9 @@ struct ModelRowView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
 
-        if viewStore.model.isDownloading {
+        if viewStore.isRemovingModel {
+          ProgressView()
+        } else if viewStore.model.isDownloading {
           Button("Cancel") { viewStore.send(.cancelDownloadTapped) }
             .tertiaryButtonStyle()
         } else if viewStore.model.isDownloaded == false {
@@ -139,21 +145,15 @@ struct ModelRowView: View {
     .contentShape(Rectangle())
     .onTapGesture { viewStore.send(.selectModelTapped) }
     .contextMenu(viewStore.model.isDownloaded && viewStore.model.modelType != .tiny ? contextMenuBuilder() : nil)
-    .animation(.easeInOut(duration: 0.2), value: viewStore.state)
     .enableInjection()
   }
 
   func contextMenuBuilder() -> ContextMenu<TupleView<(Button<Text>, Button<Text>)>> {
     ContextMenu {
-      Button(action: { viewStore.send(.selectModelTapped) }) {
-        Text("Select")
-      }
-      Button(action: { viewStore.send(.deleteModelTapped) }) {
-        Text("Delete")
-      }
+      Button(action: { viewStore.send(.selectModelTapped) }) { Text("Select") }
+      Button(action: { viewStore.send(.deleteModelTapped) }) { Text("Delete") }
     }
-  }
-}
+  }}
 
 // MARK: - ActiveButtonStyle
 
@@ -184,19 +184,6 @@ struct ActiveButtonStyle: ButtonStyle {
 extension View {
   func activeButtonStyle(isActive: Bool) -> some View {
     buttonStyle(ActiveButtonStyle(isActive: isActive))
-  }
-}
-
-// MARK: - RadioButtonStyle
-
-struct RadioButtonStyle: ToggleStyle {
-  func makeBody(configuration: Configuration) -> some View {
-    Button(action: { configuration.isOn.toggle() }) {
-      HStack {
-        Image(systemName: configuration.isOn ? "largecircle.fill.circle" : "circle")
-          .foregroundColor(configuration.isOn ? .systemGreen : .systemGray)
-      }
-    }
   }
 }
 

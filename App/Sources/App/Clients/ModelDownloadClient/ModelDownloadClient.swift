@@ -31,8 +31,9 @@ extension ModelDownloadClient: DependencyKey {
       },
 
       downloadModel: { modelType in
-        AsyncStream<DownloadState> { continuation in
+        AsyncStream<DownloadState>(bufferingPolicy: .bufferingNewest(1)) { continuation in
           Task {
+            // ------------------------------------------------------------------
             // TODO: remove after some time, it is just to clean up old models folder
             if UserDefaults.standard.bool(forKey: "didCleanUpOldModelsFolder") == false {
               let oldModelsFolder = try? FileManager.default
@@ -43,6 +44,7 @@ extension ModelDownloadClient: DependencyKey {
               }
               UserDefaults.standard.set(true, forKey: "didCleanUpOldModelsFolder")
             }
+            // ------------------------------------------------------------------
 
             try FileManager.default.createDirectory(at: VoiceModelType.localFolderURL, withIntermediateDirectories: true)
             let destination = modelType.localURL
@@ -82,7 +84,9 @@ extension ModelDownloadClient: DependencyKey {
       },
 
       deleteModel: { modelType in
+        log.verbose("Deleting model \(modelType)...")
         try? FileManager.default.removeItem(at: modelType.localURL)
+        log.verbose("Deleted model \(modelType)")
       }
     )
   }()

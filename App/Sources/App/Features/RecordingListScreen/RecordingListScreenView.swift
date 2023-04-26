@@ -25,6 +25,9 @@ public struct RecordingListScreen: ReducerProtocol {
       set {
         selectedId = newValue?.id
         shareAudioFileURL = newValue?.shareAudioFileURL
+        if let card = newValue?.value.recordingCard {
+          recordingCards[id: card.id] = card
+        }
       }
     }
   }
@@ -140,25 +143,18 @@ public struct RecordingListScreen: ReducerProtocol {
           return .none
 
         case let .recordingSelected(id):
-          guard let id else {
-            state.selection = nil
-            return .none
-          }
-
-          state.selection = state.recordingCards.first(where: { $0.id == id }).map { card in
-            Identified(RecordingDetails.State(recordingCard: card), id: id)
-          }
+          state.selectedId = id
           return .none
         }
       }
-    }
-    .forEach(\.recordingCards, action: /Action.recordingCard(id:action:)) {
-      RecordingCard()
     }
     .ifLet(\.selection, action: /Action.details) {
       Scope(state: \Identified<RecordingInfo.ID, RecordingDetails.State>.value, action: /.self) {
         RecordingDetails()
       }
+    }
+    .forEach(\.recordingCards, action: /Action.recordingCard(id:action:)) {
+      RecordingCard()
     }
   }
 

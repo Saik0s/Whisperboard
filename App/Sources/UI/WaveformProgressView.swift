@@ -7,6 +7,10 @@ import SwiftUI
 
 // MARK: - WaveformProgress
 
+enum WaveformProgressError: Error {
+  case audioFileNotFound
+}
+
 public struct WaveformProgress: ReducerProtocol {
   public struct State: Equatable, Then {
     var fileName = ""
@@ -39,29 +43,25 @@ public struct WaveformProgress: ReducerProtocol {
     Reduce<State, Action> { state, action in
       switch action {
       case .didAppear:
-        guard state.waveFormImageURL == nil else {
-          return .none
-        }
+        guard state.waveFormImageURL == nil else { return .none }
 
-        let waveImageURL = storage.waveFileURLWithName(state.fileName + ".waveform.png")
-        guard UIImage(contentsOfFile: waveImageURL.path) == nil else {
-          state.waveFormImageURL = waveImageURL
-          return .none
-        }
+        return .task(priority: .low) { [state] in
+          let waveImageURL = storage.waveFileURLWithName(state.fileName + ".waveform.png")
+          guard UIImage(contentsOfFile: waveImageURL.path) == nil else {
+            return .waveFormImageCreated(.success(waveImageURL))
+          }
 
-        let audioURL = storage.audioFileURLWithName(state.fileName)
-        guard FileManager.default.fileExists(atPath: audioURL.path) else {
-          log.error("Can't find audio file at \(audioURL.path)")
-          return .none
-        }
+          let audioURL = storage.audioFileURLWithName(state.fileName)
+          guard FileManager.default.fileExists(atPath: audioURL.path) else {
+            log.error("Can't find audio file at \(audioURL.path)")
+            return .waveFormImageCreated(.failure(WaveformProgressError.audioFileNotFound))
+          }
 
-        return .task {
           let image = try await waveImageDrawer.waveformImage(fromAudioAt: audioURL, with: configuration)
           let data = try image.pngData().require()
           try data.write(to: waveImageURL, options: .atomic)
           return .waveFormImageCreated(.success(waveImageURL))
         } catch: { error in
-          log.error(error)
           return .waveFormImageCreated(.failure(error))
         }
 
@@ -124,7 +124,7 @@ public struct WaveformProgressView: View {
           .foregroundColor(.DS.Text.subdued)
       } placeholder: {
         ProgressView()
-      }
+      }.id(viewStore.waveFormImageURL)
       AsyncImage(url: viewStore.waveFormImageURL) { image in
         image
           .resizable()
@@ -139,7 +139,7 @@ public struct WaveformProgressView: View {
           }
       } placeholder: {
         ProgressView()
-      }
+      }.id(viewStore.waveFormImageURL)
     }
   }
 }
