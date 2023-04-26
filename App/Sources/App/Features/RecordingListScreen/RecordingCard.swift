@@ -15,7 +15,7 @@ public struct RecordingCard: ReducerProtocol {
     var recordingEnvelop: RecordingEnvelop
     var mode = Mode.notPlaying
     var isTranscribing: Bool { recordingEnvelop.transcriptionState?.isTranscribing ?? false }
-    var transcribingProgressText: String { recordingEnvelop.transcriptionState?.segments.joined(separator: " ") ?? "" }
+    var transcribingProgressText: String { recordingEnvelop.transcriptionState?.segments.map(\.text).joined(separator: " ") ?? "" }
     @BindingState var alert: AlertState<Action>?
 
     var waveFormImageURL: URL?
@@ -107,7 +107,7 @@ public struct RecordingCard: ReducerProtocol {
         log.debug("Transcribe tapped for recording \(state.recordingEnvelop.id)")
         return .run { [id = state.recordingEnvelop.id] _ in
           try await backgroundProcessingClient.startTask(id)
-        } catch: { error, send in
+        } catch: { _, send in
           await send(.binding(.set(\.$alert, .error(message: "Another transcription in progress"))))
         }.cancellable(id: TranscriptionID(id: state.recordingEnvelop.id))
 

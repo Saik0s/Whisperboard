@@ -11,21 +11,26 @@ import UIKit
 extension StorageClient: DependencyKey {
   static let liveValue: Self = {
     let storage = Storage()
-    let documentsURL = (try? Storage.documentsURL()) ?? URL(fileURLWithPath: "~/Documents")
+    let documentsURL = Storage.documentsURL
+    let recordingsInfoStream: AnyPublisher<[RecordingInfo], Never> = storage
+      .currentRecordingsStream
+      .receive(on: RunLoop.main)
+      .shareReplay(1)
+      .eraseToAnyPublisher()
 
     return Self(
       read: {
-        storage.currentRecordingsSubject.value.identifiedArray
+        storage.currentRecordings.identifiedArray
       },
 
-      recordingsInfoStream: storage.currentRecordingsSubject.replaceError(with: []).eraseToAnyPublisher(),
+      recordingsInfoStream: recordingsInfoStream,
 
       write: { recordings in
         storage.write(recordings.elements)
       },
 
       addRecordingInfo: { recording in
-        let newRecordings = (storage.currentRecordingsSubject.value) + [recording]
+        let newRecordings = storage.currentRecordings + [recording]
         storage.write(newRecordings)
       },
 
@@ -44,20 +49,21 @@ extension StorageClient: DependencyKey {
       },
 
       delete: { recordingId in
-        let recordings = storage.currentRecordingsSubject.value
-        guard let recording = recordings.identifiedArray[id: recordingId] else {
+        let recordings = storage.currentRecordings.identifiedArray
+        guard let recording = recordings[id: recordingId] else {
+          customAssertionFailure()
           return
         }
 
         let url = documentsURL.appending(path: recording.fileName)
         try FileManager.default.removeItem(at: url)
         let newRecordings = recordings.filter { $0.id != recordingId }
-        storage.write(newRecordings)
+        storage.write(newRecordings.elements)
 
       },
 
       update: { id, updater in
-        var recordings = storage.currentRecordingsSubject.value.identifiedArray
+        var recordings = storage.currentRecordings.identifiedArray
         guard var recording = recordings[id: id] else {
           customAssertionFailure()
           return
@@ -75,69 +81,57 @@ extension StorageClient: DependencyKey {
 // MARK: - Storage
 
 private final class Storage {
-  let currentRecordingsSubject: CurrentValueSubject<[RecordingInfo], Never>
-
-  private let cancellable: AnyCancellable
-
-  init() {
-    let subject = CurrentValueSubject<[RecordingInfo], Never>([])
-    cancellable = subject.dropFirst().sink { recordings in
-      do {
-        let fileURL = try Self.dbURL()
-        try recordings.write(toFile: fileURL, encoder: JSONEncoder())
-      } catch {
-        customAssertionFailure()
-        log.error(error)
-      }
-    }
-    currentRecordingsSubject = subject
-
+  static var documentsURL: URL {
     do {
-      try currentRecordingsSubject.send(read())
+      return try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
     } catch {
-      customAssertionFailure()
-      log.error(error)
+      customAssertionFailure("Could not get documents directory")
+      return URL(fileURLWithPath: "~/Documents")
     }
-
-    subscribeToDidBecomeActiveNotifications()
   }
 
-  static func documentsURL() throws -> URL {
-    try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+  static var dbURL: URL {
+    documentsURL.appendingPathComponent("recordings.json")
   }
 
-  static func dbURL() throws -> URL {
-    try documentsURL().appendingPathComponent("recordings.json")
-  }
-
-  func containerGroupURL() -> URL? {
+  static var containerGroupURL: URL? {
     let appGroupName = "group.whisperboard"
     return FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName)?.appending(component: "share")
   }
 
-  func read() throws -> [RecordingInfo] {
-    let docURL = try Self.documentsURL()
-    let dbURL = try Self.dbURL()
+  private let currentRecordingsSubject = CodableValueSubject<[RecordingInfo]>(fileURL: dbURL)
 
-    // If the database file does not exist, create an empty array and save it to the file
-    if !FileManager.default.fileExists(atPath: dbURL.path) {
-      log.verbose("Database file does not exist, creating new database file")
-      try [RecordingInfo]().saveToFile(path: dbURL.path)
-    }
+  var currentRecordings: [RecordingInfo] {
+    currentRecordingsSubject.value ?? []
+  }
+  var currentRecordingsStream: AnyPublisher<[RecordingInfo], Never> {
+    currentRecordingsSubject.replaceError(with: []).eraseToAnyPublisher()
+  }
 
+  init() {
+    catchingRead()
+    subscribeToDidBecomeActiveNotifications()
+  }
+
+  func read() throws {
     // Get the recordings stored in the database file
-    var storedRecordings = try [RecordingInfo].fromFile(path: dbURL.path)
+    var storedRecordings = currentRecordingsSubject.value ?? []
+    var shouldWrite = false
 
     // If there are files in shared container, move them to the documents directory
-    let sharedRecordings = moveSharedFiles(to: docURL)
-    storedRecordings.append(contentsOf: sharedRecordings)
+    let sharedRecordings = moveSharedFiles(to: Self.documentsURL)
+    if !sharedRecordings.isEmpty {
+      storedRecordings.append(contentsOf: sharedRecordings)
+      shouldWrite = true
+    }
 
     // Get the files in the documents directory with the .wav extension
-    let recordingFiles = try FileManager.default.contentsOfDirectory(atPath: docURL.path).filter { $0.hasSuffix(".wav") }
+    let recordingFiles = try FileManager.default
+      .contentsOfDirectory(atPath: Self.documentsURL.path)
+      .filter { $0.hasSuffix(".wav") }
 
     // Initialize a flag to track if the database file should be written to
-    var shouldWrite = false
-    var recordings: [RecordingInfo] = try recordingFiles.map { file in
+    let recordings: [RecordingInfo] = try recordingFiles.map { file in
       // If the recording is already stored in the database, return it
       if let recording = storedRecordings.first(where: { $0.fileName == file }) {
         return recording
@@ -145,30 +139,30 @@ private final class Storage {
 
       // Otherwise, set the flag to true and create the recording info
       shouldWrite = true
-      log.verbose("Recording \(file) not found in database, creating new info for it")
+      log.warning("Recording \(file) not found in database, creating new info for it")
       return try createInfo(fileName: file)
-    }
-
-    // Sort the recordings by date
-    recordings.sort { info, info2 in
-      info.date > info2.date
     }
 
     // If the flag is true, write the recordings to the database file
     if shouldWrite {
-      try recordings.saveToFile(path: dbURL.path)
+      write(recordings)
     }
-
-    return recordings
   }
 
   func write(_ recordings: [RecordingInfo]) {
-    currentRecordingsSubject.send(recordings)
+    DispatchQueue.main.async {
+      // Sort the recordings by date
+      let sorted = recordings.sorted { info, info2 in
+        info.date > info2.date
+      }
+
+      self.currentRecordingsSubject.send(sorted)
+    }
   }
 
   private func moveSharedFiles(to docURL: URL) -> [RecordingInfo] {
     var recordings: [RecordingInfo] = []
-    if let containerGroupURL = containerGroupURL(), FileManager.default.fileExists(atPath: containerGroupURL.path) {
+    if let containerGroupURL = Self.containerGroupURL, FileManager.default.fileExists(atPath: containerGroupURL.path) {
       do {
         for file in try FileManager.default.contentsOfDirectory(atPath: containerGroupURL.path) {
           let sourceURL = containerGroupURL.appendingPathComponent(file)
@@ -194,7 +188,7 @@ private final class Storage {
   }
 
   private func createInfo(fileName: String) throws -> RecordingInfo {
-    let docURL = try Storage.documentsURL()
+    let docURL = Storage.documentsURL
     let fileURL = docURL.appending(component: fileName)
     let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
     let date = attributes[.creationDate] as? Date ?? Date()
@@ -205,13 +199,15 @@ private final class Storage {
 
   private func subscribeToDidBecomeActiveNotifications() {
     NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: nil) { [weak self] _ in
-      guard let self else { return }
-      do {
-        let recordings = try self.read()
-        self.write(recordings)
-      } catch {
-        log.error(error)
-      }
+      self?.catchingRead()
+    }
+  }
+
+  private func catchingRead() {
+    do {
+      try read()
+    } catch {
+      log.error("Error reading recordings: \(error)")
     }
   }
 }

@@ -5,7 +5,6 @@ import Dependencies
 import Foundation
 import os.log
 
-typealias TranscriptionSegment = String
 typealias FileName = String
 
 // MARK: - TranscriptionProgress
@@ -13,7 +12,7 @@ typealias FileName = String
 enum TranscriptionProgress {
   case loadingModel
   case started
-  case newSegment(TranscriptionSegment)
+  case newSegment(WhisperTranscriptionSegment)
   case finished(String)
   case error(Error)
 }
@@ -44,7 +43,7 @@ public struct TranscriptionState: Hashable {
   enum State: Hashable { case starting, loadingModel, transcribing }
 
   var state: State = .starting
-  var segments: [TranscriptionSegment] = []
+  var segments: [WhisperTranscriptionSegment] = []
   var finalText: String = ""
 }
 
@@ -57,7 +56,6 @@ struct TranscriberClient {
   var unloadSelectedModel: @Sendable () -> Void
 
   var transcribeAudio: @Sendable (_ audioURL: URL, _ language: VoiceLanguage, _ isParallel: Bool) async throws -> String
-  var transcriberState: @Sendable () -> TranscriberState
 
   var transcriptionStateStream: AnyPublisher<[FileName: TranscriptionState], Never>
 
@@ -75,7 +73,10 @@ extension TranscriberClient: DependencyKey {
   static let liveValue: TranscriberClient = {
     let impl = TranscriberImpl()
     let transcriptionStatesSubject = CurrentValueSubject<[FileName: TranscriptionState], Never>([:])
-    let state: CurrentValueSubject<TranscriberState, Never> = CurrentValueSubject(.idle)
+    let transcriptionStatesStream: AnyPublisher<[FileName: TranscriptionState], Never> = transcriptionStatesSubject
+      .receive(on: RunLoop.main)
+      .shareReplay(1)
+      .eraseToAnyPublisher()
 
     return TranscriberClient(
       selectModel: { model in
@@ -97,30 +98,41 @@ extension TranscriberClient: DependencyKey {
         let fileName = audioURL.lastPathComponent
         log.verbose("Transcribing \(fileName)...")
 
-        var transcriptionState: TranscriptionState {
-          get { transcriptionStatesSubject.value[fileName] ?? TranscriptionState() }
-          set { transcriptionStatesSubject.value[fileName] = newValue }
+        transcriptionStatesSubject.value[fileName] = TranscriptionState()
+        func updateState(_ update: @escaping (inout TranscriptionState) -> Void) {
+          DispatchQueue.main.async {
+            if var state: TranscriptionState = transcriptionStatesSubject.value[fileName] {
+              update(&state)
+              state.segments.sort { $0.index < $1.index }
+              transcriptionStatesSubject.value[fileName] = state
+            }
+          }
         }
 
-        defer {
-          transcriptionStatesSubject.value.removeValue(forKey: fileName)
+        do {
+          updateState { $0.state = .loadingModel }
+          try await impl.loadModel(model: selectedModel)
+
+          updateState { $0.state = .transcribing }
+          let text = try await impl.transcribeAudio(audioURL, language: language, isParallel: isParallel) { segment in
+            updateState { $0.segments.append(segment) }
+          }
+
+          DispatchQueue.main.async {
+            transcriptionStatesSubject.value.removeValue(forKey: fileName)
+          }
+
+          return text
+        } catch {
+          log.error(error)
+          DispatchQueue.main.async {
+            transcriptionStatesSubject.value.removeValue(forKey: fileName)
+          }
+          throw error
         }
-
-        transcriptionState.state = .loadingModel
-        try await impl.loadModel(model: selectedModel)
-
-        transcriptionState.state = .transcribing
-        let text = try await impl.transcribeAudio(audioURL, language: language, isParallel: isParallel) { segment in
-          transcriptionState.segments.append(segment)
-        }
-
-        transcriptionStatesSubject.value.removeValue(forKey: fileName)
-        return text
       },
 
-      transcriberState: { state.value },
-
-      transcriptionStateStream: transcriptionStatesSubject.eraseToAnyPublisher(),
+      transcriptionStateStream: transcriptionStatesStream,
 
       getAvailableLanguages: {
         [.auto] + WhisperContext.getAvailableLanguages().sorted { $0.name < $1.name }
@@ -169,7 +181,7 @@ final class TranscriberImpl {
 
   /// Transcribes the audio file at the given URL.
   /// Model should be loaded
-  func transcribeAudio(_ audioURL: URL, language: VoiceLanguage, isParallel: Bool, newSegmentCallback: @escaping (String) -> Void) async throws -> String {
+  func transcribeAudio(_ audioURL: URL, language: VoiceLanguage, isParallel: Bool, newSegmentCallback: @escaping (WhisperTranscriptionSegment) -> Void) async throws -> String {
     guard let whisperContext else {
       throw TranscriberError.modelNotLoaded
     }
@@ -180,7 +192,7 @@ final class TranscriberImpl {
     log.verbose("Transcribing data...")
     try await whisperContext.fullTranscribe(samples: data, language: language, isParallel: isParallel, newSegmentCallback: newSegmentCallback)
 
-    let text = await whisperContext.getTranscription()
+    let text = try await whisperContext.getTranscription()
     log.verbose("Done: \(text)")
 
     return text
@@ -188,35 +200,6 @@ final class TranscriberImpl {
 
   private func readAudioSamples(_ url: URL) throws -> [Float] {
     try decodeWaveFile(url)
-  }
-}
-
-extension TranscriberState {
-  var isTranscribing: Bool {
-    switch self {
-    case .transcribing, .loadingModel:
-      return true
-    default:
-      return false
-    }
-  }
-
-  var isIdle: Bool {
-    switch self {
-    case .idle, .failed, .finished, .modelLoaded:
-      return true
-    default:
-      return false
-    }
-  }
-
-  var isModelLoaded: Bool {
-    switch self {
-    case .modelLoaded, .finished:
-      return true
-    default:
-      return false
-    }
   }
 }
 
