@@ -15,11 +15,11 @@ let projectSettings: SettingsDictionary = [
 let debugSettings: SettingsDictionary = [
   "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -enable-actor-data-race-checks",
   "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
-  "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/App/Sources/Common/Bridging.h",
+  "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Sources/Common/Bridging.h",
 ]
 
 let releaseSettings: SettingsDictionary = [
-  "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/App/Sources/Common/Bridging.h",
+  "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Sources/Common/Bridging.h",
 ]
 
 func appTarget() -> Target {
@@ -68,12 +68,12 @@ func appTarget() -> Target {
         "$(PRODUCT_BUNDLE_IDENTIFIER)",
       ],
     ]),
-    sources: .paths([.relativeToManifest("App/Sources/**")]),
+    sources: .paths([.relativeToManifest("Sources/**")]),
     resources: [
-      "App/Resources/Assets.xcassets",
-      "App/Resources/ggml-tiny.bin",
+      "Resources/Assets.xcassets",
+      "Resources/ggml-tiny.bin",
     ],
-    entitlements: "App/Resources/app.entitlements",
+    entitlements: .relativeToManifest("Resources/app.entitlements"),
     dependencies: [
       .target(name: "ShareExtension"),
 
@@ -89,12 +89,28 @@ func appTarget() -> Target {
       // .external(name: "LottieUI"),
 
       .external(name: "AudioKit"),
-      .external(name: "whisper"),
+      // .external(name: "whisper"),
 
       .external(name: "ComposableArchitecture"),
       // .external(name: "ComposablePresentation"),
       .external(name: "AsyncAlgorithms"),
       .external(name: "DependenciesAdditions"),
+
+      .project(target: "RecognitionKit", path: "../RecognitionKit"),
+    ]
+  )
+}
+
+func appTestTarget() -> Target {
+  Target(
+    name: "WhisperBoardTests",
+    platform: .iOS,
+    product: .unitTests,
+    bundleId: "me.igortarasenko.WhisperboardTests",
+    infoPlist: .default,
+    sources: .paths([.relativeToManifest("Tests/**")]),
+    dependencies: [
+      .target(name: "WhisperBoard"),
     ]
   )
 }
@@ -134,8 +150,8 @@ func shareExtensionTarget() -> Target {
         ],
       ],
     ]),
-    sources: "ShareExtension/ShareViewController.swift",
-    entitlements: "ShareExtension/ShareExtension.entitlements",
+    sources: .paths([.relativeToManifest("ShareExtension/ShareViewController.swift")]),
+    entitlements: .relativeToManifest("ShareExtension/ShareExtension.entitlements"),
     dependencies: [
       .external(name: "AudioKit"),
     ]
@@ -160,6 +176,7 @@ let project = Project(
   targets: [
     appTarget(),
     shareExtensionTarget(),
+    appTestTarget(),
   ],
   resourceSynthesizers: [
     .files(extensions: ["bin", "json"]),

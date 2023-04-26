@@ -4,6 +4,7 @@ import ComposableArchitecture
 import Dependencies
 import Foundation
 import os.log
+import RecognitionKit
 
 typealias FileName = String
 

@@ -1,28 +1,27 @@
-import AppDevUtils
 import Foundation
 import whisper
 
 // MARK: - WhisperTranscriptionSegment
 
-struct WhisperTranscriptionSegment: Hashable {
-  var index: Int32
-  var text: String
+public struct WhisperTranscriptionSegment: Hashable {
+  public var index: Int32
+  public var text: String
 }
 
 // MARK: - WhisperError
 
-enum WhisperError: Error {
+public enum WhisperError: Error {
   case cantLoadModel
   case cantRunModel
 }
 
 // MARK: - WhisperContext
 
-actor WhisperContext {
+public actor WhisperContext {
   private static var newSegmentCallback: ((WhisperTranscriptionSegment) -> Void)?
   private var context: OpaquePointer
 
-  init(context: OpaquePointer) {
+  public init(context: OpaquePointer) {
     self.context = context
   }
 
@@ -30,7 +29,7 @@ actor WhisperContext {
     whisper_free(context)
   }
 
-  func fullTranscribe(
+  public func fullTranscribe(
     samples: [Float],
     language: VoiceLanguage,
     isParallel: Bool,
@@ -43,28 +42,28 @@ actor WhisperContext {
     WhisperContext.newSegmentCallback = nil
   }
 
-  func getTranscription() async throws -> String {
+  public func getTranscription() async throws -> String {
     let segmentsCount = whisper_full_n_segments(context)
     return (0 ..< segmentsCount).map { i in
       String(cString: whisper_full_get_segment_text(context, i))
     }.joined(separator: " ")
   }
 
-  func unloadContext() {
+  public func unloadContext() {
     whisper_free(context)
   }
 
-  static func createContext(path: String) throws -> WhisperContext {
+  public static func createContext(path: String) throws -> WhisperContext {
     let context = whisper_init_from_file(path)
     if let context {
       return WhisperContext(context: context)
     } else {
-      log.verbose("Couldn't load model at \(path)")
+      print("Verbose: Couldn't load model at \(path)")
       throw WhisperError.cantLoadModel
     }
   }
 
-  static func getAvailableLanguages() -> [VoiceLanguage] {
+  public static func getAvailableLanguages() -> [VoiceLanguage] {
     let maxLangID = whisper_lang_max_id()
     return (0 ... maxLangID).map { id in
       let name = String(cString: whisper_lang_str(id))
@@ -78,7 +77,7 @@ actor WhisperContext {
       let segmentText = String(cString: whisper_full_get_segment_text(context, segmentIndex))
       let segment = WhisperTranscriptionSegment(index: segmentIndex, text: segmentText)
       DispatchQueue.main.async {
-        log.verbose("New segment: \(segmentText) id: \(segmentIndex)")
+        print("Verbose: New segment: \(segmentText) id: \(segmentIndex)")
         WhisperContext.newSegmentCallback?(segment)
       }
     }
@@ -86,7 +85,7 @@ actor WhisperContext {
 
   private func createWhisperParams(language: VoiceLanguage, isParallel: Bool, newSegmentCallback: @escaping (@convention(c) (OpaquePointer?, OpaquePointer?, Int32, UnsafeMutableRawPointer?) -> Void)) -> whisper_full_params {
     let maxThreads = max(1, min(8, cpuCount() - 2))
-    log.verbose("Selecting \(maxThreads) threads")
+    print("Verbose: Selecting \(maxThreads) threads")
 
     var params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY)
     params.print_realtime = false
@@ -112,18 +111,18 @@ actor WhisperContext {
 
   private func runWhisperFull(samples: [Float], isParallel: Bool, params: whisper_full_params) throws {
     whisper_reset_timings(context)
-    log.verbose("About to run whisper_full")
+    print("Verbose: About to run whisper_full")
     try samples.withUnsafeBufferPointer { samples in
       if isParallel {
         if whisper_full_parallel(context, params, samples.baseAddress, Int32(samples.count), Int32(params.n_threads)) != 0 {
-          log.error("Failed to run the model in parallel")
+          print("Error: Failed to run the model in parallel")
           throw WhisperError.cantRunModel
         } else {
           whisper_print_timings(context)
         }
       } else {
         if whisper_full(context, params, samples.baseAddress, Int32(samples.count)) != 0 {
-          log.error("Failed to run the model")
+          print("Error: Failed to run the model")
           throw WhisperError.cantRunModel
         } else {
           whisper_print_timings(context)

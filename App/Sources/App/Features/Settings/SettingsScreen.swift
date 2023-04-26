@@ -3,6 +3,7 @@ import ComposableArchitecture
 import Inject
 import Setting
 import SwiftUI
+import RecognitionKit
 
 // MARK: - SettingsScreen
 
