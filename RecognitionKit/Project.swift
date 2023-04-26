@@ -16,5 +16,9 @@ let project = Project.frameworkProject(
   ],
   additionalReleaseSettings: [
     "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Sources/Common/Bridging.h",
+  ],
+  additionalTestResources: [
+    .glob(pattern: "TestResources/**"),
+    "../App/Resources/ggml-tiny.bin",
   ]
 )
