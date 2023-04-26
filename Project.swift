@@ -94,6 +94,7 @@ func appTarget() -> Target {
       .external(name: "ComposableArchitecture"),
       // .external(name: "ComposablePresentation"),
       .external(name: "AsyncAlgorithms"),
+      .external(name: "DependenciesAdditions"),
     ]
   )
 }

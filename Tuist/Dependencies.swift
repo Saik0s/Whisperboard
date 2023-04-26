@@ -13,6 +13,7 @@ let packages: [Package] = [
   .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", .branch("prerelease/1.0")),
   // .package(url: "https://github.com/darrarski/swift-composable-presentation.git", from: "0.16.0"),
   .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "0.1.0"),
+  .package(url: "https://github.com/tgrapperon/swift-dependencies-additions", from: "0.4.0"),
 ]
 
 let dependencies = Dependencies(
