@@ -24,7 +24,9 @@ let releaseSettings: SettingsDictionary = [
 public extension Project {
   /// Helper function to create a framework target and an associated unit test target
   static func makeFrameworkTargets(name: String, mainDependencies: [TargetDependency],
-                                   testDependencies: [TargetDependency]) -> [Target] {
+                                   testDependencies: [TargetDependency],
+                                   additionalFrameworkResources: ResourceFileElements? = nil,
+                                   additionalTestResources: ResourceFileElements? = nil) -> [Target] {
     let sources = Target(
       name: name,
       platform: .iOS,
@@ -33,7 +35,7 @@ public extension Project {
       deploymentTarget: .iOS(targetVersion: "16.0", devices: [.iphone, .ipad]),
       infoPlist: .default,
       sources: .paths([.relativeToManifest("Sources/**")]),
-      resources: [],
+      resources: additionalFrameworkResources,
       dependencies: mainDependencies
     )
     let tests = Target(
@@ -44,7 +46,7 @@ public extension Project {
       deploymentTarget: .iOS(targetVersion: "16.0", devices: [.iphone, .ipad]),
       infoPlist: .default,
       sources: .paths([.relativeToManifest("Tests/**")]),
-      resources: [],
+      resources: additionalTestResources,
       dependencies: [.target(name: name)] + testDependencies
     )
     return [sources, tests]
@@ -57,7 +59,9 @@ public extension Project {
     testDependencies: [TargetDependency] = [],
     additionalProjectSettings: SettingsDictionary = [:],
     additionalDebugSettings: SettingsDictionary = [:],
-    additionalReleaseSettings: SettingsDictionary = [:]
+    additionalReleaseSettings: SettingsDictionary = [:],
+    additionalFrameworkResources: ResourceFileElements? = nil,
+    additionalTestResources: ResourceFileElements? = nil
   ) -> Project {
     let projectSettingsMerged = projectSettings.merging(additionalProjectSettings) { _, new in new }
     let debugSettingsMerged = debugSettings.merging(additionalDebugSettings) { _, new in new }
@@ -65,7 +69,9 @@ public extension Project {
     let frameworkTargets = makeFrameworkTargets(
       name: name,
       mainDependencies: mainDependencies,
-      testDependencies: testDependencies
+      testDependencies: testDependencies,
+      additionalFrameworkResources: additionalFrameworkResources,
+      additionalTestResources: additionalTestResources
     )
     return Project(
       name: name,
@@ -84,7 +90,10 @@ public extension Project {
         defaultSettings: .recommended
       ),
       targets: frameworkTargets,
-      additionalFiles: []
+      additionalFiles: [],
+      resourceSynthesizers: [
+        .files(extensions: ["bin", "wav"]),
+      ]
     )
   }
 }
