@@ -15,11 +15,10 @@ public struct VoiceLanguage: Codable, Hashable, Identifiable {
   }
 }
 
-extension VoiceLanguage {
-  public static let auto = VoiceLanguage(id: -1, code: "auto")
+public extension VoiceLanguage {
+  static let auto = VoiceLanguage(id: -1, code: "auto")
 
-  public var isAuto: Bool {
+  var isAuto: Bool {
     code == "auto"
   }
 }
-

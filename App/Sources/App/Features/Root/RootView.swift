@@ -12,6 +12,18 @@ struct Root: ReducerProtocol {
     var recordScreen = RecordScreen.State()
     var settings = SettingsScreen.State()
     var selectedTab = 0
+
+    var isRecording: Bool {
+      recordScreen.recordingControls.recording != nil
+    }
+
+    var isTranscribing: Bool {
+      recordingListScreen.recordingCards.map(\.isTranscribing).contains(true)
+    }
+
+    var shouldDisableIdleTimer: Bool {
+      isRecording || isTranscribing
+    }
   }
 
   enum Action: Equatable {
@@ -55,13 +67,6 @@ struct Root: ReducerProtocol {
 
       Reduce { state, action in
         switch action {
-        case .task:
-          return .fireAndForget { @MainActor in
-            for await state in transcriber.transcriptionStateStream.values {
-              UIApplication.shared.isIdleTimerDisabled = !state.isEmpty
-            }
-          }
-
         case let .selectTab(tab):
           state.selectedTab = tab
           return .none
@@ -70,6 +75,9 @@ struct Root: ReducerProtocol {
           return .none
         }
       }
+    }.onChange(of: \.shouldDisableIdleTimer) { shouldDisableIdleTimer, _, _ in
+      UIApplication.shared.isIdleTimerDisabled = shouldDisableIdleTimer
+      return .none
     }
   }
 }

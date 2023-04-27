@@ -74,10 +74,7 @@ extension TranscriberClient: DependencyKey {
   static let liveValue: TranscriberClient = {
     let impl = TranscriberImpl()
     let transcriptionStatesSubject = CurrentValueSubject<[FileName: TranscriptionState], Never>([:])
-    let transcriptionStatesStream: AnyPublisher<[FileName: TranscriptionState], Never> = transcriptionStatesSubject
-      .receive(on: RunLoop.main)
-      .shareReplay(1)
-      .eraseToAnyPublisher()
+    let transcriptionStatesStream: AnyPublisher<[FileName: TranscriptionState], Never> = transcriptionStatesSubject.eraseToAnyPublisher()
 
     return TranscriberClient(
       selectModel: { model in
@@ -182,7 +179,12 @@ final class TranscriberImpl {
 
   /// Transcribes the audio file at the given URL.
   /// Model should be loaded
-  func transcribeAudio(_ audioURL: URL, language: VoiceLanguage, isParallel: Bool, newSegmentCallback: @escaping (WhisperTranscriptionSegment) -> Void) async throws -> String {
+  func transcribeAudio(
+    _ audioURL: URL,
+    language: VoiceLanguage,
+    isParallel: Bool,
+    newSegmentCallback: @escaping (WhisperTranscriptionSegment) -> Void
+  ) async throws -> String {
     guard let whisperContext else {
       throw TranscriberError.modelNotLoaded
     }

@@ -83,7 +83,11 @@ public actor WhisperContext {
     }
   }
 
-  private func createWhisperParams(language: VoiceLanguage, isParallel: Bool, newSegmentCallback: @escaping (@convention(c) (OpaquePointer?, OpaquePointer?, Int32, UnsafeMutableRawPointer?) -> Void)) -> whisper_full_params {
+  private func createWhisperParams(
+    language: VoiceLanguage,
+    isParallel _: Bool,
+    newSegmentCallback: @escaping (@convention(c) (OpaquePointer?, OpaquePointer?, Int32, UnsafeMutableRawPointer?) -> Void)
+  ) -> whisper_full_params {
     let maxThreads = max(1, min(8, cpuCount() - 2))
     print("Verbose: Selecting \(maxThreads) threads")
 

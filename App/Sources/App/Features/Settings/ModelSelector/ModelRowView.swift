@@ -153,7 +153,8 @@ struct ModelRowView: View {
       Button(action: { viewStore.send(.selectModelTapped) }) { Text("Select") }
       Button(action: { viewStore.send(.deleteModelTapped) }) { Text("Delete") }
     }
-  }}
+  }
+}
 
 // MARK: - ActiveButtonStyle
 
