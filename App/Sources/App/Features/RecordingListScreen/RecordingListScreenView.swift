@@ -60,9 +60,12 @@ public struct RecordingListScreen: ReducerProtocol {
         switch action {
         case .task:
           return .run { send in
-            for await envelops in recordingsStream.values {
+            for try await envelops in recordingsStream.values {
               await send(.receivedRecordings(envelops))
             }
+            customAssertionFailure()
+          } catch: { error, send in
+            await send(.failedToAddRecordings(error: error.equatable))
           }.cancellable(id: StreamID(), cancelInFlight: true)
 
         case let .receivedRecordings(envelops):

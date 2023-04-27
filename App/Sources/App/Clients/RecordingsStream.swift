@@ -22,10 +22,7 @@ extension DependencyValues {
         info.map { (currentInfo: RecordingInfo) in
           RecordingEnvelop(currentInfo, state[currentInfo.fileName])
         }
-      }
-      .receive(on: RunLoop.main)
-      .shareReplay(1)
-      .eraseToAnyPublisher()
+      }.eraseToAnyPublisher()
     }()
   }
 }

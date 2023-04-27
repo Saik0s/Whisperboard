@@ -1,9 +1,10 @@
 import AppDevUtils
 import ComposableArchitecture
 import Inject
+import Popovers
+import RecognitionKit
 import Setting
 import SwiftUI
-import RecognitionKit
 
 // MARK: - SettingsScreen
 
@@ -155,6 +156,7 @@ struct SettingsScreenView: View {
 
   let store: StoreOf<SettingsScreen>
   @ObservedObject var viewStore: ViewStoreOf<SettingsScreen>
+  @State var debugPresent = false
 
   var modelSelectorStore: StoreOf<ModelSelector> {
     store.scope(state: \.modelSelector, action: SettingsScreen.Action.modelSelector)
@@ -206,6 +208,23 @@ struct SettingsScreenView: View {
             ))
           #endif
         }
+
+        #if DEBUG
+          SettingGroup(header: "Debug", backgroundColor: .DS.Background.secondary) {
+            SettingButton(icon: .system(icon: "ladybug", backgroundColor: .systemRed.darken(by: 0.05)), title: "Show logs") {
+              debugPresent = true
+            }
+            SettingCustomView {
+              ZStack {}.popover(present: $debugPresent) {
+                Text("Debug popup")
+                  .padding()
+                  .foregroundColor(.white)
+                  .background(.blue)
+                  .cornerRadius(16)
+              }
+            }
+          }
+        #endif
 
         SettingGroup(header: "Storage", backgroundColor: .DS.Background.secondary) {
           SettingCustomView {

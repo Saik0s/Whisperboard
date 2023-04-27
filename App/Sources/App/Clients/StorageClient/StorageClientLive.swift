@@ -12,11 +12,7 @@ extension StorageClient: DependencyKey {
   static let liveValue: Self = {
     let storage = Storage()
     let documentsURL = Storage.documentsURL
-    let recordingsInfoStream: AnyPublisher<[RecordingInfo], Never> = storage
-      .currentRecordingsStream
-      .receive(on: RunLoop.main)
-      .shareReplay(1)
-      .eraseToAnyPublisher()
+    let recordingsInfoStream: AnyPublisher<[RecordingInfo], Never> = storage.currentRecordingsStream
 
     return Self(
       read: {
@@ -59,7 +55,6 @@ extension StorageClient: DependencyKey {
         try FileManager.default.removeItem(at: url)
         let newRecordings = recordings.filter { $0.id != recordingId }
         storage.write(newRecordings.elements)
-
       },
 
       update: { id, updater in
@@ -99,30 +94,40 @@ private final class Storage {
     return FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName)?.appending(component: "share")
   }
 
-  private let currentRecordingsSubject = CodableValueSubject<[RecordingInfo]>(fileURL: dbURL)
+  private let currentRecordingsSubject = CurrentValueSubject<[RecordingInfo], Never>([])
 
   var currentRecordings: [RecordingInfo] {
-    currentRecordingsSubject.value ?? []
-  }
-  var currentRecordingsStream: AnyPublisher<[RecordingInfo], Never> {
-    currentRecordingsSubject.replaceError(with: []).eraseToAnyPublisher()
+    currentRecordingsSubject.value
   }
 
+  var currentRecordingsStream: AnyPublisher<[RecordingInfo], Never> {
+    currentRecordingsSubject.eraseToAnyPublisher()
+  }
+
+  private var cancellables = Set<AnyCancellable>()
+
   init() {
-    catchingRead()
+    currentRecordingsSubject.value = (try? [RecordingInfo].fromFile(path: Self.dbURL.path)) ?? []
+
+    currentRecordingsSubject.sink { recordings in
+      do {
+        try recordings.saveToFile(path: Self.dbURL.path)
+      } catch {
+        log.error(error)
+      }
+    }.store(in: &cancellables)
+
     subscribeToDidBecomeActiveNotifications()
+    catchingRead()
   }
 
   func read() throws {
-    // Get the recordings stored in the database file
-    var storedRecordings = currentRecordingsSubject.value ?? []
-    var shouldWrite = false
+    var storedRecordings = currentRecordings
 
     // If there are files in shared container, move them to the documents directory
     let sharedRecordings = moveSharedFiles(to: Self.documentsURL)
     if !sharedRecordings.isEmpty {
       storedRecordings.append(contentsOf: sharedRecordings)
-      shouldWrite = true
     }
 
     // Get the files in the documents directory with the .wav extension
@@ -130,34 +135,28 @@ private final class Storage {
       .contentsOfDirectory(atPath: Self.documentsURL.path)
       .filter { $0.hasSuffix(".wav") }
 
-    // Initialize a flag to track if the database file should be written to
     let recordings: [RecordingInfo] = try recordingFiles.map { file in
       // If the recording is already stored in the database, return it
       if let recording = storedRecordings.first(where: { $0.fileName == file }) {
         return recording
       }
 
-      // Otherwise, set the flag to true and create the recording info
-      shouldWrite = true
       log.warning("Recording \(file) not found in database, creating new info for it")
       return try createInfo(fileName: file)
     }
 
-    // If the flag is true, write the recordings to the database file
-    if shouldWrite {
-      write(recordings)
-    }
+    write(recordings)
   }
 
   func write(_ recordings: [RecordingInfo]) {
-    DispatchQueue.main.async {
-      // Sort the recordings by date
-      let sorted = recordings.sorted { info, info2 in
-        info.date > info2.date
-      }
+    log.debug("Writing \(recordings.count) recordings to database file")
 
-      self.currentRecordingsSubject.send(sorted)
+    // Sort the recordings by date
+    let sorted = recordings.sorted { info, info2 in
+      info.date > info2.date
     }
+
+    currentRecordingsSubject.send(sorted)
   }
 
   private func moveSharedFiles(to docURL: URL) -> [RecordingInfo] {

@@ -5,11 +5,13 @@ import DSWaveformImageViews
 import Inject
 import SwiftUI
 
-// MARK: - WaveformProgress
+// MARK: - WaveformProgressError
 
 enum WaveformProgressError: Error {
   case audioFileNotFound
 }
+
+// MARK: - WaveformProgress
 
 public struct WaveformProgress: ReducerProtocol {
   public struct State: Equatable, Then {
@@ -62,7 +64,7 @@ public struct WaveformProgress: ReducerProtocol {
           try data.write(to: waveImageURL, options: .atomic)
           return .waveFormImageCreated(.success(waveImageURL))
         } catch: { error in
-          return .waveFormImageCreated(.failure(error))
+          .waveFormImageCreated(.failure(error))
         }
 
       case let .waveFormImageCreated(.success(url)):

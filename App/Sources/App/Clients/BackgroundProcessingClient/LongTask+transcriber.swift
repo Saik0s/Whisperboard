@@ -24,9 +24,15 @@ extension LongTask {
       let language = settings.settings().voiceLanguage
       let isParallel = settings.settings().isParallelEnabled
       let text = try await transcriber.transcribeAudio(fileURL, language, isParallel)
-      try storage.update(recordingInfo.id) {
-        $0.text = text
-        $0.isTranscribed = true
+      DispatchQueue.main.async {
+        do {
+          try storage.update(recordingInfo.id) {
+            $0.text = text
+            $0.isTranscribed = true
+          }
+        } catch {
+          log.error(error)
+        }
       }
     }
   }
