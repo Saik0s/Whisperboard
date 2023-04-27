@@ -110,13 +110,7 @@ final class BackgroundProcessingClientImpl<State: Codable> {
     }
 
     if !taskQueue.isEmpty {
-      Task {
-        do {
-          try await executeNextTask()
-        } catch {
-          log.error(error)
-        }
-      }
+      removeAndCancelAllTasks()
     }
   }
 

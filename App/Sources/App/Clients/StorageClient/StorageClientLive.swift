@@ -112,6 +112,7 @@ private final class Storage {
     currentRecordingsSubject.sink { recordings in
       do {
         try recordings.saveToFile(path: Self.dbURL.path)
+        log.verbose("Saved \(recordings.count) recordings to database file")
       } catch {
         log.error(error)
       }
@@ -149,14 +150,16 @@ private final class Storage {
   }
 
   func write(_ recordings: [RecordingInfo]) {
-    log.debug("Writing \(recordings.count) recordings to database file")
+    DispatchQueue.main.async { [currentRecordingsSubject] in
+      log.debug("Writing \(recordings.count) recordings to database file")
 
-    // Sort the recordings by date
-    let sorted = recordings.sorted { info, info2 in
-      info.date > info2.date
+      // Sort the recordings by date
+      let sorted = recordings.sorted { info, info2 in
+        info.date > info2.date
+      }
+
+      currentRecordingsSubject.send(sorted)
     }
-
-    currentRecordingsSubject.send(sorted)
   }
 
   private func moveSharedFiles(to docURL: URL) -> [RecordingInfo] {
