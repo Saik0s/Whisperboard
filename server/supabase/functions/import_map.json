@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "server": "https://deno.land/std@0.114.0/http/server.ts",
+    "multipart": "https://deno.land/std@0.114.0/mime/multipart.ts",
+    "apns": "npm:apns2@^11.2.0",
+    "supabase": "https://cdn.skypack.dev/@supabase/supabase-js",
+    "banana-dev": "https://cdn.skypack.dev/@banana-dev/banana-dev"
+  }
+}
