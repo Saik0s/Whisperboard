@@ -8,6 +8,7 @@ import SwiftUI
 public struct RecordingDetails: ReducerProtocol {
   public struct State: Equatable {
     var recordingCard: RecordingCard.State
+
     @BindingState var shareAudioFileURL: URL?
   }
 
@@ -19,6 +20,7 @@ public struct RecordingDetails: ReducerProtocol {
   }
 
   @Dependency(\.transcriber) var transcriber: TranscriberClient
+
   @Dependency(\.storage) var storage: StorageClient
 
   public var body: some ReducerProtocol<State, Action> {
@@ -59,6 +61,7 @@ public struct RecordingDetailsView: View {
   @FocusState private var focusedField: Field?
 
   let store: StoreOf<RecordingDetails>
+
   @ObservedObject var viewStore: ViewStoreOf<RecordingDetails>
 
   public init(store: StoreOf<RecordingDetails>) {
@@ -181,6 +184,7 @@ public struct RecordingDetailsView: View {
 }
 
 #if DEBUG
+
   struct RecordingDetailsView_Previews: PreviewProvider {
     static var previews: some View {
       NavigationView {

@@ -12,13 +12,19 @@ public struct RecordingCard: ReducerProtocol {
     }
 
     public var id: String { recordingEnvelop.id }
+
     var recordingEnvelop: RecordingEnvelop
+
     var mode = Mode.notPlaying
+
     var isTranscribing: Bool { recordingEnvelop.transcriptionState?.isTranscribing ?? false }
+
     var transcribingProgressText: String { recordingEnvelop.transcriptionState?.segments.map(\.text).joined(separator: " ") ?? "" }
+
     @BindingState var alert: AlertState<Action>?
 
     var waveFormImageURL: URL?
+
     var waveform: WaveformProgress.State {
       get {
         WaveformProgress.State(
@@ -54,13 +60,20 @@ public struct RecordingCard: ReducerProtocol {
   }
 
   @Dependency(\.transcriber) var transcriber: TranscriberClient
+
   @Dependency(\.audioPlayer) var audioPlayer: AudioPlayerClient
+
   @Dependency(\.storage) var storage: StorageClient
+
   @Dependency(\.settings) var settings: SettingsClient
+
   @Dependency(\.backgroundProcessingClient) var backgroundProcessingClient: BackgroundProcessingClient
 
   private enum PlayID {}
-  private struct TranscriptionID: Hashable { let id: String }
+
+  private struct TranscriptionID: Hashable {
+    let id: String
+  }
 
   public var body: some ReducerProtocol<State, Action> {
     BindingReducer()

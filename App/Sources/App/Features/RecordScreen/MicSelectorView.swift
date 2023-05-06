@@ -9,7 +9,9 @@ import SwiftUI
 public struct MicSelector: ReducerProtocol {
   public struct State: Equatable {
     var mics: [Microphone] = []
+
     var currentMic: Microphone?
+
     @BindingState var alert: AlertState<Action>?
   }
 

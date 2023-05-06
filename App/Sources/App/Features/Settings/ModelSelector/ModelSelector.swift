@@ -9,6 +9,7 @@ import SwiftUI
 struct ModelSelector: ReducerProtocol {
   struct State: Equatable {
     var modelRows: IdentifiedArrayOf<ModelRow.State> = []
+
     @BindingState var alert: AlertState<Action>?
 
     var selectedModel: VoiceModelType {
@@ -23,6 +24,7 @@ struct ModelSelector: ReducerProtocol {
   }
 
   @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
+
   @Dependency(\.transcriber) var transcriber: TranscriberClient
 
   var body: some ReducerProtocol<State, Action> {

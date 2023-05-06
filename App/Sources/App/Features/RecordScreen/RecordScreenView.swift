@@ -8,7 +8,9 @@ import SwiftUI
 public struct RecordScreen: ReducerProtocol {
   public struct State: Equatable {
     @BindingState var alert: AlertState<Action>?
+
     var micSelector = MicSelector.State()
+
     var recordingControls = RecordingControls.State()
   }
 
@@ -104,6 +106,7 @@ public struct RecordScreenView: View {
 }
 
 #if DEBUG
+
   struct RecordScreenView_Previews: PreviewProvider {
     static var previews: some View {
       NavigationView {

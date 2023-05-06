@@ -10,13 +10,17 @@ import SwiftUI
 public struct RecordingListScreen: ReducerProtocol {
   public struct State: Equatable {
     var recordingCards: IdentifiedArrayOf<RecordingCard.State> = []
+
     var selectedId: RecordingInfo.ID? = nil
 
     @BindingState var editMode: EditMode = .inactive
+
     @BindingState var isImportingFiles = false
+
     @BindingState var alert: AlertState<Action>?
 
     var shareAudioFileURL: URL?
+
     var selection: Identified<RecordingInfo.ID, RecordingDetails.State>? {
       get {
         guard let id = selectedId, let card = recordingCards.first(where: { $0.id == id }) else { return nil }
@@ -46,11 +50,17 @@ public struct RecordingListScreen: ReducerProtocol {
   }
 
   @Dependency(\.storage) var storage: StorageClient
+
   @Dependency(\.fileImport) var fileImport: FileImportClient
+
   @Dependency(\.recordingsStream) var recordingsStream: AnyPublisher<[RecordingEnvelop], Never>
 
   struct SavingRecordingsID: Hashable {}
+
   struct StreamID: Hashable {}
+
+  /// - The reducer combines several actions such as adding, deleting, and selecting recordings.
+  /// - It also manages related states like alerts, binding updates, and confirmation dialogs.
 
   public var body: some ReducerProtocol<State, Action> {
     CombineReducers {
@@ -66,14 +76,16 @@ public struct RecordingListScreen: ReducerProtocol {
             customAssertionFailure()
           } catch: { error, send in
             await send(.failedToAddRecordings(error: error.equatable))
-          }.cancellable(id: StreamID(), cancelInFlight: true)
+          }
+          .cancellable(id: StreamID(), cancelInFlight: true)
 
         case let .receivedRecordings(envelops):
           state.recordingCards = envelops.map { envelop in
             var card = state.recordingCards[id: envelop.id] ?? RecordingCard.State(recordingEnvelop: envelop)
             card.recordingEnvelop = envelop
             return card
-          }.identifiedArray
+          }
+          .identifiedArray
 
           state.selection = state.selection.flatMap { selection -> Identified<RecordingInfo.ID, RecordingDetails.State>? in
             guard let card = state.recordingCards.first(where: { $0.id == selection.id }) else {
@@ -122,7 +134,8 @@ public struct RecordingListScreen: ReducerProtocol {
           } catch: { error, send in
             await send(.binding(.set(\.$isImportingFiles, false)))
             await send(.failedToAddRecordings(error: error.equatable))
-          }.animation(.gentleBounce())
+          }
+          .animation(.gentleBounce())
 
         case let .failedToAddRecordings(error):
           log.error(error.error)
@@ -184,6 +197,7 @@ public struct RecordingListScreenView: View {
   @ObserveInjection var inject
 
   let store: StoreOf<RecordingListScreen>
+
   @ObservedObject var viewStore: ViewStoreOf<RecordingListScreen>
 
   @State var showListItems = false
@@ -291,6 +305,7 @@ extension RecordingListScreenView {
 
 struct EmptyStateView: View {
   @ObserveInjection var inject
+
   @State private var isAnimating = false
 
   var body: some View {
@@ -317,6 +332,7 @@ struct EmptyStateView: View {
 }
 
 #if DEBUG
+
   struct RecordingListScreenView_Previews: PreviewProvider {
     static var previews: some View {
       RecordingListScreenView(

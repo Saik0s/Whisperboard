@@ -9,6 +9,7 @@ struct RecordingCardView: View {
   @ObserveInjection var inject
 
   let store: StoreOf<RecordingCard>
+
   @ObservedObject var viewStore: ViewStoreOf<RecordingCard>
 
   init(store: StoreOf<RecordingCard>) {

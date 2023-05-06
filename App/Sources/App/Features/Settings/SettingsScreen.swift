@@ -13,12 +13,19 @@ struct SettingsScreen: ReducerProtocol {
     var modelSelector = ModelSelector.State()
 
     var availableLanguages: IdentifiedArrayOf<VoiceLanguage> = []
+
     @BindingState var selectedLanguage: VoiceLanguage = .auto
+
     var appVersion: String = ""
+
     var buildNumber: String = ""
+
     var freeSpace: String = ""
+
     var takenSpace: String = ""
+
     var takenSpacePercentage: Double = 0
+
     @BindingState var isParallelEnabled: Bool = false
 
     @BindingState var alert: AlertState<Action>?
@@ -42,9 +49,13 @@ struct SettingsScreen: ReducerProtocol {
   }
 
   @Dependency(\.transcriber) var transcriber: TranscriberClient
+
   @Dependency(\.settings) var settingsClient: SettingsClient
+
   @Dependency(\.openURL) var openURL: OpenURLEffect
+
   @Dependency(\.build) var build: BuildClient
+
   @Dependency(\.diskSpace) var diskSpace: DiskSpaceClient
 
   var body: some ReducerProtocol<State, Action> {
@@ -155,7 +166,9 @@ struct SettingsScreenView: View {
   @ObserveInjection var inject
 
   let store: StoreOf<SettingsScreen>
+
   @ObservedObject var viewStore: ViewStoreOf<SettingsScreen>
+
   @State var debugPresent = false
 
   var modelSelectorStore: StoreOf<ModelSelector> {

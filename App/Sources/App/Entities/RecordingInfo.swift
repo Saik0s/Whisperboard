@@ -5,10 +5,15 @@ import Foundation
 
 public struct RecordingInfo: Identifiable, Hashable, Then, Codable {
   public var fileName: String
+
   public var title = ""
+
   public var date: Date
+
   public var duration: TimeInterval
+
   public var text: String = ""
+
   public var isTranscribed = false
 
   public var id: String { fileName }
@@ -31,6 +36,7 @@ public struct RecordingInfo: Identifiable, Hashable, Then, Codable {
 }
 
 #if DEBUG
+
   extension RecordingInfo {
     static let mock = RecordingInfo(
       fileName: "mock.wav",

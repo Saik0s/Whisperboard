@@ -36,7 +36,6 @@ extension DependencyValues {
 }
 
 private extension FormatConverter {
-  /// Async version of start
   func startAsync() async throws {
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
       start { error in

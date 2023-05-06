@@ -5,11 +5,15 @@ import Foundation
 
 struct VoiceModel: Equatable, Identifiable, Then {
   var modelType: VoiceModelType
+
   var isDownloading: Bool = false
+
   var downloadProgress: Double = 0
 
   var id: String { name }
+
   var name: String { modelType.fileName }
+
   var isDownloaded: Bool { downloadProgress >= 1 }
 }
 
@@ -104,6 +108,7 @@ enum VoiceModelType: String, CaseIterable {
 }
 
 #if DEBUG
+
   extension VoiceModel {
     static let fixture = VoiceModel(modelType: .tiny)
   }
