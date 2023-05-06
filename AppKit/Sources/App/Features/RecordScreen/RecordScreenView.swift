@@ -21,6 +21,7 @@ public struct RecordScreen: ReducerProtocol {
 
     // Delegate actions
     case newRecordingCreated(RecordingInfo)
+    case goToNewRecordingTapped
   }
 
   @Dependency(\.storage) var storage: StorageClient
@@ -45,12 +46,13 @@ public struct RecordScreen: ReducerProtocol {
           duration: recording.duration
         )
 
-        return .task {
+        return .run { send in
           log.verbose("Adding recording info: \(recordingInfo)")
           try await storage.addRecordingInfo(recordingInfo)
-          return .newRecordingCreated(recordingInfo)
-        } catch: { error in
-          .binding(.set(\.$alert, .error(error)))
+          await send(.newRecordingCreated(recordingInfo))
+          await send(.recordingControls(.binding(.set(\.$isGotToDetailsPopupPresented, true))))
+        } catch: { error, send in
+          await send(.binding(.set(\.$alert, .error(error))))
         }
 
       case let .recordingControls(.recording(.delegate(.didFinish(.failure(error))))):
@@ -58,6 +60,12 @@ public struct RecordScreen: ReducerProtocol {
           title: TextState("Voice recording failed."),
           message: TextState(error.localizedDescription)
         )
+        return .none
+
+      case .recordingControls(.goToDetailsButtonTapped):
+        return .send(.goToNewRecordingTapped)
+
+      case .goToNewRecordingTapped:
         return .none
 
       case .recordingControls:

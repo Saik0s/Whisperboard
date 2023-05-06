@@ -34,6 +34,7 @@ struct Root: ReducerProtocol {
   }
 
   @Dependency(\.transcriber) var transcriber: TranscriberClient
+  @Dependency(\.storage) var storage: StorageClient
 
   var body: some ReducerProtocol<State, Action> {
     CombineReducers {
@@ -51,12 +52,12 @@ struct Root: ReducerProtocol {
 
       Reduce<State, Action> { state, action in
         switch action {
-        case let .recordScreen(.newRecordingCreated(recordingInfo)):
-          state.recordingListScreen.selection = nil
-          return .run { send in
-            await send(.selectTab(0))
-            await send(.recordingListScreen(.recordingSelected(id: recordingInfo.id)))
+        case .recordScreen(.goToNewRecordingTapped):
+          if let recordingCard = state.recordingListScreen.recordingCards.first {
+            state.selectedTab = 0
+            state.recordingListScreen.selectedId = recordingCard.id
           }
+          return .none
 
         default:
           return .none
@@ -73,7 +74,8 @@ struct Root: ReducerProtocol {
           return .none
         }
       }
-    }.onChange(of: \.shouldDisableIdleTimer) { shouldDisableIdleTimer, _, _ in
+    }
+    .onChange(of: \.shouldDisableIdleTimer) { shouldDisableIdleTimer, _, _ in
       UIApplication.shared.isIdleTimerDisabled = shouldDisableIdleTimer
       return .none
     }
