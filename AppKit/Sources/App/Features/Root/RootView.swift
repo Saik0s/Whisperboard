@@ -9,13 +9,9 @@ import SwiftUI
 struct Root: ReducerProtocol {
   struct State: Equatable {
     var recordingListScreen = RecordingListScreen.State()
-
     var recordScreen = RecordScreen.State()
-
     var settings = SettingsScreen.State()
-
     var selectedTab = 0
-
     var isRecording: Bool {
       recordScreen.recordingControls.recording != nil
     }
@@ -38,8 +34,6 @@ struct Root: ReducerProtocol {
   }
 
   @Dependency(\.transcriber) var transcriber: TranscriberClient
-
-  @Dependency(\.recordingsStream) var recordingsStream: AnyPublisher<[RecordingEnvelop], Never>
 
   var body: some ReducerProtocol<State, Action> {
     CombineReducers {

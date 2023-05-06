@@ -53,7 +53,7 @@ public struct RecordingListScreen: ReducerProtocol {
 
   @Dependency(\.fileImport) var fileImport: FileImportClient
 
-  @Dependency(\.recordingsStream) var recordingsStream: AnyPublisher<[RecordingEnvelop], Never>
+  @Dependency(\.recordingsStream) var recordingsStream: AsyncStream<[RecordingEnvelop]>
 
   struct SavingRecordingsID: Hashable {}
 
@@ -70,7 +70,7 @@ public struct RecordingListScreen: ReducerProtocol {
         switch action {
         case .task:
           return .run { send in
-            for try await envelops in recordingsStream.values {
+            for try await envelops in recordingsStream {
               await send(.receivedRecordings(envelops))
             }
             customAssertionFailure()

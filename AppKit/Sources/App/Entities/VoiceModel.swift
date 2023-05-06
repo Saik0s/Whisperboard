@@ -87,7 +87,7 @@ enum VoiceModelType: String, CaseIterable {
   var localURL: URL {
     switch self {
     case .tiny:
-      return Files.App.Resources.ggmlTinyBin.url
+      return Files.AppKit.Resources.ggmlTinyBin.url
 
     default:
       return VoiceModelType.localFolderURL.appending(component: fileName)

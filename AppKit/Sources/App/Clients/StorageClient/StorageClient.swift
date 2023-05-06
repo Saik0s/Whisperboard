@@ -11,7 +11,7 @@ import XCTestDynamicOverlay
 struct StorageClient {
   var read: @Sendable () -> IdentifiedArrayOf<RecordingInfo>
 
-  var recordingsInfoStream: AnyPublisher<[RecordingInfo], Never>
+  var recordingsInfoStream: AsyncStream<[RecordingInfo]>
 
   var write: @Sendable (IdentifiedArrayOf<RecordingInfo>) -> Void
 

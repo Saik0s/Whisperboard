@@ -125,7 +125,7 @@ struct TranscriberClient {
   /// - parameter transcriptionStateStream: A publisher of type `AnyPublisher<[FileName: TranscriptionState], Never>`.
   /// - returns: A publisher that emits a dictionary of file names and their corresponding transcription states. The
   /// publisher never fails.
-  var transcriptionStateStream: AnyPublisher<[FileName: TranscriptionState], Never>
+  var transcriptionStateStream: AsyncStream<[FileName: TranscriptionState]>
 
   /// Returns an array of available voice languages for text-to-speech.
   ///
@@ -182,7 +182,7 @@ extension TranscriberClient: DependencyKey {
         try await impl.transcriptionPipeline(audioURL, language: language, isParallel: isParallel, newSegmentCallback: { _ in })
       },
 
-      transcriptionStateStream: impl.$transcriptionStates.eraseToAnyPublisher(),
+      transcriptionStateStream: impl.$transcriptionStates.asAsyncStream(),
 
       getAvailableLanguages: {
         [.auto] + WhisperContext.getAvailableLanguages().sorted { $0.name < $1.name }
@@ -193,7 +193,7 @@ extension TranscriberClient: DependencyKey {
 
 // MARK: - TranscriberImpl
 
-final class TranscriberImpl: ObservableObject {
+final class TranscriberImpl {
   @Published var transcriptionStates: [FileName: TranscriptionState] = [:]
   /// A private property that stores the current whisper context.
   ///
@@ -241,11 +241,7 @@ final class TranscriberImpl: ObservableObject {
   /// - postcondition: The `whisperContext` property is set to `nil` after this function is called.
   func unloadModel() {
     log.verbose("Unloading model...")
-    let tmpContext = whisperContext
     whisperContext = nil
-    Task {
-      await tmpContext?.unloadContext()
-    }
   }
 
   /// Transcribes an audio file into text using the Whisper context.
@@ -260,7 +256,7 @@ final class TranscriberImpl: ObservableObject {
     _ audioURL: URL,
     language: VoiceLanguage,
     isParallel: Bool,
-    newSegmentCallback: @escaping (WhisperTranscriptionSegment) -> Void
+    newSegmentCallback _: @escaping (WhisperTranscriptionSegment) -> Void
   ) async throws -> String {
     let fileName = audioURL.lastPathComponent
     log.verbose("Transcribing \(fileName)...")
@@ -363,7 +359,7 @@ extension DependencyValues {
 func decodeWaveFile(_ url: URL) throws -> [Float] {
   let data = try Data(contentsOf: url)
   let floats = stride(from: 44, to: data.count, by: 2).map {
-    data[$0..<$0 + 2].withUnsafeBytes {
+    data[$0 ..< $0 + 2].withUnsafeBytes {
       let short = Int16(littleEndian: $0.load(as: Int16.self))
       return max(-1.0, min(Float(short) / 32767.0, 1.0))
     }
