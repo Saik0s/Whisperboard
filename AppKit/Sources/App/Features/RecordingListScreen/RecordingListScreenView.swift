@@ -210,7 +210,7 @@ public struct RecordingListScreenView: View {
   public var body: some View {
     NavigationStack {
       ScrollView {
-        VStack(spacing: .grid(4)) {
+        LazyVStack(spacing: .grid(4)) {
           ForEach(Array(viewStore.recordingCards.enumerated()), id: \.element.id) { index, card in
             IfLetStore(store.scope(
               state: \.recordingCards[id: card.id],
