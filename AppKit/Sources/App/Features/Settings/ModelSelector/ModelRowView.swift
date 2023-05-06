@@ -41,7 +41,7 @@ struct ModelRow: ReducerProtocol {
         state.model.isDownloading = true
 
         return .run { [modelType = state.model.modelType] send in
-          for try await downloadState in await modelDownload.downloadModel(modelType).throttle(for: .seconds(0.3), latest: true) {
+          for try await downloadState in await modelDownload.downloadModel(modelType) {
             switch downloadState {
             case let .inProgress(progress):
               await send(.modelUpdated(VoiceModel(modelType: modelType, isDownloading: true, downloadProgress: progress)))

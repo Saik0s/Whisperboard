@@ -55,6 +55,7 @@ extension ModelDownloadClient: DependencyKey {
 
             delegate.addDownloadTask(task) {
               continuation.yield(.inProgress($0))
+              log.verbose("Download progress: \($0)")
             } onComplete: { result in
               switch result {
               case let .success(url):
@@ -71,6 +72,7 @@ extension ModelDownloadClient: DependencyKey {
                 log.error(error)
               }
               continuation.finish()
+              log.verbose("Download finished")
             }
 
             continuation.yield(.inProgress(0))
@@ -79,6 +81,7 @@ extension ModelDownloadClient: DependencyKey {
             continuation.onTermination = { termination in
               if termination == .cancelled {
                 task.cancel()
+                log.debug("Download cancelled")
               }
             }
           }
