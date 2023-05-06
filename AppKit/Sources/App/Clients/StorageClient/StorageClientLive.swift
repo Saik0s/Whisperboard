@@ -4,8 +4,8 @@ import Combine
 import ComposableArchitecture
 import Dependencies
 import Foundation
-import UIKit
 import SwiftUI
+import UIKit
 
 // MARK: - StorageClient + DependencyKey
 
@@ -19,7 +19,7 @@ extension StorageClient: DependencyKey {
         storage.currentRecordings.identifiedArray
       },
 
-      recordingsInfoStream: storage.currentRecordingsStream,
+      recordingsInfoStream: storage.currentRecordingsStream.asAsyncStream(),
 
       write: { recordings in
         storage.write(recordings.elements)
@@ -75,7 +75,7 @@ extension StorageClient: DependencyKey {
 
 // MARK: - Storage
 
-private final class Storage: ObservableObject {
+private final class Storage {
   @Published private var recordings: [RecordingInfo] = []
 
   static var documentsURL: URL {

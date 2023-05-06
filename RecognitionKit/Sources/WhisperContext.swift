@@ -49,10 +49,6 @@ public actor WhisperContext {
     }.joined(separator: " ")
   }
 
-  public func unloadContext() {
-    whisper_free(context)
-  }
-
   public static func createContext(path: String) throws -> WhisperContext {
     let context = whisper_init_from_file(path)
     if let context {

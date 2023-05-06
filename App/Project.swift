@@ -15,11 +15,10 @@ let projectSettings: SettingsDictionary = [
 let debugSettings: SettingsDictionary = [
   "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -enable-actor-data-race-checks",
   "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
-  "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Sources/Common/Bridging.h",
 ]
 
 let releaseSettings: SettingsDictionary = [
-  "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Sources/Common/Bridging.h",
+  :
 ]
 
 func appTarget() -> Target {
@@ -69,48 +68,12 @@ func appTarget() -> Target {
       ],
     ]),
     sources: .paths([.relativeToManifest("Sources/**")]),
-    resources: [
-      "Resources/Assets.xcassets",
-      "Resources/ggml-tiny.bin",
-    ],
+    resources: ["Resources/Assets.xcassets"],
     entitlements: .relativeToManifest("Resources/app.entitlements"),
     dependencies: [
       .target(name: "ShareExtension"),
 
-      .external(name: "AppDevUtils"),
-      .external(name: "Inject"),
-
-      .external(name: "DSWaveformImage"),
-      .external(name: "DSWaveformImageViews"),
-      .external(name: "DynamicColor"),
-      .external(name: "Setting"),
-      .external(name: "Popovers"),
-      // .external(name: "Lottie"),
-      // .external(name: "LottieUI"),
-
-      .external(name: "AudioKit"),
-      // .external(name: "whisper"),
-
-      .external(name: "ComposableArchitecture"),
-      // .external(name: "ComposablePresentation"),
-      .external(name: "AsyncAlgorithms"),
-      .external(name: "DependenciesAdditions"),
-
-      .project(target: "RecognitionKit", path: "../RecognitionKit"),
-    ]
-  )
-}
-
-func appTestTarget() -> Target {
-  Target(
-    name: "WhisperBoardTests",
-    platform: .iOS,
-    product: .unitTests,
-    bundleId: "me.igortarasenko.WhisperboardTests",
-    infoPlist: .default,
-    sources: .paths([.relativeToManifest("Tests/**")]),
-    dependencies: [
-      .target(name: "WhisperBoard"),
+      .project(target: "WhisperBoardKit", path: "../AppKit"),
     ]
   )
 }
@@ -176,9 +139,5 @@ let project = Project(
   targets: [
     appTarget(),
     shareExtensionTarget(),
-    appTestTarget(),
-  ],
-  resourceSynthesizers: [
-    .files(extensions: ["bin", "json"]),
   ]
 )
