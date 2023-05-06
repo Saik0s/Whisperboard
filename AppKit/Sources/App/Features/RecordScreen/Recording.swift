@@ -28,7 +28,7 @@ public struct Recording: ReducerProtocol {
     case task
     case delegate(DelegateAction)
     case finalRecordingTime(TimeInterval)
-    case stopButtonTapped
+    case saveButtonTapped
     case pauseButtonTapped
     case continueButtonTapped
     case deleteButtonTapped
@@ -67,9 +67,9 @@ public struct Recording: ReducerProtocol {
       state.duration = duration
       return .none
 
-    case .stopButtonTapped:
-      state.mode = .encoding
+    case .saveButtonTapped:
       UIImpactFeedbackGenerator(style: .light).impactOccurred()
+      state.mode = .encoding
 
       return .run { send in
         await send(.finalRecordingTime(audioRecorder.currentTime()))
@@ -77,19 +77,25 @@ public struct Recording: ReducerProtocol {
       }
 
     case .pauseButtonTapped:
+      UIImpactFeedbackGenerator(style: .light).impactOccurred()
       state.mode = .paused
+
       return .fireAndForget { [audioRecorder] in
         await audioRecorder.pauseRecording()
       }
 
     case .continueButtonTapped:
+      UIImpactFeedbackGenerator(style: .light).impactOccurred()
       state.mode = .recording
+
       return .fireAndForget { [audioRecorder] in
         await audioRecorder.continueRecording()
       }
 
     case .deleteButtonTapped:
+      UIImpactFeedbackGenerator(style: .light).impactOccurred()
       state.mode = .removing
+
       return .fireAndForget { [audioRecorder] in
         await audioRecorder.removeCurrentRecording()
       }

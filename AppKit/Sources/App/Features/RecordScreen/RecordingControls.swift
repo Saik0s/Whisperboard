@@ -4,6 +4,7 @@ import DSWaveformImage
 import DSWaveformImageViews
 import Foundation
 import Inject
+import Popovers
 import SwiftUI
 
 // MARK: - RecordingControls
@@ -17,6 +18,7 @@ public struct RecordingControls: ReducerProtocol {
     }
 
     @BindingState var alert: AlertState<Action>?
+    @BindingState var isGotToDetailsPopupPresented: Bool = false
 
     var recording: Recording.State?
 
@@ -33,15 +35,14 @@ public struct RecordingControls: ReducerProtocol {
     case openSettingsButtonTapped
     case recordButtonTapped
     case recording(Recording.Action)
+    case goToDetailsButtonTapped
   }
 
   @Dependency(\.audioRecorder.requestRecordPermission) var requestRecordPermission
-
   @Dependency(\.openSettings) var openSettings
-
   @Dependency(\.date) var date
-
   @Dependency(\.storage) var storage
+  @Dependency(\.continuousClock) var clock
 
   public var body: some ReducerProtocolOf<Self> {
     BindingReducer()
@@ -93,6 +94,16 @@ public struct RecordingControls: ReducerProtocol {
         return .fireAndForget {
           await openSettings()
         }
+
+      case .binding(.set(\.$isGotToDetailsPopupPresented, true)):
+        return .task {
+          try await clock.sleep(for: .seconds(5))
+          return .binding(.set(\.$isGotToDetailsPopupPresented, false))
+        }
+
+      case .goToDetailsButtonTapped:
+        state.isGotToDetailsPopupPresented = false
+        return .none
 
       case .binding:
         return .none
@@ -198,7 +209,7 @@ public struct RecordingControlsView: View {
         .zIndex(1)
 
         if viewStore.recording?.mode == .paused {
-          Button { viewStore.send(.recording(.stopButtonTapped), animation: .default) }
+          Button { viewStore.send(.recording(.saveButtonTapped), animation: .default) }
             label: { Image(systemName: "checkmark").font(.DS.titleL) }
             .recordButtonStyle()
             .frame(width: 50, height: 50)
@@ -207,6 +218,34 @@ public struct RecordingControlsView: View {
         }
       }
       .padding(.horizontal, .grid(3))
+      .popover(
+        present: viewStore.binding(\.$isGotToDetailsPopupPresented),
+        attributes: {
+          $0.position = .absolute(
+            originAnchor: .top,
+            popoverAnchor: .bottom
+          )
+          $0.presentation = .init(animation: .gentleBounce(), transition: .move(edge: .bottom))
+          $0.dismissal = .init(
+            animation: .gentleBounce(),
+            transition: .move(edge: .bottom),
+            mode: .dragDown
+          )
+        }
+      ) {
+        VStack {
+          Text("Go to new recording?")
+            .font(.DS.headlineM)
+            .foregroundColor(.DS.Text.base)
+
+          Button("Open Recording") {
+            viewStore.send(.goToDetailsButtonTapped)
+          }.secondaryButtonStyle()
+        }
+        .padding(.grid(2))
+        .cardStyle()
+        .padding(.grid(2))
+      }
     }
     .enableInjection()
   }
