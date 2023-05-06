@@ -5,6 +5,7 @@ import Dependencies
 import Foundation
 import os.log
 import RecognitionKit
+import SwiftUI
 
 typealias FileName = String
 
@@ -160,9 +161,6 @@ extension TranscriberClient: DependencyKey {
   /// - returns: A `TranscriberClient` object with the specified closures.
   static let liveValue: TranscriberClient = {
     let impl = TranscriberImpl()
-    let transcriptionStatesSubject = CurrentValueSubject<[FileName: TranscriptionState], Never>([:])
-    let transcriptionStatesStream: AnyPublisher<[FileName: TranscriptionState], Never> = transcriptionStatesSubject.eraseToAnyPublisher()
-    _ = transcriptionStatesStream.sink { log.debug($0) }
 
     return TranscriberClient(
       selectModel: { model in
@@ -181,44 +179,10 @@ extension TranscriberClient: DependencyKey {
       },
 
       transcribeAudio: { audioURL, language, isParallel in
-        let fileName = audioURL.lastPathComponent
-        log.verbose("Transcribing \(fileName)...")
-
-        transcriptionStatesSubject.value[fileName] = TranscriptionState()
-        func updateState(_ update: @escaping (inout TranscriptionState) -> Void) {
-          DispatchQueue.main.async {
-            if var state: TranscriptionState = transcriptionStatesSubject.value[fileName] {
-              update(&state)
-              state.segments.sort { $0.index < $1.index }
-              transcriptionStatesSubject.value[fileName] = state
-            }
-          }
-        }
-
-        do {
-          updateState { $0.state = .loadingModel }
-          try await impl.loadModel(model: selectedModel)
-
-          updateState { $0.state = .transcribing }
-          let text = try await impl.transcribeAudio(audioURL, language: language, isParallel: isParallel) { segment in
-            updateState { $0.segments.append(segment) }
-          }
-
-          DispatchQueue.main.async {
-            transcriptionStatesSubject.value.removeValue(forKey: fileName)
-          }
-
-          return text
-        } catch {
-          log.error(error)
-          DispatchQueue.main.async {
-            transcriptionStatesSubject.value.removeValue(forKey: fileName)
-          }
-          throw error
-        }
+        try await impl.transcriptionPipeline(audioURL, language: language, isParallel: isParallel, newSegmentCallback: { _ in })
       },
 
-      transcriptionStateStream: transcriptionStatesStream,
+      transcriptionStateStream: impl.$transcriptionStates.eraseToAnyPublisher(),
 
       getAvailableLanguages: {
         [.auto] + WhisperContext.getAvailableLanguages().sorted { $0.name < $1.name }
@@ -229,7 +193,8 @@ extension TranscriberClient: DependencyKey {
 
 // MARK: - TranscriberImpl
 
-final class TranscriberImpl {
+final class TranscriberImpl: ObservableObject {
+  @Published var transcriptionStates: [FileName: TranscriptionState] = [:]
   /// A private property that stores the current whisper context.
   ///
   /// A whisper context is an object that contains information about the current state of a whisper conversation, such as
@@ -306,11 +271,36 @@ final class TranscriberImpl {
 
     log.verbose("Transcribing data...")
     try await whisperContext.fullTranscribe(samples: data, language: language, isParallel: isParallel, newSegmentCallback: newSegmentCallback)
-    
-    // try await Task.sleep(for: .seconds(0.5))
+
+    try await Task.sleep(for: .seconds(0.5))
 
     let text = try await whisperContext.getTranscription()
     log.verbose("Done: \(text)")
+
+    return text
+  }
+
+  func transcriptionPipeline(
+    _ audioURL: URL,
+    language: VoiceLanguage,
+    isParallel: Bool,
+    newSegmentCallback: @escaping (WhisperTranscriptionSegment) -> Void
+  ) async throws -> String {
+    let fileName = audioURL.lastPathComponent
+    log.verbose("Transcribing \(fileName)...")
+
+    transcriptionStates[fileName] = TranscriptionState()
+
+    transcriptionStates[fileName]?.state = .loadingModel
+    try await loadModel(model: TranscriberClient.selectedModel)
+
+    transcriptionStates[fileName]?.state = .transcribing
+    let text = try await transcribeAudio(audioURL, language: language, isParallel: isParallel) { [weak self] segment in
+      self?.transcriptionStates[fileName]?.segments.append(segment)
+    }
+
+    log.debug("Removing \(fileName) from transcription states")
+    transcriptionStates.removeValue(forKey: fileName)
 
     return text
   }
@@ -386,7 +376,7 @@ extension DependencyValues {
 func decodeWaveFile(_ url: URL) throws -> [Float] {
   let data = try Data(contentsOf: url)
   let floats = stride(from: 44, to: data.count, by: 2).map {
-    data[$0 ..< $0 + 2].withUnsafeBytes {
+    data[$0..<$0 + 2].withUnsafeBytes {
       let short = Int16(littleEndian: $0.load(as: Int16.self))
       return max(-1.0, min(Float(short) / 32767.0, 1.0))
     }
