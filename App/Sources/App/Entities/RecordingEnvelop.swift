@@ -3,6 +3,7 @@ import Foundation
 @dynamicMemberLookup
 public struct RecordingEnvelop: Hashable {
   let recordingInfo: RecordingInfo
+
   let transcriptionState: TranscriptionState?
 
   public init(_ recordingInfo: RecordingInfo, _ transcriptionState: TranscriptionState?) {

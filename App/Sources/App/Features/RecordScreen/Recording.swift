@@ -7,9 +7,13 @@ import SwiftUI
 public struct Recording: ReducerProtocol {
   public struct State: Equatable {
     var date: Date
+
     var duration: TimeInterval = 0
+
     var mode: Mode = .recording
+
     var url: URL
+
     var samples: [Float] = []
 
     enum Mode {
@@ -39,6 +43,7 @@ public struct Recording: ReducerProtocol {
   struct Failed: Equatable, Error {}
 
   @Dependency(\.audioRecorder) var audioRecorder
+
   @Dependency(\.continuousClock) var clock
 
   public func reduce(into state: inout State, action: Action) -> EffectTask<Action> {

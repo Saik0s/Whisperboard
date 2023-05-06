@@ -6,11 +6,17 @@ import Foundation
 
 struct BuildClient {
   var version: () -> String
+
   var buildNumber: () -> String
+
   var githubURL: () -> URL
+
   var personalWebsiteURL: () -> URL
+
   var appStoreReviewURL: () -> URL
+
   var bugReportURL: () -> URL
+
   var featureRequestURL: () -> URL
 }
 

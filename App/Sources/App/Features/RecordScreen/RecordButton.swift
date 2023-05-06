@@ -4,7 +4,9 @@ import UIKit
 
 struct RecordButton: View {
   let permission: RecordingControls.State.RecorderPermission
+
   let action: () -> Void
+
   let settingsAction: () -> Void
 
   var body: some View {

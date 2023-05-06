@@ -6,7 +6,9 @@ import Foundation
 
 struct ModelDownloadClient {
   var getModels: @Sendable () -> [VoiceModel]
+
   var downloadModel: @Sendable (_ model: VoiceModelType) async -> AsyncStream<DownloadState>
+
   var deleteModel: @Sendable (_ model: VoiceModelType) -> Void
 }
 

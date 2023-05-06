@@ -22,12 +22,13 @@ extension DependencyValues {
         info.map { (currentInfo: RecordingInfo) in
           RecordingEnvelop(currentInfo, state[currentInfo.fileName])
         }
-      }.eraseToAnyPublisher()
+      }.print().eraseToAnyPublisher()
     }()
   }
 }
 
 #if DEBUG
+
   extension RecordingEnvelop {
     static var fixtures: [RecordingEnvelop] {
       RecordingInfo.fixtures.map { RecordingEnvelop($0, nil) }

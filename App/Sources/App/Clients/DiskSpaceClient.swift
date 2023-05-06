@@ -6,8 +6,11 @@ import Foundation
 
 struct DiskSpaceClient {
   var freeSpace: () -> UInt64
+
   var totalSpace: () -> UInt64
+
   var takenSpace: () -> UInt64
+
   var deleteStorage: () async throws -> Void
 }
 
@@ -75,7 +78,6 @@ extension DependencyValues {
 }
 
 extension URL {
-  /// check if the URL is a directory and if it is reachable
   func isDirectoryAndReachable() throws -> Bool {
     guard try resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else {
       return false
@@ -83,7 +85,6 @@ extension URL {
     return try checkResourceIsReachable()
   }
 
-  /// returns total allocated size of a the directory including its subFolders or not
   func directoryTotalAllocatedSize(includingSubfolders: Bool = false) throws -> Int? {
     guard try isDirectoryAndReachable() else { return nil }
     if includingSubfolders {

@@ -9,8 +9,11 @@ import SwiftUI
 struct ModelRow: ReducerProtocol {
   struct State: Equatable, Identifiable {
     var model: VoiceModel
+
     var isSelected: Bool
+
     var isRemovingModel: Bool = false
+
     var id: VoiceModel.ID { model.id }
   }
 
@@ -25,6 +28,7 @@ struct ModelRow: ReducerProtocol {
   }
 
   @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
+
   @Dependency(\.transcriber) var transcriber: TranscriberClient
 
   struct CancelDownloadID: Hashable {}
@@ -94,6 +98,7 @@ struct ModelRowView: View {
   @ObserveInjection var inject
 
   let store: StoreOf<ModelRow>
+
   @ObservedObject var viewStore: ViewStoreOf<ModelRow>
 
   init(store: StoreOf<ModelRow>) {
@@ -191,6 +196,7 @@ extension View {
 // MARK: - Previews
 
 #if DEBUG
+
   struct ModelRowView_Previews: PreviewProvider {
     static var previews: some View {
       ModelRowView(

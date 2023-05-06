@@ -4,6 +4,7 @@ import AVFoundation
 
 public struct Microphone: Hashable {
   var id: String { port.uid }
+
   var port: AVAudioSessionPortDescription
 }
 

@@ -17,7 +17,9 @@ public struct RecordingControls: ReducerProtocol {
     }
 
     @BindingState var alert: AlertState<Action>?
+
     var recording: Recording.State?
+
     var audioRecorderPermission = RecorderPermission.undetermined
 
     public init(recording: Recording.State? = nil) {
@@ -34,8 +36,11 @@ public struct RecordingControls: ReducerProtocol {
   }
 
   @Dependency(\.audioRecorder.requestRecordPermission) var requestRecordPermission
+
   @Dependency(\.openSettings) var openSettings
+
   @Dependency(\.date) var date
+
   @Dependency(\.storage) var storage
 
   public var body: some ReducerProtocolOf<Self> {
@@ -119,6 +124,7 @@ public struct RecordingControlsView: View {
   @ObserveInjection var inject
 
   let store: StoreOf<RecordingControls>
+
   @ObservedObject var viewStore: ViewStoreOf<RecordingControls>
 
   var currentTime: String {
@@ -207,6 +213,7 @@ public struct RecordingControlsView: View {
 }
 
 #if DEBUG
+
   struct RecordingControlsView_Previews: PreviewProvider {
     static var previews: some View {
       NavigationView {
