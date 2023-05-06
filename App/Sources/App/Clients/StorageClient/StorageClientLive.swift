@@ -5,6 +5,7 @@ import ComposableArchitecture
 import Dependencies
 import Foundation
 import UIKit
+import SwiftUI
 
 // MARK: - StorageClient + DependencyKey
 
@@ -12,14 +13,13 @@ extension StorageClient: DependencyKey {
   static let liveValue: Self = {
     let storage = Storage()
     let documentsURL = Storage.documentsURL
-    let recordingsInfoStream: AnyPublisher<[RecordingInfo], Never> = storage.currentRecordingsStream
 
     return Self(
       read: {
         storage.currentRecordings.identifiedArray
       },
 
-      recordingsInfoStream: recordingsInfoStream,
+      recordingsInfoStream: storage.currentRecordingsStream,
 
       write: { recordings in
         storage.write(recordings.elements)
@@ -75,7 +75,9 @@ extension StorageClient: DependencyKey {
 
 // MARK: - Storage
 
-private final class Storage {
+private final class Storage: ObservableObject {
+  @Published private var recordings: [RecordingInfo] = []
+
   static var documentsURL: URL {
     do {
       return try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
@@ -94,29 +96,16 @@ private final class Storage {
     return FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName)?.appending(component: "share")
   }
 
-  private let currentRecordingsSubject = CurrentValueSubject<[RecordingInfo], Never>([])
-
   var currentRecordings: [RecordingInfo] {
-    currentRecordingsSubject.value
+    recordings
   }
 
   var currentRecordingsStream: AnyPublisher<[RecordingInfo], Never> {
-    currentRecordingsSubject.eraseToAnyPublisher()
+    $recordings.eraseToAnyPublisher()
   }
 
-  private var cancellables = Set<AnyCancellable>()
-
   init() {
-    currentRecordingsSubject.value = (try? [RecordingInfo].fromFile(path: Self.dbURL.path)) ?? []
-
-    currentRecordingsSubject.sink { recordings in
-      do {
-        try recordings.saveToFile(path: Self.dbURL.path)
-        log.verbose("Saved \(recordings.count) recordings to database file")
-      } catch {
-        log.error(error)
-      }
-    }.store(in: &cancellables)
+    recordings = (try? [RecordingInfo].fromFile(path: Self.dbURL.path)) ?? []
 
     subscribeToDidBecomeActiveNotifications()
     catchingRead()
@@ -149,16 +138,15 @@ private final class Storage {
     write(recordings)
   }
 
-  func write(_ recordings: [RecordingInfo]) {
-    DispatchQueue.main.async { [currentRecordingsSubject] in
-      log.debug("Writing \(recordings.count) recordings to database file")
+  func write(_ newRecordings: [RecordingInfo]) {
+    log.verbose("Writing \(newRecordings.count) recordings to database file")
 
-      // Sort the recordings by date
-      let sorted = recordings.sorted { info, info2 in
-        info.date > info2.date
-      }
+    recordings = newRecordings.sorted { $0.date > $1.date }
 
-      currentRecordingsSubject.send(sorted)
+    do {
+      try recordings.saveToFile(path: Self.dbURL.path)
+    } catch {
+      log.error(error)
     }
   }
 
