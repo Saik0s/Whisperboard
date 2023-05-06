@@ -256,30 +256,6 @@ final class TranscriberImpl: ObservableObject {
   /// - parameter newSegmentCallback: A closure that is called whenever a new segment of transcription is available.
   /// - throws: A `TranscriberError` if the model is not loaded or the transcription fails.
   /// - returns: A `String` containing the full transcription of the audio file.
-  func transcribeAudio(
-    _ audioURL: URL,
-    language: VoiceLanguage,
-    isParallel: Bool,
-    newSegmentCallback: @escaping (WhisperTranscriptionSegment) -> Void
-  ) async throws -> String {
-    guard let whisperContext else {
-      throw TranscriberError.modelNotLoaded
-    }
-
-    log.verbose("Reading wave samples...")
-    let data = try readAudioSamples(audioURL)
-
-    log.verbose("Transcribing data...")
-    try await whisperContext.fullTranscribe(samples: data, language: language, isParallel: isParallel, newSegmentCallback: newSegmentCallback)
-
-    try await Task.sleep(for: .seconds(0.5))
-
-    let text = try await whisperContext.getTranscription()
-    log.verbose("Done: \(text)")
-
-    return text
-  }
-
   func transcriptionPipeline(
     _ audioURL: URL,
     language: VoiceLanguage,
@@ -294,10 +270,21 @@ final class TranscriberImpl: ObservableObject {
     transcriptionStates[fileName]?.state = .loadingModel
     try await loadModel(model: TranscriberClient.selectedModel)
 
+    guard let whisperContext else {
+      throw TranscriberError.modelNotLoaded
+    }
+
+    log.verbose("Reading wave samples...")
+    let data = try readAudioSamples(audioURL)
+
+    log.verbose("Transcribing data...")
     transcriptionStates[fileName]?.state = .transcribing
-    let text = try await transcribeAudio(audioURL, language: language, isParallel: isParallel) { [weak self] segment in
+    try await whisperContext.fullTranscribe(samples: data, language: language, isParallel: isParallel) { [weak self] segment in
       self?.transcriptionStates[fileName]?.segments.append(segment)
     }
+
+    let text = try await whisperContext.getTranscription()
+    log.verbose("Done: \(text)")
 
     log.debug("Removing \(fileName) from transcription states")
     transcriptionStates.removeValue(forKey: fileName)
