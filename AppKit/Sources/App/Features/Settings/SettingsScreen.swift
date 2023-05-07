@@ -14,8 +14,6 @@ struct SettingsScreen: ReducerProtocol {
 
     var availableLanguages: IdentifiedArrayOf<VoiceLanguage> = []
 
-    @BindingState var selectedLanguage: VoiceLanguage = .auto
-
     var appVersion: String = ""
 
     var buildNumber: String = ""
@@ -26,7 +24,7 @@ struct SettingsScreen: ReducerProtocol {
 
     var takenSpacePercentage: Double = 0
 
-    @BindingState var isParallelEnabled: Bool = false
+    @BindingState var settings: Settings = .init()
 
     @BindingState var alert: AlertState<Action>?
   }
@@ -35,8 +33,6 @@ struct SettingsScreen: ReducerProtocol {
     case binding(BindingAction<State>)
     case modelSelector(ModelSelector.Action)
     case task
-    case setLanguage(VoiceLanguage)
-    case parallelSwitchTapped(Bool)
     case openGitHub
     case openPersonalWebsite
     case deleteStorageTapped
@@ -80,24 +76,10 @@ struct SettingsScreen: ReducerProtocol {
         state.takenSpace = diskSpace.takenSpace().readableString
         state.takenSpacePercentage = 1 - Double(diskSpace.freeSpace()) / Double(diskSpace.freeSpace() + diskSpace.takenSpace())
         state.availableLanguages = transcriber.getAvailableLanguages().identifiedArray
-        state.selectedLanguage = settingsClient.settings().voiceLanguage
-        state.isParallelEnabled = settingsClient.settings().isParallelEnabled
-        return .none
-
-      case let .setLanguage(language):
-        state.selectedLanguage = language
-        return .run { _ in
-          try await settingsClient.setValue(language, forKey: \.voiceLanguage)
-        } catch: { error, send in
-          await send(.showError(error.equatable))
-        }
-
-      case let .parallelSwitchTapped(switchState):
-        state.isParallelEnabled = switchState
-        return .run { [isParallelEnabled = state.isParallelEnabled] _ in
-          try await settingsClient.setValue(isParallelEnabled, forKey: \.isParallelEnabled)
-        } catch: { error, send in
-          await send(.showError(error.equatable))
+        return .run { send in
+          for try await settings in settingsClient.settingsPublisher().values {
+            await send(.binding(.set(\.$settings, settings)))
+          }
         }
 
       case .openGitHub:
@@ -141,6 +123,14 @@ struct SettingsScreen: ReducerProtocol {
           await openURL(build.featureRequestURL())
         }
       }
+    }
+  }
+
+  private func setSettings<Value: Codable>(_ value: Value, forKey keyPath: WritableKeyPath<Settings, Value>) -> EffectPublisher<Action, Never> {
+    .run { _ in
+      try await settingsClient.setValue(value, forKey: keyPath)
+    } catch: { error, send in
+      await send(.showError(error.equatable))
     }
   }
 
@@ -206,8 +196,8 @@ struct SettingsScreenView: View {
             title: "Language",
             choices: viewStore.availableLanguages.map(\.name.titleCased),
             selectedIndex: viewStore.binding(
-              get: { $0.availableLanguages.firstIndex(of: $0.selectedLanguage) ?? 0 },
-              send: { .setLanguage(viewStore.availableLanguages[$0]) }
+              get: { $0.availableLanguages.firstIndex(of: $0.settings.voiceLanguage) ?? 0 },
+              send: { .binding(.set(\.$settings.voiceLanguage, viewStore.availableLanguages[$0])) }
             ),
             choicesConfiguration: .init(
               groupBackgroundColor: .DS.Background.secondary
@@ -215,9 +205,13 @@ struct SettingsScreenView: View {
           )
 
           #if DEBUG
+            SettingToggle(title: "Fast Cloud Transcription", isOn: viewStore.binding(
+              get: \.settings.isRemoteTranscriptionEnabled,
+              send: { .binding(.set(\.$settings.isRemoteTranscriptionEnabled, $0)) }
+            ))
             SettingToggle(title: "Parallel chunks transcription", isOn: viewStore.binding(
-              get: \.isParallelEnabled,
-              send: { .parallelSwitchTapped($0) }
+              get: \.settings.isParallelEnabled,
+              send: { .binding(.set(\.$settings.isParallelEnabled, $0)) }
             ))
           #endif
         }
