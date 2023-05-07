@@ -27,11 +27,11 @@ enum AudioRecorderSettings {
 // MARK: - AudioRecorderClient
 
 struct AudioRecorderClient {
-  /// Returns the current time interval since the reference date.
+  /// Returns the current time interval of recording
   ///
   /// - note: This function is marked as `@Sendable` and `async`, which means it can be safely called from any concurrency
   /// context and may suspend its execution until the result is available.
-  /// - returns: A `TimeInterval` value representing the number of seconds since 00:00:00 UTC on 1 January 2001.
+  /// - returns: A `TimeInterval` value representing the number of seconds since the recording started.
   var currentTime: @Sendable () async -> TimeInterval
   /// Requests the user's permission to record audio using the microphone.
   ///

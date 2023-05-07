@@ -33,6 +33,7 @@ extension StorageClient: DependencyKey {
       createNewWhisperURL: {
         let filename = UUID().uuidString + ".wav"
         let url = documentsURL.appending(path: filename)
+        storage.setAsCurrentlyRecording(url)
         return url
       },
 
@@ -104,6 +105,8 @@ private final class Storage {
     $recordings.eraseToAnyPublisher()
   }
 
+  private var currentlyRecordingURL: URL?
+
   init() {
     recordings = (try? [RecordingInfo].fromFile(path: Self.dbURL.path)) ?? []
 
@@ -113,6 +116,19 @@ private final class Storage {
 
   func read() throws {
     var storedRecordings = currentRecordings
+
+    // Update the duration of the recordings that don't have it
+    storedRecordings = storedRecordings.map { recording in
+      var recording = recording
+      if recording.duration == 0 {
+        do {
+          recording.duration = try getFileDuration(url: Self.documentsURL.appending(path: recording.fileName))
+        } catch {
+          log.error(error)
+        }
+      }
+      return recording
+    }
 
     // If there are files in shared container, move them to the documents directory
     let sharedRecordings = moveSharedFiles(to: Self.documentsURL)
@@ -124,6 +140,8 @@ private final class Storage {
     let recordingFiles = try FileManager.default
       .contentsOfDirectory(atPath: Self.documentsURL.path)
       .filter { $0.hasSuffix(".wav") }
+      // Remove the currently recording file from the list until it is finished
+      .filter { $0 != currentlyRecordingURL?.lastPathComponent }
 
     let recordings: [RecordingInfo] = try recordingFiles.map { file in
       // If the recording is already stored in the database, return it
@@ -141,6 +159,11 @@ private final class Storage {
   func write(_ newRecordings: [RecordingInfo]) {
     log.verbose("Writing \(newRecordings.count) recordings to database file")
 
+    // If the currently recording file is in the new recordings, set it to nil as it is not in progress anymore
+    if newRecordings.contains(where: { $0.fileName == currentlyRecordingURL?.lastPathComponent }) {
+      currentlyRecordingURL = nil
+    }
+
     recordings = newRecordings.sorted { $0.date > $1.date }
 
     do {
@@ -148,6 +171,10 @@ private final class Storage {
     } catch {
       log.error(error)
     }
+  }
+
+  func setAsCurrentlyRecording(_ url: URL) {
+    currentlyRecordingURL = url
   }
 
   private func moveSharedFiles(to docURL: URL) -> [RecordingInfo] {
