@@ -59,6 +59,10 @@ struct Root: ReducerProtocol {
           }
           return .none
 
+        case .settings(.deleteDialogConfirmed):
+          state.recordingListScreen.selectedId = nil
+          return .none
+
         default:
           return .none
         }
