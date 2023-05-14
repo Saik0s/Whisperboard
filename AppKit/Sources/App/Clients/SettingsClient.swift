@@ -11,7 +11,7 @@ struct SettingsClient {
   ///
   /// - note: The publisher is a function that can be called to get a fresh publisher instance.
   /// - returns: A publisher that emits a `Settings` value or an `Error` if the settings cannot be retrieved.
-  var settingsPublisher: @Sendable () -> AnyPublisher<Settings, Error>
+  var settingsPublisher: @Sendable () -> AnyPublisher<Settings, Never>
   /// A property that returns a `Settings` value.
   ///
   /// - note: This property is marked with the `@Sendable` attribute, which means it can be safely used across concurrency
@@ -58,19 +58,17 @@ extension SettingsClient: DependencyKey {
   static var liveValue: Self = {
     let docURL = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
     let settingsURL = docURL.appendingPathComponent("settings.json")
-    if FileManager.default.fileExists(atPath: settingsURL.path) == false {
-      let settings = Settings()
-      let encoder = JSONEncoder()
-      encoder.outputFormatting = .prettyPrinted
-      let data = try! encoder.encode(settings)
-      try! data.write(to: settingsURL)
-    }
-    let settingsSubject = CodableValueSubject<Settings>(fileURL: settingsURL)
+    let settings = (try? Settings.fromFile(path: settingsURL.path)) ?? Settings()
+    let container = SettingsContainer(settings: settings)
 
     return Self(
-      settingsPublisher: { settingsSubject.eraseToAnyPublisher() },
-      settings: { settingsSubject.value ?? Settings() },
-      updateSettings: { settings in settingsSubject.send(settings) }
+      settingsPublisher: { container.$settings.eraseToAnyPublisher() },
+      settings: { container.settings },
+      updateSettings: { newSettings in
+        guard newSettings != container.settings else { return }
+        container.settings = newSettings
+        try newSettings.saveToFile(path: settingsURL.path)
+      }
     )
   }()
 }
@@ -83,5 +81,14 @@ extension DependencyValues {
   var settings: SettingsClient {
     get { self[SettingsClient.self] }
     set { self[SettingsClient.self] = newValue }
+  }
+}
+
+
+private final class SettingsContainer {
+  @Published var settings: Settings
+
+  init(settings: Settings) {
+    self.settings = settings
   }
 }

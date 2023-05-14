@@ -65,7 +65,11 @@ struct SettingsScreen: ReducerProtocol {
     Reduce<State, Action> { state, action in
       switch action {
       case .binding:
-        return .none
+        return .run { [settings = state.settings] _ in
+          try await settingsClient.updateSettings(settings)
+        } catch: { error, send in
+          await send(.showError(error.equatable))
+        }
 
       case .modelSelector:
         return .none
@@ -218,14 +222,8 @@ struct SettingsScreenView: View {
           )
 
           #if DEBUG
-            SettingToggle(title: "Fast Cloud Transcription", isOn: viewStore.binding(
-              get: \.settings.isRemoteTranscriptionEnabled,
-              send: { .binding(.set(\.$settings.isRemoteTranscriptionEnabled, $0)) }
-            ))
-            SettingToggle(title: "Parallel chunks transcription", isOn: viewStore.binding(
-              get: \.settings.isParallelEnabled,
-              send: { .binding(.set(\.$settings.isParallelEnabled, $0)) }
-            ))
+            SettingToggle(title: "Fast Cloud Transcription", isOn: viewStore.binding(\.$settings.isRemoteTranscriptionEnabled))
+            SettingToggle(title: "Parallel chunks transcription", isOn: viewStore.binding(\.$settings.isParallelEnabled))
           #endif
         }
 
@@ -262,22 +260,22 @@ struct SettingsScreenView: View {
               GeometryReader { geometry in
                 HStack(spacing: 0) {
                   LinearGradient.easedGradient(
-                    colors: [
-                      .systemPurple,
-                      .systemOrange,
-                    ],
-                    startPoint: .bottomLeading,
-                    endPoint: .topTrailing
-                  )
-                  .frame(width: geometry.size.width * viewStore.takenSpacePercentage)
+                      colors: [
+                        .systemPurple,
+                        .systemOrange,
+                      ],
+                      startPoint: .bottomLeading,
+                      endPoint: .topTrailing
+                    )
+                    .frame(width: geometry.size.width * viewStore.takenSpacePercentage)
                   Color.DS.Background.tertiary
                 }
               }
-              .frame(height: .grid(4))
-              .continuousCornerRadius(.grid(1))
+                .frame(height: .grid(4))
+                .continuousCornerRadius(.grid(1))
             }
-            .padding(.horizontal, .grid(4))
-            .padding(.vertical, .grid(2))
+              .padding(.horizontal, .grid(4))
+              .padding(.vertical, .grid(2))
           }
 
           SettingButton(icon: .system(icon: "trash", backgroundColor: .systemRed.darken(by: 0.1)), title: "Delete Storage", indicator: nil) {
@@ -322,26 +320,26 @@ struct SettingsScreenView: View {
                 .foregroundColor(.DS.Text.accentAlt)
             }
           }
-          .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity)
 
           HStack(spacing: .grid(1)) {
             Button("Saik0s/Whisperboard") {
               viewStore.send(.openGitHub)
             }
           }
-          .buttonStyle(SmallButtonStyle())
-          .frame(maxWidth: .infinity)
-          .onAppear {
-            viewStore.send(.modelSelector(.onAppear))
-            viewStore.send(.updateInfo)
-          }
+            .buttonStyle(SmallButtonStyle())
+            .frame(maxWidth: .infinity)
+            .onAppear {
+              viewStore.send(.modelSelector(.onAppear))
+              viewStore.send(.updateInfo)
+            }
         }
       }
     }
-    .alert(modelSelectorStore.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
-    .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
-    .task { viewStore.send(.task) }
-    .enableInjection()
+      .alert(modelSelectorStore.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
+      .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
+      .task { viewStore.send(.task) }
+      .enableInjection()
   }
 }
 
@@ -364,10 +362,10 @@ struct SmallButtonStyle: ButtonStyle {
 
 private extension String {
   static let modelSelectorFooter = """
-  Whisper ASR, by OpenAI, is an advanced system that converts spoken words into written text. It's perfect for transcribing conversations or speeches.
+                                   Whisper ASR, by OpenAI, is an advanced system that converts spoken words into written text. It's perfect for transcribing conversations or speeches.
 
-  The model is a neural network that takes an audio file as input and outputs a sequence of characters.
-  """
+                                   The model is a neural network that takes an audio file as input and outputs a sequence of characters.
+                                   """
 }
 
 // MARK: - SettingsScreen_Previews
