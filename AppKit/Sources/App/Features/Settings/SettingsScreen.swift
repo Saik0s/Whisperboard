@@ -33,6 +33,7 @@ struct SettingsScreen: ReducerProtocol {
     case binding(BindingAction<State>)
     case modelSelector(ModelSelector.Action)
     case task
+    case updateInfo
     case openGitHub
     case openPersonalWebsite
     case deleteStorageTapped
@@ -52,7 +53,7 @@ struct SettingsScreen: ReducerProtocol {
 
   @Dependency(\.build) var build: BuildClient
 
-  @Dependency(\.diskSpace) var diskSpace: DiskSpaceClient
+  @Dependency(\.storage) var storage: StorageClient
 
   var body: some ReducerProtocol<State, Action> {
     BindingReducer()
@@ -70,17 +71,19 @@ struct SettingsScreen: ReducerProtocol {
         return .none
 
       case .task:
-        state.appVersion = build.version()
-        state.buildNumber = build.buildNumber()
-        state.freeSpace = diskSpace.freeSpace().readableString
-        state.takenSpace = diskSpace.takenSpace().readableString
-        state.takenSpacePercentage = 1 - Double(diskSpace.freeSpace()) / Double(diskSpace.freeSpace() + diskSpace.takenSpace())
-        state.availableLanguages = transcriber.getAvailableLanguages().identifiedArray
+        updateInfo(state: &state)
         return .run { send in
           for try await settings in settingsClient.settingsPublisher().values {
             await send(.binding(.set(\.$settings, settings)))
           }
+        } catch: { error, send in
+          await send(.showError(error.equatable))
         }
+
+      case .updateInfo:
+        updateInfo(state: &state)
+        state.modelSelector = .init()
+        return .send(.modelSelector(.onAppear))
 
       case .openGitHub:
         return .fireAndForget {
@@ -98,8 +101,9 @@ struct SettingsScreen: ReducerProtocol {
 
       case .deleteDialogConfirmed:
         return .run { send in
-          try await diskSpace.deleteStorage()
-          await send(.task)
+          try await storage.deleteStorage()
+          transcriber.selectModel(.default)
+          await send(.updateInfo)
         } catch: { error, send in
           await send(.showError(error.equatable))
         }
@@ -124,6 +128,15 @@ struct SettingsScreen: ReducerProtocol {
         }
       }
     }
+  }
+
+  private func updateInfo(state: inout State) {
+    state.appVersion = build.version()
+    state.buildNumber = build.buildNumber()
+    state.freeSpace = storage.freeSpace().readableString
+    state.takenSpace = storage.takenSpace().readableString
+    state.takenSpacePercentage = 1 - Double(storage.freeSpace()) / Double(storage.freeSpace() + storage.takenSpace())
+    state.availableLanguages = transcriber.getAvailableLanguages().identifiedArray
   }
 
   private func setSettings<Value: Codable>(_ value: Value, forKey keyPath: WritableKeyPath<Settings, Value>) -> EffectPublisher<Action, Never> {
@@ -318,13 +331,16 @@ struct SettingsScreenView: View {
           }
           .buttonStyle(SmallButtonStyle())
           .frame(maxWidth: .infinity)
+          .onAppear {
+            viewStore.send(.modelSelector(.onAppear))
+            viewStore.send(.updateInfo)
+          }
         }
       }
     }
     .alert(modelSelectorStore.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .task { viewStore.send(.task) }
-    .onAppear { viewStore.send(.modelSelector(.onAppear)) }
     .enableInjection()
   }
 }

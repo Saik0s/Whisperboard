@@ -58,6 +58,13 @@ extension SettingsClient: DependencyKey {
   static var liveValue: Self = {
     let docURL = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
     let settingsURL = docURL.appendingPathComponent("settings.json")
+    if FileManager.default.fileExists(atPath: settingsURL.path) == false {
+      let settings = Settings()
+      let encoder = JSONEncoder()
+      encoder.outputFormatting = .prettyPrinted
+      let data = try! encoder.encode(settings)
+      try! data.write(to: settingsURL)
+    }
     let settingsSubject = CodableValueSubject<Settings>(fileURL: settingsURL)
 
     return Self(

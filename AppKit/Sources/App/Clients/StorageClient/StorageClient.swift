@@ -26,6 +26,14 @@ struct StorageClient {
   var delete: @Sendable (RecordingInfo.ID) throws -> Void
 
   var update: @Sendable (RecordingInfo.ID, (inout RecordingInfo) -> Void) throws -> Void
+
+  var freeSpace: () -> UInt64
+
+  var totalSpace: () -> UInt64
+
+  var takenSpace: () -> UInt64
+
+  var deleteStorage: () async throws -> Void
 }
 
 extension DependencyValues {

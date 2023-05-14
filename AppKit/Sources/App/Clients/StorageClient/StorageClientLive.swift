@@ -69,9 +69,58 @@ extension StorageClient: DependencyKey {
 
         recordings[id: id] = recording
         storage.write(recordings.elements)
-      }
+      },
+
+      freeSpace: { freeDiskSpaceInBytes() },
+      totalSpace: { totalDiskSpaceInBytes() },
+      takenSpace: { takenSpace() },
+      deleteStorage: { try await deleteStorage(storage) }
     )
   }()
+
+  private static func totalDiskSpaceInBytes() -> UInt64 {
+    do {
+      let fileURL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+      let values = try fileURL.resourceValues(forKeys: [.volumeTotalCapacityKey])
+      let capacity = values.volumeAvailableCapacityForImportantUsage
+      return UInt64(capacity ?? 0)
+    } catch {
+      log.error("Error while getting total disk space: \(error)")
+      return 0
+    }
+  }
+
+  private static func freeDiskSpaceInBytes() -> UInt64 {
+    do {
+      let fileURL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+      let values = try fileURL.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+      let capacity = values.volumeAvailableCapacityForImportantUsage
+      return UInt64(capacity ?? 0)
+    } catch {
+      log.error("Error while getting free disk space: \(error)")
+      return 0
+    }
+  }
+
+  private static func takenSpace() -> UInt64 {
+    do {
+      let fileURL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+      let capacity = try fileURL.directoryTotalAllocatedSize(includingSubfolders: true)
+      return UInt64(capacity ?? 0)
+    } catch {
+      log.error("Error while getting taken disk space: \(error)")
+      return 0
+    }
+  }
+
+  private static func deleteStorage(_ storage: Storage) async throws {
+    let documentDir = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+    let contents = try FileManager.default.contentsOfDirectory(at: documentDir, includingPropertiesForKeys: nil, options: [])
+    for item in contents where item.lastPathComponent != "settings.json" {
+      try FileManager.default.removeItem(at: item)
+    }
+    try storage.read()
+  }
 }
 
 // MARK: - Storage
@@ -232,3 +281,26 @@ private final class Storage {
 // MARK: - CodableValueSubject + Then
 
 extension CodableValueSubject: Then {}
+
+extension URL {
+  func isDirectoryAndReachable() throws -> Bool {
+    guard try resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else {
+      return false
+    }
+    return try checkResourceIsReachable()
+  }
+
+  func directoryTotalAllocatedSize(includingSubfolders: Bool = false) throws -> Int? {
+    guard try isDirectoryAndReachable() else { return nil }
+    if includingSubfolders {
+      guard let urls = FileManager.default.enumerator(at: self, includingPropertiesForKeys: nil)?.allObjects as? [URL] else { return nil }
+      return try urls.lazy.reduce(0) {
+        try ($1.resourceValues(forKeys: [.totalFileAllocatedSizeKey]).totalFileAllocatedSize ?? 0) + $0
+      }
+    }
+    return try FileManager.default.contentsOfDirectory(at: self, includingPropertiesForKeys: nil).lazy.reduce(0) {
+      try ($1.resourceValues(forKeys: [.totalFileAllocatedSizeKey])
+        .totalFileAllocatedSize ?? 0) + $0
+    }
+  }
+}
