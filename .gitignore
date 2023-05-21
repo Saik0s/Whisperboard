@@ -119,9 +119,13 @@ Private/
 *.xcodeproj
 .prompt
 Whisperboard/Resources/*.bin
-App/Sources/App/Clients/Secrets.swift
 Tuist/Dependencies/SwiftPackageManager
 Tuist/Dependencies/graph.json
 **/Derived/
 Derived/
 analyzer.py
+.env
+AppKit/Sources/App/Clients/Secrets.swift
+ci_scripts/__pycache__/
+ci_scripts/gyb
+ci_scripts/gyb.py

@@ -72,6 +72,15 @@ extension DependencyValues {
 enum BackgroundProcessingClientError: Error {
   case noTasksInQueue
   case alreadyExecutingTask
+
+  var localizedDescription: String {
+    switch self {
+    case .noTasksInQueue:
+      return "No tasks in queue"
+    case .alreadyExecutingTask:
+      return "Already executing task"
+    }
+  }
 }
 
 // MARK: - BackgroundProcessingClientImpl
@@ -223,8 +232,8 @@ final class BackgroundProcessingClientImpl<State: Codable> {
       isExecutingTask = false
       try await taskCompleted()
     } catch {
-      customAssertionFailure()
       log.error(error)
+      customAssertionFailure(error.localizedDescription)
       taskFailed()
       throw error
     }
@@ -292,6 +301,7 @@ final class BackgroundProcessingClientImpl<State: Codable> {
   private func taskFailed() {
     isExecutingTask = false
     resetBackgroundTask()
+    taskQueue.removeAll()
   }
 
   /// Ends the current background task and removes any scheduled background task.
