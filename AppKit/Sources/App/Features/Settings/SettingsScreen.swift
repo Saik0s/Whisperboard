@@ -167,6 +167,55 @@ struct SettingsScreen: ReducerProtocol {
   }
 }
 
+// MARK: - RemoteTranscriptionImage
+
+struct RemoteTranscriptionImage: View {
+  @ObserveInjection var inject
+
+  @State private var animating = false
+
+  private let featureDescription = "Transcribe your recordings in the cloud super fast using the most capable"
+  private let modelName = "Large-v2 Whisper model"
+
+  var body: some View {
+    VStack(spacing: 0) {
+      WhisperBoardKitAsset.remoteTranscription.swiftUIImage
+        .resizable()
+        .aspectRatio(contentMode: .fit)
+        .frame(height: 70)
+        .padding(.grid(2))
+        .background(
+          WhisperBoardKitAsset.remoteTranscription.swiftUIImage
+            .resizable()
+            .blur(radius: animating ? 30 : 20)
+            .padding(.grid(2))
+            .opacity(animating ? 1.0 : 0.3)
+            .animation(Animation.interpolatingSpring(stiffness: 3, damping: 0.3).repeatForever(autoreverses: false), value: animating)
+        )
+        .onAppear { animating = true }
+
+      VStack(spacing: 0) {
+        Text(featureDescription)
+          .font(.DS.headlineS)
+          .foregroundColor(.DS.Text.base)
+        Text(modelName).shadow(color: .black, radius: 1, y: 1)
+          .background(Text(modelName).blur(radius: 7))
+          .font(.DS.headlineL)
+          .foregroundStyle(
+            LinearGradient(
+              colors: [.DS.Text.accent, .DS.Background.accentAlt],
+              startPoint: .leading,
+              endPoint: .trailing
+            )
+          )
+      }
+      .multilineTextAlignment(.center)
+      .padding([.leading, .bottom, .trailing], .grid(2))
+    }
+    .enableInjection()
+  }
+}
+
 // MARK: - SettingsScreenView
 
 struct SettingsScreenView: View {
@@ -190,7 +239,7 @@ struct SettingsScreenView: View {
   var body: some View {
     SettingStack {
       SettingPage(title: "Settings", backgroundColor: .DS.Background.primary) {
-        SettingGroup(header: "Transcription", backgroundColor: .DS.Background.secondary) {
+        SettingGroup(header: "Local Transcription", backgroundColor: .DS.Background.secondary) {
           SettingPage(
             title: "Models",
             selectedChoice: viewStore.modelSelector.selectedModel.readableName,
@@ -222,9 +271,15 @@ struct SettingsScreenView: View {
           )
 
           #if DEBUG
-            SettingToggle(title: "Fast Cloud Transcription", isOn: viewStore.binding(\.$settings.isRemoteTranscriptionEnabled))
             SettingToggle(title: "Parallel chunks transcription", isOn: viewStore.binding(\.$settings.isParallelEnabled))
           #endif
+        }
+
+        SettingGroup(header: "Remote Transcription", backgroundColor: .DS.Background.secondary) {
+          SettingCustomView(id: "remote_transcription") {
+            RemoteTranscriptionImage()
+          }
+          SettingToggle(title: "Fast Cloud Transcription", isOn: viewStore.binding(\.$settings.isRemoteTranscriptionEnabled))
         }
 
         #if DEBUG
@@ -260,22 +315,22 @@ struct SettingsScreenView: View {
               GeometryReader { geometry in
                 HStack(spacing: 0) {
                   LinearGradient.easedGradient(
-                      colors: [
-                        .systemPurple,
-                        .systemOrange,
-                      ],
-                      startPoint: .bottomLeading,
-                      endPoint: .topTrailing
-                    )
-                    .frame(width: geometry.size.width * viewStore.takenSpacePercentage)
+                    colors: [
+                      .systemPurple,
+                      .systemOrange,
+                    ],
+                    startPoint: .bottomLeading,
+                    endPoint: .topTrailing
+                  )
+                  .frame(width: geometry.size.width * viewStore.takenSpacePercentage)
                   Color.DS.Background.tertiary
                 }
               }
-                .frame(height: .grid(4))
-                .continuousCornerRadius(.grid(1))
+              .frame(height: .grid(4))
+              .continuousCornerRadius(.grid(1))
             }
-              .padding(.horizontal, .grid(4))
-              .padding(.vertical, .grid(2))
+            .padding(.horizontal, .grid(4))
+            .padding(.vertical, .grid(2))
           }
 
           SettingButton(icon: .system(icon: "trash", backgroundColor: .systemRed.darken(by: 0.1)), title: "Delete Storage", indicator: nil) {
@@ -320,26 +375,26 @@ struct SettingsScreenView: View {
                 .foregroundColor(.DS.Text.accentAlt)
             }
           }
-            .frame(maxWidth: .infinity)
+          .frame(maxWidth: .infinity)
 
           HStack(spacing: .grid(1)) {
             Button("Saik0s/Whisperboard") {
               viewStore.send(.openGitHub)
             }
           }
-            .buttonStyle(SmallButtonStyle())
-            .frame(maxWidth: .infinity)
-            .onAppear {
-              viewStore.send(.modelSelector(.onAppear))
-              viewStore.send(.updateInfo)
-            }
+          .buttonStyle(SmallButtonStyle())
+          .frame(maxWidth: .infinity)
+          .onAppear {
+            viewStore.send(.modelSelector(.onAppear))
+            viewStore.send(.updateInfo)
+          }
         }
       }
     }
-      .alert(modelSelectorStore.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
-      .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
-      .task { viewStore.send(.task) }
-      .enableInjection()
+    .alert(modelSelectorStore.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
+    .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
+    .task { viewStore.send(.task) }
+    .enableInjection()
   }
 }
 
@@ -362,10 +417,10 @@ struct SmallButtonStyle: ButtonStyle {
 
 private extension String {
   static let modelSelectorFooter = """
-                                   Whisper ASR, by OpenAI, is an advanced system that converts spoken words into written text. It's perfect for transcribing conversations or speeches.
+  Whisper ASR, by OpenAI, is an advanced system that converts spoken words into written text. It's perfect for transcribing conversations or speeches.
 
-                                   The model is a neural network that takes an audio file as input and outputs a sequence of characters.
-                                   """
+  The model is a neural network that takes an audio file as input and outputs a sequence of characters.
+  """
 }
 
 // MARK: - SettingsScreen_Previews

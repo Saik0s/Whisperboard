@@ -92,5 +92,6 @@ let project = Project(
   ],
   resourceSynthesizers: [
     .files(extensions: ["bin", "json"]),
+    .assets(),
   ]
 )
