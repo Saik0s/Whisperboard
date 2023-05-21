@@ -19,6 +19,7 @@ func sendFile(fileUrl: URL) async throws -> String {
   let url = try URL(string: "\(Secrets.BACKEND_URL)").require().appendingPathComponent("transcribe")
   var request = URLRequest(url: url)
   request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+  request.addValue(Secrets.API_KEY, forHTTPHeaderField: "Authorization")
   let device_identifier = await getDeviceIdentifier()
   request.addValue(device_identifier, forHTTPHeaderField: "x-device-identifier")
   request.httpMethod = "POST"
@@ -56,9 +57,10 @@ enum FetchError: Error, LocalizedError {
   }
 }
 
-func fetchResult(callId: String) async throws -> String {
+func waitForResults<Result: Codable>(callId: String) async throws -> Result {
   let url = try URL(string: "\(Secrets.BACKEND_URL)").require().appendingPathComponent("result").appendingPathComponent(callId)
   var request = URLRequest(url: url)
+  request.addValue(Secrets.API_KEY, forHTTPHeaderField: "Authorization")
   let device_identifier = await getDeviceIdentifier()
   request.addValue(device_identifier, forHTTPHeaderField: "x-device-identifier")
   request.httpMethod = "GET"
@@ -69,13 +71,12 @@ func fetchResult(callId: String) async throws -> String {
 
     if let response = response as? HTTPURLResponse {
       if response.statusCode == 200 {
-        let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-        let segments = json?["segments"] as? [[String: Any]]
-        let text = segments?.map { $0["text"] as? String }.compactMap { $0 }.joined(separator: " ") ?? ""
-
         log.debug(data.utf8String)
         isFinished = true
-        return text
+
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(Result.self, from: data)
+        return result
       } else if response.statusCode == 202 {
         log.verbose("Still processing \(callId)...")
       } else {

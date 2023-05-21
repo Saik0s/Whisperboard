@@ -54,12 +54,12 @@ extension LongTask {
 
   private static func remoteTranscription(
     fileURL: URL,
-    language _: VoiceLanguage
+    language: VoiceLanguage
   ) async throws -> String {
-    let callId = try await sendFile(fileUrl: fileURL)
-    let response = try await fetchResult(callId: callId)
-    log.debug(response)
-    return response
+    @Dependency(\.remoteTranscriber) var remoteTranscriber: RemoteTranscriberClient
+    let text = try await remoteTranscriber.transcribeAudio(fileURL, language)
+    log.debug(text)
+    return text
   }
 }
 

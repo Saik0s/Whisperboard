@@ -71,10 +71,6 @@ public struct RecordingCard: ReducerProtocol {
 
   private enum PlayID {}
 
-  private struct TranscriptionID: Hashable {
-    let id: String
-  }
-
   public var body: some ReducerProtocol<State, Action> {
     BindingReducer()
 
@@ -126,13 +122,12 @@ public struct RecordingCard: ReducerProtocol {
           #else
             await send(.binding(.set(\.$alert, .genericError)))
           #endif
-        }.cancellable(id: TranscriptionID(id: state.recordingEnvelop.id))
+        }
 
       case .cancelTranscriptionTapped:
         return .fireAndForget(priority: .utility) {
-          transcriber.unloadSelectedModel()
           backgroundProcessingClient.removeAndCancelAllTasks()
-        }.merge(with: .cancel(id: TranscriptionID(id: state.recordingEnvelop.id)))
+        }
 
       case let .titleChanged(title):
         do {
@@ -168,7 +163,7 @@ public struct RecordingCard: ReducerProtocol {
         }
       }
     }
-    .cancellable(id: PlayID.self, cancelInFlight: true)
+      .cancellable(id: PlayID.self, cancelInFlight: true)
   }
 }
 
@@ -184,7 +179,7 @@ extension RecordingCard.State.Mode {
   }
 }
 
-extension TranscriptionState.State {
+extension TranscriptionState.Progress {
   var message: String {
     switch self {
     case .starting:
@@ -193,6 +188,10 @@ extension TranscriptionState.State {
       return "Loading model..."
     case .transcribing:
       return "Transcribing..."
+    case let .finished(result):
+      return result
+    case let .error(error):
+      return error.localizedDescription
     }
   }
 }

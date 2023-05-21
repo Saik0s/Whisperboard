@@ -8,8 +8,7 @@ import RecognitionKit
 import SwiftUI
 
 struct RemoteTranscriberClient {
-  var startAudioTranscription: @Sendable (_ audioURL: URL, _ language: VoiceLanguage) async throws -> Response.Start
-  var checkAudioTranscription: @Sendable (_ id: String) async throws -> Response.Status
+  var transcribeAudio: @Sendable (_ audioURL: URL, _ language: VoiceLanguage) async throws -> String
 }
 
 extension RemoteTranscriberClient {
@@ -18,7 +17,7 @@ extension RemoteTranscriberClient {
     let start: Double
     let end: Double
     let score: Double
-    let speaker: String
+    let speaker: String?
   }
 
   struct TranscriptionSegment: Codable {
@@ -26,31 +25,43 @@ extension RemoteTranscriberClient {
     let end: Double
     let text: String
     let words: [Word]
-    let speaker: String
+    let speaker: String?
   }
-
-  typealias Transcription = [TranscriptionSegment]
 
   enum Response {
     struct Start: Codable {
       let id: String
     }
 
-    struct Status: Codable {
-      let id: String
-      let status: String
-      let text: String
-      let transcription: Transcription
+    struct Finish: Codable {
+      let segments: [TranscriptionSegment]
     }
   }
 }
 
 extension RemoteTranscriberClient: DependencyKey {
   static let liveValue: Self = {
-    RemoteTranscriberClient(
-      startAudioTranscription: { _, _ in Response.Start(id: "1") },
-      checkAudioTranscription: { id in
-        Response.Status(id: "id", status: "", text: "", transcription: [])
+    @Dependency(\.transcriptionsStream) var transcriptionsStream: TranscriptionsStream
+
+    return RemoteTranscriberClient(
+      transcribeAudio: { audioURL, language in
+        let fileName = audioURL.lastPathComponent
+        log.verbose("Remotely transcribing \(fileName)...")
+
+        do {
+          transcriptionsStream.updateStateKey(fileName: fileName, keyPath: \.progress, value: .loadingModel)
+          let callId = try await sendFile(fileUrl: audioURL)
+          transcriptionsStream.updateStateKey(fileName: fileName, keyPath: \.progress, value: .transcribing([]))
+          let result: Response.Finish = try await waitForResults(callId: callId)
+          let text = result.segments.map(\.text).joined(separator: " ")
+          transcriptionsStream.updateStateKey(fileName: fileName, keyPath: \.finalText, value: text)
+          // transcriptionsStream.updateState(fileName: fileName, state: nil)
+          return text
+        } catch {
+          transcriptionsStream.updateStateKey(fileName: fileName, keyPath: \.error, value: error as? TranscriberError ?? .cancelled)
+          log.error(error)
+          throw error
+        }
       }
     )
   }()
