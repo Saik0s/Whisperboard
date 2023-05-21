@@ -30,7 +30,7 @@ class RecordingsStreamTests: XCTestCase {
     let expectedOutput = [
       RecordingEnvelop(
         RecordingInfo(fileName: "file1", date: date, isTranscribed: true),
-        TranscriptionState(state: .transcribing, segments: [], finalText: "Hello world")
+        TranscriptionState(progress: .transcribing, segments: [], finalText: "Hello world")
       ),
     ]
     @Dependency(\.recordingsStream) var recordingsStream: AsyncStream<[RecordingEnvelop]>
@@ -57,7 +57,7 @@ class RecordingsStreamTests: XCTestCase {
 
       Task.detached {
         await self.transcriptionSubject.send([
-          "file1": TranscriptionState(state: .transcribing, segments: [], finalText: "Hello"),
+          "file1": TranscriptionState(progress: .transcribing, segments: [], finalText: "Hello"),
         ])
         expectation.fulfill()
       }
@@ -71,7 +71,7 @@ class RecordingsStreamTests: XCTestCase {
 
       Task.detached {
         await self.transcriptionSubject.send([
-          "file1": TranscriptionState(state: .transcribing, segments: [], finalText: "Hello world"),
+          "file1": TranscriptionState(progress: .transcribing, segments: [], finalText: "Hello world"),
         ])
         expectation.fulfill()
       }

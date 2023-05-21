@@ -9,85 +9,6 @@ import SwiftUI
 
 typealias FileName = String
 
-// MARK: - TranscriptionProgress
-
-enum TranscriptionProgress {
-  case loadingModel
-  case started
-  case newSegment(WhisperTranscriptionSegment)
-  case finished(String)
-  case error(Error)
-}
-
-// MARK: - TranscriberState
-
-/// An enumeration that represents the possible states of a transcriber.
-///
-/// A transcriber is an object that converts speech to text using a machine learning model.
-///
-/// - idle: The transcriber is not performing any task.
-/// - loadingModel: The transcriber is loading the model from a file or a URL.
-/// - modelLoaded: The transcriber has loaded the model successfully and is ready to transcribe.
-/// - transcribing: The transcriber is actively transcribing speech to text.
-/// - finished: The transcriber has finished transcribing and has produced a transcript.
-/// - failed: The transcriber has encountered an error and has failed to load the model or transcribe speech. The
-/// associated value is an EquatableErrorWrapper that wraps the underlying error.
-enum TranscriberState: Equatable {
-  case idle
-  case loadingModel
-  case modelLoaded
-  case transcribing
-  case finished
-  case failed(EquatableErrorWrapper)
-}
-
-// MARK: - TranscriberError
-
-/// An enumeration of possible errors that can occur when using a transcriber.
-///
-/// A transcriber is an object that converts speech to text using a trained model.
-///
-/// - couldNotLocateModel: The model file could not be found in the specified location.
-/// - modelNotLoaded: The model file could not be loaded into memory or initialized properly.
-/// - notEnoughMemory: There is not enough memory available to load the model or perform the transcription. The
-/// associated values are the available and required memory in bytes.
-/// - cancelled: The transcription operation was cancelled by the user or the system.
-///
-/// This enumeration conforms to the Error and CustomStringConvertible protocols, which means it can be thrown as an
-/// error and printed as a string.
-enum TranscriberError: Error, CustomStringConvertible {
-  case couldNotLocateModel
-  case modelNotLoaded
-  case notEnoughMemory(available: UInt64, required: UInt64)
-  case cancelled
-}
-
-// MARK: - TranscriptionState
-
-public struct TranscriptionState: Hashable {
-  /// An enumeration of the possible states of a transcription service.
-  ///
-  /// - starting: The service is initializing and preparing to load the model.
-  /// - loadingModel: The service is loading the speech recognition model from a file or a URL.
-  /// - transcribing: The service is actively transcribing audio input into text output.
-  enum State: Hashable { case starting, loadingModel, transcribing }
-
-  /// A variable that holds the current state of the program.
-  ///
-  /// - possible values: `.starting`, `.running`, `.paused`, `.stopped`
-  /// - initial value: `.starting`
-  var state: State = .starting
-  /// Declares an empty array of `WhisperTranscriptionSegment` values.
-  ///
-  /// A `WhisperTranscriptionSegment` represents a segment of speech transcribed by the Whisper app, with a start time,
-  /// end time, and text. The `segments` array stores the segments of the current transcription session.
-  var segments: [WhisperTranscriptionSegment] = []
-  /// Declares a variable to store the final text output.
-  ///
-  /// - note: The variable is initialized with an empty string.
-  var finalText: String = ""
-}
-
 // MARK: - TranscriberClient
 
 struct TranscriberClient {
@@ -161,6 +82,7 @@ extension TranscriberClient: DependencyKey {
   /// - returns: A `TranscriberClient` object with the specified closures.
   static let liveValue: TranscriberClient = {
     let impl = TranscriberImpl()
+    @Dependency(\.transcriptionsStream) var transcriptionsStream: TranscriptionsStream
 
     return TranscriberClient(
       selectModel: { model in
@@ -179,10 +101,25 @@ extension TranscriberClient: DependencyKey {
       },
 
       transcribeAudio: { audioURL, language, isParallel in
-        try await impl.transcriptionPipeline(audioURL, language: language, isParallel: isParallel, newSegmentCallback: { _ in })
+        let fileName = audioURL.lastPathComponent
+        log.verbose("Transcribing \(fileName)...")
+
+        for await state in impl.transcriptionPipeline(audioURL, language: language, isParallel: isParallel) {
+          transcriptionsStream.updateState(fileName: fileName, state: state)
+        }
+
+        let current = transcriptionsStream.state(for: fileName)
+        if let text = current?.finalText {
+          transcriptionsStream.updateState(fileName: fileName, state: nil)
+          return text
+        } else {
+          let error = current?.error ?? TranscriberError.cancelled
+          transcriptionsStream.updateStateKey(fileName: fileName, keyPath: \TranscriptionState.error, value: error)
+          throw error
+        }
       },
 
-      transcriptionStateStream: impl.$transcriptionStates.asAsyncStream(),
+      transcriptionStateStream: transcriptionsStream.asyncStream,
 
       getAvailableLanguages: {
         [.auto] + WhisperContext.getAvailableLanguages().sorted { $0.name < $1.name }
@@ -194,7 +131,6 @@ extension TranscriberClient: DependencyKey {
 // MARK: - TranscriberImpl
 
 final class TranscriberImpl {
-  @Published var transcriptionStates: [FileName: TranscriptionState] = [:]
   /// A private property that stores the current whisper context.
   ///
   /// A whisper context is an object that contains information about the current state of a whisper conversation, such as
@@ -255,37 +191,43 @@ final class TranscriberImpl {
   func transcriptionPipeline(
     _ audioURL: URL,
     language: VoiceLanguage,
-    isParallel: Bool,
-    newSegmentCallback _: @escaping (WhisperTranscriptionSegment) -> Void
-  ) async throws -> String {
-    let fileName = audioURL.lastPathComponent
-    log.verbose("Transcribing \(fileName)...")
+    isParallel: Bool
+  ) -> AsyncStream<TranscriptionState> {
+    AsyncStream { continuation in
+      Task {
+        var state = TranscriptionState() {
+          didSet { continuation.yield(state) }
+        }
 
-    transcriptionStates[fileName] = TranscriptionState()
+        do {
+          state.progress = .loadingModel
+          try await loadModel(model: TranscriberClient.selectedModel)
 
-    transcriptionStates[fileName]?.state = .loadingModel
-    try await loadModel(model: TranscriberClient.selectedModel)
+          guard let whisperContext else {
+            throw TranscriberError.modelNotLoaded
+          }
 
-    guard let whisperContext else {
-      throw TranscriberError.modelNotLoaded
+          log.verbose("Reading wave samples...")
+          let data = try readAudioSamples(audioURL)
+
+          log.verbose("Transcribing data...")
+          state.progress = .transcribing([])
+          try await whisperContext.fullTranscribe(samples: data, language: language, isParallel: isParallel) { segment in
+            state.segments.append(segment)
+          }
+
+          let text = try await whisperContext.getTranscription()
+          log.verbose("Done: \(text)")
+
+          state.finalText = text
+        } catch {
+          log.error("Transcription failed: \(error)")
+          state.progress = .error(error as? TranscriberError ?? .cancelled)
+        }
+
+        continuation.finish()
+      }
     }
-
-    log.verbose("Reading wave samples...")
-    let data = try readAudioSamples(audioURL)
-
-    log.verbose("Transcribing data...")
-    transcriptionStates[fileName]?.state = .transcribing
-    try await whisperContext.fullTranscribe(samples: data, language: language, isParallel: isParallel) { [weak self] segment in
-      self?.transcriptionStates[fileName]?.segments.append(segment)
-    }
-
-    let text = try await whisperContext.getTranscription()
-    log.verbose("Done: \(text)")
-
-    log.debug("Removing \(fileName) from transcription states")
-    transcriptionStates.removeValue(forKey: fileName)
-
-    return text
   }
 
   /// Reads audio samples from a wave file and returns them as an array of floats.
@@ -295,40 +237,6 @@ final class TranscriberImpl {
   /// - returns: An array of floats representing the audio samples.
   private func readAudioSamples(_ url: URL) throws -> [Float] {
     try decodeWaveFile(url)
-  }
-}
-
-extension TranscriberError {
-  /// Returns a localized description of the error.
-  ///
-  /// - returns: A `String` that describes the error in a human-readable format.
-  var localizedDescription: String {
-    switch self {
-    case .couldNotLocateModel:
-      return "Could not locate model"
-    case .modelNotLoaded:
-      return "Model not loaded"
-    case let .notEnoughMemory(available, required):
-      return "Not enough memory. Available: \(bytesToReadableString(bytes: available)), required: \(bytesToReadableString(bytes: required))"
-    case .cancelled:
-      return "Cancelled"
-    }
-  }
-
-  /// Returns the localized description of the error.
-  ///
-  /// - returns: A `String` representing the error message in the current locale.
-  var description: String {
-    localizedDescription
-  }
-}
-
-extension TranscriptionState {
-  /// Returns a Boolean value indicating whether the transcription is in progress.
-  ///
-  /// - returns: `true` if the state is `.starting`, `.loadingModel`, or `.transcribing`; otherwise, `false`.
-  var isTranscribing: Bool {
-    state == .starting || state == .loadingModel || state == .transcribing
   }
 }
 

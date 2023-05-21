@@ -235,7 +235,6 @@ public struct RecordingListScreenView: View {
         }
       }
       .screenRadialBackground()
-
       .navigationDestination(isPresented: Binding(
         get: { viewStore.selection != nil },
         set: { if !$0 { viewStore.send(.recordingSelected(id: nil)) } }
@@ -314,7 +313,8 @@ struct EmptyStateView: View {
         .font(.system(size: 100))
         .foregroundColor(.DS.Text.accent)
         .shadow(color: .DS.Text.accent.opacity(isAnimating ? 1 : 0), radius: isAnimating ? 20 : 0, x: 0, y: 0)
-        .animateForever(using: .easeInOut(duration: 2), autoreverses: true) {
+        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
+        .onAppear {
           isAnimating = true
         }
       VStack(spacing: .grid(1)) {

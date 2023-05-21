@@ -138,7 +138,9 @@ final class BackgroundProcessingClientImpl<State: Codable> {
     }
     log.debug("Adding task to queue: \(taskState)")
     taskQueue.append(taskState)
-    try await executeNextTask()
+    Task {
+      try await executeNextTask()
+    }
   }
 
   /// Removes all tasks from the queue and cancels the background task.
