@@ -7,8 +7,8 @@ cd $script_dir
 # Check if gyb is available in the script folder and if not, download it
 if [ ! -f "gyb" ]; then
     echo "gyb not found in script folder. Downloading..."
-    wget -P . https://github.com/apple/swift/raw/main/utils/gyb
-    wget -P . https://github.com/apple/swift/raw/main/utils/gyb.py
+    curl -L -o gyb https://github.com/apple/swift/raw/main/utils/gyb
+    curl -L -o gyb.py https://github.com/apple/swift/raw/main/utils/gyb.py
     chmod +x gyb
 fi
 
