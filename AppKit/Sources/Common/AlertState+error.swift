@@ -16,4 +16,12 @@ public extension AlertState {
       buttons: [.default(TextState("OK"))]
     )
   }
+
+  static var genericError: Self {
+    Self(
+      title: TextState("Something went wrong"),
+      message: TextState("Please try again later."),
+      buttons: [.default(TextState("OK"))]
+    )
+  }
 }
