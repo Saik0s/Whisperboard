@@ -1,10 +1,7 @@
 import AppDevUtils
 import Dependencies
 import Foundation
-import Functions
 import RecognitionKit
-import Supabase
-import DeviceCheck
 
 // MARK: - LongTaskTranscriptError
 
@@ -36,6 +33,7 @@ extension LongTask {
       } else {
         text = try await localTranscription(settings: settings, fileURL: fileURL, language: language)
       }
+
       try storage.update(recordingInfo.id) {
         $0.text = text
         $0.isTranscribed = true
@@ -58,9 +56,10 @@ extension LongTask {
     fileURL: URL,
     language _: VoiceLanguage
   ) async throws -> String {
-    let text = try await uploadFileToTranscription(fileURL: fileURL)
-    log.debug(text)
-    return text
+    let callId = try await sendFile(fileUrl: fileURL)
+    let response = try await fetchResult(callId: callId)
+    log.debug(response)
+    return response
   }
 }
 
@@ -70,42 +69,6 @@ enum RemoteTranscriptionError: Error {
   case decodingError(String)
 }
 
-struct TranscriptionResponse: Decodable {
-}
+// MARK: - TranscriptionResponse
 
-private func uploadFileToTranscription(fileURL: URL) async throws -> String {
-  let supabaseUrl = Secrets.supabaseUrl
-  let supabaseKey = Secrets.supabaseKey
-  let supabaseClient = SupabaseClient(supabaseURL: supabaseUrl, supabaseKey: supabaseKey, options: .init())
-  let functionName = "transcription"
-
-  let fileData = try Data(contentsOf: fileURL)
-  let base64Audio = fileData.base64EncodedString()
-  let jsonBody: [String: String] = ["file_string": base64Audio]
-  let device_identifier = await getDeviceIdentifier()
-
-  let headers = [
-    "Authorization": "Bearer \(supabaseKey)",
-    "x-device-identifier": device_identifier
-  ]
-  supabaseClient.functions.setAuth(token: supabaseKey)
-  let options = FunctionInvokeOptions(headers: headers, body: jsonBody)
-  let response: [String: String] = try await supabaseClient.functions.invoke(functionName: functionName, invokeOptions: options)
-  log.debug(response)
-  return "\(response)"
-}
-
-private func getDeviceIdentifier() async -> String {
-  do {
-    return try await DCDevice.current.generateToken().utf8String
-  } catch {
-    log.error(error)
-    if let device_identifier = UserDefaults.standard.string(forKey: "device_identifier") {
-      return device_identifier
-    } else {
-      let device_identifier = UUID().uuidString
-      UserDefaults.standard.set(device_identifier, forKey: "device_identifier")
-      return device_identifier
-    }
-  }
-}
+struct TranscriptionResponse: Decodable {}

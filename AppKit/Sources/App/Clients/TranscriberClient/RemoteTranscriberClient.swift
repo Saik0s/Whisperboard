@@ -50,7 +50,7 @@ extension RemoteTranscriberClient: DependencyKey {
     RemoteTranscriberClient(
       startAudioTranscription: { _, _ in Response.Start(id: "1") },
       checkAudioTranscription: { id in
-        Response.Status(id: "id, status: "", text: "", transcription: [])
+        Response.Status(id: "id", status: "", text: "", transcription: [])
       }
     )
   }()
