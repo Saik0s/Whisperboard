@@ -50,7 +50,6 @@ func appKitTarget() -> Target {
       // .external(name: "ComposablePresentation"),
       .external(name: "AsyncAlgorithms"),
       .external(name: "DependenciesAdditions"),
-      .external(name: "Supabase"),
 
       .project(target: "RecognitionKit", path: "../RecognitionKit"),
     ]
