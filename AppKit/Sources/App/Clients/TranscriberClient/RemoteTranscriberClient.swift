@@ -24,7 +24,7 @@ extension RemoteTranscriberClient {
     let start: Double
     let end: Double
     let text: String
-    let words: [Word]
+    let words: [Word]?
     let speaker: String?
   }
 
@@ -35,6 +35,7 @@ extension RemoteTranscriberClient {
 
     struct Finish: Codable {
       let segments: [TranscriptionSegment]
+      let language: String?
     }
   }
 }
