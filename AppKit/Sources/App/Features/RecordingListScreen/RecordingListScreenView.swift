@@ -4,6 +4,7 @@ import ComposableArchitecture
 import Dependencies
 import Inject
 import SwiftUI
+import SwiftUIIntrospect
 
 // MARK: - RecordingListScreen
 
@@ -73,7 +74,7 @@ public struct RecordingListScreen: ReducerProtocol {
             for try await envelops in recordingsStream {
               await send(.receivedRecordings(envelops))
             }
-            customAssertionFailure()
+//            customAssertionFailure()
           } catch: { error, send in
             await send(.failedToAddRecordings(error: error.equatable))
           }
@@ -200,7 +201,7 @@ public struct RecordingListScreenView: View {
 
   @ObservedObject var viewStore: ViewStoreOf<RecordingListScreen>
 
-  @State var showListItems = false
+  var showListItems: Bool { !viewStore.recordingCards.isEmpty }
 
   public init(store: StoreOf<RecordingListScreen>) {
     self.store = store
@@ -223,18 +224,26 @@ public struct RecordingListScreenView: View {
           }
         }
         .padding(.grid(4))
-        .onChange(of: viewStore.recordingCards.count) {
-          showListItems = $0 > 0
-        }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .animation(.default, value: viewStore.recordingCards.count)
+        .introspect(.scrollView, on: .iOS(.v15, .v16, .v17), scope: .ancestor) { scrollView in
+          scrollView.clipsToBounds = false
+
+          var current: UIView = scrollView
+          while let superview = current.superview {
+            if superview is UIWindow == false, superview.clipsToBounds {
+              superview.clipsToBounds = false
+            }
+            current = superview
+          }
+        }
       }
       .background {
         if viewStore.recordingCards.isEmpty {
           EmptyStateView()
         }
       }
-      .screenRadialBackground()
+      //      .screenRadialBackground()
       .navigationDestination(isPresented: Binding(
         get: { viewStore.selection != nil },
         set: { if !$0 { viewStore.send(.recordingSelected(id: nil)) } }
@@ -261,6 +270,9 @@ public struct RecordingListScreenView: View {
         \.editMode,
         viewStore.binding(\.$editMode)
       )
+      .introspect(.navigationStack, on: .iOS(.v16, .v17), scope: .ancestor) { navigation in
+        navigation.view.subviews.first?.subviews.first?.subviews.first?.backgroundColor = .clear
+      }
     }
     .overlay {
       if viewStore.isImportingFiles {
@@ -344,3 +356,12 @@ struct EmptyStateView: View {
     }
   }
 #endif
+
+import UIKit
+
+extension UIScrollView {
+  override open var clipsToBounds: Bool {
+    get { false }
+    set {}
+  }
+}

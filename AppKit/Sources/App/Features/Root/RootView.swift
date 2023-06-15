@@ -4,88 +4,6 @@ import ComposableArchitecture
 import Inject
 import SwiftUI
 
-// MARK: - Root
-
-struct Root: ReducerProtocol {
-  struct State: Equatable {
-    var recordingListScreen = RecordingListScreen.State()
-    var recordScreen = RecordScreen.State()
-    var settings = SettingsScreen.State()
-    var selectedTab = 0
-    var isRecording: Bool {
-      recordScreen.recordingControls.recording != nil
-    }
-
-    var isTranscribing: Bool {
-      recordingListScreen.recordingCards.map(\.isTranscribing).contains(true)
-    }
-
-    var shouldDisableIdleTimer: Bool {
-      isRecording || isTranscribing
-    }
-  }
-
-  enum Action: Equatable {
-    case task
-    case recordingListScreen(RecordingListScreen.Action)
-    case recordScreen(RecordScreen.Action)
-    case settings(SettingsScreen.Action)
-    case selectTab(Int)
-  }
-
-  @Dependency(\.transcriber) var transcriber: TranscriberClient
-  @Dependency(\.storage) var storage: StorageClient
-
-  var body: some ReducerProtocol<State, Action> {
-    CombineReducers {
-      Scope(state: \.recordingListScreen, action: /Action.recordingListScreen) {
-        RecordingListScreen()
-      }
-
-      Scope(state: \.recordScreen, action: /Action.recordScreen) {
-        RecordScreen()
-      }
-
-      Scope(state: \.settings, action: /Action.settings) {
-        SettingsScreen()
-      }
-
-      Reduce<State, Action> { state, action in
-        switch action {
-        case .recordScreen(.goToNewRecordingTapped):
-          if let recordingCard = state.recordingListScreen.recordingCards.first {
-            state.selectedTab = 0
-            state.recordingListScreen.selectedId = recordingCard.id
-          }
-          return .none
-
-        case .settings(.deleteDialogConfirmed):
-          state.recordingListScreen.selectedId = nil
-          return .none
-
-        default:
-          return .none
-        }
-      }
-
-      Reduce { state, action in
-        switch action {
-        case let .selectTab(tab):
-          state.selectedTab = tab
-          return .none
-
-        default:
-          return .none
-        }
-      }
-    }
-    .onChange(of: \.shouldDisableIdleTimer) { shouldDisableIdleTimer, _, _ in
-      UIApplication.shared.isIdleTimerDisabled = shouldDisableIdleTimer
-      return .none
-    }
-  }
-}
-
 // MARK: - RootView
 
 struct RootView: View {
@@ -95,61 +13,24 @@ struct RootView: View {
 
   @ObservedObject var viewStore: ViewStoreOf<Root>
 
+  @Namespace var animation
+
   init(store: StoreOf<Root>) {
     self.store = store
     viewStore = ViewStore(store) { $0 }
   }
 
   private var selectedTab: Int {
-    viewStore.selectedTab
+    viewStore.selectedTab.rawValue
   }
 
   var body: some View {
-    TabView {
-      ZStack {
-        RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: Root.Action.recordingListScreen))
-          .opacity(selectedTab == 0 ? 1 : 0)
-
-        RecordScreenView(store: store.scope(state: \.recordScreen, action: Root.Action.recordScreen))
-          .opacity(selectedTab == 1 ? 1 : 0)
-
-        SettingsScreenView(store: store.scope(state: \.settings, action: Root.Action.settings))
-          .opacity(selectedTab == 2 ? 1 : 0)
-      }
-      .toolbarBackground(.hidden, for: .tabBar)
-      .toolbar(selectedTab == 1 ? .hidden : .visible, for: .tabBar)
-    }
-    .accentColor(Color.DS.Text.base)
-    .safeAreaInset(edge: .bottom) {
-      HStack {
-        if selectedTab != 1 { Spacer() }
-
-        if viewStore.recordScreen.recordingControls.recording == nil {
-          TabBarItem(icon: "list.bullet", tag: 0, selectedTab: viewStore.binding(get: \.selectedTab, send: Root.Action.selectTab))
-            .transition(.move(edge: .leading))
-        }
-
-        Spacer()
-
-        TabBarItem(icon: "mic", tag: 1, selectedTab: viewStore.binding(get: \.selectedTab, send: Root.Action.selectTab))
-          .offset(y: selectedTab == 1 ? -20 : 0)
-          .opacity(selectedTab == 1 ? 0 : 1)
-
-        Spacer()
-
-        if viewStore.recordScreen.recordingControls.recording == nil {
-          TabBarItem(icon: "gear", tag: 2, selectedTab: viewStore.binding(get: \.selectedTab, send: Root.Action.selectTab))
-            .transition(.move(edge: .trailing))
-        }
-
-        if selectedTab != 1 { Spacer() }
-      }
-      .background(.ultraThinMaterial.opacity(selectedTab == 1 ? 0 : 1))
-      .cornerRadius(25.0)
-      .padding(.horizontal, selectedTab == 1 ? 16 : 64)
-      .frame(height: 50.0)
-      .animation(.gentleBounce(), value: viewStore.recordScreen.recordingControls.recording == nil)
-    }
+    CustomTabBarView(
+      selectedIndex: viewStore.binding(get: \.selectedTab.rawValue, send: Root.Action.selectTab),
+      screen1: RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: Root.Action.recordingListScreen)),
+      screen2: RecordScreenView(store: store.scope(state: \.recordScreen, action: Root.Action.recordScreen)),
+      screen3: SettingsScreenView(store: store.scope(state: \.settings, action: Root.Action.settings))
+    )
     .animation(.gentleBounce(), value: selectedTab)
     .task { viewStore.send(.task) }
     .enableInjection()

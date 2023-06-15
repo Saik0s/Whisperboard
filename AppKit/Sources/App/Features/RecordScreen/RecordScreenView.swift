@@ -108,7 +108,7 @@ public struct RecordScreenView: View {
       .ignoresSafeArea(edges: .bottom)
       .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     }
-    .screenRadialBackground()
+//    .screenRadialBackground()
     .enableInjection()
   }
 }

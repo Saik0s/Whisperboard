@@ -52,6 +52,9 @@ func appKitTarget() -> Target {
       .external(name: "DependenciesAdditions"),
 
       .project(target: "RecognitionKit", path: "../RecognitionKit"),
+
+      .external(name: "VariableBlurView"),
+      .external(name: "SwiftUIIntrospect"),
     ]
   )
 }
