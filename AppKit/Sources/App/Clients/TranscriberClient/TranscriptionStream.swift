@@ -50,6 +50,7 @@ public struct TranscriptionState: Hashable {
       progress = .transcribing(newValue)
     }
   }
+
   var finalText: String {
     get {
       if case let .finished(text) = progress {
@@ -62,6 +63,7 @@ public struct TranscriptionState: Hashable {
       progress = .finished(newValue)
     }
   }
+
   var error: TranscriberError? {
     get {
       if case let .error(error) = progress {
@@ -102,7 +104,6 @@ final class TranscriptionsStreamImpl: TranscriptionsStream {
     }
     _states[fileName]?[keyPath: keyPath] = value
   }
-
 
   var asyncStream: AsyncStream<[FileName: TranscriptionState]> {
     $_states.asAsyncStream()

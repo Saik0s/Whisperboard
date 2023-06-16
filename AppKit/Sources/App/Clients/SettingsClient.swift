@@ -84,6 +84,7 @@ extension DependencyValues {
   }
 }
 
+// MARK: - SettingsContainer
 
 private final class SettingsContainer {
   @Published var settings: Settings

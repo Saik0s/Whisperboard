@@ -332,20 +332,20 @@ struct SettingsScreenView: View {
             }
             .padding(.horizontal, .grid(4))
             .padding(.vertical, .grid(2))
-              .introspect(.scrollView, on: .iOS(.v15, .v16, .v17), scope: .ancestor) { scrollView in
-                log.debug("scrollView: \(scrollView)")
-                scrollView.clipsToBounds = false
+            .introspect(.scrollView, on: .iOS(.v15, .v16, .v17), scope: .ancestor) { scrollView in
+              log.debug("scrollView: \(scrollView)")
+              scrollView.clipsToBounds = false
 
-                var current: UIView = scrollView
-                while let superview = current.superview {
-                  log.debug("superview: \(superview)")
+              var current: UIView = scrollView
+              while let superview = current.superview {
+                log.debug("superview: \(superview)")
 
-                  if superview is UIWindow == false, superview.clipsToBounds {
-                    superview.clipsToBounds = false
-                  }
-                  current = superview
+                if superview is UIWindow == false, superview.clipsToBounds {
+                  superview.clipsToBounds = false
                 }
+                current = superview
               }
+            }
           }
 
           SettingButton(icon: .system(icon: "trash", backgroundColor: .systemRed.darken(by: 0.1)), title: "Delete Storage", indicator: nil) {
@@ -403,11 +403,10 @@ struct SettingsScreenView: View {
             viewStore.send(.modelSelector(.onAppear))
             viewStore.send(.updateInfo)
           }
-            .introspect(.navigationStack, on: .iOS(.v16, .v17), scope: .ancestor) { navigation in
-              log.debug("************************ \(navigation)")
-              navigation.view.subviews.first?.subviews.first?.subviews.first?.backgroundColor = .clear
-            }
-
+          .introspect(.navigationStack, on: .iOS(.v16, .v17), scope: .ancestor) { navigation in
+            log.debug("************************ \(navigation)")
+            navigation.view.subviews.first?.subviews.first?.subviews.first?.backgroundColor = .clear
+          }
         }
       }
     }
