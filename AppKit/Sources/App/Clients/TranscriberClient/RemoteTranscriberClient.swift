@@ -7,6 +7,8 @@ import os.log
 import RecognitionKit
 import SwiftUI
 
+// MARK: - RemoteTranscriberClient
+
 struct RemoteTranscriberClient {
   var transcribeAudio: @Sendable (_ audioURL: URL, _ language: VoiceLanguage) async throws -> String
 }
@@ -40,12 +42,14 @@ extension RemoteTranscriberClient {
   }
 }
 
+// MARK: DependencyKey
+
 extension RemoteTranscriberClient: DependencyKey {
   static let liveValue: Self = {
     @Dependency(\.transcriptionsStream) var transcriptionsStream: TranscriptionsStream
 
     return RemoteTranscriberClient(
-      transcribeAudio: { audioURL, language in
+      transcribeAudio: { audioURL, _ in
         let fileName = audioURL.lastPathComponent
         log.verbose("Remotely transcribing \(fileName)...")
 

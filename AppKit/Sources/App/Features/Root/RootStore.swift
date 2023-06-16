@@ -7,7 +7,7 @@ import SwiftUI
 
 struct Root: ReducerProtocol {
   enum Tab: Int { case list, record, settings }
-  
+
   struct State: Equatable {
     var recordingListScreen = RecordingListScreen.State()
     var recordScreen = RecordScreen.State()
@@ -27,7 +27,7 @@ struct Root: ReducerProtocol {
   }
 
   enum Action: BindableAction, Equatable {
-  case binding(BindingAction<State>)
+    case binding(BindingAction<State>)
     case task
     case recordingListScreen(RecordingListScreen.Action)
     case recordScreen(RecordScreen.Action)
@@ -40,7 +40,7 @@ struct Root: ReducerProtocol {
 
   var body: some ReducerProtocol<State, Action> {
     CombineReducers {
-    BindingReducer()
+      BindingReducer()
       Scope(state: \.recordingListScreen, action: /Action.recordingListScreen) {
         RecordingListScreen()
       }

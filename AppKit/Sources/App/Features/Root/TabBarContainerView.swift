@@ -16,22 +16,22 @@ struct CustomTabBarView<T1: View, T2: View, T3: View>: View {
   var screen1: T1
   var screen2: T2
   var screen3: T3
-  
+
   @Namespace private var animation
 
   var body: some View {
     VStack {
       ZStack {
         if selectedIndex == 0 {
-                    screen1
-                        .transition(.move(edge: .leading))
-                } else if selectedIndex == 1 {
-                    screen2
-                      .transition(.move(edge: .bottom))
-                } else if selectedIndex == 2 {
-                    screen3
-                        .transition(.move(edge: .trailing))
-                }
+          screen1
+            .transition(.move(edge: .leading))
+        } else if selectedIndex == 1 {
+          screen2
+            .transition(.move(edge: .bottom))
+        } else if selectedIndex == 2 {
+          screen3
+            .transition(.move(edge: .trailing))
+        }
       }.frame(maxHeight: .infinity, alignment: .top)
 
       CustomTabBar(selectedIndex: $selectedIndex, animation: animation)

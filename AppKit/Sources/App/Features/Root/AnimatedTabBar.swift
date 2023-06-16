@@ -1,6 +1,8 @@
 import SwiftUI
 import VariableBlurView
 
+// MARK: - CustomTabBar
+
 struct CustomTabBar: View {
   @Binding var selectedIndex: Int
   var animation: Namespace.ID

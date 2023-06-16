@@ -163,7 +163,7 @@ public struct RecordingCard: ReducerProtocol {
         }
       }
     }
-      .cancellable(id: PlayID.self, cancelInFlight: true)
+    .cancellable(id: PlayID.self, cancelInFlight: true)
   }
 }
 
