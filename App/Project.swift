@@ -74,7 +74,7 @@ func appTarget() -> Target {
       .target(name: "ShareExtension"),
 
       .project(target: "WhisperBoardKit", path: "../AppKit"),
-    ]
+    ] + (Environment.isHotReloadingEnabled.getBoolean(default: false) ? [.package(product: "HotReloading")] : [])
   )
 }
 
@@ -130,6 +130,9 @@ let project = Project(
       tabWidth: 2
     )
   ),
+  packages: Environment.isHotReloadingEnabled.getBoolean(default: false)
+    ? [.remote(url: "https://github.com/johnno1962/HotReloading.git", requirement: .branch("main"))]
+    : [],
   settings: .settings(
     base: projectSettings,
     debug: debugSettings,
