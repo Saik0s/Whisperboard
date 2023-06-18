@@ -9,6 +9,10 @@ update: secrets
 	$(TUIST) fetch --update
 	$(TUIST) generate --no-open --no-cache
 
+hot:
+	TUIST_IS_HOT_RELOADING_ENABLED=1  $(TUIST) fetch
+	TUIST_IS_HOT_RELOADING_ENABLED=1  $(TUIST) generate --no-open --no-cache
+
 build_debug:
 	$(TUIST) build --generate --configuration Debug --build-output-path .build/
 
@@ -21,4 +25,4 @@ format:
 secrets:
 	sh ./ci_scripts/secrets.sh
 
-.SILENT: all update build_debug build_release secrets
+.SILENT: all update hot build_debug build_release format secrets
