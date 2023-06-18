@@ -72,22 +72,10 @@ struct RecordingCardView: View {
           HStack(spacing: .grid(2)) {
             CopyButton(viewStore.transcription) {
               Image(systemName: "doc.on.clipboard")
-                .font(.DS.bodyS)
-                .padding(.grid(2))
-                .background {
-                  Circle()
-                    .fill(Color.DS.Background.accent.opacity(0.2))
-                }
             }
 
             ShareButton(viewStore.transcription) {
               Image(systemName: "paperplane")
-                .font(.DS.bodyS)
-                .padding(.grid(2))
-                .background {
-                  Circle()
-                    .fill(Color.DS.Background.accent.opacity(0.2))
-                }
             }
           }.iconButtonStyle()
         }

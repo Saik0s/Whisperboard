@@ -108,11 +108,17 @@ struct IconButtonStyle: ButtonStyle {
 
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
-      .foregroundColor(isPrimary ? .DS.Text.accent : .DS.Text.base)
-      .font(isPrimary ? .DS.titleM : .DS.bodyM)
-      .fontWeight(.light)
-      .scaleEffect(configuration.isPressed ? 0.95 : 1)
+      .foregroundColor(isPrimary ? .systemOrange : .DS.Text.base)
+      .font(isPrimary ? .DS.headlineS : .DS.bodyM)
+      .frame(width: 30, height: 30)
+      .padding(.grid(2))
+      .scaleEffect(configuration.isPressed ? 0.9 : 1)
       .animation(.gentleBounce(), value: configuration.isPressed)
+      .onChange(of: configuration.isPressed) { isPressed in
+        if isPressed {
+          UISelectionFeedbackGenerator().selectionChanged()
+        }
+      }
   }
 }
 
