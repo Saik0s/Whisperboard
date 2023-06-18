@@ -73,6 +73,9 @@ struct Root: ReducerProtocol {
 
       Reduce { state, action in
         switch action {
+          case .task:
+          return .task { .recordingListScreen(.task) }
+
         case let .selectTab(tab):
           state.selectedTab = .init(rawValue: tab) ?? .list
           return .none
