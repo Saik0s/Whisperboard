@@ -27,7 +27,7 @@ struct CustomTabBarView<T1: View, T2: View, T3: View>: View {
             .transition(.move(edge: .leading))
         } else if selectedIndex == 1 {
           screen2
-            .transition(.scale(scale: 0.5).combined(with: .opacity))
+//            .transition(.scale(scale: 0.5).combined(with: .opacity))
         } else if selectedIndex == 2 {
           screen3
             .transition(.move(edge: .trailing))

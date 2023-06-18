@@ -103,17 +103,16 @@ struct TabBarButton: View {
   var body: some View {
     Button(action: action) {
       image
-        .resizable()
-        .renderingMode(.template)
-        .fontWeight(isSelected ? .medium : .regular)
+        .font(.DS.titleM)
+        .fontWeight(isSelected ? .semibold : .light)
         .foregroundColor(isSelected ? Color.DS.Text.accent : Color.DS.Text.base)
-        .scaledToFit()
+        .shadow(color: Color.DS.Text.accent.opacity(isSelected ? 0.2 : 0), radius: 10, x: 0, y: 0)
         .frame(width: 30, height: 30)
         .padding()
         .contentShape(Rectangle())
     }
     .buttonStyle(TabBarButtonStyle())
-    .animation(.spring(), value: isSelected)
+    .animation(.gentleBounce(), value: isSelected)
   }
 }
 
@@ -123,11 +122,9 @@ struct TabBarButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label
       .scaleEffect(configuration.isPressed ? 0.8 : 1)
-      .animation(.spring(), value: configuration.isPressed)
-      .onChange(of: configuration.isPressed) { isPressed in
-        if isPressed {
-          UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        }
+      .animation(.gentleBounce(), value: configuration.isPressed)
+      .onChange(of: configuration.isPressed) { _ in
+        UIImpactFeedbackGenerator(style: .soft).impactOccurred()
       }
   }
 }
