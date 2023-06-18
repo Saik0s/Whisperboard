@@ -1,0 +1,50 @@
+{
+  "pins" : [
+    {
+      "identity" : "hotreloading",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/HotReloading.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "7365c3384d9124f2d0ad770ab0ce055a8c19915c"
+      }
+    },
+    {
+      "identity" : "remote",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/Remote",
+      "state" : {
+        "revision" : "2a03313297a15f31b354dbf2b40c62ca9630b0a1",
+        "version" : "2.3.5"
+      }
+    },
+    {
+      "identity" : "swiftregex5",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/SwiftRegex5",
+      "state" : {
+        "revision" : "8ecb4a8570757b7f8bce72f82242742e13891f99",
+        "version" : "5.2.3"
+      }
+    },
+    {
+      "identity" : "swifttrace",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/SwiftTrace",
+      "state" : {
+        "revision" : "cf0d763a91c5b74fc1209ce82b7a138d6ce60c5c",
+        "version" : "8.4.4"
+      }
+    },
+    {
+      "identity" : "xprobeplugin",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/XprobePlugin",
+      "state" : {
+        "revision" : "e79414826ee22b6b6d181e20d8913d9fefe99c1b",
+        "version" : "2.9.2"
+      }
+    }
+  ],
+  "version" : 2
+}
