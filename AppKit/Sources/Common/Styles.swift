@@ -116,7 +116,7 @@ struct IconButtonStyle: ButtonStyle {
       .scaleEffect(configuration.isPressed ? 0.9 : 1)
       .contentShape(Rectangle())
       .animation(.gentleBounce(), value: configuration.isPressed)
-      .onChange(of: configuration.isPressed) { isPressed in
+      .onChange(of: configuration.isPressed) { _ in
         feedbackGenerator.selectionChanged()
       }
   }
