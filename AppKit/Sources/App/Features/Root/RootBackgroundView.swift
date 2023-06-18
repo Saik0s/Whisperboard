@@ -4,7 +4,7 @@ import SwiftUI
 
 // MARK: - GooeyBlobsView
 
-struct GooeyBlobsView: View {
+struct RootBackgroundView: View {
   @State var blobs: [Blob] = (1 ... 12).map { _ in
     Blob(
       position: CGPoint(x: CGFloat.random(in: 0 ..< 1), y: CGFloat.random(in: 0 ..< 1)),

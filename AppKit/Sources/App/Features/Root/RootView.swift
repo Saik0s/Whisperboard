@@ -31,7 +31,8 @@ struct RootView: View {
       screen2: RecordScreenView(store: store.scope(state: \.recordScreen, action: Root.Action.recordScreen)),
       screen3: SettingsScreenView(store: store.scope(state: \.settings, action: Root.Action.settings))
     )
-    .animation(.gentleBounce(), value: selectedTab)
+    .accentColor(.white)
+    .animation(.spring(response: 0.5, dampingFraction: 0.8), value: selectedTab)
     .task { viewStore.send(.task) }
     .enableInjection()
   }

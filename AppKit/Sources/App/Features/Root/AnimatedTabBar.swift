@@ -1,30 +1,39 @@
 import SwiftUI
 import VariableBlurView
 
-// MARK: - CustomTabBar
+// MARK: - AnimatedTabBar
 
-struct CustomTabBar: View {
+struct AnimatedTabBar: View {
   @Binding var selectedIndex: Int
   var animation: Namespace.ID
 
   var body: some View {
-    HStack {
-      TabBarButton(icon: "list.bullet", action: {
+    HStack(spacing: 50) {
+      TabBarButton(
+        image: Image(systemName: "list.bullet"),
+        isSelected: selectedIndex == 0
+      ) {
         selectedIndex = 0
-      })
-      Spacer()
-      TabBarButton(icon: "circle.inset.filled", action: {
+      }
+
+      TabBarButton(
+        image: Image(systemName: "mic"),
+        isSelected: selectedIndex == 1
+      ) {
         selectedIndex = 1
-      }).opacity(selectedIndex == 1 ? 0 : 1)
-      Spacer()
-      TabBarButton(icon: "gear", action: {
+      }.opacity(selectedIndex == 1 ? 0 : 1)
+
+      TabBarButton(
+        image: Image(systemName: "gear"),
+        isSelected: selectedIndex == 2
+      ) {
         selectedIndex = 2
-      })
+      }
     }
-    .frame(maxWidth: .infinity)
-    .padding()
+    .padding(.horizontal, 50)
     .background(TabBarBackground(selectedIndex: selectedIndex, animation: animation))
     .padding()
+    .frame(maxWidth: .infinity)
     .background {
       VariableBlurView()
         .rotationEffect(.degrees(180), anchor: .center)
@@ -58,7 +67,7 @@ struct TabBarBackground: View {
         .overlay(animationStage == .base ? nil : micImage)
         .offset(x: 0, y: animationStage == .up ? yOffset : 0)
         .frame(width: animationStage == .base ? nil : circleWidth)
-        .scaleEffect(animationStage == .up ? scale : 1)
+        .scaleEffect(animationStage == .up ? scale : (animationStage == .toCircle ? 0.1 : 1))
         .opacity(animationStage == .up ? 0 : 1)
     }
     .frame(height: 70)
@@ -87,15 +96,38 @@ struct TabBarBackground: View {
 // MARK: - TabBarButton
 
 struct TabBarButton: View {
-  var icon: String
+  var image: Image
+  var isSelected: Bool
   var action: () -> Void
-  let textColor = Color.white
-  let iconFont = Font.title
 
   var body: some View {
     Button(action: action) {
-      Label("", systemImage: icon).foregroundColor(textColor).font(iconFont)
+      image
+        .resizable()
+        .renderingMode(.template)
+        .fontWeight(isSelected ? .medium : .regular)
+        .foregroundColor(isSelected ? Color.DS.Text.accent : Color.DS.Text.base)
+        .scaledToFit()
+        .frame(width: 30, height: 30)
+        .padding()
+        .contentShape(Rectangle())
     }
-    .frame(maxWidth: .infinity)
+    .buttonStyle(TabBarButtonStyle())
+    .animation(.spring(), value: isSelected)
+  }
+}
+
+// MARK: - TabBarButtonStyle
+
+struct TabBarButtonStyle: ButtonStyle {
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .scaleEffect(configuration.isPressed ? 0.8 : 1)
+      .animation(.spring(), value: configuration.isPressed)
+      .onChange(of: configuration.isPressed) { isPressed in
+        if isPressed {
+          UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        }
+      }
   }
 }

@@ -27,16 +27,15 @@ struct CustomTabBarView<T1: View, T2: View, T3: View>: View {
             .transition(.move(edge: .leading))
         } else if selectedIndex == 1 {
           screen2
-            .transition(.move(edge: .bottom))
+            .transition(.scale(scale: 0.5))
         } else if selectedIndex == 2 {
           screen3
             .transition(.move(edge: .trailing))
         }
       }.frame(maxHeight: .infinity, alignment: .top)
 
-      CustomTabBar(selectedIndex: $selectedIndex, animation: animation)
+      AnimatedTabBar(selectedIndex: $selectedIndex, animation: animation)
     }
-    .background(GooeyBlobsView())
-    .animation(.spring(response: 0.5, dampingFraction: 0.9, blendDuration: 0), value: selectedIndex)
+    .background(RootBackgroundView())
   }
 }

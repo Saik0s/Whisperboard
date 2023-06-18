@@ -60,9 +60,6 @@ public struct RecordingListScreen: ReducerProtocol {
 
   struct StreamID: Hashable {}
 
-  /// - The reducer combines several actions such as adding, deleting, and selecting recordings.
-  /// - It also manages related states like alerts, binding updates, and confirmation dialogs.
-
   public var body: some ReducerProtocol<State, Action> {
     CombineReducers {
       BindingReducer<State, Action>()
@@ -214,8 +211,8 @@ public struct RecordingListScreenView: View {
         LazyVStack(spacing: .grid(4)) {
           ForEach(Array(viewStore.recordingCards.enumerated()), id: \.element.id) { index, card in
             IfLetStore(store.scope(
-              state: \.recordingCards[id: card.id],
-              action: { RecordingListScreen.Action.recordingCard(id: card.id, action: $0) }
+                state: \.recordingCards[id: card.id],
+                action: { RecordingListScreen.Action.recordingCard(id: card.id, action: $0) }
             )) { store in
               makeRecordingCard(store: store, index: index, id: card.id)
             } else: {
@@ -223,20 +220,10 @@ public struct RecordingListScreenView: View {
             }
           }
         }
-        .padding(.grid(4))
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .animation(.default, value: viewStore.recordingCards.count)
-        .introspect(.scrollView, on: .iOS(.v15, .v16, .v17), scope: .ancestor) { scrollView in
-          scrollView.clipsToBounds = false
-
-          var current: UIView = scrollView
-          while let superview = current.superview {
-            if superview is UIWindow == false, superview.clipsToBounds {
-              superview.clipsToBounds = false
-            }
-            current = superview
-          }
-        }
+          .padding(.grid(4))
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+          .animation(.default, value: viewStore.recordingCards.count)
+          .removeClipToBounds()
       }
       .background {
         if viewStore.recordingCards.isEmpty {
@@ -249,8 +236,8 @@ public struct RecordingListScreenView: View {
         set: { if !$0 { viewStore.send(.recordingSelected(id: nil)) } }
       )) {
         IfLetStore(store.scope(
-          state: \.selection?.value,
-          action: RecordingListScreen.Action.details
+            state: \.selection?.value,
+            action: RecordingListScreen.Action.details
         )) {
           RecordingDetailsView(store: $0)
         }
@@ -270,9 +257,7 @@ public struct RecordingListScreenView: View {
         \.editMode,
         viewStore.binding(\.$editMode)
       )
-      .introspect(.navigationStack, on: .iOS(.v16, .v17), scope: .ancestor) { navigation in
-        navigation.view.subviews.first?.subviews.first?.subviews.first?.backgroundColor = .clear
-      }
+        .removeNavigationBackground()
     }
     .overlay {
       if viewStore.isImportingFiles {
@@ -281,7 +266,6 @@ public struct RecordingListScreenView: View {
     }
     .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .navigationViewStyle(.stack)
-    .task { await viewStore.send(.task).finish() }
     .enableInjection()
   }
 }
@@ -356,12 +340,3 @@ struct EmptyStateView: View {
     }
   }
 #endif
-
-import UIKit
-
-extension UIScrollView {
-  override open var clipsToBounds: Bool {
-    get { false }
-    set {}
-  }
-}
