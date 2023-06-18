@@ -9,40 +9,25 @@ public struct RecordingDetails: ReducerProtocol {
   public struct State: Equatable {
     var recordingCard: RecordingCard.State
 
-    @BindingState var shareAudioFileURL: URL?
+    var shareAudioFileURL: URL { recordingCard.recordingEnvelop.fileURL }
   }
 
-  public enum Action: BindableAction, Equatable {
-    case binding(BindingAction<State>)
+  public enum Action: Equatable {
     case recordingCard(action: RecordingCard.Action)
     case delete
-    case shareAudio
   }
 
-  @Dependency(\.transcriber) var transcriber: TranscriberClient
-
-  @Dependency(\.storage) var storage: StorageClient
-
   public var body: some ReducerProtocol<State, Action> {
-    BindingReducer()
-
     Scope(state: \.recordingCard, action: /Action.recordingCard) {
       RecordingCard()
     }
 
-    Reduce<State, Action> { state, action in
+    Reduce<State, Action> { _, action in
       switch action {
-      case .binding:
-        return .none
-
       case .recordingCard:
         return .none
 
       case .delete:
-        return .none
-
-      case .shareAudio:
-        state.shareAudioFileURL = storage.audioFileURLWithName(state.recordingCard.recordingEnvelop.fileName)
         return .none
       }
     }
@@ -72,16 +57,16 @@ public struct RecordingDetailsView: View {
   public var body: some View {
     VStack(spacing: .grid(2)) {
       TextField(
-          "Untitled",
-          text: viewStore.binding(
-              get: { $0.recordingCard.recordingEnvelop.title },
-              send: { RecordingDetails.Action.recordingCard(action: .titleChanged($0)) }
-          )
+        "Untitled",
+        text: viewStore.binding(
+          get: { $0.recordingCard.recordingEnvelop.title },
+          send: { RecordingDetails.Action.recordingCard(action: .titleChanged($0)) }
+        )
       )
-        .focused($focusedField, equals: .title)
-        .font(.DS.titleXL)
-        .minimumScaleFactor(0.01)
-        .foregroundColor(.DS.Text.base)
+      .focused($focusedField, equals: .title)
+      .font(.DS.titleXL)
+      .minimumScaleFactor(0.01)
+      .foregroundColor(.DS.Text.base)
 
       Text("Created: \(viewStore.recordingCard.recordingEnvelop.date.formatted(date: .abbreviated, time: .shortened))")
         .font(.DS.captionS)
@@ -94,7 +79,7 @@ public struct RecordingDetailsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
 
       if viewStore.recordingCard.recordingEnvelop.isTranscribed == false
-             && viewStore.recordingCard.recordingEnvelop.transcriptionState?.isTranscribing != true {
+        && viewStore.recordingCard.recordingEnvelop.transcriptionState?.isTranscribing != true {
         PrimaryButton("Transcribe") {
           viewStore.send(.recordingCard(action: .transcribeTapped))
         }.padding(.grid(4))
@@ -106,7 +91,7 @@ public struct RecordingDetailsView: View {
               Image(systemName: "doc.on.clipboard")
             }
 
-            ShareButton(viewStore.recordingCard.recordingEnvelop.text) {
+            ShareLink(item: viewStore.recordingCard.recordingEnvelop.text) {
               Image(systemName: "paperplane")
             }
 
@@ -114,7 +99,7 @@ public struct RecordingDetailsView: View {
               Image(systemName: "arrow.clockwise")
             }
 
-            Button { viewStore.send(.shareAudio) } label: {
+            ShareLink(item: viewStore.shareAudioFileURL) {
               Image(systemName: "square.and.arrow.up")
             }
 
@@ -128,8 +113,8 @@ public struct RecordingDetailsView: View {
 
         ScrollView {
           Text(viewStore.recordingCard.isTranscribing
-              ? viewStore.recordingCard.transcribingProgressText
-              : viewStore.recordingCard.recordingEnvelop.text)
+            ? viewStore.recordingCard.transcribingProgressText
+            : viewStore.recordingCard.recordingEnvelop.text)
             .font(.DS.bodyL)
             .foregroundColor(viewStore.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
             .lineLimit(nil)
@@ -152,10 +137,10 @@ public struct RecordingDetailsView: View {
       Spacer()
 
       WaveformProgressView(
-          store: store.scope(
-              state: { $0.recordingCard.waveform },
-              action: { .recordingCard(action: .waveform($0)) }
-          )
+        store: store.scope(
+          state: { $0.recordingCard.waveform },
+          action: { .recordingCard(action: .waveform($0)) }
+        )
       )
 
       PlayButton(isPlaying: viewStore.recordingCard.mode.isPlaying) {
@@ -163,18 +148,17 @@ public struct RecordingDetailsView: View {
       }
     }
     .padding(.grid(4))
-    .shareSheet(item: viewStore.binding(\.$shareAudioFileURL))
     .toolbar {
       ToolbarItem(placement: .keyboard) {
         Button("Done") {
           focusedField = nil
         }
-          .frame(maxWidth: .infinity, alignment: .trailing)
+        .frame(maxWidth: .infinity, alignment: .trailing)
       }
     }
     .scrollContentBackground(.hidden)
     .task { await viewStore.send(.recordingCard(action: .task)).finish() }
-      .background(.thickMaterial)
+    .background(.thickMaterial)
     .enableInjection()
   }
 }

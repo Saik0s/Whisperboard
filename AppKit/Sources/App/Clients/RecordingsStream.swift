@@ -22,7 +22,7 @@ extension DependencyValues {
       return AsyncCombineLatest2Sequence(storage.recordingsInfoStream, transcriber.transcriptionStateStream)
         .map { (info: [RecordingInfo], state: [FileName: TranscriptionState]) in
           info.map { (currentInfo: RecordingInfo) in
-            RecordingEnvelop(currentInfo, state[currentInfo.fileName])
+            RecordingEnvelop(currentInfo, state[currentInfo.fileName], fileURL: storage.audioFileURLWithName(currentInfo.fileName))
           }
         }
         .eraseToStream()
@@ -37,11 +37,11 @@ extension DependencyValues {
 #if DEBUG
   extension RecordingEnvelop {
     static var fixtures: [RecordingEnvelop] {
-      RecordingInfo.fixtures.map { RecordingEnvelop($0, nil) }
+      RecordingInfo.fixtures.map { RecordingEnvelop($0, nil, fileURL: URL(fileURLWithPath: $0.fileName)) }
     }
 
     static var mock: RecordingEnvelop {
-      RecordingEnvelop(.mock, nil)
+      RecordingEnvelop(.mock, nil, fileURL: URL(fileURLWithPath: "file.wav"))
     }
   }
 #endif

@@ -2,7 +2,7 @@ import Inject
 import Popovers
 import SwiftUI
 
-// MARK: - GooeyBlobsView
+// MARK: - RootBackgroundView
 
 struct RootBackgroundView: View {
   @State var blobs: [Blob] = (1 ... 12).map { _ in

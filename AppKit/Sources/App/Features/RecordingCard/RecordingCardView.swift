@@ -74,7 +74,7 @@ struct RecordingCardView: View {
               Image(systemName: "doc.on.clipboard")
             }
 
-            ShareButton(viewStore.transcription) {
+            ShareLink(item: viewStore.transcription) {
               Image(systemName: "paperplane")
             }
           }.iconButtonStyle()

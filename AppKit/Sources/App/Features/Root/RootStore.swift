@@ -73,7 +73,7 @@ struct Root: ReducerProtocol {
 
       Reduce { state, action in
         switch action {
-          case .task:
+        case .task:
           return .task { .recordingListScreen(.task) }
 
         case let .selectTab(tab):
