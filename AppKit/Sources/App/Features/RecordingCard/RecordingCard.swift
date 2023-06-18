@@ -69,7 +69,7 @@ public struct RecordingCard: ReducerProtocol {
 
   @Dependency(\.backgroundProcessingClient) var backgroundProcessingClient: BackgroundProcessingClient
 
-  private enum PlayID {}
+  private struct PlayID: Hashable {}
 
   public var body: some ReducerProtocol<State, Action> {
     BindingReducer()
@@ -163,7 +163,7 @@ public struct RecordingCard: ReducerProtocol {
         }
       }
     }
-    .cancellable(id: PlayID.self, cancelInFlight: true)
+    .cancellable(id: PlayID(), cancelInFlight: true)
   }
 }
 

@@ -106,7 +106,7 @@ public struct RecordScreenView: View {
       .padding(.horizontal, .grid(4))
       .padding(.bottom, .grid(8))
       .ignoresSafeArea(edges: .bottom)
-      .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
+      .alert(store.scope(state: \.alert, action: { $0 }), dismiss: .binding(.set(\.$alert, nil)))
     }
     .enableInjection()
   }

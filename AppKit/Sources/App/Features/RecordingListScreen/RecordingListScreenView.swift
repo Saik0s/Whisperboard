@@ -18,7 +18,7 @@ public struct RecordingListScreen: ReducerProtocol {
 
     @BindingState var isImportingFiles = false
 
-    @BindingState var alert: AlertState<Action>?
+    @PresentationState var alert: AlertState<Action.Alert>?
 
     var shareAudioFileURL: URL?
 
@@ -45,9 +45,13 @@ public struct RecordingListScreen: ReducerProtocol {
     case delete(id: RecordingInfo.ID)
     case addFileRecordings(urls: [URL])
     case failedToAddRecordings(error: EquatableErrorWrapper)
-    case deleteDialogConfirmed(id: RecordingInfo.ID)
     case details(action: PresentationAction<RecordingDetails.Action>)
     case recordingSelected(id: RecordingInfo.ID?)
+    case alert(PresentationAction<Alert>)
+
+    public enum Alert: Hashable {
+      case deleteDialogConfirmed(id: RecordingInfo.ID)
+    }
   }
 
   @Dependency(\.storage) var storage: StorageClient
@@ -74,6 +78,7 @@ public struct RecordingListScreen: ReducerProtocol {
     .forEach(\.recordingCards, action: /Action.recordingCard(id:action:)) {
       RecordingCard()
     }
+      ._printChanges(.actionLabels)
   }
 
   private func mainReducer() -> some ReducerProtocol<State, Action> {
@@ -171,7 +176,7 @@ public struct RecordingListScreen: ReducerProtocol {
         createDeleteConfirmationDialog(id: id, state: &state)
         return .none
 
-      case let .deleteDialogConfirmed(id):
+      case let .alert(.presented(.deleteDialogConfirmed(id))):
         if state.selection.wrappedValue?.recordingCard.id == id {
           state.selection = PresentationState(wrappedValue: nil)
         }
@@ -184,19 +189,23 @@ public struct RecordingListScreen: ReducerProtocol {
         }
         return .none
 
+      case .alert:
+        return .none
+
       default:
         return .none
       }
     }
+      .ifLet(\.$alert, action: /Action.alert)
   }
 
   private func createDeleteConfirmationDialog(id: RecordingInfo.ID, state: inout State) {
     state.alert = AlertState {
       TextState("Confirmation")
     } actions: {
-      ButtonState(role: .cancel) {
-        TextState("Cancel")
-      }
+//      ButtonState(role: .cancel) {
+//        TextState("Cancel")
+//      }
       ButtonState(role: .destructive, action: .deleteDialogConfirmed(id: id)) {
         TextState("Delete")
       }
@@ -274,7 +283,7 @@ public struct RecordingListScreenView: View {
         Color.black.opacity(0.5).overlay(ProgressView())
       }
     }
-    .messagePopup(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
+    .messagePopup(store: store.scope(state: \.$alert, action: { .alert($0) }))
     .navigationViewStyle(.stack)
     .enableInjection()
   }
