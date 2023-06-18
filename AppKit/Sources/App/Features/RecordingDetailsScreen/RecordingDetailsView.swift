@@ -72,16 +72,16 @@ public struct RecordingDetailsView: View {
   public var body: some View {
     VStack(spacing: .grid(2)) {
       TextField(
-        "Untitled",
-        text: viewStore.binding(
-          get: { $0.recordingCard.recordingEnvelop.title },
-          send: { RecordingDetails.Action.recordingCard(action: .titleChanged($0)) }
-        )
+          "Untitled",
+          text: viewStore.binding(
+              get: { $0.recordingCard.recordingEnvelop.title },
+              send: { RecordingDetails.Action.recordingCard(action: .titleChanged($0)) }
+          )
       )
-      .focused($focusedField, equals: .title)
-      .font(.DS.titleXL)
-      .minimumScaleFactor(0.01)
-      .foregroundColor(.DS.Text.base)
+        .focused($focusedField, equals: .title)
+        .font(.DS.titleXL)
+        .minimumScaleFactor(0.01)
+        .foregroundColor(.DS.Text.base)
 
       Text("Created: \(viewStore.recordingCard.recordingEnvelop.date.formatted(date: .abbreviated, time: .shortened))")
         .font(.DS.captionS)
@@ -94,7 +94,7 @@ public struct RecordingDetailsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
 
       if viewStore.recordingCard.recordingEnvelop.isTranscribed == false
-        && viewStore.recordingCard.recordingEnvelop.transcriptionState?.isTranscribing != true {
+             && viewStore.recordingCard.recordingEnvelop.transcriptionState?.isTranscribing != true {
         PrimaryButton("Transcribe") {
           viewStore.send(.recordingCard(action: .transcribeTapped))
         }.padding(.grid(4))
@@ -111,7 +111,15 @@ public struct RecordingDetailsView: View {
             }
 
             Button { viewStore.send(.recordingCard(action: .transcribeTapped)) } label: {
-              Image(systemName: "arrow.clockwise").padding(.grid(1))
+              Image(systemName: "arrow.clockwise")
+            }
+
+            Button { viewStore.send(.shareAudio) } label: {
+              Image(systemName: "square.and.arrow.up")
+            }
+
+            Button { viewStore.send(.delete) } label: {
+              Image(systemName: "trash")
             }
 
             Spacer()
@@ -120,8 +128,8 @@ public struct RecordingDetailsView: View {
 
         ScrollView {
           Text(viewStore.recordingCard.isTranscribing
-            ? viewStore.recordingCard.transcribingProgressText
-            : viewStore.recordingCard.recordingEnvelop.text)
+              ? viewStore.recordingCard.transcribingProgressText
+              : viewStore.recordingCard.recordingEnvelop.text)
             .font(.DS.bodyL)
             .foregroundColor(viewStore.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
             .lineLimit(nil)
@@ -144,10 +152,10 @@ public struct RecordingDetailsView: View {
       Spacer()
 
       WaveformProgressView(
-        store: store.scope(
-          state: { $0.recordingCard.waveform },
-          action: { .recordingCard(action: .waveform($0)) }
-        )
+          store: store.scope(
+              state: { $0.recordingCard.waveform },
+              action: { .recordingCard(action: .waveform($0)) }
+          )
       )
 
       PlayButton(isPlaying: viewStore.recordingCard.mode.isPlaying) {
@@ -155,30 +163,18 @@ public struct RecordingDetailsView: View {
       }
     }
     .padding(.grid(4))
-    .screenRadialBackground()
     .shareSheet(item: viewStore.binding(\.$shareAudioFileURL))
     .toolbar {
       ToolbarItem(placement: .keyboard) {
         Button("Done") {
           focusedField = nil
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
+          .frame(maxWidth: .infinity, alignment: .trailing)
       }
     }
-    .navigationBarItems(
-      trailing: HStack(spacing: .grid(4)) {
-        Button { viewStore.send(.shareAudio) } label: {
-          Image(systemName: "square.and.arrow.up")
-        }
-
-        Button { viewStore.send(.delete) } label: {
-          Image(systemName: "trash")
-        }
-      }.secondaryIconButtonStyle()
-    )
     .scrollContentBackground(.hidden)
-    .navigationBarTitleDisplayMode(.inline)
     .task { await viewStore.send(.recordingCard(action: .task)).finish() }
+      .background(.thickMaterial)
     .enableInjection()
   }
 }

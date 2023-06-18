@@ -22,15 +22,15 @@ public struct RecordingListScreen: ReducerProtocol {
 
     var shareAudioFileURL: URL?
 
-    var selection: Identified<RecordingInfo.ID, RecordingDetails.State>? {
+    var selection: PresentationState<RecordingDetails.State> {
       get {
-        guard let id = selectedId, let card = recordingCards.first(where: { $0.id == id }) else { return nil }
-        return Identified(RecordingDetails.State(recordingCard: card, shareAudioFileURL: shareAudioFileURL), id: id)
+        guard let id = selectedId, let card = recordingCards.first(where: { $0.id == id }) else { return PresentationState(wrappedValue: nil) }
+        return PresentationState(wrappedValue: RecordingDetails.State(recordingCard: card, shareAudioFileURL: shareAudioFileURL))
       }
       set {
-        selectedId = newValue?.id
-        shareAudioFileURL = newValue?.shareAudioFileURL
-        if let card = newValue?.value.recordingCard {
+        selectedId = newValue.wrappedValue?.recordingCard.id
+        shareAudioFileURL = newValue.wrappedValue?.shareAudioFileURL
+        if let card = newValue.wrappedValue?.recordingCard {
           recordingCards[id: card.id] = card
         }
       }
@@ -46,7 +46,7 @@ public struct RecordingListScreen: ReducerProtocol {
     case addFileRecordings(urls: [URL])
     case failedToAddRecordings(error: EquatableErrorWrapper)
     case deleteDialogConfirmed(id: RecordingInfo.ID)
-    case details(action: RecordingDetails.Action)
+    case details(action: PresentationAction<RecordingDetails.Action>)
     case recordingSelected(id: RecordingInfo.ID?)
   }
 
@@ -64,111 +64,129 @@ public struct RecordingListScreen: ReducerProtocol {
     CombineReducers {
       BindingReducer<State, Action>()
 
-      Reduce<State, Action> { state, action in
-        switch action {
-        case .task:
-          return .run { send in
-            for try await envelops in recordingsStream {
-              await send(.receivedRecordings(envelops))
-            }
-//            customAssertionFailure()
-          } catch: { error, send in
-            await send(.failedToAddRecordings(error: error.equatable))
-          }
-          .cancellable(id: StreamID(), cancelInFlight: true)
+      mainReducer()
 
-        case let .receivedRecordings(envelops):
-          state.recordingCards = envelops.map { envelop in
-            var card = state.recordingCards[id: envelop.id] ?? RecordingCard.State(recordingEnvelop: envelop)
-            card.recordingEnvelop = envelop
-            return card
-          }
-          .identifiedArray
-
-          state.selection = state.selection.flatMap { selection -> Identified<RecordingInfo.ID, RecordingDetails.State>? in
-            guard let card = state.recordingCards.first(where: { $0.id == selection.id }) else {
-              return nil
-            }
-            return Identified(RecordingDetails.State(recordingCard: card), id: selection.id)
-          }
-
-          return .none
-
-        case .binding:
-          return .none
-
-        case .recordingCard:
-          return .none
-
-        case let .delete(id):
-          createDeleteConfirmationDialog(id: id, state: &state)
-          return .none
-
-        case .details(action: .delete):
-          guard let id = state.selection?.id else {
-            return .none
-          }
-          createDeleteConfirmationDialog(id: id, state: &state)
-          return .none
-
-        case let .addFileRecordings(urls):
-          return .run { send in
-            await send(.binding(.set(\.$isImportingFiles, true)))
-
-            for url in urls {
-              let newURL = storage.createNewWhisperURL()
-              log.verbose("Importing file from \(url) to \(newURL)")
-              try await fileImport.importFile(url, newURL)
-
-              let newFileName = newURL.lastPathComponent
-              let oldFileName = url.lastPathComponent
-              let duration = try getFileDuration(url: newURL)
-              let recordingEnvelop = RecordingInfo(fileName: newFileName, title: oldFileName, date: Date(), duration: duration)
-              log.verbose("Adding recording info: \(recordingEnvelop)")
-              try await storage.addRecordingInfo(recordingEnvelop)
-            }
-
-            await send(.binding(.set(\.$isImportingFiles, false)))
-          } catch: { error, send in
-            await send(.binding(.set(\.$isImportingFiles, false)))
-            await send(.failedToAddRecordings(error: error.equatable))
-          }
-          .animation(.gentleBounce())
-
-        case let .failedToAddRecordings(error):
-          log.error(error.error)
-          state.alert = .error(error)
-          return .none
-
-        case let .deleteDialogConfirmed(id):
-          if state.selection?.id == id {
-            state.selection = nil
-          }
-
-          do {
-            try storage.delete(id)
-          } catch {
-            log.error(error)
-            state.alert = .error(error)
-          }
-          return .none
-
-        case .details:
-          return .none
-
-        case let .recordingSelected(id):
-          state.selectedId = id
-          return .none
-        }
-      }
+      deleteReducer()
     }
     .ifLet(\.selection, action: /Action.details) {
-      Scope(state: \Identified<RecordingInfo.ID, RecordingDetails.State>.value, action: /.self) {
-        RecordingDetails()
-      }
+      RecordingDetails()
     }
     .forEach(\.recordingCards, action: /Action.recordingCard(id:action:)) {
       RecordingCard()
+    }
+  }
+
+  private func mainReducer() -> some ReducerProtocol<State, Action> {
+    Reduce<State, Action> { state, action in
+      switch action {
+      case .task:
+        return .run { send in
+          for try await envelops in recordingsStream {
+            await send(.receivedRecordings(envelops))
+          }
+//            customAssertionFailure()
+        } catch: { error, send in
+          await send(.failedToAddRecordings(error: error.equatable))
+        }
+        .cancellable(id: StreamID(), cancelInFlight: true)
+
+      case let .receivedRecordings(envelops):
+        state.recordingCards = envelops.map { envelop in
+          var card = state.recordingCards[id: envelop.id] ?? RecordingCard.State(recordingEnvelop: envelop)
+          card.recordingEnvelop = envelop
+          return card
+        }
+        .identifiedArray
+
+        let detailsState = state.selection.wrappedValue.flatMap { selection -> RecordingDetails.State? in
+          guard let card = state.recordingCards.first(where: { $0.id == selection.recordingCard.id }) else {
+            return nil
+          }
+          return RecordingDetails.State(recordingCard: card)
+        }
+
+        state.selection = PresentationState(wrappedValue: detailsState)
+
+        return .none
+
+      case .binding:
+        return .none
+
+      case .recordingCard:
+        return .none
+
+      case let .addFileRecordings(urls):
+        return .run { send in
+          await send(.binding(.set(\.$isImportingFiles, true)))
+
+          for url in urls {
+            let newURL = storage.createNewWhisperURL()
+            log.verbose("Importing file from \(url) to \(newURL)")
+            try await fileImport.importFile(url, newURL)
+
+            let newFileName = newURL.lastPathComponent
+            let oldFileName = url.lastPathComponent
+            let duration = try getFileDuration(url: newURL)
+            let recordingEnvelop = RecordingInfo(fileName: newFileName, title: oldFileName, date: Date(), duration: duration)
+            log.verbose("Adding recording info: \(recordingEnvelop)")
+            try await storage.addRecordingInfo(recordingEnvelop)
+          }
+
+          await send(.binding(.set(\.$isImportingFiles, false)))
+        } catch: { error, send in
+          await send(.binding(.set(\.$isImportingFiles, false)))
+          await send(.failedToAddRecordings(error: error.equatable))
+        }
+        .animation(.gentleBounce())
+
+      case let .failedToAddRecordings(error):
+        log.error(error.error)
+        state.alert = .error(error)
+        return .none
+
+      case .details:
+        return .none
+
+      case let .recordingSelected(id):
+        state.selectedId = id
+        return .none
+
+      default:
+        return .none
+      }
+    }
+  }
+
+  private func deleteReducer() -> some ReducerProtocol<State, Action> {
+    Reduce<State, Action> { state, action in
+      switch action {
+      case let .delete(id):
+        createDeleteConfirmationDialog(id: id, state: &state)
+        return .none
+
+      case .details(action: .presented(.delete)):
+        guard let id = state.selection.wrappedValue?.recordingCard.id else {
+          return .none
+        }
+        createDeleteConfirmationDialog(id: id, state: &state)
+        return .none
+
+      case let .deleteDialogConfirmed(id):
+        if state.selection.wrappedValue?.recordingCard.id == id {
+          state.selection = PresentationState(wrappedValue: nil)
+        }
+
+        do {
+          try storage.delete(id)
+        } catch {
+          log.error(error)
+          state.alert = .error(error)
+        }
+        return .none
+
+      default:
+        return .none
+      }
     }
   }
 
@@ -190,7 +208,6 @@ public struct RecordingListScreen: ReducerProtocol {
 
 // MARK: - RecordingListScreenView
 
-@MainActor
 public struct RecordingListScreenView: View {
   @ObserveInjection var inject
 
@@ -206,13 +223,13 @@ public struct RecordingListScreenView: View {
   }
 
   public var body: some View {
-    NavigationStack {
+    NavigationView {
       ScrollView {
         LazyVStack(spacing: .grid(4)) {
           ForEach(Array(viewStore.recordingCards.enumerated()), id: \.element.id) { index, card in
             IfLetStore(store.scope(
-                state: \.recordingCards[id: card.id],
-                action: { RecordingListScreen.Action.recordingCard(id: card.id, action: $0) }
+              state: \.recordingCards[id: card.id],
+              action: { RecordingListScreen.Action.recordingCard(id: card.id, action: $0) }
             )) { store in
               makeRecordingCard(store: store, index: index, id: card.id)
             } else: {
@@ -220,26 +237,14 @@ public struct RecordingListScreenView: View {
             }
           }
         }
-          .padding(.grid(4))
-          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-          .animation(.default, value: viewStore.recordingCards.count)
-          .removeClipToBounds()
+        .padding(.grid(4))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .animation(.default, value: viewStore.recordingCards.count)
+        .removeClipToBounds()
       }
       .background {
         if viewStore.recordingCards.isEmpty {
           EmptyStateView()
-        }
-      }
-      //      .screenRadialBackground()
-      .navigationDestination(isPresented: Binding(
-        get: { viewStore.selection != nil },
-        set: { if !$0 { viewStore.send(.recordingSelected(id: nil)) } }
-      )) {
-        IfLetStore(store.scope(
-            state: \.selection?.value,
-            action: RecordingListScreen.Action.details
-        )) {
-          RecordingDetailsView(store: $0)
         }
       }
       .navigationTitle("Recordings")
@@ -257,14 +262,19 @@ public struct RecordingListScreenView: View {
         \.editMode,
         viewStore.binding(\.$editMode)
       )
-        .removeNavigationBackground()
+      .removeNavigationBackground()
+
+      .sheet(
+        store: store.scope(state: \.selection, action: RecordingListScreen.Action.details),
+        content: RecordingDetailsView.init(store:)
+      )
     }
     .overlay {
       if viewStore.isImportingFiles {
         Color.black.opacity(0.5).overlay(ProgressView())
       }
     }
-    .alert(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
+    .messagePopup(store.scope(state: \.alert), dismiss: .binding(.set(\.$alert, nil)))
     .navigationViewStyle(.stack)
     .enableInjection()
   }
