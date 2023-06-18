@@ -30,7 +30,8 @@ class RecordingsStreamTests: XCTestCase {
     let expectedOutput = [
       RecordingEnvelop(
         RecordingInfo(fileName: "file1", date: date, isTranscribed: true),
-        TranscriptionState(progress: .transcribing, segments: [], finalText: "Hello world")
+        TranscriptionState(progress: .transcribing, segments: [], finalText: "Hello world"),
+        fileURL: URL(fileURLWithPath: "file1")
       ),
     ]
     @Dependency(\.recordingsStream) var recordingsStream: AsyncStream<[RecordingEnvelop]>

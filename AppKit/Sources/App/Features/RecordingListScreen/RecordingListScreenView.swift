@@ -20,16 +20,13 @@ public struct RecordingListScreen: ReducerProtocol {
 
     @PresentationState var alert: AlertState<Action.Alert>?
 
-    var shareAudioFileURL: URL?
-
     var selection: PresentationState<RecordingDetails.State> {
       get {
         guard let id = selectedId, let card = recordingCards.first(where: { $0.id == id }) else { return PresentationState(wrappedValue: nil) }
-        return PresentationState(wrappedValue: RecordingDetails.State(recordingCard: card, shareAudioFileURL: shareAudioFileURL))
+        return PresentationState(wrappedValue: RecordingDetails.State(recordingCard: card))
       }
       set {
         selectedId = newValue.wrappedValue?.recordingCard.id
-        shareAudioFileURL = newValue.wrappedValue?.shareAudioFileURL
         if let card = newValue.wrappedValue?.recordingCard {
           recordingCards[id: card.id] = card
         }
@@ -78,7 +75,7 @@ public struct RecordingListScreen: ReducerProtocol {
     .forEach(\.recordingCards, action: /Action.recordingCard(id:action:)) {
       RecordingCard()
     }
-      ._printChanges(.actionLabels)
+    ._printChanges(.actionLabels)
   }
 
   private func mainReducer() -> some ReducerProtocol<State, Action> {
@@ -196,16 +193,13 @@ public struct RecordingListScreen: ReducerProtocol {
         return .none
       }
     }
-      .ifLet(\.$alert, action: /Action.alert)
+    .ifLet(\.$alert, action: /Action.alert)
   }
 
   private func createDeleteConfirmationDialog(id: RecordingInfo.ID, state: inout State) {
     state.alert = AlertState {
       TextState("Confirmation")
     } actions: {
-//      ButtonState(role: .cancel) {
-//        TextState("Cancel")
-//      }
       ButtonState(role: .destructive, action: .deleteDialogConfirmed(id: id)) {
         TextState("Delete")
       }

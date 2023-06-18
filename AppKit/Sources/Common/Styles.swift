@@ -105,19 +105,19 @@ extension View {
 
 struct IconButtonStyle: ButtonStyle {
   var isPrimary: Bool = true
+  @State var feedbackGenerator = UISelectionFeedbackGenerator()
 
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
-      .foregroundColor(isPrimary ? .systemOrange : .DS.Text.base)
+      .foregroundColor(isPrimary ? .DS.Text.accent : .DS.Text.base)
       .font(isPrimary ? .DS.headlineS : .DS.bodyM)
       .frame(width: 30, height: 30)
       .padding(.grid(2))
       .scaleEffect(configuration.isPressed ? 0.9 : 1)
+      .contentShape(Rectangle())
       .animation(.gentleBounce(), value: configuration.isPressed)
       .onChange(of: configuration.isPressed) { isPressed in
-        if isPressed {
-          UISelectionFeedbackGenerator().selectionChanged()
-        }
+        feedbackGenerator.selectionChanged()
       }
   }
 }
