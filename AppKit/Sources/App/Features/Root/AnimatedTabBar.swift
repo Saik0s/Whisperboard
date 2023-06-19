@@ -35,7 +35,7 @@ struct AnimatedTabBar: View {
     .padding()
     .frame(maxWidth: .infinity)
     .background {
-      VariableBlurView()
+      VariableBlurView(maxBlurRadius: 10)
         .rotationEffect(.degrees(180), anchor: .center)
         .allowsHitTesting(false)
         .ignoresSafeArea()

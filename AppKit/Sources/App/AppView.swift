@@ -1,5 +1,6 @@
 import AppDevUtils
 import ComposableArchitecture
+import Dependencies
 import DynamicColor
 import SwiftUI
 
@@ -19,23 +20,22 @@ public func appSetup() {
   configureDesignSystem()
 
   Logger.Settings.format = "%C%t %F:%l %m%c"
-  // let dateFormatter = DateFormatter()
-  // dateFormatter.dateFormat = "yyyy-MM-dd"
-  // let dateString = dateFormatter.string(from: Date())
-  // let fileName = "log-\(dateString).log"
-  // let fileURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent(fileName)
-  // Logger.Settings.destinations += [.custom { _, text in
-  //   DispatchQueue.main.async {
-  //     do {
-  //       let fileHandle = try FileHandle(forWritingTo: fileURL)
-  //       fileHandle.seekToEndOfFile()
-  //       fileHandle.write(text.data(using: .utf8)!)
-  //       fileHandle.closeFile()
-  //     } catch {
-  //       print("Error appending to file: \(error)")
-  //     }
-  //   }
-  // }]
+
+  #if DEBUG
+    Logger.Settings.destinations += [.custom { _, text in
+      DispatchQueue.global(qos: .utility).async {
+        do {
+          let fileHandle = try FileHandle(forWritingTo: Configs.logFileURL)
+          fileHandle.seekToEndOfFile()
+          fileHandle.write(text.data(using: .utf8)!)
+          fileHandle.closeFile()
+        } catch {
+          print("Error appending to file: \(error)")
+          FileManager.default.createFile(atPath: Configs.logFileURL.path, contents: text.data(using: .utf8), attributes: nil)
+        }
+      }
+    }]
+  #endif
 }
 
 private func configureDesignSystem() {

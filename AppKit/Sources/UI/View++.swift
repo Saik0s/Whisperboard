@@ -1,11 +1,32 @@
 import Foundation
 import SwiftUI
 import SwiftUIIntrospect
+import UIKit
 
 extension View {
   func removeNavigationBackground() -> some View {
     introspect(.navigationStack, on: .iOS(.v16, .v17), scope: .ancestor) { navigation in
-      navigation.view.subviews.first?.subviews.first?.subviews.first?.backgroundColor = .clear
+      func removeBackground(_ view: UIView) {
+        let viewType = String(describing: type(of: view))
+        let obfuscatedUIHostingView = "`VJIptujohWjfx"
+        let deobfuscatedUIHostingView = deobfuscate(obfuscatedUIHostingView, shift: 1)
+        if viewType.starts(with: deobfuscatedUIHostingView) {
+          view.backgroundColor = .clear
+        }
+        view.subviews.forEach(removeBackground)
+      }
+
+      func deobfuscate(_ text: String, shift: Int) -> String {
+        String(text.unicodeScalars.map { char in
+          if let scalar = UnicodeScalar((char.value - UInt32(shift)) % 128) {
+            return Character(scalar)
+          } else {
+            return Character(char)
+          }
+        })
+      }
+
+      removeBackground(navigation.view)
     }
   }
 

@@ -294,7 +294,7 @@ private actor AudioRecorder {
   /// - precondition: The recorder must not be nil.
   /// - postcondition: The recorder's state is changed to paused.
   func pause() {
-    log.info("")
+    log.info("pause")
     recorder?.pause()
   }
 
@@ -304,7 +304,7 @@ private actor AudioRecorder {
   /// - postcondition: The `recorder`'s `isRecording` property will be `true`.
   /// - note: This function will log an empty message to the console for debugging purposes.
   func `continue`() {
-    log.info("")
+    log.info("continue")
     recorder?.record()
   }
 

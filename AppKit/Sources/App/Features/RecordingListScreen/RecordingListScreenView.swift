@@ -22,7 +22,8 @@ public struct RecordingListScreen: ReducerProtocol {
 
     var selection: PresentationState<RecordingDetails.State> {
       get {
-        guard let id = selectedId, let card = recordingCards.first(where: { $0.id == id }) else { return PresentationState(wrappedValue: nil) }
+        guard let id = selectedId, let card = recordingCards[id: id]
+        else { return PresentationState(wrappedValue: nil) }
         return PresentationState(wrappedValue: RecordingDetails.State(recordingCard: card))
       }
       set {

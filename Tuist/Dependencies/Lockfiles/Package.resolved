@@ -19,6 +19,15 @@
       }
     },
     {
+      "identity" : "bettercodable",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/marksands/BetterCodable",
+      "state" : {
+        "branch" : "master",
+        "revision" : "2b4a27f03c8fe80f195ac2b6ac1764213406ee89"
+      }
+    },
+    {
       "identity" : "combine-schedulers",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/combine-schedulers",
