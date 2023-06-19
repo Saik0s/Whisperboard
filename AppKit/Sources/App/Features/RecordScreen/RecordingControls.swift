@@ -170,11 +170,13 @@ public struct RecordingControlsView: View {
       HStack(spacing: .grid(8)) {
         if viewStore.recording?.mode == .paused {
           Button { viewStore.send(.recording(.deleteButtonTapped), animation: .default) }
-            label: { Image(systemName: "multiply").font(.DS.titleL) }
-            .recordButtonStyle()
-            .frame(width: 50, height: 50)
-            .transition(.move(edge: .trailing)
-              .combined(with: .opacity))
+            label: {
+              Image(systemName: "multiply")
+                .font(.DS.titleL)
+                .frame(width: 50, height: 50)
+                .containerShape(Rectangle())
+            }
+            .transition(.move(edge: .trailing).combined(with: .opacity))
         }
 
         ZStack {
@@ -206,15 +208,16 @@ public struct RecordingControlsView: View {
           }
         }
         .frame(width: 70, height: 70)
-        .zIndex(1)
 
         if viewStore.recording?.mode == .paused {
           Button { viewStore.send(.recording(.saveButtonTapped), animation: .default) }
-            label: { Image(systemName: "checkmark").font(.DS.titleL) }
-            .recordButtonStyle()
-            .frame(width: 50, height: 50)
-            .transition(.move(edge: .leading)
-              .combined(with: .opacity))
+            label: {
+              Image(systemName: "checkmark")
+                .font(.DS.titleL)
+                .frame(width: 50, height: 50)
+                .containerShape(Rectangle())
+            }
+            .transition(.move(edge: .leading).combined(with: .opacity))
         }
       }
       .padding(.horizontal, .grid(3))

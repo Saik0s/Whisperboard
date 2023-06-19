@@ -89,5 +89,8 @@ struct Root: ReducerProtocol {
       UIApplication.shared.isIdleTimerDisabled = shouldDisableIdleTimer
       return .none
     }
+    #if DEBUG
+      .dependency(\.storage, SettingsClient.liveValue.settings().useMockedClients ? .testValue : .liveValue)
+    #endif
   }
 }

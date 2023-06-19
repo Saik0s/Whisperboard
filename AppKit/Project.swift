@@ -55,6 +55,7 @@ func appKitTarget() -> Target {
 
       .external(name: "VariableBlurView"),
       .external(name: "SwiftUIIntrospect"),
+      .external(name: "BetterCodable"),
     ]
   )
 }

@@ -244,7 +244,7 @@ struct SettingsScreenView: View {
           SettingPage(
             title: "Models",
             selectedChoice: viewStore.modelSelector.selectedModel.readableName,
-            backgroundColor: .DS.Background.primary,
+            backgroundColor: .clear,
             previewConfiguration: .init(icon: .system(icon: "square.and.arrow.down", backgroundColor: .systemBlue))
           ) {
             SettingGroup(footer: .modelSelectorFooter) {}
@@ -254,6 +254,8 @@ struct SettingsScreenView: View {
                 ForEachStore(modelSelectorStore.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
                   ModelRowView(store: modelRowStore)
                 }
+                .removeClipToBounds()
+                .removeNavigationBackground()
               }
             }
           }
@@ -267,6 +269,7 @@ struct SettingsScreenView: View {
               send: { .binding(.set(\.$settings.voiceLanguage, viewStore.availableLanguages[$0])) }
             ),
             choicesConfiguration: .init(
+              pickerDisplayMode: .menu,
               groupBackgroundColor: .DS.Background.secondary
             )
           )
@@ -285,16 +288,28 @@ struct SettingsScreenView: View {
 
         #if DEBUG
           SettingGroup(header: "Debug", backgroundColor: .DS.Background.secondary) {
+            SettingToggle(title: "🪄 Enable Fixtures", isOn: viewStore.binding(\.$settings.useMockedClients))
             SettingButton(icon: .system(icon: "ladybug", backgroundColor: .systemRed.darken(by: 0.05)), title: "Show logs") {
               debugPresent = true
             }
             SettingCustomView {
-              ZStack {}.popover(present: $debugPresent) {
-                Text("Debug popup")
-                  .padding()
-                  .foregroundColor(.white)
-                  .background(.blue)
-                  .cornerRadius(16)
+              ZStack {}.popover(present: $debugPresent) { (attr: inout Popover.Attributes) in
+                attr.position = .relative(popoverAnchors: [.center])
+                attr.presentation.transition = .move(edge: .bottom).combined(with: .scale)
+                attr.presentation.animation = .gentleBounce()
+                attr.source = .stayAboveWindows
+                attr.dismissal.mode = [.tapOutside, .dragDown]
+                attr.screenEdgePadding = UIEdgeInsets(top: 32, left: 16, bottom: 32, right: 16)
+              } view: {
+                ScrollView {
+                  Text((try? String(contentsOfFile: Configs.logFileURL.path())) ?? "No logs...")
+                    .font(.footnote)
+                    .monospaced()
+                    .padding()
+                }
+                .foregroundColor(.white)
+                .background(Color.systemBlue)
+                .cornerRadius(16)
               }
             }
           }
@@ -394,7 +409,8 @@ struct SettingsScreenView: View {
         }
       }
     }
-
+    .environment(\.settingBackgroundColor, .DS.Background.primary)
+    .environment(\.settingSecondaryBackgroundColor, .DS.Background.secondary)
     .alert(modelSelectorStore.scope(state: \.alert, action: { $0 }), dismiss: .binding(.set(\.$alert, nil)))
     .alert(store.scope(state: \.alert, action: { $0 }), dismiss: .binding(.set(\.$alert, nil)))
     .task { viewStore.send(.task) }

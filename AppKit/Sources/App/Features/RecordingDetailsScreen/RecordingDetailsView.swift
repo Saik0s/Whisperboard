@@ -2,6 +2,7 @@ import AppDevUtils
 import ComposableArchitecture
 import Inject
 import SwiftUI
+import VariableBlurView
 
 // MARK: - RecordingDetails
 
@@ -119,10 +120,23 @@ public struct RecordingDetailsView: View {
             .foregroundColor(viewStore.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
             .lineLimit(nil)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, .grid(8))
 
           if viewStore.recordingCard.isTranscribing {
             ProgressView()
           }
+        }
+        .mask {
+          LinearGradient(
+            stops: [
+              .init(color: .clear, location: 0),
+              .init(color: .black, location: 0.1),
+              .init(color: .black, location: 0.9),
+              .init(color: .clear, location: 1),
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+          )
         }
 
         // TextField("No transcription", text: viewStore.binding(\.$recordingCard.recordingEnvelop.text), axis: .vertical)
