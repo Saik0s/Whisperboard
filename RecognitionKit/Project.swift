@@ -19,6 +19,6 @@ let project = Project.frameworkProject(
   ],
   additionalTestResources: [
     .glob(pattern: "TestResources/**"),
-    "../App/Resources/ggml-tiny.bin",
+    "../AppKit/Resources/ggml-tiny.bin",
   ]
 )
