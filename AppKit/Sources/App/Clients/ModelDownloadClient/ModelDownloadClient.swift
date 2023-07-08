@@ -25,9 +25,16 @@ extension ModelDownloadClient: DependencyKey {
     return ModelDownloadClient(
       getModels: {
         VoiceModelType.allCases.map {
-          VoiceModel(
+          let filePath = $0.localURL.path
+          let fileExists = FileManager.default.fileExists(atPath: filePath)
+          let fileSize = (try? FileManager.default.attributesOfItem(atPath: filePath)[.size] as? NSNumber)?.intValue ?? 0
+          let isDownloaded = fileExists && fileSize > 10 * 1024 * 1024
+          if fileExists && !isDownloaded {
+            try? FileManager.default.removeItem(atPath: filePath)
+          }
+          return VoiceModel(
             modelType: $0,
-            downloadProgress: FileManager.default.fileExists(atPath: $0.localURL.path) ? 1 : 0
+            downloadProgress: isDownloaded ? 1 : 0
           )
         }
       },
@@ -60,6 +67,10 @@ extension ModelDownloadClient: DependencyKey {
               switch result {
               case let .success(url):
                 do {
+                  let fileSize = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.intValue ?? 0
+                  guard fileSize > 10 * 1024 * 1024 else {
+                    throw NSError(domain: "Error while downloading model", code: 1, userInfo: [NSLocalizedDescriptionKey: "There was an error while downloading \(modelType.readableName) model"])
+                  }
                   try? FileManager.default.removeItem(at: destination)
                   try FileManager.default.moveItem(at: url, to: destination)
                   continuation.yield(.success(fileURL: url))
