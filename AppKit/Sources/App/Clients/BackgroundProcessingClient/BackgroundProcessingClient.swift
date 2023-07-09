@@ -147,8 +147,15 @@ final class BackgroundProcessingClientImpl<State: Codable> {
   ///
   /// This function clears the `taskQueue` array and calls `resetBackgroundTask()` to cancel any pending or running
   /// background task. It should be called when the app is terminated or suspended.
+
   func removeAndCancelAllTasks() {
+    taskSemaphore.wait()
+    defer { taskSemaphore.signal() }
     taskQueue.removeAll()
+    if isExecutingTask {
+      longTask.cancel()
+      isExecutingTask = false
+    }
     resetBackgroundTask()
   }
 
@@ -248,17 +255,16 @@ final class BackgroundProcessingClientImpl<State: Codable> {
   /// being executed, or any error thrown by the `longTask.performTask` method.
   /// - note: This method is recursive and will call itself until the task queue is empty.
   private func executeNextTaskWithoutScheduling() async throws {
-    guard let taskState = taskQueue.first, !isExecutingTask else {
-      log.warning("No tasks(\(taskQueue.count)) to execute or already executing a task(\(isExecutingTask))")
-      throw BackgroundProcessingClientError.noTasksInQueue
+    taskSemaphore.wait()
+    defer { taskSemaphore.signal() }
+    while let taskState = taskQueue.first, !isExecutingTask {
+      isExecutingTask = true
+      try await longTask.performTask(taskState)
+      isExecutingTask = false
     }
-
-    isExecutingTask = true
-
-    try await longTask.performTask(taskState)
-    isExecutingTask = false
-    try await executeNextTaskWithoutScheduling()
   }
+
+  private let taskSemaphore = DispatchSemaphore(value: 1)
 
   /// Schedules a background processing task using the `BGTaskScheduler` API.
   ///
@@ -267,21 +273,14 @@ final class BackgroundProcessingClientImpl<State: Codable> {
   /// or `false` otherwise.
   ///
   /// - throws: An error if the task request cannot be submitted.
-  private func scheduleBackgroundTask() {
+  private func scheduleBackgroundTask() throws {
     assert(!backgroundTaskScheduled)
-
     let taskRequest = BGProcessingTaskRequest(identifier: longTask.identifier)
     taskRequest.requiresNetworkConnectivity = false
     taskRequest.requiresExternalPower = false
     taskRequest.earliestBeginDate = Date(timeIntervalSinceNow: 1)
-
-    do {
-      try BGTaskScheduler.shared.submit(taskRequest)
-      backgroundTaskScheduled = true
-    } catch {
-      log.error("Failed to schedule background task: \(error)")
-      backgroundTaskScheduled = false
-    }
+    try BGTaskScheduler.shared.submit(taskRequest)
+    backgroundTaskScheduled = true
   }
 
   /// Marks the current task as completed and executes the next one in the queue.
