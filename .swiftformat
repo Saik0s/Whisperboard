@@ -22,7 +22,6 @@
 
 --disable                               \
     andOperator,                        \
-    sortedSwitchCases,                  \
     wrapMultilineStatementBraces,       \
     wrapSwitchCases,                    \
     organizeDeclarations,               \
@@ -34,4 +33,6 @@
     blankLineAfterImports,              \
     markTypes,                          \
     blockComments,                      \
+    sortedSwitchCases,                  \
+    docComments,                        \
     isEmpty
