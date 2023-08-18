@@ -24,8 +24,8 @@ extension SettingsClient {
 
 extension SettingsClient: DependencyKey {
   static var liveValue: Self = {
-    let docURL = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-    let settingsURL = docURL.appendingPathComponent("settings.json")
+    @Dependency(\.fileSystem) var fileSystem: FileSystemClient
+    let settingsURL = fileSystem.getSettingsFileURL()
     let settings = (try? Settings.fromFile(path: settingsURL.path)) ?? Settings()
     let container = SettingsContainer(settings: settings)
 
