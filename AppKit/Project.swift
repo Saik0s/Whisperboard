@@ -23,7 +23,7 @@ func appKitTarget() -> Target {
   Target(
     name: "WhisperBoardKit",
     platform: .iOS,
-    product: .framework,
+    product: .staticFramework,
     bundleId: "me.igortarasenko.WhisperboardKit",
     deploymentTarget: .iOS(targetVersion: "16.0", devices: [.iphone, .ipad]),
     infoPlist: .extendingDefault(with: [:]),
@@ -41,21 +41,18 @@ func appKitTarget() -> Target {
       .external(name: "DynamicColor"),
       .external(name: "Setting"),
       .external(name: "Popovers"),
-      // .external(name: "Lottie"),
-      // .external(name: "LottieUI"),
 
       .external(name: "AudioKit"),
 
       .external(name: "ComposableArchitecture"),
-      // .external(name: "ComposablePresentation"),
       .external(name: "AsyncAlgorithms"),
       .external(name: "DependenciesAdditions"),
-
-      .project(target: "RecognitionKit", path: "../RecognitionKit"),
 
       .external(name: "VariableBlurView"),
       .external(name: "SwiftUIIntrospect"),
       .external(name: "BetterCodable"),
+
+      .external(name: "whisper")
     ]
   )
 }
@@ -75,7 +72,7 @@ func appKitTestTarget() -> Target {
 }
 
 let project = Project(
-  name: "WhisperBoard",
+  name: "WhisperBoardKit",
   options: .options(
     disableShowEnvironmentVarsInScriptPhases: true,
     textSettings: .textSettings(

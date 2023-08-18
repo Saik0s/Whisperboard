@@ -8,9 +8,7 @@ import SwiftUI
 public struct RecordScreen: ReducerProtocol {
   public struct State: Equatable {
     @BindingState var alert: AlertState<Action>?
-
     var micSelector = MicSelector.State()
-
     var recordingControls = RecordingControls.State()
   }
 

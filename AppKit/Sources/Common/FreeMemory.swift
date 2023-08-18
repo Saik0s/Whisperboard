@@ -2,7 +2,7 @@ import Foundation
 import os
 import OSLog
 
-func freeMemory() -> UInt64 {
+func freeMemoryAmount() -> UInt64 {
   #if targetEnvironment(simulator)
     return availableMemory()
   #else

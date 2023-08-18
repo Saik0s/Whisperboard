@@ -10,13 +10,13 @@ public struct AppView: View {
   public init() {}
 
   public var body: some View {
-    RootView(store: Store(initialState: Root.State(), reducer: Root()))
+    RootView(store: Store(initialState: Root.State(), reducer: Root()._printChanges(.actionLabels)))
   }
 }
 
 public func appSetup() {
-  @Dependency(\.backgroundProcessingClient) var backgroundProcessingClient: BackgroundProcessingClient
-  backgroundProcessingClient.registerBackgroundTask()
+  @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
+  transcriptionWorker.registerForProcessingTask()
   configureDesignSystem()
 
   Logger.Settings.format = "%C%t %F:%l %m%c"

@@ -19,7 +19,7 @@ struct VoiceModel: Equatable, Identifiable, Then {
 
 // MARK: - VoiceModelType
 
-enum VoiceModelType: String, CaseIterable {
+enum VoiceModelType: String, CaseIterable, Codable, Equatable {
   case tinyEN = "tiny.en"
   case tiny
   case baseEN = "base.en"

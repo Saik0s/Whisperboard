@@ -24,8 +24,7 @@ struct ModelSelector: ReducerProtocol {
   }
 
   @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
-
-  @Dependency(\.transcriber) var transcriber: TranscriberClient
+  @Dependency(\.settings) var settings: SettingsClient
 
   var body: some ReducerProtocol<State, Action> {
     BindingReducer()
@@ -61,7 +60,7 @@ struct ModelSelector: ReducerProtocol {
   }
 
   private func reloadSelectedModel(state: inout State) {
-    let selected = transcriber.getSelectedModel()
+    let selected = settings.getSettings().selectedModel
     state.modelRows = modelDownload.getModels().map { model in
       ModelRow.State(model: model, isSelected: model.modelType == selected)
     }.identifiedArray

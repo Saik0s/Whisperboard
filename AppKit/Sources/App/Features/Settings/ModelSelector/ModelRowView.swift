@@ -28,8 +28,7 @@ struct ModelRow: ReducerProtocol {
   }
 
   @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
-
-  @Dependency(\.transcriber) var transcriber: TranscriberClient
+  @Dependency(\.settings) var settings: SettingsClient
 
   struct CancelDownloadID: Hashable {}
 
@@ -59,8 +58,9 @@ struct ModelRow: ReducerProtocol {
       case .selectModelTapped:
         guard state.isSelected == false else { return .none }
         state.isSelected = true
-        transcriber.selectModel(state.model.modelType)
-        return .none
+        return .run { [state] _ in
+          try await settings.setValue(state.model.modelType, forKey: \.selectedModel)
+        }
 
       case let .modelUpdated(model):
         state.model = model

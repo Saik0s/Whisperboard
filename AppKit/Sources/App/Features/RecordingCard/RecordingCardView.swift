@@ -25,13 +25,13 @@ struct RecordingCardView: View {
         }
 
         VStack(alignment: .leading, spacing: .grid(1)) {
-          if viewStore.recordingEnvelop.title.isEmpty {
+          if viewStore.recording.title.isEmpty {
             Text("Untitled")
               .font(.DS.headlineS)
               .foregroundColor(.DS.Text.subdued)
               .opacity(0.5)
           } else {
-            Text(viewStore.recordingEnvelop.title)
+            Text(viewStore.recording.title)
               .font(.DS.headlineS)
               .foregroundColor(.DS.Text.base)
           }
@@ -61,7 +61,7 @@ struct RecordingCardView: View {
         .transition(.scale.combined(with: .opacity))
       }
 
-      if viewStore.recordingEnvelop.isTranscribed && !viewStore.isTranscribing {
+      if viewStore.recording.isTranscribed && !viewStore.isTranscribing {
         VStack(alignment: .leading, spacing: .grid(2)) {
           Text(viewStore.transcription)
             .font(.DS.bodyS)
@@ -80,48 +80,68 @@ struct RecordingCardView: View {
           }.iconButtonStyle()
         }
       } else if viewStore.isTranscribing {
-        ProgressView()
-          .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
-          .scaleEffect(1.5)
-          .frame(maxWidth: .infinity, alignment: .center)
-          .padding(.vertical, .grid(2))
-        // TODO: Implement cancel transcription https://github.com/ggerganov/whisper.cpp/blob/master/examples/main/main.cpp#L793
-        // .overlay(alignment: .trailing) {
-        //   Button("Cancel") {
-        //     viewStore.send(.cancelTranscriptionTapped)
-        //   }
-        //   .tertiaryButtonStyle()
-        //   .padding(.grid(4))
-        //   .transition(.move(edge: .trailing))
-        // }
+        ZStack {
+          Text(viewStore.transcription)
+            .font(.DS.bodyS)
+            .foregroundColor(.DS.Text.base)
+            .lineLimit(3)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
+          Color.black.opacity(0.3)
+            .blur(radius: 20)
+
+          VStack(spacing: .grid(2)) {
+            ProgressView()
+              .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
+              .scaleEffect(1.5)
+
+            Text(viewStore.recording.lastTranscription?.status.message ?? "")
+              .font(.DS.bodyS)
+              .foregroundColor(.DS.Text.accent)
+
+            Button("Cancel") {
+              viewStore.send(.cancelTranscriptionTapped)
+            }.tertiaryButtonStyle()
+          }
+          .padding(.grid(2))
+        }
+      } else if let queuePosition = viewStore.queuePosition, let queueTotal = viewStore.queueTotal {
+        VStack(spacing: .grid(2)) {
+          Text("In queue: \(queuePosition) of \(queueTotal)")
+            .font(.DS.bodyS)
+            .foregroundColor(.DS.Text.accent)
+
+          Button("Cancel") {
+            viewStore.send(.cancelTranscriptionTapped)
+          }.tertiaryButtonStyle()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
       } else {
         Button("Transcribe") {
           viewStore.send(.transcribeTapped)
         }.tertiaryButtonStyle()
       }
     }
-    .animation(.easeInOut(duration: 0.3), value: [viewStore.isTranscribing, viewStore.recordingEnvelop.isTranscribed])
+    .animation(.easeInOut(duration: 0.3), value: viewStore.recording)
     .multilineTextAlignment(.leading)
     .padding(.grid(4))
     .cardStyle(isPrimary: viewStore.mode.isPlaying)
     .alert(store.scope(state: \.alert, action: { $0 }), dismiss: .binding(.set(\.$alert, nil)))
-    .animation(.easeIn(duration: 0.3), value: viewStore.mode.isPlaying)
-    .task { await viewStore.send(.task).finish() }
     .enableInjection()
   }
 }
 
 private extension RecordingCard.State {
   var dateString: String {
-    recordingEnvelop.date.formatted(date: .abbreviated, time: .shortened)
+    recording.date.formatted(date: .abbreviated, time: .shortened)
   }
 
   var currentTimeString: String {
-    let currentTime = mode.progress.map { $0 * recordingEnvelop.duration } ?? recordingEnvelop.duration
+    let currentTime = mode.progress.map { $0 * recording.duration } ?? recording.duration
     return dateComponentsFormatter.string(from: currentTime) ?? ""
   }
 
   var transcription: String {
-    recordingEnvelop.text.trimmingCharacters(in: .whitespacesAndNewlines)
+    recording.text.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 }

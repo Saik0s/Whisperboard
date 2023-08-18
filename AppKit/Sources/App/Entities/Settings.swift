@@ -1,10 +1,14 @@
 import BetterCodable
 import Foundation
-import RecognitionKit
 
 struct Settings: Codable, Hashable {
-  var voiceLanguage: VoiceLanguage = .auto
   var isParallelEnabled: Bool = false
   var isRemoteTranscriptionEnabled: Bool = false
   @DefaultFalse var useMockedClients: Bool = false
+  var selectedModel: VoiceModelType = .default
+  var parameters = TranscriptionParameters()
+  var voiceLanguage: VoiceLanguage {
+    get { parameters.language }
+    set { parameters.language = newValue }
+  }
 }

@@ -2,7 +2,6 @@ import AppDevUtils
 import ComposableArchitecture
 import Inject
 import Popovers
-import RecognitionKit
 import Setting
 import SwiftUI
 import SwiftUIIntrospect
@@ -12,21 +11,13 @@ import SwiftUIIntrospect
 struct SettingsScreen: ReducerProtocol {
   struct State: Equatable {
     var modelSelector = ModelSelector.State()
-
     var availableLanguages: IdentifiedArrayOf<VoiceLanguage> = []
-
     var appVersion: String = ""
-
     var buildNumber: String = ""
-
     var freeSpace: String = ""
-
     var takenSpace: String = ""
-
     var takenSpacePercentage: Double = 0
-
     @BindingState var settings: Settings = .init()
-
     @BindingState var alert: AlertState<Action>?
   }
 
@@ -46,14 +37,10 @@ struct SettingsScreen: ReducerProtocol {
     case showError(EquatableErrorWrapper)
   }
 
-  @Dependency(\.transcriber) var transcriber: TranscriberClient
-
+  @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
   @Dependency(\.settings) var settingsClient: SettingsClient
-
   @Dependency(\.openURL) var openURL: OpenURLEffect
-
   @Dependency(\.build) var build: BuildClient
-
   @Dependency(\.storage) var storage: StorageClient
 
   var body: some ReducerProtocol<State, Action> {
@@ -107,7 +94,7 @@ struct SettingsScreen: ReducerProtocol {
       case .deleteDialogConfirmed:
         return .run { send in
           try await storage.deleteStorage()
-          transcriber.selectModel(.default)
+          try await settingsClient.setValue(.default, forKey: \.selectedModel)
           await send(.updateInfo)
         } catch: { error, send in
           await send(.showError(error.equatable))
@@ -141,7 +128,7 @@ struct SettingsScreen: ReducerProtocol {
     state.freeSpace = storage.freeSpace().readableString
     state.takenSpace = storage.takenSpace().readableString
     state.takenSpacePercentage = 1 - Double(storage.freeSpace()) / Double(storage.freeSpace() + storage.takenSpace())
-    state.availableLanguages = transcriber.getAvailableLanguages().identifiedArray
+    state.availableLanguages = transcriptionWorker.getAvailableLanguages().identifiedArray
   }
 
   private func setSettings<Value: Codable>(_ value: Value, forKey keyPath: WritableKeyPath<Settings, Value>) -> EffectPublisher<Action, Never> {

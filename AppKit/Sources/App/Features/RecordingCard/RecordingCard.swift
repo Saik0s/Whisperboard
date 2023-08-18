@@ -11,24 +11,24 @@ public struct RecordingCard: ReducerProtocol {
       case playing(progress: Double)
     }
 
-    public var id: String { recordingEnvelop.id }
+    public var id: String { recording.id }
 
-    var recordingEnvelop: RecordingEnvelop
-
+    var recording: RecordingInfo
     var mode = Mode.notPlaying
+    var waveFormImageURL: URL?
+    var queuePosition: Int?
+    var queueTotal: Int?
 
-    var isTranscribing: Bool { recordingEnvelop.transcriptionState?.isTranscribing ?? false }
-
-    var transcribingProgressText: String { recordingEnvelop.transcriptionState?.segments.map(\.text).joined(separator: " ") ?? "" }
+    var isTranscribing: Bool { recording.isTranscribing }
+    var transcribingProgressText: String { recording.lastTranscription?.text ?? "" }
+    var isInQueue: Bool { queuePosition != nil && queueTotal != nil }
 
     @BindingState var alert: AlertState<Action>?
-
-    var waveFormImageURL: URL?
 
     var waveform: WaveformProgress.State {
       get {
         WaveformProgress.State(
-          fileName: recordingEnvelop.fileName,
+          fileName: recording.fileName,
           progress: mode.progress ?? 0,
           isPlaying: mode.isPlaying,
           waveFormImageURL: waveFormImageURL
@@ -42,13 +42,12 @@ public struct RecordingCard: ReducerProtocol {
       }
     }
 
-    public init(recordingEnvelop: RecordingEnvelop) {
-      self.recordingEnvelop = recordingEnvelop
+    public init(recording: RecordingInfo) {
+      self.recording = recording
     }
   }
 
   public enum Action: BindableAction, Equatable {
-    case task
     case binding(BindingAction<State>)
     case audioPlayerFinished(TaskResult<Bool>)
     case playButtonTapped
@@ -59,15 +58,10 @@ public struct RecordingCard: ReducerProtocol {
     case titleChanged(String)
   }
 
-  @Dependency(\.transcriber) var transcriber: TranscriberClient
-
+  @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
   @Dependency(\.audioPlayer) var audioPlayer: AudioPlayerClient
-
   @Dependency(\.storage) var storage: StorageClient
-
   @Dependency(\.settings) var settings: SettingsClient
-
-  @Dependency(\.backgroundProcessingClient) var backgroundProcessingClient: BackgroundProcessingClient
 
   private struct PlayID: Hashable {}
 
@@ -80,9 +74,6 @@ public struct RecordingCard: ReducerProtocol {
 
     Reduce<State, Action> { state, action in
       switch action {
-      case .task:
-        return .none
-
       case .binding:
         return .none
 
@@ -113,25 +104,30 @@ public struct RecordingCard: ReducerProtocol {
         return .none
 
       case .transcribeTapped:
-        log.debug("Transcribe tapped for recording \(state.recordingEnvelop.id)")
-        return .run { [id = state.recordingEnvelop.id] _ in
-          try await backgroundProcessingClient.startTask(id)
-        } catch: { error, send in
-          #if DEBUG
-            await send(.binding(.set(\.$alert, .error(error))))
-          #else
-            await send(.binding(.set(\.$alert, .genericError)))
-          #endif
+        log.debug("Transcribe tapped for recording \(state.recording.id)")
+        let fileURL = storage.audioFileURLWithName(state.recording.fileName)
+        let parameters = settings.getSettings().parameters
+        let model = settings.getSettings().selectedModel
+        let task = TranscriptionTask(fileURL: fileURL, parameters: parameters, modelType: model)
+        return .run { _ in
+          await transcriptionWorker.enqueueTask(task)
         }
 
       case .cancelTranscriptionTapped:
-        return .fireAndForget(priority: .utility) {
-          backgroundProcessingClient.removeAndCancelAllTasks()
+        return .run { [state] _ in
+          await transcriptionWorker.cancelTaskForFile(state.recording.fileName)
+          try storage.update(state.recording.id) {
+            if let last = $0.transcriptionHistory.last {
+              $0.transcriptionHistory[id: last.id]?.status = .canceled
+            }
+          }
+        } catch: { error, _ in
+          log.error(error)
         }
 
       case let .titleChanged(title):
         do {
-          try storage.update(state.recordingEnvelop.id) { $0.title = title }
+          try storage.update(state.recording.id) { $0.title = title }
         } catch {
           log.error(error)
           state.alert = .error(message: "Failed to update title")
@@ -144,7 +140,7 @@ public struct RecordingCard: ReducerProtocol {
   private func play(state: inout State) -> EffectPublisher<Action, Never> {
     state.mode = .playing(progress: 0)
 
-    return .run { [fileName = state.recordingEnvelop.fileName] send in
+    return .run { [fileName = state.recording.fileName] send in
       let url = storage.audioFileURLWithName(fileName)
       for await playback in audioPlayer.play(url) {
         switch playback {
@@ -179,19 +175,21 @@ extension RecordingCard.State.Mode {
   }
 }
 
-extension TranscriptionState.Progress {
+extension Transcription.Status {
   var message: String {
     switch self {
-    case .starting:
-      return "Starting transcription..."
-    case .loadingModel:
+    case .notStarted:
+      return "Waiting to start..."
+    case .loading:
       return "Loading model..."
-    case .transcribing:
-      return "Transcribing..."
-    case let .finished(result):
-      return result
-    case let .error(error):
-      return error.localizedDescription
+    case let .error(message: message):
+      return message
+    case let .progress(progress):
+      return "Transcribing... \(progress)%"
+    case .done:
+      return "Done"
+    case .canceled:
+      return "Canceled"
     }
   }
 }

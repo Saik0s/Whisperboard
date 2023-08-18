@@ -10,29 +10,17 @@ import XCTestDynamicOverlay
 
 struct StorageClient {
   var read: @Sendable () -> IdentifiedArrayOf<RecordingInfo>
-
   var recordingsInfoStream: AsyncStream<[RecordingInfo]>
-
   var write: @Sendable (IdentifiedArrayOf<RecordingInfo>) -> Void
-
   var addRecordingInfo: @Sendable (RecordingInfo) async throws -> Void
-
   var createNewWhisperURL: () -> URL
-
   var audioFileURLWithName: (String) -> URL
-
   var waveFileURLWithName: (String) -> URL
-
   var delete: @Sendable (RecordingInfo.ID) throws -> Void
-
   var update: @Sendable (RecordingInfo.ID, (inout RecordingInfo) -> Void) throws -> Void
-
   var freeSpace: () -> UInt64
-
   var totalSpace: () -> UInt64
-
   var takenSpace: () -> UInt64
-
   var deleteStorage: () async throws -> Void
 }
 

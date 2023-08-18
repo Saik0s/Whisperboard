@@ -1,4 +1,5 @@
 import AppDevUtils
+import AsyncAlgorithms
 import Combine
 import ComposableArchitecture
 import Dependencies
@@ -38,7 +39,7 @@ public struct RecordingListScreen: ReducerProtocol {
   public enum Action: BindableAction, Equatable {
     case binding(BindingAction<State>)
     case task
-    case receivedRecordings([RecordingEnvelop])
+    case receivedRecordings([RecordingInfo], IdentifiedArrayOf<TranscriptionTask>)
     case recordingCard(id: RecordingCard.State.ID, action: RecordingCard.Action)
     case delete(id: RecordingInfo.ID)
     case addFileRecordings(urls: [URL])
@@ -53,10 +54,8 @@ public struct RecordingListScreen: ReducerProtocol {
   }
 
   @Dependency(\.storage) var storage: StorageClient
-
   @Dependency(\.fileImport) var fileImport: FileImportClient
-
-  @Dependency(\.recordingsStream) var recordingsStream: AsyncStream<[RecordingEnvelop]>
+  @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
 
   struct SavingRecordingsID: Hashable {}
 
@@ -76,7 +75,6 @@ public struct RecordingListScreen: ReducerProtocol {
     .forEach(\.recordingCards, action: /Action.recordingCard(id:action:)) {
       RecordingCard()
     }
-    ._printChanges(.actionLabels)
   }
 
   private func mainReducer() -> some ReducerProtocol<State, Action> {
@@ -84,22 +82,27 @@ public struct RecordingListScreen: ReducerProtocol {
       switch action {
       case .task:
         return .run { send in
-          for try await envelops in recordingsStream {
-            await send(.receivedRecordings(envelops))
+          let stream = combineLatest(
+            storage.recordingsInfoStream,
+            transcriptionWorker.tasksStream()
+          ).eraseToStream()
+
+          for await value: (recordings: [RecordingInfo], tasksQueue: IdentifiedArrayOf<TranscriptionTask>) in stream {
+            await send(.receivedRecordings(value.recordings, value.tasksQueue))
           }
-//            customAssertionFailure()
-        } catch: { error, send in
-          await send(.failedToAddRecordings(error: error.equatable))
         }
         .cancellable(id: StreamID(), cancelInFlight: true)
 
-      case let .receivedRecordings(envelops):
-        state.recordingCards = envelops.map { envelop in
-          var card = state.recordingCards[id: envelop.id] ?? RecordingCard.State(recordingEnvelop: envelop)
-          card.recordingEnvelop = envelop
+      case let .receivedRecordings(recordings, tasksQueue):
+        state.recordingCards = recordings.map { recording in
+          var card = state.recordingCards[id: recording.id] ?? RecordingCard.State(recording: recording)
+          card.recording = recording
+          if let index = tasksQueue.firstIndex(where: { $0.fileName == recording.fileName }) {
+            card.queuePosition = index + 1
+            card.queueTotal = tasksQueue.count
+          }
           return card
-        }
-        .identifiedArray
+        }.identifiedArray
 
         let detailsState = state.selection.wrappedValue.flatMap { selection -> RecordingDetails.State? in
           guard let card = state.recordingCards.first(where: { $0.id == selection.recordingCard.id }) else {
