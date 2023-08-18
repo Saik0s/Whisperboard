@@ -61,7 +61,7 @@ struct RecordingCardView: View {
         .transition(.scale.combined(with: .opacity))
       }
 
-      if viewStore.recording.isTranscribed && !viewStore.isTranscribing {
+      ZStack(alignment: .top) {
         VStack(alignment: .leading, spacing: .grid(2)) {
           Text(viewStore.transcription)
             .font(.DS.bodyS)
@@ -69,26 +69,24 @@ struct RecordingCardView: View {
             .lineLimit(3)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-          HStack(spacing: .grid(2)) {
-            CopyButton(viewStore.transcription) {
-              Image(systemName: "doc.on.clipboard")
-            }
+          if viewStore.recording.isTranscribed && !viewStore.isTranscribing {
+            HStack(spacing: .grid(2)) {
+              CopyButton(viewStore.transcription) {
+                Image(systemName: "doc.on.clipboard")
+              }
 
-            ShareLink(item: viewStore.transcription) {
-              Image(systemName: "paperplane")
-            }
-          }.iconButtonStyle()
+              ShareLink(item: viewStore.transcription) {
+                Image(systemName: "paperplane")
+              }
+            }.iconButtonStyle()
+          }
         }
-      } else if viewStore.isTranscribing {
-        ZStack {
-          Text(viewStore.transcription)
-            .font(.DS.bodyS)
-            .foregroundColor(.DS.Text.base)
-            .lineLimit(3)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
-          Color.black.opacity(0.3)
-            .blur(radius: 20)
+        if viewStore.isTranscribing {
+          Rectangle()
+            .fill(.ultraThinMaterial)
+            .opacity(0.8)
+            .blur(radius: 12)
 
           VStack(spacing: .grid(2)) {
             ProgressView()
@@ -104,22 +102,21 @@ struct RecordingCardView: View {
             }.tertiaryButtonStyle()
           }
           .padding(.grid(2))
-        }
-      } else if let queuePosition = viewStore.queuePosition, let queueTotal = viewStore.queueTotal {
-        VStack(spacing: .grid(2)) {
-          Text("In queue: \(queuePosition) of \(queueTotal)")
-            .font(.DS.bodyS)
-            .foregroundColor(.DS.Text.accent)
+        } else if let queuePosition = viewStore.queuePosition, let queueTotal = viewStore.queueTotal {
+          VStack(spacing: .grid(2)) {
+            Text("In queue: \(queuePosition) of \(queueTotal)")
+              .font(.DS.bodyS)
+              .foregroundColor(.DS.Text.accent)
 
-          Button("Cancel") {
-            viewStore.send(.cancelTranscriptionTapped)
+            Button("Cancel") {
+              viewStore.send(.cancelTranscriptionTapped)
+            }.tertiaryButtonStyle()
+          }
+        } else if !viewStore.recording.isTranscribed {
+          Button("Transcribe") {
+            viewStore.send(.transcribeTapped)
           }.tertiaryButtonStyle()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-      } else {
-        Button("Transcribe") {
-          viewStore.send(.transcribeTapped)
-        }.tertiaryButtonStyle()
       }
     }
     .animation(.easeInOut(duration: 0.3), value: viewStore.recording)
@@ -128,20 +125,5 @@ struct RecordingCardView: View {
     .cardStyle(isPrimary: viewStore.mode.isPlaying)
     .alert(store.scope(state: \.alert, action: { $0 }), dismiss: .binding(.set(\.$alert, nil)))
     .enableInjection()
-  }
-}
-
-private extension RecordingCard.State {
-  var dateString: String {
-    recording.date.formatted(date: .abbreviated, time: .shortened)
-  }
-
-  var currentTimeString: String {
-    let currentTime = mode.progress.map { $0 * recording.duration } ?? recording.duration
-    return dateComponentsFormatter.string(from: currentTime) ?? ""
-  }
-
-  var transcription: String {
-    recording.text.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 }

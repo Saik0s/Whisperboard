@@ -1,4 +1,3 @@
-
 import AppDevUtils
 import BackgroundTasks
 import Combine
@@ -12,6 +11,7 @@ import UIKit
 protocol TranscriptionWorker: AnyObject {
   var currentTaskID: TranscriptionTask.ID? { get }
   func enqueueTask(_ task: TranscriptionTask)
+  func processTasks() async
   func removeTask(with id: TranscriptionTask.ID)
   func removeAllTasks()
   func getAllTasks() -> IdentifiedArrayOf<TranscriptionTask>
@@ -28,14 +28,15 @@ final class TranscriptionWorkerImpl: TranscriptionWorker {
   private let processingTaskIdentifier = "me.igortarasenko.Whisperboard"
   private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
   @Published private var isProcessing: Bool = false
-  @Published private var taskQueue: LockIsolated<IdentifiedArrayOf<TranscriptionTask>> = LockIsolated([])
+  @Published private var taskQueue: IdentifiedArrayOf<TranscriptionTask> = []
   private var cancellables: Set<AnyCancellable> = []
 
   private let executor: TranscriptionWorkExecutor
 
   init(executor: TranscriptionWorkExecutor) {
     self.executor = executor
-    taskQueue.setValue(loadTasks())
+    taskQueue = loadTasks()
+    log.debug("Restored:", taskQueue)
 
     let notificationCenter = NotificationCenter.default
 
@@ -51,45 +52,19 @@ final class TranscriptionWorkerImpl: TranscriptionWorker {
       cancelScheduledBackgroundProcessingTask()
     }.store(in: &cancellables)
 
-    $taskQueue.sink { [weak self] _ in
-      self?.saveTasks()
+    $taskQueue.sink { tasks in
+      UserDefaults.standard.encode(tasks, forKey: "taskQueue")
     }.store(in: &cancellables)
   }
 
   func enqueueTask(_ task: TranscriptionTask) {
-    _ = taskQueue.withValue { $0.append(task) }
     Task {
+      taskQueue.append(task)
       await processTasks()
     }
   }
 
-  func removeTask(with id: TranscriptionTask.ID) {
-    taskQueue.withValue { $0[id: id] = nil }
-  }
-
-  func removeAllTasks() {
-    taskQueue.withValue { $0.removeAll() }
-  }
-
-  func getAllTasks() -> IdentifiedArrayOf<TranscriptionTask> {
-    taskQueue.value
-  }
-
-  func tasksStream() -> AsyncStream<IdentifiedArrayOf<TranscriptionTask>> {
-    $taskQueue.map(\.value).values.eraseToStream()
-  }
-
-  func isProcessingStream() -> AsyncStream<Bool> {
-    $isProcessing.values.eraseToStream()
-  }
-
-  func registerForProcessingTask() {
-    BGTaskScheduler.shared.register(forTaskWithIdentifier: processingTaskIdentifier, using: nil) { task in
-      self.handleBGProcessingTask(bgTask: task as! BGProcessingTask)
-    }
-  }
-
-  private func processTasks() async {
+  func processTasks() async {
     guard !isProcessing else { return }
 
     isProcessing = true
@@ -97,13 +72,39 @@ final class TranscriptionWorkerImpl: TranscriptionWorker {
     while let task = taskQueue.first {
       currentTaskID = task.id
       await executor.processTask(task) { [weak self] newTask in
-        self?.taskQueue.withValue { $0[id: task.id] = newTask }
+        self?.taskQueue[id: task.id] = newTask
       }
-      taskQueue.withValue { $0[id: task.id] = nil }
+      taskQueue[id: task.id] = nil
       currentTaskID = nil
     }
 
     isProcessing = false
+  }
+
+  func removeTask(with id: TranscriptionTask.ID) {
+    taskQueue[id: id] = nil
+  }
+
+  func removeAllTasks() {
+    taskQueue.removeAll()
+  }
+
+  func getAllTasks() -> IdentifiedArrayOf<TranscriptionTask> {
+    taskQueue
+  }
+
+  func tasksStream() -> AsyncStream<IdentifiedArrayOf<TranscriptionTask>> {
+    $taskQueue.asAsyncStream()
+  }
+
+  func isProcessingStream() -> AsyncStream<Bool> {
+    $isProcessing.asAsyncStream()
+  }
+
+  func registerForProcessingTask() {
+    BGTaskScheduler.shared.register(forTaskWithIdentifier: processingTaskIdentifier, using: nil) { task in
+      self.handleBGProcessingTask(bgTask: task as! BGProcessingTask)
+    }
   }
 
   private func beginBackgroundTask() {
@@ -142,10 +143,6 @@ final class TranscriptionWorkerImpl: TranscriptionWorker {
     bgTask.expirationHandler = {
       task.cancel()
     }
-  }
-
-  private func saveTasks() {
-    UserDefaults.standard.encode(taskQueue.value, forKey: "taskQueue")
   }
 
   private func loadTasks() -> IdentifiedArrayOf<TranscriptionTask> {
