@@ -192,10 +192,10 @@
     {
       "identity" : "whisper.spm",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ggerganov/whisper.spm",
+      "location" : "https://github.com/ggerganov/whisper.spm.git",
       "state" : {
-        "revision" : "de46d9e7817fe851c109d66080239d415812d32a",
-        "version" : "1.4.2"
+        "branch" : "master",
+        "revision" : "52b2619d029f809b8ca0bfa4998e634701540fa0"
       }
     },
     {

@@ -1,7 +1,5 @@
 import Foundation
 
-// MARK: - VoiceLanguage
-
 public struct VoiceLanguage: Codable, Hashable, Identifiable {
   public let id: Int32
   public let code: String

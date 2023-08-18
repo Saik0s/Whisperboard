@@ -2,7 +2,7 @@ import SwiftUI
 import WhisperBoardKit
 
 @main
-struct WhisperboardApp: App {
+struct WhisperBoardApp: App {
   var body: some Scene {
     WindowGroup {
       AppView()

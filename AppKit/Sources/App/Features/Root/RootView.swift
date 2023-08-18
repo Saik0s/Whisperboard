@@ -11,28 +11,24 @@ struct RootView: View {
 
   let store: StoreOf<Root>
 
-  @ObservedObject var viewStore: ViewStoreOf<Root>
+  @ObservedObject var viewStore: ViewStore<Root.Tab, Root.Action>
 
   @Namespace var animation
 
   init(store: StoreOf<Root>) {
     self.store = store
-    viewStore = ViewStore(store) { $0 }
-  }
-
-  private var selectedTab: Int {
-    viewStore.selectedTab.rawValue
+    viewStore = ViewStore(store) { $0.selectedTab }
   }
 
   var body: some View {
     CustomTabBarView(
-      selectedIndex: viewStore.binding(get: \.selectedTab.rawValue, send: Root.Action.selectTab),
+      selectedIndex: viewStore.binding(get: \.rawValue, send: Root.Action.selectTab),
       screen1: RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: Root.Action.recordingListScreen)),
       screen2: RecordScreenView(store: store.scope(state: \.recordScreen, action: Root.Action.recordScreen)),
-      screen3: SettingsScreenView(store: store.scope(state: \.settings, action: Root.Action.settings))
+      screen3: SettingsScreenView(store: store.scope(state: \.settingsScreen, action: Root.Action.settingsScreen))
     )
     .accentColor(.white)
-    .animation(.spring(response: 0.5, dampingFraction: 0.8), value: selectedTab)
+    .animation(.spring(response: 0.5, dampingFraction: 0.8), value: viewStore.rawValue)
     .task { viewStore.send(.task) }
     .enableInjection()
   }

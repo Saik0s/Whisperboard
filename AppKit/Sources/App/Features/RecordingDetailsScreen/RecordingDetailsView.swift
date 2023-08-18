@@ -10,7 +10,7 @@ public struct RecordingDetails: ReducerProtocol {
   public struct State: Equatable {
     var recordingCard: RecordingCard.State
 
-    var shareAudioFileURL: URL { recordingCard.recordingEnvelop.fileURL }
+    var shareAudioFileURL: URL { recordingCard.recording.fileURL }
   }
 
   public enum Action: Equatable {
@@ -60,7 +60,7 @@ public struct RecordingDetailsView: View {
       TextField(
         "Untitled",
         text: viewStore.binding(
-          get: { $0.recordingCard.recordingEnvelop.title },
+          get: { $0.recordingCard.recording.title },
           send: { RecordingDetails.Action.recordingCard(action: .titleChanged($0)) }
         )
       )
@@ -69,7 +69,7 @@ public struct RecordingDetailsView: View {
       .minimumScaleFactor(0.01)
       .foregroundColor(.DS.Text.base)
 
-      Text("Created: \(viewStore.recordingCard.recordingEnvelop.date.formatted(date: .abbreviated, time: .shortened))")
+      Text("Created: \(viewStore.recordingCard.recording.date.formatted(date: .abbreviated, time: .shortened))")
         .font(.DS.captionS)
         .foregroundColor(.DS.Text.subdued)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -79,20 +79,19 @@ public struct RecordingDetailsView: View {
         .foregroundColor(.DS.Text.subdued)
         .frame(maxWidth: .infinity, alignment: .leading)
 
-      if viewStore.recordingCard.recordingEnvelop.isTranscribed == false
-        && viewStore.recordingCard.recordingEnvelop.transcriptionState?.isTranscribing != true {
+      if viewStore.recordingCard.recording.isTranscribed == false
+        && !viewStore.recordingCard.recording.isTranscribing {
         PrimaryButton("Transcribe") {
           viewStore.send(.recordingCard(action: .transcribeTapped))
         }.padding(.grid(4))
-
       } else {
         if !viewStore.recordingCard.isTranscribing {
           HStack(spacing: .grid(2)) {
-            CopyButton(viewStore.recordingCard.recordingEnvelop.text) {
+            CopyButton(viewStore.recordingCard.recording.text) {
               Image(systemName: "doc.on.clipboard")
             }
 
-            ShareLink(item: viewStore.recordingCard.recordingEnvelop.text) {
+            ShareLink(item: viewStore.recordingCard.recording.text) {
               Image(systemName: "paperplane")
             }
 
@@ -112,25 +111,38 @@ public struct RecordingDetailsView: View {
           }.iconButtonStyle()
         }
 
+        if viewStore.recordingCard.isTranscribing || viewStore.recordingCard.isInQueue {
+          VStack(spacing: .grid(2)) {
+            ProgressView()
+              .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
+
+            Text(viewStore.recordingCard.isTranscribing
+              ? viewStore.recordingCard.recording.lastTranscription?.status.message ?? ""
+              : "In queue: \(viewStore.recordingCard.queuePosition ?? 0) of \(viewStore.recordingCard.queueTotal ?? 0)")
+              .font(.DS.bodyS)
+              .foregroundColor(.DS.Text.accent)
+
+            Button("Cancel") {
+              viewStore.send(.recordingCard(action: .cancelTranscriptionTapped))
+            }.tertiaryButtonStyle()
+          }
+        }
+
         ScrollView {
           Text(viewStore.recordingCard.isTranscribing
             ? viewStore.recordingCard.transcribingProgressText
-            : viewStore.recordingCard.recordingEnvelop.text)
+            : viewStore.recordingCard.recording.text)
             .font(.DS.bodyL)
             .foregroundColor(viewStore.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
             .lineLimit(nil)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, .grid(8))
-
-          if viewStore.recordingCard.isTranscribing {
-            ProgressView()
-          }
         }
         .mask {
           LinearGradient(
             stops: [
               .init(color: .clear, location: 0),
-              .init(color: .black, location: 0.1),
+              .init(color: .black, location: 0.07),
               .init(color: .black, location: 0.9),
               .init(color: .clear, location: 1),
             ],
@@ -171,7 +183,6 @@ public struct RecordingDetailsView: View {
       }
     }
     .scrollContentBackground(.hidden)
-    .task { await viewStore.send(.recordingCard(action: .task)).finish() }
     .background(.thickMaterial)
     .enableInjection()
   }
@@ -184,7 +195,7 @@ public struct RecordingDetailsView: View {
       NavigationView {
         RecordingDetailsView(
           store: Store(
-            initialState: RecordingDetails.State(recordingCard: .init(recordingEnvelop: .mock)),
+            initialState: RecordingDetails.State(recordingCard: .init(recording: .mock)),
             reducer: RecordingDetails()
           )
         )

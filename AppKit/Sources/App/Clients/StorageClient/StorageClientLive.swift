@@ -14,7 +14,7 @@ extension StorageClient: DependencyKey {
     let storage = Storage()
     let documentsURL = Storage.documentsURL
 
-    return Self(
+    return StorageClient(
       read: {
         storage.currentRecordings.identifiedArray
       },
@@ -123,70 +123,8 @@ extension StorageClient: DependencyKey {
   }
 }
 
-#if DEBUG
-  extension StorageClient {
-    /// In memory simple storage that is initialised with RecordingEnvelop.fixtures
-    static var testValue: StorageClient {
-      let recordings = CurrentValueSubject<[RecordingInfo], Never>(RecordingEnvelop.fixtures.map(\.recordingInfo))
-
-      return Self(
-        read: {
-          recordings.value.identifiedArray
-        },
-
-        recordingsInfoStream: recordings.asAsyncStream(),
-
-        write: { newRecordings in
-          recordings.value = newRecordings.elements
-        },
-
-        addRecordingInfo: { recording in
-          recordings.value.append(recording)
-        },
-
-        createNewWhisperURL: {
-          let filename = UUID().uuidString + ".wav"
-          let url = URL(fileURLWithPath: filename)
-          return url
-        },
-
-        audioFileURLWithName: { name in
-          URL(fileURLWithPath: name)
-        },
-
-        waveFileURLWithName: { name in
-          URL(fileURLWithPath: name)
-        },
-
-        delete: { recordingId in
-          recordings.value = recordings.value.filter { $0.id != recordingId }
-        },
-
-        update: { id, updater in
-          var identifiedRecordings = recordings.value.identifiedArray
-          guard var recording = identifiedRecordings[id: id] else {
-            customAssertionFailure()
-            return
-          }
-
-          updater(&recording)
-
-          identifiedRecordings[id: id] = recording
-
-          recordings.value = identifiedRecordings.elements
-        },
-
-        freeSpace: { 0 },
-        totalSpace: { 0 },
-        takenSpace: { 0 },
-        deleteStorage: {}
-      )
-    }
-  }
-#endif
 
 // MARK: - Storage
-
 private final class Storage {
   @Published private var recordings: [RecordingInfo] = []
 
@@ -340,8 +278,8 @@ private final class Storage {
   }
 }
 
-// MARK: - CodableValueSubject + Then
 
+// MARK: - CodableValueSubject + Then
 extension CodableValueSubject: Then {}
 
 extension URL {
@@ -366,3 +304,65 @@ extension URL {
     }
   }
 }
+
+#if DEBUG
+extension StorageClient {
+  /// In memory simple storage that is initialised with RecordingEnvelop.fixtures
+  static var testValue: StorageClient {
+    let recordings = CurrentValueSubject<[RecordingInfo], Never>(RecordingInfo.fixtures)
+
+    return Self(
+      read: {
+        recordings.value.identifiedArray
+      },
+
+      recordingsInfoStream: recordings.asAsyncStream(),
+
+      write: { newRecordings in
+        recordings.value = newRecordings.elements
+      },
+
+      addRecordingInfo: { recording in
+        recordings.value.append(recording)
+      },
+
+      createNewWhisperURL: {
+        let filename = UUID().uuidString + ".wav"
+        let url = URL(fileURLWithPath: filename)
+        return url
+      },
+
+      audioFileURLWithName: { name in
+        URL(fileURLWithPath: name)
+      },
+
+      waveFileURLWithName: { name in
+        URL(fileURLWithPath: name)
+      },
+
+      delete: { recordingId in
+        recordings.value = recordings.value.filter { $0.id != recordingId }
+      },
+
+      update: { id, updater in
+        var identifiedRecordings = recordings.value.identifiedArray
+        guard var recording = identifiedRecordings[id: id] else {
+          customAssertionFailure()
+          return
+        }
+
+        updater(&recording)
+
+        identifiedRecordings[id: id] = recording
+
+        recordings.value = identifiedRecordings.elements
+      },
+
+      freeSpace: { 0 },
+      totalSpace: { 0 },
+      takenSpace: { 0 },
+      deleteStorage: {}
+    )
+  }
+}
+#endif
