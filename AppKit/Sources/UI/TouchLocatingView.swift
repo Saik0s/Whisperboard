@@ -3,9 +3,9 @@ import UIKit
 
 // MARK: - TouchLocatingView
 
-// Our UIKit to SwiftUI wrapper view
+/// Our UIKit to SwiftUI wrapper view
 public struct TouchLocatingView: UIViewRepresentable {
-  // The types of touches users want to be notified about
+  /// The types of touches users want to be notified about
   public struct TouchType: OptionSet {
     public let rawValue: Int
 
@@ -17,13 +17,13 @@ public struct TouchLocatingView: UIViewRepresentable {
     public init(rawValue: Int) { self.rawValue = rawValue }
   }
 
-  // A closure to call when touch data has arrived
+  /// A closure to call when touch data has arrived
   var onUpdate: (CGPoint) -> Void
 
-  // The list of touch types to be notified of
+  /// The list of touch types to be notified of
   var types = TouchType.all
 
-  // Whether touch information should continue after the user's finger has left the view
+  /// Whether touch information should continue after the user's finger has left the view
   var limitToBounds = true
 
   public func makeUIView(context _: Context) -> TouchLocatingUIView {
@@ -37,54 +37,54 @@ public struct TouchLocatingView: UIViewRepresentable {
 
   public func updateUIView(_: TouchLocatingUIView, context _: Context) {}
 
-  // The internal UIView responsible for catching taps
+  /// The internal UIView responsible for catching taps
   public class TouchLocatingUIView: UIView {
-    // Internal copies of our settings
+    /// Internal copies of our settings
     var onUpdate: ((CGPoint) -> Void)?
     var touchTypes: TouchLocatingView.TouchType = .all
     var limitToBounds = true
 
-    // Our main initializer, making sure interaction is enabled.
+    /// Our main initializer, making sure interaction is enabled.
     override public init(frame: CGRect) {
       super.init(frame: frame)
       isUserInteractionEnabled = true
     }
 
-    // Just in case you're using storyboards!
+    /// Just in case you're using storyboards!
     public required init?(coder: NSCoder) {
       super.init(coder: coder)
       isUserInteractionEnabled = true
     }
 
-    // Triggered when a touch starts.
+    /// Triggered when a touch starts.
     override public func touchesBegan(_ touches: Set<UITouch>, with _: UIEvent?) {
       guard let touch = touches.first else { return }
       let location = touch.location(in: self)
       send(location, forEvent: .started)
     }
 
-    // Triggered when an existing touch moves.
+    /// Triggered when an existing touch moves.
     override public func touchesMoved(_ touches: Set<UITouch>, with _: UIEvent?) {
       guard let touch = touches.first else { return }
       let location = touch.location(in: self)
       send(location, forEvent: .moved)
     }
 
-    // Triggered when the user lifts a finger.
+    /// Triggered when the user lifts a finger.
     override public func touchesEnded(_ touches: Set<UITouch>, with _: UIEvent?) {
       guard let touch = touches.first else { return }
       let location = touch.location(in: self)
       send(location, forEvent: .ended)
     }
 
-    // Triggered when the user's touch is interrupted, e.g. by a low battery alert.
+    /// Triggered when the user's touch is interrupted, e.g. by a low battery alert.
     override public func touchesCancelled(_ touches: Set<UITouch>, with _: UIEvent?) {
       guard let touch = touches.first else { return }
       let location = touch.location(in: self)
       send(location, forEvent: .ended)
     }
 
-    // Send a touch location only if the user asked for it
+    /// Send a touch location only if the user asked for it
     func send(_ location: CGPoint, forEvent event: TouchLocatingView.TouchType) {
       guard touchTypes.contains(event) else {
         return
@@ -99,7 +99,7 @@ public struct TouchLocatingView: UIViewRepresentable {
 
 // MARK: - TouchLocator
 
-// A custom SwiftUI view modifier that overlays a view with our UIView subclass.
+/// A custom SwiftUI view modifier that overlays a view with our UIView subclass.
 struct TouchLocator: ViewModifier {
   var type: TouchLocatingView.TouchType = .all
   var limitToBounds = true
@@ -113,7 +113,7 @@ struct TouchLocator: ViewModifier {
   }
 }
 
-// A new method on View that makes it easier to apply our touch locater view.
+/// A new method on View that makes it easier to apply our touch locater view.
 extension View {
   func onTouch(type: TouchLocatingView.TouchType = .all, limitToBounds: Bool = true, perform: @escaping (CGPoint) -> Void) -> some View {
     modifier(TouchLocator(type: type, limitToBounds: limitToBounds, perform: perform))
@@ -156,7 +156,7 @@ public extension View {
 
 // MARK: - ContentView
 
-// Finally, here's some example code you can try out.
+/// Finally, here's some example code you can try out.
 struct ContentView: View {
   var body: some View {
     VStack {

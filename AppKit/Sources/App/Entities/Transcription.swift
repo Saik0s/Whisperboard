@@ -1,25 +1,25 @@
-//
-// Created by Igor Tarasenko on 12/08/2023.
-//
-
 import Foundation
+
+// MARK: - Transcription
 
 public struct Transcription: Codable, Hashable, Identifiable {
   public let id: UUID
   var fileName: String
-  var startDate: Date = Date()
+  var startDate: Date = .init()
   var segments: [Segment] = []
   var parameters: TranscriptionParameters
   var model: VoiceModelType
   var status: Status = .notStarted
 
   var text: String {
-    segments.map { $0.text }.joined(separator: " ")
+    segments.map(\.text).joined(separator: " ")
   }
 }
 
-extension Transcription {
-  public enum Status: Codable, Hashable {
+// MARK: Transcription.Status
+
+public extension Transcription {
+  enum Status: Codable, Hashable {
     case notStarted, loading, error(message: String), progress(Double), done(Date), canceled
   }
 }
@@ -59,7 +59,6 @@ public struct TokenData: Codable, Hashable, Identifiable {
   let endTime: Int64
   let voiceLength: Float
 }
-
 
 public extension Transcription.Status {
   var isDone: Bool {
@@ -136,7 +135,7 @@ public extension Transcription.Status {
 
   var isErrorOrCanceled: Bool {
     switch self {
-    case .error, .canceled:
+    case .canceled, .error:
       return true
     default:
       return false
@@ -173,16 +172,16 @@ public extension Transcription.Status {
                 voiceLength: 0
               ),
               speaker: nil
-            )
+            ),
           ],
           speaker: nil
-        )
+        ),
       ],
       parameters: TranscriptionParameters(),
       model: .tiny,
       status: .done(Date())
     )
-    
+
     static let mock2 = Transcription(
       id: UUID(),
       fileName: "test2",
@@ -210,16 +209,16 @@ public extension Transcription.Status {
                 voiceLength: 0
               ),
               speaker: nil
-            )
+            ),
           ],
           speaker: nil
-        )
+        ),
       ],
       parameters: TranscriptionParameters(),
       model: .tiny,
       status: .done(Date())
     )
-    
+
     static let mock3 = Transcription(
       id: UUID(),
       fileName: "test3",
@@ -247,10 +246,10 @@ public extension Transcription.Status {
                 voiceLength: 0
               ),
               speaker: nil
-            )
+            ),
           ],
           speaker: nil
-        )
+        ),
       ],
       parameters: TranscriptionParameters(),
       model: .tiny,

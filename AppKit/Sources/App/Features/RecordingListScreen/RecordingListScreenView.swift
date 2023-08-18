@@ -235,6 +235,15 @@ public struct RecordingListScreenView: View {
   public var body: some View {
     NavigationView {
       ScrollView {
+        ForEachStore(
+          store.scope(
+            state: \.recordingCards,
+            action: RecordingListScreen.Action.recordingCard(id:action:)
+          ),
+          content: { store in
+            makeRecordingCard(store: store, index: 0, id: ViewStore(store).state.id)
+          }
+        )
         LazyVStack(spacing: .grid(4)) {
           ForEach(Array(viewStore.recordingCards.enumerated()), id: \.element.id) { index, card in
             IfLetStore(store.scope(

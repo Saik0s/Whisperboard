@@ -1,4 +1,6 @@
 import AppDevUtils
+import AsyncAlgorithms
+import Combine
 import ComposableArchitecture
 import Dependencies
 import DynamicColor
@@ -10,7 +12,21 @@ public struct AppView: View {
   public init() {}
 
   public var body: some View {
-    RootView(store: Store(initialState: Root.State(), reducer: Root()._printChanges(.actionLabels)))
+    RootView(store: Store(
+      initialState: Root.State(),
+      reducer: Root()
+      #if DEBUG
+        .dependency(\.storage, SettingsClient.liveValue.getSettings().useMockedClients ? .testValue : .liveValue)
+        .transformDependency(\.transcriptionWorker) { worker in
+          if SettingsClient.liveValue.getSettings().useMockedClients {
+            worker.transcriptionStream = { [worker] in
+              worker.transcriptionStream().filter { !$0.status.isError }.eraseToStream()
+            }
+          }
+        }
+        ._printChanges(.actionLabels)
+      #endif
+    ))
   }
 }
 

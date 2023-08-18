@@ -9,7 +9,6 @@ import os.log
 import SwiftUI
 import whisper
 
-
 // MARK: - WhisperError
 
 public enum WhisperError: Error {
@@ -18,7 +17,6 @@ public enum WhisperError: Error {
   case noSamples
   case referenceContainerNotFound
 }
-
 
 // MARK: - WhisperAction
 
@@ -29,6 +27,8 @@ public enum WhisperAction {
   case canceled
   case finished([Segment])
 }
+
+// MARK: - WhisperContextProtocol
 
 public protocol WhisperContextProtocol {
   func fullTranscribe(samples: [Float], params: TranscriptionParameters) async throws -> AsyncChannel<WhisperAction>

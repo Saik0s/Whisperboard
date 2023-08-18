@@ -17,7 +17,7 @@ public struct RecordScreen: ReducerProtocol {
     case micSelector(MicSelector.Action)
     case recordingControls(RecordingControls.Action)
 
-    // Delegate actions
+    /// Delegate actions
     case newRecordingCreated(RecordingInfo)
     case goToNewRecordingTapped
   }

@@ -82,12 +82,11 @@ struct RecordingCardView: View {
           }
         }
 
-        if viewStore.isTranscribing {
-          Rectangle()
-            .fill(.ultraThinMaterial)
-            .opacity(0.8)
-            .blur(radius: 12)
+        if viewStore.isTranscribing || viewStore.queuePosition != nil {
+          Rectangle().fill(.ultraThinMaterial).roundedCorners(radius: 8, corners: [.bottomLeft, .bottomRight])
+        }
 
+        if viewStore.isTranscribing {
           VStack(spacing: .grid(2)) {
             ProgressView()
               .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))

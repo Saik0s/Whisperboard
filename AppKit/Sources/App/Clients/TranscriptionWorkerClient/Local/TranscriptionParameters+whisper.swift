@@ -37,6 +37,6 @@ func toWhisperParams(_ params: TranscriptionParameters) -> whisper_full_params {
 
 private extension String {
   func copyAsCString() -> UnsafePointer<Int8> {
-    self.withCString { cString in UnsafePointer(strdup(cString)) }
+    withCString { cString in UnsafePointer(strdup(cString)) }
   }
 }

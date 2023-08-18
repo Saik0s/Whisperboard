@@ -77,3 +77,36 @@ extension DependencyValues {
     set { self[TranscriptionWorkerClient.self] = newValue }
   }
 }
+
+extension TranscriptionWorkerClient {
+  static let testValue: TranscriptionWorkerClient = {
+    let transcriptionChannel = AsyncChannel<Transcription>()
+    let tasksChannel = AsyncChannel<IdentifiedArrayOf<TranscriptionTask>>()
+
+    return TranscriptionWorkerClient(
+      enqueueTask: { task in
+        Task {
+          await tasksChannel.send([task])
+          await transcriptionChannel.send(Transcription(
+            id: task.id,
+            fileName: task.fileName,
+            startDate: Date(),
+            segments: [],
+            parameters: task.parameters,
+            model: task.modelType,
+            status: .progress(0.1)
+          ))
+        }
+      },
+      cancelTaskForFile: { _ in },
+      cancelAllTasks: {},
+      registerForProcessingTask: {},
+      transcriptionStream: { transcriptionChannel.eraseToStream() },
+      getAvailableLanguages: {
+        [.auto] + WhisperContext.getAvailableLanguages()
+      },
+      tasksStream: { tasksChannel.eraseToStream() },
+      getTasks: { [] }
+    )
+  }()
+}

@@ -52,7 +52,7 @@ func appKitTarget() -> Target {
       .external(name: "SwiftUIIntrospect"),
       .external(name: "BetterCodable"),
 
-      .external(name: "whisper")
+      .external(name: "whisper"),
     ]
   )
 }

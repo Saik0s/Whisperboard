@@ -88,7 +88,8 @@ struct Root: ReducerProtocol {
             // If there are any recordings that are in progress, but not in the queue, mark them as failed
             let queue = transcriptionWorker.getTasks()
             let recordings = storage.read().map { recording in
-              if let transcription = recording.lastTranscription, transcription.status.isLoadingOrProgress, !queue.contains(where: { $0.fileName == recording.fileName }) {
+              if let transcription = recording.lastTranscription, transcription.status.isLoadingOrProgress,
+                 !queue.contains(where: { $0.fileName == recording.fileName }) {
                 var recording = recording
                 recording.transcriptionHistory[id: transcription.id]?.status = .error(message: "Transcription failed")
                 return recording
@@ -138,8 +139,5 @@ struct Root: ReducerProtocol {
       UIApplication.shared.isIdleTimerDisabled = shouldDisableIdleTimer
       return .none
     }
-    #if DEBUG
-    .dependency(\.storage, SettingsClient.liveValue.getSettings().useMockedClients ? .testValue : .liveValue)
-    #endif
   }
 }
