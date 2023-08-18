@@ -74,11 +74,6 @@ public struct RecordingDetailsView: View {
         .foregroundColor(.DS.Text.subdued)
         .frame(maxWidth: .infinity, alignment: .leading)
 
-      Text("Transcription:")
-        .font(.DS.headlineS)
-        .foregroundColor(.DS.Text.subdued)
-        .frame(maxWidth: .infinity, alignment: .leading)
-
       if viewStore.recordingCard.recording.isTranscribed == false
         && !viewStore.recordingCard.recording.isTranscribing {
         PrimaryButton("Transcribe") {
@@ -136,20 +131,21 @@ public struct RecordingDetailsView: View {
             .foregroundColor(viewStore.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
             .lineLimit(nil)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, .grid(8))
+            .padding(.vertical, .grid(2))
         }
         .mask {
           LinearGradient(
             stops: [
               .init(color: .clear, location: 0),
-              .init(color: .black, location: 0.07),
-              .init(color: .black, location: 0.9),
+              .init(color: .black, location: 0.02),
+              .init(color: .black, location: 0.98),
               .init(color: .clear, location: 1),
             ],
             startPoint: .top,
             endPoint: .bottom
           )
         }
+        .offset(x: 0, y: -8)
 
         // TextField("No transcription", text: viewStore.binding(\.$recordingCard.recordingEnvelop.text), axis: .vertical)
         //   .focused($focusedField, equals: .text)
@@ -196,7 +192,7 @@ public struct RecordingDetailsView: View {
       NavigationView {
         RecordingDetailsView(
           store: Store(
-            initialState: RecordingDetails.State(recordingCard: .init(recording: .mock)),
+            initialState: RecordingDetails.State(recordingCard: .init(recording: .mock, index: 0)),
             reducer: RecordingDetails()
           )
         )

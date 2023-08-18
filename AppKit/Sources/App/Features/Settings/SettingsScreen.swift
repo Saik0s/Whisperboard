@@ -127,7 +127,7 @@ struct SettingsScreen: ReducerProtocol {
     state.buildNumber = build.buildNumber()
     state.freeSpace = storage.freeSpace().readableString
     state.takenSpace = storage.takenSpace().readableString
-    state.takenSpacePercentage = 1 - Double(storage.freeSpace()) / Double(storage.freeSpace() + storage.takenSpace())
+    state.takenSpacePercentage = min(1, max(0, 1 - Double(storage.freeSpace()) / Double(storage.freeSpace() + storage.takenSpace())))
     state.availableLanguages = transcriptionWorker.getAvailableLanguages().identifiedArray
   }
 
