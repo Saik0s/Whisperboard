@@ -62,20 +62,20 @@ enum VoiceModelType: String, CaseIterable, Codable, Equatable {
 
   var sizeLabel: String {
     switch self {
-    case .tinyEN, .tiny: return "75 MB"
-    case .baseEN, .base: return "142 MB"
-    case .smallEN, .small: return "466 MB"
-    case .mediumEN, .medium: return "1.5 GB"
+    case .tiny, .tinyEN: return "75 MB"
+    case .base, .baseEN: return "142 MB"
+    case .small, .smallEN: return "466 MB"
+    case .medium, .mediumEN: return "1.5 GB"
     case .large: return "2.9 GB"
     }
   }
 
   var memoryRequired: UInt64 {
     switch self {
-    case .tinyEN, .tiny: return 125 * 1024 * 1024
-    case .baseEN, .base: return 210 * 1024 * 1024
-    case .smallEN, .small: return 600 * 1024 * 1024
-    case .mediumEN, .medium: return 1700 * 1024 * 1024
+    case .tiny, .tinyEN: return 125 * 1024 * 1024
+    case .base, .baseEN: return 210 * 1024 * 1024
+    case .small, .smallEN: return 600 * 1024 * 1024
+    case .medium, .mediumEN: return 1700 * 1024 * 1024
     case .large: return 3300 * 1024 * 1024
     }
   }

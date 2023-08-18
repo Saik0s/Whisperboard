@@ -69,7 +69,11 @@ extension ModelDownloadClient: DependencyKey {
                 do {
                   let fileSize = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.intValue ?? 0
                   guard fileSize > 10 * 1024 * 1024 else {
-                    throw NSError(domain: "Error while downloading model", code: 1, userInfo: [NSLocalizedDescriptionKey: "There was an error while downloading \(modelType.readableName) model"])
+                    throw NSError(
+                      domain: "Error while downloading model",
+                      code: 1,
+                      userInfo: [NSLocalizedDescriptionKey: "There was an error while downloading \(modelType.readableName) model"]
+                    )
                   }
                   try? FileManager.default.removeItem(at: destination)
                   try FileManager.default.moveItem(at: url, to: destination)

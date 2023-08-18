@@ -267,12 +267,12 @@ struct SettingsScreenView: View {
         }
 
         #if DEBUG
-	        SettingGroup(header: "Remote Transcription", backgroundColor: .DS.Background.secondary) {
-	          SettingCustomView(id: "remote_transcription") {
-	            RemoteTranscriptionImage()
-	          }
-	          SettingToggle(title: "Fast Cloud Transcription", isOn: viewStore.binding(\.$settings.isRemoteTranscriptionEnabled))
-	        }
+          SettingGroup(header: "Remote Transcription", backgroundColor: .DS.Background.secondary) {
+            SettingCustomView(id: "remote_transcription") {
+              RemoteTranscriptionImage()
+            }
+            SettingToggle(title: "Fast Cloud Transcription", isOn: viewStore.binding(\.$settings.isRemoteTranscriptionEnabled))
+          }
 
           SettingGroup(header: "Debug", backgroundColor: .DS.Background.secondary) {
             SettingToggle(title: "🪄 Enable Fixtures", isOn: viewStore.binding(\.$settings.useMockedClients))

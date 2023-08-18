@@ -1,7 +1,7 @@
 import AppDevUtils
+import Dependencies
 import Foundation
 import IdentifiedCollections
-import Dependencies
 
 // MARK: - RecordingInfo
 
@@ -54,6 +54,13 @@ public struct RecordingInfo: Identifiable, Hashable, Then, Codable {
         duration: 15,
         editedText: "Milk, eggs, bread, tomatoes, onions, cereal, chicken, ground beef, pasta, apples, and orange juice.",
         transcriptionHistory: [.mock1]
+      ),
+      RecordingInfo(
+        fileName: "notTranscribed.wav",
+        title: "Not Transcribed",
+        date: Date(),
+        duration: 120,
+        transcriptionHistory: []
       ),
       RecordingInfo(
         fileName: "meetingRecap.wav",

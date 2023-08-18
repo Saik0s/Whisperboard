@@ -24,7 +24,7 @@ extension DownloadState {
     switch self {
     case .inProgress:
       return true
-    case .success, .failure:
+    case .failure, .success:
       return false
     }
   }
@@ -42,7 +42,7 @@ extension DownloadState {
     switch self {
     case .success:
       return true
-    case .inProgress, .failure:
+    case .failure, .inProgress:
       return false
     }
   }

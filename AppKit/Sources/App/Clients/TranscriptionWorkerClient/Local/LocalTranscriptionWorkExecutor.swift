@@ -1,6 +1,8 @@
 import AppDevUtils
 import Foundation
 
+// MARK: - LocalTranscriptionError
+
 enum LocalTranscriptionError: Error {
   case notEnoughMemory(available: UInt64, required: UInt64)
 }
