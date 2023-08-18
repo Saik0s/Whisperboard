@@ -11,6 +11,7 @@ struct RecordingCardView: View {
   let store: StoreOf<RecordingCard>
 
   @ObservedObject var viewStore: ViewStoreOf<RecordingCard>
+  @State var showItem = false
 
   init(store: StoreOf<RecordingCard>) {
     self.store = store
@@ -18,6 +19,13 @@ struct RecordingCardView: View {
   }
 
   var body: some View {
+    Button { viewStore.send(.recordingSelected) } label: {
+      cardView
+    }
+    .cardButtonStyle()
+  }
+
+  var cardView: some View {
     VStack(spacing: .grid(4)) {
       HStack(spacing: .grid(4)) {
         PlayButton(isPlaying: viewStore.mode.isPlaying) {
@@ -83,34 +91,32 @@ struct RecordingCardView: View {
         }
 
         if viewStore.isTranscribing || viewStore.queuePosition != nil {
-          Rectangle().fill(.ultraThinMaterial).roundedCorners(radius: 8, corners: [.bottomLeft, .bottomRight])
-        }
+          ZStack {
+            Rectangle().fill(.ultraThinMaterial).roundedCorners(radius: 8, corners: [.bottomLeft, .bottomRight])
 
-        if viewStore.isTranscribing {
-          VStack(spacing: .grid(2)) {
-            ProgressView()
-              .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
-              .scaleEffect(1.5)
+            VStack(spacing: .grid(2)) {
+              if viewStore.isTranscribing {
+                HStack(spacing: .grid(2)) {
+                  ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
 
-            Text(viewStore.recording.lastTranscription?.status.message ?? "")
-              .font(.DS.bodyS)
-              .foregroundColor(.DS.Text.accent)
+                  Text(viewStore.recording.lastTranscription?.status.message ?? "")
+                    .font(.DS.bodyS)
+                    .foregroundColor(.DS.Text.accent)
+                }
+              } else if let queuePosition = viewStore.queuePosition, let queueTotal = viewStore.queueTotal {
+                Text("In queue: \(queuePosition) of \(queueTotal)")
+                  .font(.DS.bodyS)
+                  .foregroundColor(.DS.Text.accent)
+              }
 
-            Button("Cancel") {
-              viewStore.send(.cancelTranscriptionTapped)
-            }.tertiaryButtonStyle()
+              Button("Cancel") {
+                viewStore.send(.cancelTranscriptionTapped)
+              }.tertiaryButtonStyle()
+            }
+            .padding(.grid(2))
           }
-          .padding(.grid(2))
-        } else if let queuePosition = viewStore.queuePosition, let queueTotal = viewStore.queueTotal {
-          VStack(spacing: .grid(2)) {
-            Text("In queue: \(queuePosition) of \(queueTotal)")
-              .font(.DS.bodyS)
-              .foregroundColor(.DS.Text.accent)
-
-            Button("Cancel") {
-              viewStore.send(.cancelTranscriptionTapped)
-            }.tertiaryButtonStyle()
-          }
+          .transition(.scale(scale: 0, anchor: .top).combined(with: .opacity).animation(.easeInOut(duration: 0.2)))
         } else if !viewStore.recording.isTranscribed {
           Button("Transcribe") {
             viewStore.send(.transcribeTapped)
@@ -118,11 +124,19 @@ struct RecordingCardView: View {
         }
       }
     }
-    .animation(.easeInOut(duration: 0.3), value: viewStore.recording)
+    .animation(.easeInOut(duration: 0.3), value: viewStore.state)
     .multilineTextAlignment(.leading)
     .padding(.grid(4))
     .cardStyle(isPrimary: viewStore.mode.isPlaying)
+    .offset(y: showItem ? 0 : 500)
+    .opacity(showItem ? 1 : 0)
+    .animation(
+      .spring(response: 0.6, dampingFraction: 0.75)
+        .delay(Double(viewStore.index) * 0.15),
+      value: showItem
+    )
     .alert(store.scope(state: \.alert, action: { $0 }), dismiss: .binding(.set(\.$alert, nil)))
+    .onAppear { showItem = true }
     .enableInjection()
   }
 }

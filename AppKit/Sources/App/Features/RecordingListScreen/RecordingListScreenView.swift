@@ -12,13 +12,9 @@ import SwiftUIIntrospect
 public struct RecordingListScreen: ReducerProtocol {
   public struct State: Equatable {
     var recordingCards: IdentifiedArrayOf<RecordingCard.State> = []
-
     var selectedId: RecordingInfo.ID? = nil
-
     @BindingState var editMode: EditMode = .inactive
-
     @BindingState var isImportingFiles = false
-
     @PresentationState var alert: AlertState<Action.Alert>?
 
     var selection: PresentationState<RecordingDetails.State> {
@@ -45,7 +41,6 @@ public struct RecordingListScreen: ReducerProtocol {
     case addFileRecordings(urls: [URL])
     case failedToAddRecordings(error: EquatableErrorWrapper)
     case details(action: PresentationAction<RecordingDetails.Action>)
-    case recordingSelected(id: RecordingInfo.ID?)
     case alert(PresentationAction<Alert>)
 
     public enum Alert: Hashable {
@@ -94,8 +89,9 @@ public struct RecordingListScreen: ReducerProtocol {
         .cancellable(id: StreamID(), cancelInFlight: true)
 
       case let .receivedRecordings(recordings, tasksQueue):
-        state.recordingCards = recordings.map { recording in
-          var card = state.recordingCards[id: recording.id] ?? RecordingCard.State(recording: recording)
+        state.recordingCards = recordings.enumerated().map { offset, recording in
+          var card = state.recordingCards[id: recording.id] ?? RecordingCard.State(recording: recording, index: offset)
+          card.index = offset
           card.recording = recording
           if let index = tasksQueue.firstIndex(where: { $0.fileName == recording.fileName }) {
             card.queuePosition = index + 1
@@ -116,12 +112,6 @@ public struct RecordingListScreen: ReducerProtocol {
 
         state.selection = PresentationState(wrappedValue: detailsState)
 
-        return .none
-
-      case .binding:
-        return .none
-
-      case .recordingCard:
         return .none
 
       case let .addFileRecordings(urls):
@@ -153,11 +143,17 @@ public struct RecordingListScreen: ReducerProtocol {
         state.alert = .error(error)
         return .none
 
+      case .recordingCard(let id, action: .recordingSelected):
+        state.selectedId = id
+        return .none
+
       case .details:
         return .none
 
-      case let .recordingSelected(id):
-        state.selectedId = id
+      case .binding:
+        return .none
+
+      case .recordingCard:
         return .none
 
       default:
@@ -241,26 +237,14 @@ public struct RecordingListScreenView: View {
             action: RecordingListScreen.Action.recordingCard(id:action:)
           ),
           content: { store in
-            makeRecordingCard(store: store, index: 0, id: ViewStore(store).state.id)
+            makeRecordingCard(store: store, id: ViewStore(store).state.id)
           }
         )
-        LazyVStack(spacing: .grid(4)) {
-          ForEach(Array(viewStore.recordingCards.enumerated()), id: \.element.id) { index, card in
-            IfLetStore(store.scope(
-              state: \.recordingCards[id: card.id],
-              action: { RecordingListScreen.Action.recordingCard(id: card.id, action: $0) }
-            )) { store in
-              makeRecordingCard(store: store, index: index, id: card.id)
-            } else: {
-              ProgressView()
-            }
-          }
-        }
         .padding(.grid(4))
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .animation(.default, value: viewStore.recordingCards.count)
+//        .animation(.default, value: viewStore.recordingCards)
         .removeClipToBounds()
       }
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
       .background {
         if viewStore.recordingCards.isEmpty {
           EmptyStateView()
@@ -300,7 +284,7 @@ public struct RecordingListScreenView: View {
 }
 
 extension RecordingListScreenView {
-  private func makeRecordingCard(store: StoreOf<RecordingCard>, index: Int, id: RecordingCard.State.ID) -> some View {
+  private func makeRecordingCard(store: StoreOf<RecordingCard>, id: RecordingCard.State.ID) -> some View {
     HStack(spacing: .grid(4)) {
       if viewStore.editMode.isEditing {
         Button { viewStore.send(.delete(id: id)) } label: {
@@ -309,19 +293,9 @@ extension RecordingListScreenView {
         .iconButtonStyle()
       }
 
-      Button { viewStore.send(.recordingSelected(id: id)) } label: {
-        RecordingCardView(store: store)
-          .offset(y: showListItems ? 0 : 500)
-          .opacity(showListItems ? 1 : 0)
-          .animation(
-            .spring(response: 0.6, dampingFraction: 0.75)
-              .delay(Double(index) * 0.15),
-            value: showListItems
-          )
-      }
-      .cardButtonStyle()
-      .animation(.gentleBounce(), value: viewStore.editMode.isEditing)
+      RecordingCardView(store: store)
     }
+    .animation(.gentleBounce(), value: viewStore.editMode.isEditing)
   }
 }
 

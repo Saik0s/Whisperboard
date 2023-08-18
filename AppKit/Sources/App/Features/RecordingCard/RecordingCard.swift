@@ -13,6 +13,7 @@ public struct RecordingCard: ReducerProtocol {
 
     public var id: String { recording.id }
 
+    var index: Int
     var recording: RecordingInfo
     var mode = Mode.notPlaying
     var waveFormImageURL: URL?
@@ -42,8 +43,9 @@ public struct RecordingCard: ReducerProtocol {
       }
     }
 
-    public init(recording: RecordingInfo) {
+    public init(recording: RecordingInfo, index: Int) {
       self.recording = recording
+      self.index = index
     }
   }
 
@@ -56,6 +58,7 @@ public struct RecordingCard: ReducerProtocol {
     case transcribeTapped
     case cancelTranscriptionTapped
     case titleChanged(String)
+    case recordingSelected
   }
 
   @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
@@ -134,6 +137,9 @@ public struct RecordingCard: ReducerProtocol {
           log.error(error)
           state.alert = .error(message: "Failed to update title")
         }
+        return .none
+
+      case .recordingSelected:
         return .none
       }
     }
