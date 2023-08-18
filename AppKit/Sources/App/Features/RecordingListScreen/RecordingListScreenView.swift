@@ -100,6 +100,9 @@ public struct RecordingListScreen: ReducerProtocol {
           if let index = tasksQueue.firstIndex(where: { $0.fileName == recording.fileName }) {
             card.queuePosition = index + 1
             card.queueTotal = tasksQueue.count
+          } else {
+            card.queuePosition = nil
+            card.queueTotal = nil
           }
           return card
         }.identifiedArray

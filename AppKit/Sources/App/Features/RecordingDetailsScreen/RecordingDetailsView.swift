@@ -131,7 +131,7 @@ public struct RecordingDetailsView: View {
         ScrollView {
           Text(viewStore.recordingCard.isTranscribing
             ? viewStore.recordingCard.transcribingProgressText
-            : viewStore.recordingCard.recording.text)
+            : viewStore.recordingCard.transcription)
             .font(.DS.bodyL)
             .foregroundColor(viewStore.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
             .lineLimit(nil)
@@ -184,6 +184,7 @@ public struct RecordingDetailsView: View {
     }
     .scrollContentBackground(.hidden)
     .background(.thickMaterial)
+    .animation(.easeInOut(duration: 0.3), value: viewStore.recordingCard)
     .enableInjection()
   }
 }

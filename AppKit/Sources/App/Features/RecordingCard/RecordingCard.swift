@@ -114,11 +114,13 @@ public struct RecordingCard: ReducerProtocol {
         }
 
       case .cancelTranscriptionTapped:
+        state.queuePosition = nil
+        state.queueTotal = nil
         return .run { [state] _ in
           await transcriptionWorker.cancelTaskForFile(state.recording.fileName)
-          try storage.update(state.recording.id) {
-            if let last = $0.transcriptionHistory.last {
-              $0.transcriptionHistory[id: last.id]?.status = .canceled
+          try storage.update(state.recording.id) { recording in
+            if let last = recording.transcriptionHistory.last, last.status.isLoadingOrProgress {
+              recording.transcriptionHistory[id: last.id]?.status = .canceled
             }
           }
         } catch: { error, _ in
@@ -163,6 +165,21 @@ public struct RecordingCard: ReducerProtocol {
   }
 }
 
+extension RecordingCard.State {
+  var dateString: String {
+    recording.date.formatted(date: .abbreviated, time: .shortened)
+  }
+
+  var currentTimeString: String {
+    let currentTime = mode.progress.map { $0 * recording.duration } ?? recording.duration
+    return dateComponentsFormatter.string(from: currentTime) ?? ""
+  }
+
+  var transcription: String {
+    recording.text.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+}
+
 extension RecordingCard.State.Mode {
   var isPlaying: Bool {
     if case .playing = self { return true }
@@ -185,7 +202,7 @@ extension Transcription.Status {
     case let .error(message: message):
       return message
     case let .progress(progress):
-      return "Transcribing... \(progress)%"
+      return "Transcribing... \(Int(progress * 100))%"
     case .done:
       return "Done"
     case .canceled:

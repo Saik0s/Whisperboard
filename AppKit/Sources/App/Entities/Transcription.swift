@@ -133,6 +133,15 @@ public extension Transcription.Status {
       return false
     }
   }
+
+  var isErrorOrCanceled: Bool {
+    switch self {
+    case .error, .canceled:
+      return true
+    default:
+      return false
+    }
+  }
 }
 
 #if DEBUG

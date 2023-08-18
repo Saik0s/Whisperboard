@@ -53,7 +53,10 @@ extension TranscriptionWorkerClient: DependencyKey {
         worker.registerForProcessingTask()
       },
       transcriptionStream: {
-        transcriptionChannel.eraseToStream()
+        defer {
+          Task.detached { await worker.processTasks() }
+        }
+        return transcriptionChannel.eraseToStream()
       },
       getAvailableLanguages: {
         [.auto] + WhisperContext.getAvailableLanguages()

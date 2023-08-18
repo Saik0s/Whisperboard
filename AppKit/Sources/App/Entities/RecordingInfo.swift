@@ -17,7 +17,7 @@ public struct RecordingInfo: Identifiable, Hashable, Then, Codable {
 
   public var text: String { editedText ?? lastTranscription?.text ?? "" }
   public var lastTranscription: Transcription? { transcriptionHistory.last }
-  public var isTranscribed: Bool { lastTranscription != nil && !isTranscribing }
+  public var isTranscribed: Bool { lastTranscription?.status.isDone == true }
   public var isTranscribing: Bool {
     switch lastTranscription?.status {
     case .loading, .progress:
