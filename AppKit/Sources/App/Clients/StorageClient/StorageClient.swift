@@ -12,7 +12,7 @@ struct StorageClient {
   var read: @Sendable () -> IdentifiedArrayOf<RecordingInfo>
   var recordingsInfoStream: AsyncStream<[RecordingInfo]>
   var write: @Sendable (IdentifiedArrayOf<RecordingInfo>) -> Void
-  var addRecordingInfo: @Sendable (RecordingInfo) async throws -> Void
+  var addRecordingInfo: @Sendable (RecordingInfo) throws -> Void
   var createNewWhisperURL: () -> URL
   var audioFileURLWithName: (String) -> URL
   var waveFileURLWithName: (String) -> URL
@@ -22,6 +22,7 @@ struct StorageClient {
   var totalSpace: () -> UInt64
   var takenSpace: () -> UInt64
   var deleteStorage: () async throws -> Void
+  var setEnableICloudSync: (_ enabled: Bool) async throws -> Void
 }
 
 extension DependencyValues {

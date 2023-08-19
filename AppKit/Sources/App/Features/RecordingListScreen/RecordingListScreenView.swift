@@ -58,7 +58,7 @@ public struct RecordingListScreen: ReducerProtocol {
 
   public var body: some ReducerProtocol<State, Action> {
     CombineReducers {
-      BindingReducer<State, Action>()
+      BindingReducer()
 
       mainReducer()
 
@@ -128,7 +128,7 @@ public struct RecordingListScreen: ReducerProtocol {
             let duration = try getFileDuration(url: newURL)
             let recordingEnvelop = RecordingInfo(fileName: newFileName, title: oldFileName, date: Date(), duration: duration)
             log.verbose("Adding recording info: \(recordingEnvelop)")
-            try await storage.addRecordingInfo(recordingEnvelop)
+            try storage.addRecordingInfo(recordingEnvelop)
           }
 
           await send(.binding(.set(\.$isImportingFiles, false)))
@@ -237,11 +237,10 @@ public struct RecordingListScreenView: View {
             action: RecordingListScreen.Action.recordingCard(id:action:)
           ),
           content: { store in
-            makeRecordingCard(store: store, id: ViewStore(store).state.id)
+            makeRecordingCard(store: store, id: ViewStore(store) { $0 }.state.id)
           }
         )
         .padding(.grid(4))
-//        .animation(.default, value: viewStore.recordingCards)
         .removeClipToBounds()
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -263,10 +262,9 @@ public struct RecordingListScreenView: View {
       )
       .environment(
         \.editMode,
-        viewStore.binding(\.$editMode)
+        viewStore.$editMode
       )
       .removeNavigationBackground()
-
       .sheet(
         store: store.scope(state: \.selection, action: RecordingListScreen.Action.details),
         content: RecordingDetailsView.init(store:)
@@ -337,7 +335,7 @@ struct EmptyStateView: View {
       RecordingListScreenView(
         store: Store(
           initialState: RecordingListScreen.State(),
-          reducer: RecordingListScreen()
+          reducer: { RecordingListScreen() }
         )
       )
     }

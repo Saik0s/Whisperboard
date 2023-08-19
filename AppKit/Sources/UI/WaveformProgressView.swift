@@ -47,24 +47,26 @@ public struct WaveformProgress: ReducerProtocol {
       case .didAppear:
         guard state.waveFormImageURL == nil else { return .none }
 
-        return .task(priority: .low) { [state] in
+        return Effect.run { [state] send in
           let waveImageURL = storage.waveFileURLWithName(state.fileName + ".waveform.png")
           guard UIImage(contentsOfFile: waveImageURL.path) == nil else {
-            return .waveFormImageCreated(.success(waveImageURL))
+            await send(.waveFormImageCreated(.success(waveImageURL)))
+            return
           }
 
           let audioURL = storage.audioFileURLWithName(state.fileName)
           guard FileManager.default.fileExists(atPath: audioURL.path) else {
             log.error("Can't find audio file at \(audioURL.path)")
-            return .waveFormImageCreated(.failure(WaveformProgressError.audioFileNotFound))
+            await send(.waveFormImageCreated(.failure(WaveformProgressError.audioFileNotFound)))
+            return
           }
 
           let image = try await waveImageDrawer.waveformImage(fromAudioAt: audioURL, with: configuration)
           let data = try image.pngData().require()
           try data.write(to: waveImageURL, options: .atomic)
-          return .waveFormImageCreated(.success(waveImageURL))
-        } catch: { error in
-          .waveFormImageCreated(.failure(error))
+          await send(.waveFormImageCreated(.success(waveImageURL)))
+        } catch: { error, send in
+          await send(.waveFormImageCreated(.failure(error)))
         }
 
       case let .waveFormImageCreated(.success(url)):
@@ -151,10 +153,9 @@ public struct WaveformProgressView: View {
     static var previews: some View {
       NavigationView {
         WaveformProgressView(
-          store: Store(
-            initialState: WaveformProgress.State(),
-            reducer: WaveformProgress()
-          )
+          store: Store(initialState: WaveformProgress.State()) {
+            WaveformProgress()
+          }
         )
       }
     }

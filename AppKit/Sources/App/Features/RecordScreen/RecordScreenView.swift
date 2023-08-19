@@ -7,7 +7,7 @@ import SwiftUI
 
 public struct RecordScreen: ReducerProtocol {
   public struct State: Equatable {
-    @BindingState var alert: AlertState<Action>?
+    @PresentationState var alert: AlertState<Action.Alert>?
     var micSelector = MicSelector.State()
     var recordingControls = RecordingControls.State()
   }
@@ -16,10 +16,13 @@ public struct RecordScreen: ReducerProtocol {
     case binding(BindingAction<State>)
     case micSelector(MicSelector.Action)
     case recordingControls(RecordingControls.Action)
+    case alert(PresentationAction<Alert>)
 
     /// Delegate actions
     case newRecordingCreated(RecordingInfo)
     case goToNewRecordingTapped
+
+    public enum Alert: Equatable {}
   }
 
   @Dependency(\.storage) var storage: StorageClient
@@ -44,13 +47,16 @@ public struct RecordScreen: ReducerProtocol {
           duration: recording.duration
         )
 
+        log.verbose("Adding recording info: \(recordingInfo)")
+        do {
+          try storage.addRecordingInfo(recordingInfo)
+        } catch {
+          state.alert = .error(error)
+        }
+
         return .run { send in
-          log.verbose("Adding recording info: \(recordingInfo)")
-          try await storage.addRecordingInfo(recordingInfo)
           await send(.newRecordingCreated(recordingInfo))
           await send(.recordingControls(.binding(.set(\.$isGotToDetailsPopupPresented, true))))
-        } catch: { error, send in
-          await send(.binding(.set(\.$alert, .error(error))))
         }
 
       case let .recordingControls(.recording(.delegate(.didFinish(.failure(error))))):
@@ -61,7 +67,9 @@ public struct RecordScreen: ReducerProtocol {
         return .none
 
       case .recordingControls(.goToDetailsButtonTapped):
-        return .send(.goToNewRecordingTapped)
+        return .run { send in
+          await send(.goToNewRecordingTapped)
+        }
 
       case .goToNewRecordingTapped:
         return .none
@@ -77,8 +85,12 @@ public struct RecordScreen: ReducerProtocol {
 
       case .binding:
         return .none
+
+      case .alert:
+        return .none
       }
     }
+    .ifLet(\.$alert, action: /Action.alert)
   }
 }
 
@@ -104,7 +116,9 @@ public struct RecordScreenView: View {
       .padding(.horizontal, .grid(4))
       .padding(.bottom, .grid(8))
       .ignoresSafeArea(edges: .bottom)
-      .alert(store.scope(state: \.alert, action: { $0 }), dismiss: .binding(.set(\.$alert, nil)))
+      .alert(
+        store: store.scope(state: \.$alert, action: { .alert($0) })
+      )
     }
     .enableInjection()
   }
@@ -120,7 +134,7 @@ public struct RecordScreenView: View {
             initialState: RecordScreen.State(
               recordingControls: .init(recording: .init(date: Date(), url: URL(fileURLWithPath: "test")))
             ),
-            reducer: RecordScreen()
+            reducer: { RecordScreen() }
           )
         )
       }

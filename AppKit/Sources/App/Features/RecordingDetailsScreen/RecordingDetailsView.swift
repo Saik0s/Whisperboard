@@ -193,7 +193,7 @@ public struct RecordingDetailsView: View {
         RecordingDetailsView(
           store: Store(
             initialState: RecordingDetails.State(recordingCard: .init(recording: .mock, index: 0)),
-            reducer: RecordingDetails()
+            reducer: { RecordingDetails() }
           )
         )
       }

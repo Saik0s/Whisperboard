@@ -135,7 +135,9 @@ struct RecordingCardView: View {
         .delay(Double(viewStore.index) * 0.15),
       value: showItem
     )
-    .alert(store.scope(state: \.alert, action: { $0 }), dismiss: .binding(.set(\.$alert, nil)))
+    .alert(
+      store: store.scope(state: \.$alert, action: { .alert($0) })
+    )
     .onAppear { showItem = true }
     .enableInjection()
   }

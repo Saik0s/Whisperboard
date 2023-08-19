@@ -66,7 +66,7 @@ struct Root_Previews: PreviewProvider {
       RootView(
         store: Store(
           initialState: Root.State(),
-          reducer: Root()
+          reducer: { Root() }
         )
       )
     }

@@ -7,6 +7,12 @@ import Foundation
 import SwiftUI
 import UIKit
 
+// MARK: - StorageError
+
+enum StorageError: Error {
+  case iCloudNotAvailable
+}
+
 // MARK: - StorageClient + DependencyKey
 
 extension StorageClient: DependencyKey {
@@ -74,7 +80,34 @@ extension StorageClient: DependencyKey {
       freeSpace: { freeDiskSpaceInBytes() },
       totalSpace: { totalDiskSpaceInBytes() },
       takenSpace: { takenSpace() },
-      deleteStorage: { try await deleteStorage(storage) }
+      deleteStorage: { try await deleteStorage(storage) },
+      setEnableICloudSync: { isEnabled in
+        log.verbose("iCloud Sync Enabled: \(isEnabled)")
+
+        guard let iCloudURL = FileManager.default.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("Documents") else {
+          log.error("Unable to access iCloud Account")
+          log.error("Make sure you are signed in to iCloud and try again")
+          throw StorageError.iCloudNotAvailable
+        }
+
+        Task(priority: .background) {
+          storage.currentRecordings.forEach { recording in
+            let url = documentsURL.appending(path: recording.fileName)
+
+            do {
+              if isEnabled {
+                let destination = iCloudURL.appendingPathComponent(url.lastPathComponent)
+                try FileManager.default.setUbiquitous(true, itemAt: url, destinationURL: destination)
+              } else {
+                try FileManager.default.evictUbiquitousItem(at: url)
+              }
+            } catch let error as NSError {
+              log.error(error)
+            }
+          }
+          log.verbose("Finish updating ubiquity container")
+        }
+      }
     )
   }()
 
@@ -122,7 +155,6 @@ extension StorageClient: DependencyKey {
     try storage.read()
   }
 }
-
 
 #if DEBUG
   extension StorageClient {
@@ -180,7 +212,8 @@ extension StorageClient: DependencyKey {
         freeSpace: { 0 },
         totalSpace: { 0 },
         takenSpace: { 0 },
-        deleteStorage: {}
+        deleteStorage: {},
+        setEnableICloudSync: { _ in }
       )
     }
   }

@@ -12,9 +12,8 @@ public struct AppView: View {
   public init() {}
 
   public var body: some View {
-    RootView(store: Store(
-      initialState: Root.State(),
-      reducer: Root()
+    RootView(store: Store(initialState: Root.State()) {
+      Root()
       #if DEBUG
         .dependency(\.storage, SettingsClient.liveValue.getSettings().useMockedClients ? .testValue : .liveValue)
         .transformDependency(\.transcriptionWorker) { worker in
@@ -26,7 +25,7 @@ public struct AppView: View {
         }
         ._printChanges(.actionLabels)
       #endif
-    ))
+    })
   }
 }
 

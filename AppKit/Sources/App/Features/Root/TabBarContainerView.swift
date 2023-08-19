@@ -22,12 +22,11 @@ struct CustomTabBarView<T1: View, T2: View, T3: View>: View {
   var body: some View {
     VStack {
       ZStack {
-        if selectedIndex == 0 {
-          screen1
-            .transition(.move(edge: .leading))
-        } else if selectedIndex == 1 {
+        screen1
+          .opacity(selectedIndex == 0 ? 1 : 0)
+          .offset(x: selectedIndex == 0 ? 0 : -UIScreen.main.bounds.width, y: 0)
+        if selectedIndex == 1 {
           screen2
-//            .transition(.scale(scale: 0.5).combined(with: .opacity))
         } else if selectedIndex == 2 {
           screen3
             .transition(.move(edge: .trailing))

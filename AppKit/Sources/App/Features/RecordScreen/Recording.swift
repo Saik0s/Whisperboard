@@ -80,7 +80,7 @@ public struct Recording: ReducerProtocol {
       UIImpactFeedbackGenerator(style: .light).impactOccurred()
       state.mode = .paused
 
-      return .fireAndForget { [audioRecorder] in
+      return .run { [audioRecorder] _ in
         await audioRecorder.pauseRecording()
       }
 
@@ -88,7 +88,7 @@ public struct Recording: ReducerProtocol {
       UIImpactFeedbackGenerator(style: .light).impactOccurred()
       state.mode = .recording
 
-      return .fireAndForget { [audioRecorder] in
+      return .run { [audioRecorder] _ in
         await audioRecorder.continueRecording()
       }
 
@@ -96,7 +96,7 @@ public struct Recording: ReducerProtocol {
       UIImpactFeedbackGenerator(style: .light).impactOccurred()
       state.mode = .removing
 
-      return .fireAndForget { [audioRecorder] in
+      return .run { [audioRecorder] _ in
         await audioRecorder.removeCurrentRecording()
       }
 
@@ -115,18 +115,21 @@ public struct Recording: ReducerProtocol {
       return .none
 
     case let .recordingStateUpdated(.error(error)):
-      return .task { .delegate(.didFinish(.failure(error))) }
+      return .run { send in
+        await send(.delegate(.didFinish(.failure(error))))
+      }
 
     case let .recordingStateUpdated(.finished(successfully)):
-      return .task { [state] in
+      return .run { [state] send in
         guard state.mode == .encoding else {
-          return .delegate(.didCancel)
+          await send(.delegate(.didCancel))
+          return
         }
 
         if successfully {
-          return .delegate(.didFinish(.success(state)))
+          await send(.delegate(.didFinish(.success(state))))
         } else {
-          return .delegate(.didFinish(.failure(Failed())))
+          await send(.delegate(.didFinish(.failure(Failed()))))
         }
       }
     }

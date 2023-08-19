@@ -133,7 +133,6 @@ struct SettingsMigration: Migration {
     let selectedModel = UserDefaults.standard.string(forKey: "selectedModelName").flatMap { VoiceModelType(rawValue: $0) } ?? .default
 
     let newSettings = Settings(
-      isParallelEnabled: oldSettings.isParallelEnabled,
       isRemoteTranscriptionEnabled: oldSettings.isRemoteTranscriptionEnabled,
       useMockedClients: oldSettings.useMockedClients,
       selectedModel: selectedModel,
