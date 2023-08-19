@@ -70,9 +70,9 @@ struct ModelRow: ReducerProtocol {
         guard state.model.isDownloaded else { return .none }
 
         state.isRemovingModel = true
-        return .task(priority: .background) { [modelType = state.model.modelType] in
+        return .run { [modelType = state.model.modelType] send in
           modelDownload.deleteModel(modelType)
-          return .didRemoveModel
+          await send(.didRemoveModel)
         }
 
       case .didRemoveModel:
@@ -205,7 +205,7 @@ extension View {
             model: .fixture,
             isSelected: true
           ),
-          reducer: ModelRow()
+          reducer: { ModelRow() }
         )
       )
     }

@@ -52,8 +52,8 @@ public struct RecordingControls: ReducerProtocol {
       case .recordButtonTapped:
         switch state.audioRecorderPermission {
         case .undetermined:
-          return .task {
-            await .recordPermissionResponse(requestRecordPermission())
+          return .run { send in
+            await send(.recordPermissionResponse(requestRecordPermission()))
           }
 
         case .denied:
@@ -62,7 +62,9 @@ public struct RecordingControls: ReducerProtocol {
 
         case .allowed:
           state.recording = createNewRecording()
-          return .send(.recording(.task))
+          return .run { send in
+            await send(.recording(.task))
+          }
         }
 
       case .recording(.delegate(.didCancel)):
@@ -84,21 +86,23 @@ public struct RecordingControls: ReducerProtocol {
         state.audioRecorderPermission = permission ? .allowed : .denied
         if permission {
           state.recording = createNewRecording()
-          return .send(.recording(.task))
+          return .run { send in
+            await send(.recording(.task))
+          }
         } else {
           state.alert = micPermissionAlert
           return .none
         }
 
       case .openSettingsButtonTapped:
-        return .fireAndForget {
+        return .run { _ in
           await openSettings()
         }
 
       case .binding(.set(\.$isGotToDetailsPopupPresented, true)):
-        return .task {
+        return .run { send in
           try await clock.sleep(for: .seconds(5))
-          return .binding(.set(\.$isGotToDetailsPopupPresented, false))
+          await send(.binding(.set(\.$isGotToDetailsPopupPresented, false)))
         }
 
       case .goToDetailsButtonTapped:
@@ -222,7 +226,7 @@ public struct RecordingControlsView: View {
       }
       .padding(.horizontal, .grid(3))
       .popover(
-        present: viewStore.binding(\.$isGotToDetailsPopupPresented),
+        present: viewStore.$isGotToDetailsPopupPresented,
         attributes: {
           $0.position = .absolute(
             originAnchor: .top,
@@ -260,10 +264,9 @@ public struct RecordingControlsView: View {
     static var previews: some View {
       NavigationView {
         RecordingControlsView(
-          store: Store(
-            initialState: RecordingControls.State(),
-            reducer: RecordingControls()
-          )
+          store: Store(initialState: RecordingControls.State()) {
+            RecordingControls()
+          }
         )
       }
     }

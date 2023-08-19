@@ -49,7 +49,7 @@ struct Root: ReducerProtocol {
 
   var body: some ReducerProtocol<State, Action> {
     CombineReducers {
-      BindingReducer<State, Action>()
+      BindingReducer()
 
       Scope(state: \.recordingListScreen, action: /Action.recordingListScreen) {
         RecordingListScreen()
@@ -72,7 +72,7 @@ struct Root: ReducerProtocol {
           }
           return .none
 
-        case .settingsScreen(.deleteDialogConfirmed):
+        case .settingsScreen(.alert(.presented(.deleteDialogConfirmed))):
           state.recordingListScreen.selectedId = nil
           return .none
 

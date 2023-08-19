@@ -24,7 +24,7 @@ public struct RecordingCard: ReducerProtocol {
     var transcribingProgressText: String { recording.lastTranscription?.text ?? "" }
     var isInQueue: Bool { queuePosition != nil && queueTotal != nil }
 
-    @BindingState var alert: AlertState<Action>?
+    @PresentationState var alert: AlertState<Action.Alert>?
 
     var waveform: WaveformProgress.State {
       get {
@@ -59,6 +59,9 @@ public struct RecordingCard: ReducerProtocol {
     case cancelTranscriptionTapped
     case titleChanged(String)
     case recordingSelected
+    case alert(PresentationAction<Alert>)
+
+    public enum Alert: Equatable {}
   }
 
   @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
@@ -80,15 +83,19 @@ public struct RecordingCard: ReducerProtocol {
       case .binding:
         return .none
 
-      case .audioPlayerFinished:
+      case let .audioPlayerFinished(result):
         state.mode = .notPlaying
-        return .cancel(id: PlayID.self)
+        if case .failure = result {
+          state.alert = .error(message: "Failed to play audio")
+        }
+        return .cancel(id: PlayID())
 
       case .playButtonTapped:
         guard state.mode.isPlaying == false else {
           state.mode = .notPlaying
-          return .fireAndForget { await audioPlayer.pause() }
-            .merge(with: .cancel(id: PlayID.self))
+          return .run { _ in
+            await audioPlayer.pause()
+          }.merge(with: .cancel(id: PlayID()))
         }
 
         return play(state: &state)
@@ -101,7 +108,9 @@ public struct RecordingCard: ReducerProtocol {
 
       case let .waveform(.didTouchAtHorizontalLocation(progress)):
         guard state.mode.isPlaying else { return .none }
-        return .fireAndForget { await audioPlayer.seekProgress(progress) }
+        return .run { _ in
+          await audioPlayer.seekProgress(progress)
+        }
 
       case .waveform:
         return .none
@@ -112,20 +121,22 @@ public struct RecordingCard: ReducerProtocol {
         let parameters = settings.getSettings().parameters
         let model = settings.getSettings().selectedModel
         let task = TranscriptionTask(fileURL: fileURL, parameters: parameters, modelType: model)
-        return .run { _ in
+        return .run { send in
           await transcriptionWorker.enqueueTask(task)
+          await send(action)
         }
 
       case .cancelTranscriptionTapped:
         state.queuePosition = nil
         state.queueTotal = nil
-        return .run { [state] _ in
+        return .run { [state] send in
           await transcriptionWorker.cancelTaskForFile(state.recording.fileName)
           try storage.update(state.recording.id) { recording in
             if let last = recording.transcriptionHistory.last, last.status.isLoadingOrProgress {
               recording.transcriptionHistory[id: last.id]?.status = .canceled
             }
           }
+          await send(action)
         } catch: { error, _ in
           log.error(error)
         }
@@ -141,8 +152,11 @@ public struct RecordingCard: ReducerProtocol {
 
       case .recordingSelected:
         return .none
+
+      case .alert:
+        return .none
       }
-    }
+    }.ifLet(\.$alert, action: /Action.alert)
   }
 
   private func play(state: inout State) -> EffectPublisher<Action, Never> {
@@ -160,7 +174,6 @@ public struct RecordingCard: ReducerProtocol {
           break
         case let .error(error):
           log.error(error as Any)
-          await send(.binding(.set(\.$alert, .error(message: "Failed to play audio"))))
           await send(.audioPlayerFinished(.failure(error ?? NSError())), animation: .default)
         case let .finish(successful):
           await send(.audioPlayerFinished(.success(successful)), animation: .default)

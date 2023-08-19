@@ -10,7 +10,7 @@ struct ModelSelector: ReducerProtocol {
   struct State: Equatable {
     var modelRows: IdentifiedArrayOf<ModelRow.State> = []
 
-    @BindingState var alert: AlertState<Action>?
+    @PresentationState var alert: AlertState<Action.Alert>?
 
     var selectedModel: VoiceModelType {
       modelRows.first(where: \.isSelected)?.model.modelType ?? .default
@@ -21,6 +21,9 @@ struct ModelSelector: ReducerProtocol {
     case binding(BindingAction<State>)
     case onAppear
     case modelRow(id: VoiceModel.ID, action: ModelRow.Action)
+    case alert(PresentationAction<Alert>)
+
+    enum Alert: Equatable {}
   }
 
   @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
@@ -52,11 +55,15 @@ struct ModelSelector: ReducerProtocol {
 
       case .binding:
         return .none
+
+      case .alert:
+        return .none
       }
     }
     .forEach(\.modelRows, action: /Action.modelRow) {
       ModelRow()
     }
+    .ifLet(\.$alert, action: /Action.alert)
   }
 
   private func reloadSelectedModel(state: inout State) {

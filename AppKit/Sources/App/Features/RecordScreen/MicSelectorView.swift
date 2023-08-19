@@ -12,7 +12,7 @@ public struct MicSelector: ReducerProtocol {
 
     var currentMic: Microphone?
 
-    @BindingState var alert: AlertState<Action>?
+    @PresentationState var alert: AlertState<Action.Alert>?
   }
 
   public enum Action: Equatable, BindableAction {
@@ -23,6 +23,9 @@ public struct MicSelector: ReducerProtocol {
     case setCurrentMic(Microphone?)
     case micSelected(Microphone)
     case errorWhileSettingMic(EquatableErrorWrapper)
+    case alert(PresentationAction<Alert>)
+
+    public enum Alert: Equatable {}
   }
 
   @Dependency(\.audioRecorder) var audioRecorder: AudioRecorderClient
@@ -48,11 +51,12 @@ public struct MicSelector: ReducerProtocol {
         return .send(.checkCurrentMic)
 
       case .checkCurrentMic:
-        return .task {
-          try await .setCurrentMic(audioRecorder.currentMicrophone())
-        } catch: { error in
+        return .run { send in
+          let mic = try await audioRecorder.currentMicrophone()
+          await send(.setCurrentMic(mic))
+        } catch: { error, send in
           log.error(error)
-          return .errorWhileSettingMic(error.equatable)
+          await send(.errorWhileSettingMic(error.equatable))
         }
 
       case let .setCurrentMic(mic):
@@ -60,12 +64,12 @@ public struct MicSelector: ReducerProtocol {
         return .none
 
       case let .micSelected(mic):
-        return .task {
+        return .run { send in
           try await audioRecorder.setMicrophone(mic)
-          return .setCurrentMic(mic)
-        } catch: { error in
+          await send(.setCurrentMic(mic))
+        } catch: { error, send in
           log.error(error)
-          return .errorWhileSettingMic(error.equatable)
+          await send(.errorWhileSettingMic(error.equatable))
         }
 
       case let .errorWhileSettingMic(error):
@@ -74,8 +78,12 @@ public struct MicSelector: ReducerProtocol {
 
       case .binding:
         return .none
+
+      case .alert:
+        return .none
       }
     }
+    .ifLet(\.$alert, action: /Action.alert)
   }
 }
 
@@ -117,7 +125,9 @@ public struct MicSelectorView: View {
         }
       }
       .fixedSize(horizontal: true, vertical: false)
-      .alert(store.scope(state: \.alert, action: { $0 }), dismiss: .binding(.set(\.$alert, nil)))
+      .alert(
+        store: store.scope(state: \.$alert, action: { .alert($0) })
+      )
       .task { viewStore.send(.task) }
     }
     .enableInjection()
@@ -131,7 +141,7 @@ public struct MicSelectorView: View {
         MicSelectorView(
           store: Store(
             initialState: MicSelector.State(),
-            reducer: MicSelector()
+            reducer: { MicSelector() }
           )
         )
       }

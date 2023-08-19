@@ -11,7 +11,7 @@ let packages: [Package] = [
   .package(url: "https://github.com/ggerganov/whisper.spm.git", .branch("master")),
   .package(url: "https://github.com/krzysztofzablocki/Inject.git", .branch("main")),
   .package(url: "https://github.com/marksands/BetterCodable", .branch("master")),
-  .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "0.54.1"),
+  .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "0.58.0"),
   .package(url: "https://github.com/siteline/SwiftUI-Introspect.git", from: "0.6.1"),
   .package(url: "https://github.com/tgrapperon/swift-dependencies-additions", from: "0.4.0"),
   .package(url: "https://github.com/yannickl/DynamicColor.git", from: "5.0.1"),

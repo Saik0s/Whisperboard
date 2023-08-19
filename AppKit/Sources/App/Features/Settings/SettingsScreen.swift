@@ -18,7 +18,7 @@ struct SettingsScreen: ReducerProtocol {
     var takenSpace: String = ""
     var takenSpacePercentage: Double = 0
     @BindingState var settings: Settings = .init()
-    @BindingState var alert: AlertState<Action>?
+    @PresentationState var alert: AlertState<Action.Alert>?
   }
 
   enum Action: BindableAction, Equatable {
@@ -29,12 +29,16 @@ struct SettingsScreen: ReducerProtocol {
     case openGitHub
     case openPersonalWebsite
     case deleteStorageTapped
-    case deleteDialogConfirmed
     case rateAppTapped
     case reportBugTapped
     case suggestFeatureTapped
 
     case showError(EquatableErrorWrapper)
+    case alert(PresentationAction<Alert>)
+
+    enum Alert: Equatable {
+      case deleteDialogConfirmed
+    }
   }
 
   @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
@@ -54,6 +58,9 @@ struct SettingsScreen: ReducerProtocol {
       switch action {
       case .binding:
         return .run { [settings = state.settings] _ in
+          if settingsClient.getSettings().isICloudSyncEnabled != settings.isICloudSyncEnabled {
+            try await storage.setEnableICloudSync(settings.isICloudSyncEnabled)
+          }
           try await settingsClient.updateSettings(settings)
         } catch: { error, send in
           await send(.showError(error.equatable))
@@ -66,7 +73,7 @@ struct SettingsScreen: ReducerProtocol {
         updateInfo(state: &state)
         return .run { send in
           for try await settings in settingsClient.settingsPublisher().values {
-            await send(.binding(.set(\.$settings, settings)))
+            await send(.set(\.$settings, settings))
           }
         } catch: { error, send in
           await send(.showError(error.equatable))
@@ -78,12 +85,12 @@ struct SettingsScreen: ReducerProtocol {
         return .send(.modelSelector(.onAppear))
 
       case .openGitHub:
-        return .fireAndForget {
+        return .run { _ in
           await openURL(build.githubURL())
         }
 
       case .openPersonalWebsite:
-        return .fireAndForget {
+        return .run { _ in
           await openURL(build.personalWebsiteURL())
         }
 
@@ -91,7 +98,7 @@ struct SettingsScreen: ReducerProtocol {
         createDeleteConfirmationDialog(state: &state)
         return .none
 
-      case .deleteDialogConfirmed:
+      case .alert(.presented(.deleteDialogConfirmed)):
         return .run { send in
           try await storage.deleteStorage()
           try await settingsClient.setValue(.default, forKey: \.selectedModel)
@@ -105,21 +112,24 @@ struct SettingsScreen: ReducerProtocol {
         return .none
 
       case .rateAppTapped:
-        return .fireAndForget {
+        return .run { _ in
           await openURL(build.appStoreReviewURL())
         }
 
       case .reportBugTapped:
-        return .fireAndForget {
+        return .run { _ in
           await openURL(build.bugReportURL())
         }
 
       case .suggestFeatureTapped:
-        return .fireAndForget {
+        return .run { _ in
           await openURL(build.featureRequestURL())
         }
+
+      case .alert:
+        return .none
       }
-    }
+    }.ifLet(\.$alert, action: /Action.alert)
   }
 
   private func updateInfo(state: inout State) {
@@ -207,11 +217,22 @@ struct RemoteTranscriptionImage: View {
 // MARK: - SettingsScreenView
 
 struct SettingsScreenView: View {
+  struct ViewState: Equatable {
+    var selectedModelReadableName: String
+    var availableLanguages: IdentifiedArrayOf<VoiceLanguage>
+    var appVersion: String
+    var buildNumber: String
+    var freeSpace: String
+    var takenSpace: String
+    var takenSpacePercentage: Double
+    @BindingViewState var settings: Settings
+  }
+
   @ObserveInjection var inject
 
   let store: StoreOf<SettingsScreen>
 
-  @ObservedObject var viewStore: ViewStoreOf<SettingsScreen>
+  @ObservedObject var viewStore: ViewStore<ViewState, SettingsScreen.Action>
 
   @State var debugPresent = false
 
@@ -221,7 +242,18 @@ struct SettingsScreenView: View {
 
   init(store: StoreOf<SettingsScreen>) {
     self.store = store
-    viewStore = ViewStore(store) { $0 }
+    viewStore = ViewStore(store) { state in
+      ViewState(
+        selectedModelReadableName: state.modelSelector.selectedModel.readableName,
+        availableLanguages: state.availableLanguages,
+        appVersion: state.appVersion,
+        buildNumber: state.buildNumber,
+        freeSpace: state.freeSpace,
+        takenSpace: state.takenSpace,
+        takenSpacePercentage: state.takenSpacePercentage,
+        settings: state.$settings
+      )
+    }
   }
 
   var body: some View {
@@ -230,8 +262,8 @@ struct SettingsScreenView: View {
         SettingGroup(header: "Local Transcription", backgroundColor: .DS.Background.secondary) {
           SettingPage(
             title: "Models",
-            selectedChoice: viewStore.modelSelector.selectedModel.readableName,
-            backgroundColor: .clear,
+            selectedChoice: viewStore.selectedModelReadableName,
+            backgroundColor: .DS.Background.primary,
             previewConfiguration: .init(icon: .system(icon: "square.and.arrow.down", backgroundColor: .systemBlue))
           ) {
             SettingGroup(footer: .modelSelectorFooter) {}
@@ -242,7 +274,6 @@ struct SettingsScreenView: View {
                   ModelRowView(store: modelRowStore)
                 }
                 .removeClipToBounds()
-                .removeNavigationBackground()
               }
             }
           }
@@ -251,19 +282,15 @@ struct SettingsScreenView: View {
             icon: .system(icon: "globe", backgroundColor: .systemGreen.darken(by: 0.1)),
             title: "Language",
             choices: viewStore.availableLanguages.map(\.name.titleCased),
-            selectedIndex: viewStore.binding(
-              get: { $0.availableLanguages.firstIndex(of: $0.settings.voiceLanguage) ?? 0 },
-              send: { .binding(.set(\.$settings.voiceLanguage, viewStore.availableLanguages[$0])) }
+            selectedIndex: Binding(
+              get: { viewStore.availableLanguages.firstIndex(of: viewStore.settings.voiceLanguage) ?? 0 },
+              set: { viewStore.$settings.voiceLanguage.wrappedValue = viewStore.availableLanguages[$0] }
             ),
             choicesConfiguration: .init(
               pickerDisplayMode: .menu,
               groupBackgroundColor: .DS.Background.secondary
             )
           )
-
-          #if DEBUG
-            SettingToggle(title: "Parallel chunks transcription", isOn: viewStore.binding(\.$settings.isParallelEnabled))
-          #endif
         }
 
         #if DEBUG
@@ -271,11 +298,11 @@ struct SettingsScreenView: View {
             SettingCustomView(id: "remote_transcription") {
               RemoteTranscriptionImage()
             }
-            SettingToggle(title: "Fast Cloud Transcription", isOn: viewStore.binding(\.$settings.isRemoteTranscriptionEnabled))
+            SettingToggle(title: "Fast Cloud Transcription", isOn: viewStore.$settings.isRemoteTranscriptionEnabled)
           }
 
           SettingGroup(header: "Debug", backgroundColor: .DS.Background.secondary) {
-            SettingToggle(title: "🪄 Enable Fixtures", isOn: viewStore.binding(\.$settings.useMockedClients))
+            SettingToggle(title: "🪄 Enable Fixtures", isOn: viewStore.$settings.useMockedClients)
             SettingButton(icon: .system(icon: "ladybug", backgroundColor: .systemRed.darken(by: 0.05)), title: "Show logs") {
               debugPresent = true
             }
@@ -336,6 +363,10 @@ struct SettingsScreenView: View {
             .padding(.vertical, .grid(2))
             .removeClipToBounds()
           }
+
+          #if DEBUG
+            SettingToggle(title: "iCloud Sync", isOn: viewStore.$settings.isICloudSyncEnabled)
+          #endif
 
           SettingButton(icon: .system(icon: "trash", backgroundColor: .systemRed.darken(by: 0.1)), title: "Delete Storage", indicator: nil) {
             viewStore.send(.deleteStorageTapped)
@@ -398,8 +429,8 @@ struct SettingsScreenView: View {
     }
     .environment(\.settingBackgroundColor, .DS.Background.primary)
     .environment(\.settingSecondaryBackgroundColor, .DS.Background.secondary)
-    .alert(modelSelectorStore.scope(state: \.alert, action: { $0 }), dismiss: .binding(.set(\.$alert, nil)))
-    .alert(store.scope(state: \.alert, action: { $0 }), dismiss: .binding(.set(\.$alert, nil)))
+    .alert(store: modelSelectorStore.scope(state: \.$alert, action: { .alert($0) }))
+    .alert(store: store.scope(state: \.$alert, action: { .alert($0) }))
     .task { viewStore.send(.task) }
     .enableInjection()
   }
@@ -438,7 +469,7 @@ struct SettingsScreen_Previews: PreviewProvider {
       SettingsScreenView(
         store: Store(
           initialState: SettingsScreen.State(),
-          reducer: SettingsScreen()
+          reducer: { SettingsScreen() }
         )
       )
     }
