@@ -111,9 +111,9 @@ public final class WhisperContext: Identifiable, WhisperContextProtocol {
 
       if container?.isCancelled == true {
         container?.doneCancelling()
+      } else {
+        container?.finish(segments)
       }
-
-      container?.finish(segments)
     }
 
     return container.actionChannel
