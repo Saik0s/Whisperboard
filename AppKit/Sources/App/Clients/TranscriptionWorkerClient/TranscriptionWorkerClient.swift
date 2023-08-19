@@ -26,7 +26,7 @@ extension TranscriptionWorkerClient: DependencyKey {
   static let liveValue: TranscriptionWorkerClient = {
     let transcriptionChannel = AsyncChannel<Transcription>()
     let workExecutor = LocalTranscriptionWorkExecutor { transcription in
-      Task {
+      Task { @MainActor in
         await transcriptionChannel.send(transcription)
       }
     }

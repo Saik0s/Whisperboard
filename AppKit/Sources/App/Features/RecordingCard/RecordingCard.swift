@@ -121,22 +121,20 @@ public struct RecordingCard: ReducerProtocol {
         let parameters = settings.getSettings().parameters
         let model = settings.getSettings().selectedModel
         let task = TranscriptionTask(fileURL: fileURL, parameters: parameters, modelType: model)
-        return .run { send in
+        return .run { _ in
           await transcriptionWorker.enqueueTask(task)
-          await send(action)
         }
 
       case .cancelTranscriptionTapped:
         state.queuePosition = nil
         state.queueTotal = nil
-        return .run { [state] send in
+        return .run { [state] _ in
           await transcriptionWorker.cancelTaskForFile(state.recording.fileName)
           try storage.update(state.recording.id) { recording in
             if let last = recording.transcriptionHistory.last, last.status.isLoadingOrProgress {
               recording.transcriptionHistory[id: last.id]?.status = .canceled
             }
           }
-          await send(action)
         } catch: { error, _ in
           log.error(error)
         }

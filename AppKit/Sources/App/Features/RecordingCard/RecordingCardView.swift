@@ -90,37 +90,41 @@ struct RecordingCardView: View {
           }
         }
 
-        if viewStore.isTranscribing || viewStore.queuePosition != nil {
+        if viewStore.isTranscribing || viewStore.queuePosition != nil || !viewStore.recording.isTranscribed {
           ZStack {
-            Rectangle().fill(.ultraThinMaterial).roundedCorners(radius: 8, corners: [.bottomLeft, .bottomRight])
+            Rectangle()
+              .fill(.ultraThinMaterial)
+              .roundedCorners(radius: 8, corners: [.bottomLeft, .bottomRight])
 
-            VStack(spacing: .grid(2)) {
-              if viewStore.isTranscribing {
-                HStack(spacing: .grid(2)) {
-                  ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
+            if viewStore.isTranscribing || viewStore.queuePosition != nil {
+              VStack(spacing: .grid(2)) {
+                if viewStore.isTranscribing {
+                  HStack(spacing: .grid(2)) {
+                    ProgressView()
+                      .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
 
-                  Text(viewStore.recording.lastTranscription?.status.message ?? "")
+                    Text(viewStore.recording.lastTranscription?.status.message ?? "")
+                      .font(.DS.bodyS)
+                      .foregroundColor(.DS.Text.accent)
+                  }
+                } else if let queuePosition = viewStore.queuePosition, let queueTotal = viewStore.queueTotal {
+                  Text("In queue: \(queuePosition) of \(queueTotal)")
                     .font(.DS.bodyS)
                     .foregroundColor(.DS.Text.accent)
                 }
-              } else if let queuePosition = viewStore.queuePosition, let queueTotal = viewStore.queueTotal {
-                Text("In queue: \(queuePosition) of \(queueTotal)")
-                  .font(.DS.bodyS)
-                  .foregroundColor(.DS.Text.accent)
-              }
 
-              Button("Cancel") {
-                viewStore.send(.cancelTranscriptionTapped)
+                Button("Cancel") {
+                  viewStore.send(.cancelTranscriptionTapped)
+                }.tertiaryButtonStyle()
+              }
+              .padding(.grid(2))
+            } else if !viewStore.recording.isTranscribed {
+              Button("Transcribe") {
+                viewStore.send(.transcribeTapped)
               }.tertiaryButtonStyle()
             }
-            .padding(.grid(2))
           }
           .transition(.scale(scale: 0, anchor: .top).combined(with: .opacity).animation(.easeInOut(duration: 0.2)))
-        } else if !viewStore.recording.isTranscribed {
-          Button("Transcribe") {
-            viewStore.send(.transcribeTapped)
-          }.tertiaryButtonStyle()
         }
       }
     }

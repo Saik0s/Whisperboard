@@ -215,17 +215,27 @@ public struct RecordingListScreen: ReducerProtocol {
 // MARK: - RecordingListScreenView
 
 public struct RecordingListScreenView: View {
+  struct ViewState: Equatable {
+    var isRecordingCardsEmpty: Bool
+    var isImportingFiles: Bool
+    @BindingViewState var editMode: EditMode
+  }
+
   @ObserveInjection var inject
 
   let store: StoreOf<RecordingListScreen>
 
-  @ObservedObject var viewStore: ViewStoreOf<RecordingListScreen>
-
-  var showListItems: Bool { !viewStore.recordingCards.isEmpty }
+  @ObservedObject var viewStore: ViewStore<ViewState, RecordingListScreen.Action>
 
   public init(store: StoreOf<RecordingListScreen>) {
     self.store = store
-    viewStore = ViewStore(store) { $0 }
+    viewStore = ViewStore(store) { state in
+      ViewState(
+        isRecordingCardsEmpty: state.recordingCards.isEmpty,
+        isImportingFiles: state.isImportingFiles,
+        editMode: state.$editMode
+      )
+    }
   }
 
   public var body: some View {
@@ -245,7 +255,7 @@ public struct RecordingListScreenView: View {
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
       .background {
-        if viewStore.recordingCards.isEmpty {
+        if viewStore.isRecordingCardsEmpty {
           EmptyStateView()
         }
       }

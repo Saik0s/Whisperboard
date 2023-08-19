@@ -100,6 +100,7 @@ struct Root: ReducerProtocol {
 
             await send(.recordingListScreen(.task))
             for await transcription in transcriptionWorker.transcriptionStream() {
+              log.debug(transcription.status)
               await send(.updateTranscription(transcription))
             }
           }
