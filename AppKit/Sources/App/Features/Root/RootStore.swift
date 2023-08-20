@@ -39,6 +39,7 @@ struct Root: ReducerProtocol {
     case updateTranscription(Transcription)
     case alert(PresentationAction<Alert>)
     case failedToUpdateRecording(RecordingInfo.ID, EquatableErrorWrapper)
+    case failedICloudSync(EquatableErrorWrapper)
 
     public enum Alert: Hashable {}
   }
@@ -75,6 +76,17 @@ struct Root: ReducerProtocol {
         case .settingsScreen(.alert(.presented(.deleteDialogConfirmed))):
           state.recordingListScreen.selectedId = nil
           return .none
+
+        case .recordingListScreen(.didFinishImportingFiles), .recordScreen(.newRecordingCreated):
+          return .run { send in
+            if settings.getSettings().isICloudSyncEnabled {
+              await send(.settingsScreen(.set(\.$isICloudSyncInProgress, true)))
+              try await storage.uploadRecordingsToICloud()
+              await send(.settingsScreen(.set(\.$isICloudSyncInProgress, false)))
+            }
+          } catch: { error, send in
+            await send(.failedICloudSync(error.equatable))
+          }
 
         default:
           return .none
@@ -125,6 +137,15 @@ struct Root: ReducerProtocol {
           log.error("Failed to update transcription for \(fileName): \(error)")
           state.alert = .init(
             title: .init("Failed to update recording"),
+            message: .init(error.localizedDescription),
+            dismissButton: .default(.init("OK"))
+          )
+          return .none
+
+        case let .failedICloudSync(error):
+          log.error("Failed to sync with iCloud: \(error)")
+          state.alert = .init(
+            title: .init("Failed to sync with iCloud"),
             message: .init(error.localizedDescription),
             dismissButton: .default(.init("OK"))
           )
