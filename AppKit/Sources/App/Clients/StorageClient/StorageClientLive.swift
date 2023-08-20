@@ -81,8 +81,8 @@ extension StorageClient: DependencyKey {
       totalSpace: { totalDiskSpaceInBytes() },
       takenSpace: { takenSpace() },
       deleteStorage: { try await deleteStorage(storage) },
-      setEnableICloudSync: { isEnabled in
-        log.verbose("iCloud Sync Enabled: \(isEnabled)")
+      uploadRecordingsToICloud: {
+        log.verbose("iCloud Sync started")
 
         guard let iCloudURL = FileManager.default.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("Documents") else {
           log.error("Unable to access iCloud Account")
@@ -90,23 +90,28 @@ extension StorageClient: DependencyKey {
           throw StorageError.iCloudNotAvailable
         }
 
-        Task(priority: .background) {
-          storage.currentRecordings.forEach { recording in
-            let url = documentsURL.appending(path: recording.fileName)
+        try await Task(priority: .background) {
+          var uploadedFiles: [String] {
+            get { UserDefaults.standard.array(forKey: "uploadedFiles") as? [String] ?? [] }
+            set { UserDefaults.standard.set(newValue, forKey: "uploadedFiles") }
+          }
 
-            do {
-              if isEnabled {
-                let destination = iCloudURL.appendingPathComponent(url.lastPathComponent)
-                try FileManager.default.setUbiquitous(true, itemAt: url, destinationURL: destination)
-              } else {
-                try FileManager.default.evictUbiquitousItem(at: url)
-              }
-            } catch let error as NSError {
-              log.error(error)
+          let tempDirURL = documentsURL.appendingPathComponent("temp")
+          try FileManager.default.createDirectory(at: tempDirURL, withIntermediateDirectories: true, attributes: nil)
+          for recording in storage.currentRecordings {
+            if !uploadedFiles.contains(recording.fileName) {
+              let url = documentsURL.appending(path: recording.fileName)
+              let tempURL = tempDirURL.appending(path: recording.fileName)
+              try FileManager.default.copyItem(at: url, to: tempURL)
+
+              let destination = iCloudURL.appendingPathComponent(tempURL.lastPathComponent)
+              try FileManager.default.setUbiquitous(true, itemAt: tempURL, destinationURL: destination)
+              uploadedFiles.append(recording.fileName)
             }
           }
-          log.verbose("Finish updating ubiquity container")
-        }
+        }.value
+
+        log.verbose("Finish updating ubiquity container")
       }
     )
   }()
@@ -213,7 +218,7 @@ extension StorageClient: DependencyKey {
         totalSpace: { 0 },
         takenSpace: { 0 },
         deleteStorage: {},
-        setEnableICloudSync: { _ in }
+        uploadRecordingsToICloud: {}
       )
     }
   }

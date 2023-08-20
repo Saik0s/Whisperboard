@@ -19,6 +19,7 @@ struct SettingsScreen: ReducerProtocol {
     var takenSpacePercentage: Double = 0
     @BindingState var settings: Settings = .init()
     @PresentationState var alert: AlertState<Action.Alert>?
+    @BindingState var isICloudSyncInProgress = false
   }
 
   enum Action: BindableAction, Equatable {
@@ -49,6 +50,26 @@ struct SettingsScreen: ReducerProtocol {
 
   var body: some ReducerProtocol<State, Action> {
     BindingReducer()
+      .onChange(of: \.settings.isICloudSyncEnabled) { oldValue, newValue in
+        Reduce<State, Action> { _, _ in
+          if oldValue != newValue, newValue {
+            return .run { send in
+              if settingsClient.getSettings().isICloudSyncEnabled != newValue {
+                await send(.set(\.$isICloudSyncInProgress, true))
+                try await storage.uploadRecordingsToICloud()
+                await send(.set(\.$isICloudSyncInProgress, false))
+              }
+              try await settingsClient.updateSettings(settingsClient.getSettings().with(\.isICloudSyncEnabled, setTo: newValue))
+            } catch: { error, send in
+              await send(.set(\.$isICloudSyncInProgress, false))
+              await send(.set(\.$settings, settingsClient.getSettings()))
+              await send(.showError(error.equatable))
+            }
+          } else {
+            return .none
+          }
+        }
+      }
 
     Scope(state: \.modelSelector, action: /Action.modelSelector) {
       ModelSelector()
@@ -58,11 +79,9 @@ struct SettingsScreen: ReducerProtocol {
       switch action {
       case .binding:
         return .run { [settings = state.settings] _ in
-          if settingsClient.getSettings().isICloudSyncEnabled != settings.isICloudSyncEnabled {
-            try await storage.setEnableICloudSync(settings.isICloudSyncEnabled)
-          }
           try await settingsClient.updateSettings(settings)
         } catch: { error, send in
+          await send(.set(\.$settings, settingsClient.getSettings()))
           await send(.showError(error.equatable))
         }
 
@@ -226,6 +245,7 @@ struct SettingsScreenView: View {
     var takenSpace: String
     var takenSpacePercentage: Double
     @BindingViewState var settings: Settings
+    @BindingViewState var isICloudSyncInProgress: Bool
   }
 
   @ObserveInjection var inject
@@ -251,7 +271,8 @@ struct SettingsScreenView: View {
         freeSpace: state.freeSpace,
         takenSpace: state.takenSpace,
         takenSpacePercentage: state.takenSpacePercentage,
-        settings: state.$settings
+        settings: state.$settings,
+        isICloudSyncInProgress: state.$isICloudSyncInProgress
       )
     }
   }
@@ -365,7 +386,29 @@ struct SettingsScreenView: View {
           }
 
           #if DEBUG
-            SettingToggle(title: "iCloud Sync", isOn: viewStore.$settings.isICloudSyncEnabled)
+            SettingCustomView(id: "icloud") {
+              HStack(spacing: 12) {
+                SettingIconView(icon: .system(icon: "icloud.and.arrow.up", backgroundColor: .systemPurple.darken(by: 0.2)))
+
+                Text("iCloud Sync")
+                  .fixedSize(horizontal: false, vertical: true)
+                  .frame(maxWidth: .infinity, alignment: .leading)
+                  .padding(.vertical, 14)
+
+                Toggle("", isOn: viewStore.$settings.isICloudSyncEnabled)
+                  .labelsHidden()
+              }
+              .padding(.horizontal, 14)
+              .accessibilityElement(children: .combine)
+              .overlay {
+                if viewStore.isICloudSyncInProgress {
+                  ZStack {
+                    Rectangle().fill(.ultraThinMaterial)
+                    ProgressView().accentColor(.DS.Text.accent)
+                  }
+                }
+              }
+            }
           #endif
 
           SettingButton(icon: .system(icon: "trash", backgroundColor: .systemRed.darken(by: 0.1)), title: "Delete Storage", indicator: nil) {

@@ -42,6 +42,7 @@ public struct RecordingListScreen: ReducerProtocol {
     case failedToAddRecordings(error: EquatableErrorWrapper)
     case details(action: PresentationAction<RecordingDetails.Action>)
     case alert(PresentationAction<Alert>)
+    case didFinishImportingFiles
 
     public enum Alert: Hashable {
       case deleteDialogConfirmed(id: RecordingInfo.ID)
@@ -132,6 +133,7 @@ public struct RecordingListScreen: ReducerProtocol {
           }
 
           await send(.binding(.set(\.$isImportingFiles, false)))
+          await send(.didFinishImportingFiles)
         } catch: { error, send in
           await send(.binding(.set(\.$isImportingFiles, false)))
           await send(.failedToAddRecordings(error: error.equatable))
