@@ -66,6 +66,13 @@ func appTarget() -> Target {
       "BGTaskSchedulerPermittedIdentifiers": [
         "$(PRODUCT_BUNDLE_IDENTIFIER)",
       ],
+      "NSUbiquitousContainers": [
+        "iCloud.me.igortarasenko.whisperboard.recordings": [
+          "NSUbiquitousContainerIsDocumentScopePublic": true,
+          "NSUbiquitousContainerName": "WhisperBoard",
+          "NSUbiquitousContainerSupportedFolderLevels": "Any",
+        ],
+      ],
     ]),
     sources: .paths([.relativeToManifest("Sources/**")]),
     resources: ["Resources/Assets.xcassets"],
