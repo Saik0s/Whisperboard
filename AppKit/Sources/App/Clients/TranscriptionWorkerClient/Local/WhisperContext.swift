@@ -109,6 +109,9 @@ public final class WhisperContext: Identifiable, WhisperContextProtocol {
       let container = WhisperContext.referenceStore[id]
       let segments = extractSegments(context: context)
 
+      // Not the best solution, but it works
+      try? await Task.sleep(for: .seconds(0.3))
+
       if container?.isCancelled == true {
         container?.doneCancelling()
       } else {

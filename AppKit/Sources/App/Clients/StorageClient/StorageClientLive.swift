@@ -96,17 +96,25 @@ extension StorageClient: DependencyKey {
             set { UserDefaults.standard.set(newValue, forKey: "uploadedFiles") }
           }
 
-          let tempDirURL = documentsURL.appendingPathComponent("temp")
-          try FileManager.default.createDirectory(at: tempDirURL, withIntermediateDirectories: true, attributes: nil)
-          for recording in storage.currentRecordings {
-            if !uploadedFiles.contains(recording.fileName) {
-              let url = documentsURL.appending(path: recording.fileName)
-              let tempURL = tempDirURL.appending(path: recording.fileName)
-              try FileManager.default.copyItem(at: url, to: tempURL)
+          let fileManager = FileManager.default
+          let cachesDirURL = try fileManager.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+          let tempDirURL = cachesDirURL.appending(path: "temp")
+          try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true, attributes: nil)
 
-              let destination = iCloudURL.appendingPathComponent(tempURL.lastPathComponent)
-              try FileManager.default.setUbiquitous(true, itemAt: tempURL, destinationURL: destination)
-              uploadedFiles.append(recording.fileName)
+          for recording in storage.currentRecordings {
+            let fileName = recording.fileName
+            let url = documentsURL.appending(path: fileName)
+            let tempURL = tempDirURL.appending(path: fileName)
+            let destination = iCloudURL.appending(path: fileName)
+
+            if !uploadedFiles.contains(fileName) {
+              log.verbose("Uploading file: \(fileName)")
+              try fileManager.copyItem(at: url, to: tempURL)
+
+              try fileManager.setUbiquitous(true, itemAt: tempURL, destinationURL: destination)
+              uploadedFiles.append(fileName)
+            } else {
+              log.verbose("File already uploaded: \(fileName)")
             }
           }
         }.value
