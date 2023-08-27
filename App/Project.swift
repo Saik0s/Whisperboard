@@ -1,7 +1,7 @@
 import Foundation
 import ProjectDescription
 
-let version = "1.10.3"
+let version = "1.10.4"
 
 let projectSettings: SettingsDictionary = [
   "GCC_TREAT_WARNINGS_AS_ERRORS": "YES",
@@ -67,10 +67,10 @@ func appTarget() -> Target {
         "$(PRODUCT_BUNDLE_IDENTIFIER)",
       ],
       "NSUbiquitousContainers": [
-        "iCloud.me.igortarasenko.whisperboard.recordings": [
+        "iCloud.me.igortarasenko.whisperboard": [
           "NSUbiquitousContainerIsDocumentScopePublic": true,
           "NSUbiquitousContainerName": "WhisperBoard",
-          "NSUbiquitousContainerSupportedFolderLevels": "Any",
+          "NSUbiquitousContainerSupportedFolderLevels": "One",
         ],
       ],
     ]),

@@ -84,7 +84,7 @@ extension StorageClient: DependencyKey {
       uploadRecordingsToICloud: {
         log.verbose("iCloud Sync started")
 
-        guard let iCloudURL = FileManager.default.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("Documents") else {
+        guard let iCloudURL = FileManager.default.url(forUbiquityContainerIdentifier: nil) else {
           log.error("Unable to access iCloud Account")
           log.error("Make sure you are signed in to iCloud and try again")
           throw StorageError.iCloudNotAvailable
@@ -96,22 +96,33 @@ extension StorageClient: DependencyKey {
             set { UserDefaults.standard.set(newValue, forKey: "uploadedFiles") }
           }
 
+          uploadedFiles = []
+
           let fileManager = FileManager.default
           let cachesDirURL = try fileManager.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
           let tempDirURL = cachesDirURL.appending(path: "temp")
           try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true, attributes: nil)
 
+          let dateFormater = DateFormatter().then { $0.dateFormat = "yyyy_MM_dd_HH_mm_ss" }
           for recording in storage.currentRecordings {
             let fileName = recording.fileName
+            let readableFileName = (recording.title.isEmpty
+              ? dateFormater.string(from: recording.date) + "_\(recording.id)"
+              : recording.title) + ".wav"
+            log.verbose("Uploading file: \(fileName), readable name: \(readableFileName)")
             let url = documentsURL.appending(path: fileName)
-            let tempURL = tempDirURL.appending(path: fileName)
-            let destination = iCloudURL.appending(path: fileName)
+            let tempURL = tempDirURL.appending(path: "\(UUID().uuidString)_\(fileName)")
+            let destination = iCloudURL.appending(path: readableFileName)
 
             if !uploadedFiles.contains(fileName) {
               log.verbose("Uploading file: \(fileName)")
               try fileManager.copyItem(at: url, to: tempURL)
 
-              try fileManager.setUbiquitous(true, itemAt: tempURL, destinationURL: destination)
+              do {
+                try fileManager.setUbiquitous(true, itemAt: tempURL, destinationURL: destination)
+              } catch {
+                log.error(error)
+              }
               uploadedFiles.append(fileName)
             } else {
               log.verbose("File already uploaded: \(fileName)")
