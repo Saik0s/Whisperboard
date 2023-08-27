@@ -45,8 +45,12 @@ public func appSetup() {
           fileHandle.write(text.data(using: .utf8)!)
           fileHandle.closeFile()
         } catch {
-          print("Error appending to file: \(error)")
           FileManager.default.createFile(atPath: Configs.logFileURL.path, contents: text.data(using: .utf8), attributes: nil)
+          do {
+            try text.write(toFile: Configs.logFileURL.path, atomically: true, encoding: .utf8)
+          } catch {
+            log.error(error)
+          }
         }
       }
     }]
