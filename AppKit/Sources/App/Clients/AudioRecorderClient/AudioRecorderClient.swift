@@ -72,20 +72,21 @@ enum AudioRecorderError: Error {
 
 private actor AudioRecorder {
   var recorder: AVAudioRecorder?
-  var isSessionActive = false
   let recordingStateSubject = ReplaySubject<RecordingState, Never>(1)
-  @MainActor var timer: Timer?
+  var task: Task<Void, Error>?
+  var selectedMicrophone: Microphone?
+  @Dependency(\.audioSession) var audioSession: AudioSessionClient
 
   lazy var delegate: Delegate = .init(
-    didFinishRecording: { [recordingStateSubject] successfully in
+    didFinishRecording: { [audioSession, recordingStateSubject] successfully in
       log.info("didFinishRecording: \(successfully)")
+      try? audioSession.disable(.record, true)
       recordingStateSubject.send(.finished(successfully))
-      // try? AVAudioSession.sharedInstance().setActive(false)
     },
-    encodeErrorDidOccur: { [recordingStateSubject] error in
+    encodeErrorDidOccur: { [audioSession, recordingStateSubject] error in
       log.info("encodeErrorDidOccur: \(error?.localizedDescription ?? "nil")")
+      try? audioSession.disable(.record, true)
       recordingStateSubject.send(.error(error?.equatable ?? AudioRecorderError.somethingWrong.equatable))
-      // try? AVAudioSession.sharedInstance().setActive(false)
     }
   )
 
@@ -101,23 +102,11 @@ private actor AudioRecorder {
     }
   }
 
-  func activateSession() throws {
-    log.info("")
-    guard !isSessionActive else { return }
-    try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.allowBluetooth, .defaultToSpeaker])
-    try AVAudioSession.sharedInstance().setActive(true)
-    isSessionActive = true
-  }
-
   func stop() {
     log.info("")
-    DispatchQueue.main.async { [weak self] in
-      self?.timer?.invalidate()
-    }
+    task?.cancel()
     recorder?.stop()
     recorder = nil
-    // try? AVAudioSession.sharedInstance().setActive(false)
-    // isSessionActive = false
   }
 
   func start(url: URL) {
@@ -129,18 +118,18 @@ private actor AudioRecorder {
     recordingStateSubject.send(.recording(duration: 0, power: 0))
 
     do {
-      try activateSession()
+      try audioSession.enable(.record, true)
+      try AVAudioSession.sharedInstance().setPreferredInput(selectedMicrophone?.port)
       let recorder = try AVAudioRecorder(url: url, settings: AudioRecorderSettings.whisper)
       self.recorder = recorder
       recorder.delegate = delegate
       recorder.isMeteringEnabled = true
       recorder.record()
 
-      DispatchQueue.main.async { [weak self] in
-        self?.timer = .scheduledTimer(withTimeInterval: 0.025, repeats: true) { [weak self] _ in
-          Task { [weak self] in
-            await self?.updateMeters()
-          }
+      task = Task { [weak self] in
+        while true {
+          await self?.updateMeters()
+          try await Task.sleep(seconds: 0.025)
         }
       }
     } catch {
@@ -161,9 +150,7 @@ private actor AudioRecorder {
 
   func removeCurrentRecording() {
     log.info("")
-    DispatchQueue.main.async { [weak self] in
-      self?.timer?.invalidate()
-    }
+    task?.cancel()
     recorder?.stop()
     recorder?.deleteRecording()
     recorder = nil
@@ -178,7 +165,7 @@ private actor AudioRecorder {
         }
     )
 
-    try activateSession()
+    try audioSession.enable(.record, false)
 
     return AsyncStream([Microphone].self) { continuation in
       let microphones = AVAudioSession.sharedInstance().availableInputs?.map(Microphone.init) ?? []
@@ -194,20 +181,17 @@ private actor AudioRecorder {
 
   func setMicrophone(_ microphone: Microphone) async throws {
     log.info("microphone: \(microphone)")
-    try activateSession()
+    selectedMicrophone = microphone
     try AVAudioSession.sharedInstance().setPreferredInput(microphone.port)
   }
 
   func currentMicrophone() async throws -> Microphone? {
-    try activateSession()
-    return AVAudioSession.sharedInstance().currentRoute.inputs.first.map(Microphone.init)
+    return AVAudioSession.sharedInstance().currentRoute.inputs.first.map(Microphone.init) ?? selectedMicrophone
   }
 
   private func updateMeters() async {
     guard let recorder else {
-      await MainActor.run {
-        timer?.invalidate()
-      }
+      task?.cancel()
       return
     }
 
@@ -226,7 +210,7 @@ private actor AudioRecorder {
 private final class Delegate: NSObject, AVAudioRecorderDelegate, Sendable {
   let didFinishRecording: @Sendable (_ successfully: Bool) -> Void
   let encodeErrorDidOccur: @Sendable (Error?)
-    -> Void
+  -> Void
 
   init(
     didFinishRecording: @escaping @Sendable (Bool) -> Void,

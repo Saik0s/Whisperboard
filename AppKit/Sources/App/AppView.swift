@@ -4,6 +4,7 @@ import Combine
 import ComposableArchitecture
 import Dependencies
 import DynamicColor
+import os
 import SwiftUI
 
 // MARK: - AppView
@@ -37,23 +38,43 @@ public func appSetup() {
   Logger.Settings.format = "%C%t %F:%l %m%c"
 
   #if DEBUG
-    Logger.Settings.destinations += [.custom { _, text in
-      DispatchQueue.global(qos: .utility).async {
-        do {
-          let fileHandle = try FileHandle(forWritingTo: Configs.logFileURL)
-          fileHandle.seekToEndOfFile()
-          fileHandle.write(text.data(using: .utf8)!)
-          fileHandle.closeFile()
-        } catch {
-          FileManager.default.createFile(atPath: Configs.logFileURL.path, contents: text.data(using: .utf8), attributes: nil)
+    let osLogger = os.Logger(
+      subsystem: Bundle.main.bundleIdentifier!,
+      category: "General"
+    )
+    Logger.Settings.destinations += [
+      .custom { _, text in
+        DispatchQueue.global(qos: .utility).async {
           do {
-            try text.write(toFile: Configs.logFileURL.path, atomically: true, encoding: .utf8)
+            let fileHandle = try FileHandle(forWritingTo: Configs.logFileURL)
+            fileHandle.seekToEndOfFile()
+            fileHandle.write(text.data(using: .utf8)!)
+            fileHandle.closeFile()
           } catch {
-            log.error(error)
+            FileManager.default.createFile(atPath: Configs.logFileURL.path, contents: text.data(using: .utf8), attributes: nil)
+            do {
+              try text.write(toFile: Configs.logFileURL.path, atomically: true, encoding: .utf8)
+            } catch {
+              log.error(error)
+            }
           }
         }
-      }
-    }]
+      },
+      .custom { message, text in
+        switch message.level {
+        case .error:
+          osLogger.error("\(text)")
+        case .warning:
+          osLogger.warning("\(text)")
+        case .info:
+          osLogger.info("\(text)")
+        case .debug:
+          osLogger.debug("\(text)")
+        case .verbose:
+          osLogger.log("\(text)")
+        }
+      },
+    ]
   #endif
 }
 

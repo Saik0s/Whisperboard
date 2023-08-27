@@ -28,22 +28,26 @@ extension AudioPlayerClient: DependencyKey {
 
     return AudioPlayerClient(
       play: { url in
+        @Dependency(\.audioSession) var audioSession: AudioSessionClient
+
         let stream = AsyncStream<PlaybackState> { continuation in
           do {
+            context.continuation = continuation
             context.audioPlayer = try AudioPlayer(
               url: url,
               didFinishPlaying: { successful in
+                try? audioSession.disable(.playback, true)
                 continuation.yield(.finish(successful: successful))
                 continuation.finish()
               },
               decodeErrorDidOccur: { error in
+                try? audioSession.disable(.playback, true)
                 continuation.yield(.error(error))
                 continuation.finish()
               }
             )
-            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.allowBluetooth, .defaultToSpeaker])
-            try AVAudioSession.sharedInstance().setActive(true)
 
+            try audioSession.enable(.playback, true)
             context.audioPlayer?.player.play()
             let timerTask = Task {
               let clock = ContinuousClock()
