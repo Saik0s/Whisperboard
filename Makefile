@@ -1,7 +1,9 @@
 
 TUIST=PATH="${PWD}/.tuist-bin:${PATH}" tuist
 
-all: secrets
+all: project_file
+
+project_file: secrets
 	$(TUIST) fetch
 	$(TUIST) generate --no-open --no-cache
 
@@ -25,4 +27,4 @@ format:
 secrets:
 	sh ./ci_scripts/secrets.sh
 
-.SILENT: all update hot build_debug build_release format secrets
+.SILENT: all project_file update hot build_debug build_release format secrets

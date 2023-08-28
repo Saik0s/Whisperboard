@@ -39,7 +39,6 @@ func appKitTarget() -> Target {
       .external(name: "DSWaveformImage"),
       .external(name: "DSWaveformImageViews"),
       .external(name: "DynamicColor"),
-      .external(name: "Setting"),
       .external(name: "Popovers"),
 
       .external(name: "AudioKit"),
@@ -67,6 +66,7 @@ func appKitTestTarget() -> Target {
     sources: .paths([.relativeToManifest("Tests/**")]),
     dependencies: [
       .target(name: "WhisperBoardKit"),
+      .external(name: "SnapshotTesting"),
     ]
   )
 }

@@ -40,12 +40,17 @@ struct ModelRow: ReducerProtocol {
         state.model.isDownloading = true
 
         return .run { [modelType = state.model.modelType] send in
+          var lastProgressUpdate = Date()
           for try await downloadState in await modelDownload.downloadModel(modelType) {
             switch downloadState {
             case let .inProgress(progress):
-              await send(.modelUpdated(VoiceModel(modelType: modelType, isDownloading: true, downloadProgress: progress)))
+              let now = Date()
+              if now.timeIntervalSince(lastProgressUpdate) > 0.1 {
+                lastProgressUpdate = now
+                await send(.modelUpdated(VoiceModel(modelType: modelType, downloadProgress: progress, isDownloading: true)))
+              }
             case .success:
-              await send(.modelUpdated(VoiceModel(modelType: modelType, isDownloading: false, downloadProgress: 1)))
+              await send(.modelUpdated(VoiceModel(modelType: modelType, downloadProgress: 1, isDownloading: false)))
               await send(.selectModelTapped)
             case let .failure(error):
               await send(.loadError(error.localizedDescription))
@@ -110,7 +115,7 @@ struct ModelRowView: View {
     VStack(spacing: .grid(2)) {
       HStack(spacing: .grid(2)) {
         VStack(alignment: .leading, spacing: .grid(1)) {
-          HStack(spacing: .grid(1)) {
+          HStack(alignment: .bottom, spacing: .grid(1)) {
             Text(viewStore.model.modelType.readableName)
               .font(.DS.headlineM)
               .foregroundColor(Color.DS.Text.base)
@@ -145,8 +150,6 @@ struct ModelRowView: View {
       }
     }
     .foregroundColor(viewStore.isSelected ? Color.DS.Text.success : Color.DS.Text.base)
-    .padding(.horizontal, .grid(4))
-    .padding(.vertical, .grid(2))
     .contentShape(Rectangle())
     .onTapGesture { viewStore.send(.selectModelTapped) }
     .contextMenu(viewStore.model.isDownloaded && viewStore.model.modelType != .tiny ? contextMenuBuilder() : nil)

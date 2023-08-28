@@ -51,10 +51,9 @@ struct TabBarBackground: View {
   @State var animationStage: AnimationStage = .base
   let baseColor = Color.DS.Background.secondary
   let circleColor = Color.DS.Background.accent
-  let micImage = AnyView(Image(systemName: "mic").font(.title))
-  let yOffset: CGFloat = -70
+  let yOffset: CGFloat = -115
   let circleWidth: CGFloat = 70
-  let scale: CGFloat = 1.3
+  let scale: CGFloat = 1
 
   enum AnimationStage: Hashable {
     case base, toCircle, up
@@ -64,7 +63,6 @@ struct TabBarBackground: View {
     ZStack {
       Capsule(style: .continuous)
         .foregroundColor(animationStage == .base ? baseColor : circleColor)
-        .overlay(animationStage == .base ? nil : micImage)
         .offset(x: 0, y: animationStage == .up ? yOffset : 0)
         .frame(width: animationStage == .base ? nil : circleWidth)
         .scaleEffect(animationStage == .up ? scale : (animationStage == .toCircle ? 0.1 : 1))
@@ -73,17 +71,19 @@ struct TabBarBackground: View {
     .frame(height: 70)
     .onChange(of: selectedIndex) { selectedIndex in
       if selectedIndex == 1 {
-        withAnimation(.spring().speed(3)) {
+        animationStage = .base
+
+        withAnimation(.easeOut(duration: 0.2)) {
           animationStage = .toCircle
         }
-        withAnimation(.spring().speed(3).delay(0.2)) {
+        withAnimation(.easeIn(duration: 0.2).delay(0.2)) {
           animationStage = .up
         }
       } else if animationStage == .up {
-        withAnimation(.spring().speed(3)) {
+        withAnimation(.easeOut(duration: 0.2)) {
           animationStage = .toCircle
         }
-        withAnimation(.spring().speed(3).delay(0.2)) {
+        withAnimation(.easeIn(duration: 0.2).delay(0.2)) {
           animationStage = .base
         }
       } else {
