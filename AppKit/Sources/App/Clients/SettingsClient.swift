@@ -41,6 +41,21 @@ extension SettingsClient: DependencyKey {
   }()
 }
 
+extension SettingsClient {
+  static var testValue: SettingsClient = {
+    let container = SettingsContainer(settings: Settings())
+
+    return Self(
+      settingsPublisher: { container.$settings.eraseToAnyPublisher() },
+      getSettings: { container.settings },
+      updateSettings: { newSettings in
+        guard newSettings != container.settings else { return }
+        container.settings = newSettings
+      }
+    )
+  }()
+}
+
 extension DependencyValues {
   var settings: SettingsClient {
     get { self[SettingsClient.self] }

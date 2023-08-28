@@ -1,14 +1,13 @@
 import AppDevUtils
 import Dependencies
 import Foundation
+import IdentifiedCollections
 
 // MARK: - ModelDownloadClient
 
 struct ModelDownloadClient {
   var getModels: @Sendable () -> [VoiceModel]
-
   var downloadModel: @Sendable (_ model: VoiceModelType) async -> AsyncStream<DownloadState>
-
   var deleteModel: @Sendable (_ model: VoiceModelType) -> Void
 }
 
@@ -62,7 +61,6 @@ extension ModelDownloadClient: DependencyKey {
 
             delegate.addDownloadTask(task) {
               continuation.yield(.inProgress($0))
-              log.verbose("Download progress: \($0)")
             } onComplete: { result in
               switch result {
               case let .success(url):
@@ -107,6 +105,47 @@ extension ModelDownloadClient: DependencyKey {
         log.verbose("Deleting model \(modelType)...")
         try? FileManager.default.removeItem(at: modelType.localURL)
         log.verbose("Deleted model \(modelType)")
+      }
+    )
+  }()
+
+  static let previewValue: ModelDownloadClient = {
+    let downloadedModels: LockIsolated<IdentifiedArrayOf<VoiceModel>> = LockIsolated(
+      VoiceModelType.allCases
+        .map { VoiceModel(modelType: $0, downloadProgress: 0) }
+        .identifiedArray
+    )
+    @Dependency(\.continuousClock) var clock: any Clock<Duration>
+
+    return ModelDownloadClient(
+      getModels: {
+        VoiceModelType.allCases.map {
+          downloadedModels.value[id: $0.fileName] ?? VoiceModel(
+            modelType: $0,
+            downloadProgress: 0
+          )
+        }
+      },
+
+      downloadModel: { modelType in
+        AsyncStream<DownloadState>(bufferingPolicy: .bufferingNewest(1)) { continuation in
+          Task {
+            continuation.yield(.inProgress(0))
+            try await clock.sleep(for: .seconds(1))
+            continuation.yield(.inProgress(0.5))
+            try await clock.sleep(for: .seconds(1))
+            continuation.yield(.inProgress(1))
+            try await clock.sleep(for: .seconds(1))
+            let model = VoiceModel(modelType: modelType, downloadProgress: 1)
+            downloadedModels.withValue { $0[id: modelType.fileName] = model }
+            continuation.yield(.success(fileURL: URL(fileURLWithPath: "")))
+            continuation.finish()
+          }
+        }
+      },
+
+      deleteModel: { modelType in
+        downloadedModels.withValue { $0[id: modelType.fileName] = VoiceModel(modelType: modelType, downloadProgress: 0) }
       }
     )
   }()

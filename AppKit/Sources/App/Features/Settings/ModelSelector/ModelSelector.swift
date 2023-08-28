@@ -1,7 +1,6 @@
 import AppDevUtils
 import ComposableArchitecture
 import Foundation
-import Setting
 import SwiftUI
 
 // MARK: - ModelSelector
@@ -19,7 +18,7 @@ struct ModelSelector: ReducerProtocol {
 
   enum Action: Equatable, BindableAction {
     case binding(BindingAction<State>)
-    case onAppear
+    case reloadSelectedModel
     case modelRow(id: VoiceModel.ID, action: ModelRow.Action)
     case alert(PresentationAction<Alert>)
 
@@ -34,7 +33,7 @@ struct ModelSelector: ReducerProtocol {
 
     Reduce<State, Action> { state, action in
       switch action {
-      case .onAppear:
+      case .reloadSelectedModel:
         reloadSelectedModel(state: &state)
         return .none
 

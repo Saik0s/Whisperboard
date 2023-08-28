@@ -186,7 +186,7 @@ private actor AudioRecorder {
   }
 
   func currentMicrophone() async throws -> Microphone? {
-    return AVAudioSession.sharedInstance().currentRoute.inputs.first.map(Microphone.init) ?? selectedMicrophone
+    AVAudioSession.sharedInstance().currentRoute.inputs.first.map(Microphone.init) ?? selectedMicrophone
   }
 
   private func updateMeters() async {
@@ -210,7 +210,7 @@ private actor AudioRecorder {
 private final class Delegate: NSObject, AVAudioRecorderDelegate, Sendable {
   let didFinishRecording: @Sendable (_ successfully: Bool) -> Void
   let encodeErrorDidOccur: @Sendable (Error?)
-  -> Void
+    -> Void
 
   init(
     didFinishRecording: @escaping @Sendable (Bool) -> Void,

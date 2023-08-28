@@ -4,17 +4,12 @@ import Foundation
 // MARK: - VoiceModel
 
 struct VoiceModel: Equatable, Identifiable, Then {
-  var modelType: VoiceModelType
-
-  var isDownloading: Bool = false
-
-  var downloadProgress: Double = 0
-
   var id: String { name }
-
   var name: String { modelType.fileName }
-
+  var modelType: VoiceModelType
+  var downloadProgress: Double = 0
   var isDownloaded: Bool { downloadProgress >= 1 }
+  var isDownloading: Bool = false
 }
 
 // MARK: - VoiceModelType

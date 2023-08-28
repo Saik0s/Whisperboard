@@ -121,7 +121,9 @@ struct RecordingCardView: View {
             } else if !viewStore.recording.isTranscribed {
               Button("Transcribe") {
                 viewStore.send(.transcribeTapped)
-              }.tertiaryButtonStyle()
+              }
+              .tertiaryButtonStyle()
+              .padding(.grid(2))
             }
           }
           .transition(.scale(scale: 0, anchor: .top).combined(with: .opacity).animation(.easeInOut(duration: 0.2)))

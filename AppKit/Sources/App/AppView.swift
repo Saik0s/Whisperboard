@@ -42,7 +42,7 @@ public func appSetup() {
       subsystem: Bundle.main.bundleIdentifier!,
       category: "General"
     )
-    Logger.Settings.destinations += [
+    Logger.Settings.destinations = [
       .custom { _, text in
         DispatchQueue.global(qos: .utility).async {
           do {
@@ -78,7 +78,7 @@ public func appSetup() {
   #endif
 }
 
-private func configureDesignSystem() {
+func configureDesignSystem() {
   Color.DS.Background.primary = Color(DynamicColor(hexString: "#1D1820"))
   Color.DS.Background.secondary = Color(DynamicColor(hexString: "#2C2634"))
   Color.DS.Background.tertiary = Color(DynamicColor(hexString: "#4E4857"))

@@ -6,17 +6,11 @@ import Foundation
 
 struct BuildClient {
   var version: () -> String
-
   var buildNumber: () -> String
-
   var githubURL: () -> URL
-
   var personalWebsiteURL: () -> URL
-
   var appStoreReviewURL: () -> URL
-
   var bugReportURL: () -> URL
-
   var featureRequestURL: () -> URL
 }
 
@@ -38,6 +32,18 @@ extension BuildClient: DependencyKey {
       }
     )
   }
+}
+
+extension BuildClient {
+  static var testValue: Self = BuildClient(
+    version: { "0.0.0" },
+    buildNumber: { "0" },
+    githubURL: { URL(staticString: "https://github.com/username") },
+    personalWebsiteURL: { URL(staticString: "https://www.mywebsite.com") },
+    appStoreReviewURL: { URL(staticString: "https://www.appstore.com/app/id") },
+    bugReportURL: { URL(staticString: "https://www.mywebsite.com/bugreport") },
+    featureRequestURL: { URL(staticString: "https://www.mywebsite.com/featurerequest") }
+  )
 }
 
 extension DependencyValues {
