@@ -8,17 +8,27 @@
       "name": "Run",
       "type": "lightcode",
       "request": "launch",
-      "program": "${workspaceFolder}/build/Debug-iphoneos/WhisperBoard.app",
-      "buildCommand": "xcodebuild -configuration Debug -sdk iphoneos -allowProvisioningUpdates",
+      "program": "${workspaceFolder}/build/Build/Products/Debug-iphoneos/WhisperBoard.app",
+      "buildCommand": "xcodebuild -workspace WhisperBoard.xcworkspace -scheme WhisperBoard -configuration Debug -derivedDataPath ./build -sdk iphoneos -allowProvisioningUpdates",
       "appBundleId": "me.igortarasenko.Whisperboard"
     },
     {
       "name": "Attach",
       "type": "lightcode",
       "request": "attach",
-      "program": "${workspaceFolder}/build/Debug-iphoneos/WhisperBoard.app",
-      "buildCommand": "xcodebuild -configuration Debug -sdk iphoneos -allowProvisioningUpdates",
+      "program": "${workspaceFolder}/build/Build/Products/Debug-iphoneos/WhisperBoard.app",
+      "buildCommand": "xcodebuild -workspace WhisperBoard.xcworkspace -scheme WhisperBoard -configuration Debug -derivedDataPath ./build -sdk iphoneos -allowProvisioningUpdates",
       "appBundleId": "me.igortarasenko.Whisperboard"
+    },
+    {
+      "name": "LLDB Launch",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Build/Products/Debug-iphonesimulator/WhisperBoard.app",
+      "preLaunchTask": "build",
+      "cwd": "${workspaceFolder}",
+      "iosBundleId": "me.igortarasenko.Whisperboard",
+      "iosTarget": "4CD877BE-99FF-47FA-926D-63CAE7B65C84"
     }
   ]
 }

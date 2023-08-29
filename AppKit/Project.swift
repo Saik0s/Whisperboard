@@ -11,7 +11,7 @@ let projectSettings: SettingsDictionary = [
 
 let debugSettings: SettingsDictionary = [
   "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -enable-actor-data-race-checks",
-  "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
+  "OTHER_LDFLAGS": "-Xlinker -interposable -Xlinker -undefined -Xlinker dynamic_lookup $(inherited)",
   "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Sources/Common/Bridging.h",
 ]
 
@@ -31,6 +31,13 @@ func appKitTarget() -> Target {
     resources: [
       "Resources/Assets.xcassets",
       "Resources/ggml-tiny.bin",
+    ],
+    scripts: [
+      .post(
+        path: "../ci_scripts/post_build_checks.sh",
+        name: "Additional Checks",
+        basedOnDependencyAnalysis: false
+      ),
     ],
     dependencies: [
       .external(name: "AppDevUtils"),

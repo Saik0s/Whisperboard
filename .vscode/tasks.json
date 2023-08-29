@@ -1,0 +1,39 @@
+// See https://go.microsoft.com/fwlink/?LinkId=733558
+// for the documentation about the tasks.json format
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "tuist",
+      "type": "shell",
+      "command": "TUIST_IS_HOT_RELOADING_ENABLED=0 tuist generate --no-open --no-cache"
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "xcodebuild",
+      "options": {
+        "cwd": "${workspaceRoot}"
+      },
+      "args": [
+        "-workspace",
+        "WhisperBoard.xcworkspace",
+        "-scheme",
+        "WhisperBoard",
+        "-configuration",
+        "Debug",
+        "-sdk",
+        "iphonesimulator",
+        "-derivedDataPath",
+        "./build",
+        "-allowProvisioningUpdates",
+        "ARCHS=arm64"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "dependsOn": ["tuist"]
+    }
+  ]
+}
