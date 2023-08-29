@@ -1,9 +1,10 @@
 // swift-interface-format-version: 1.0
-// swift-compiler-version: Apple Swift version 5.6.1 (swiftlang-5.6.0.323.66 clang-1316.0.20.12)
+// swift-compiler-version: Apple Swift version 5.7.1 (swiftlang-5.7.1.135.3 clang-1400.0.29.51)
 // swift-module-flags: -target arm64-apple-macos12.0 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -module-name ProjectDescription
 import Foundation
 import Swift
 import _Concurrency
+import _StringProcessing
 public struct AnalyzeAction : Swift.Equatable, Swift.Codable {
   public let configuration: ProjectDescription.ConfigurationName
   public static func analyzeAction(configuration: ProjectDescription.ConfigurationName) -> ProjectDescription.AnalyzeAction
@@ -372,6 +373,7 @@ public struct DeploymentDevice : Swift.OptionSet, Swift.Codable, Swift.Hashable 
   public static let iphone: ProjectDescription.DeploymentDevice
   public static let ipad: ProjectDescription.DeploymentDevice
   public static let mac: ProjectDescription.DeploymentDevice
+  public static let vision: ProjectDescription.DeploymentDevice
   public let rawValue: Swift.UInt
   public init(rawValue: Swift.UInt)
   public typealias ArrayLiteralElement = ProjectDescription.DeploymentDevice
@@ -383,6 +385,7 @@ public enum DeploymentTarget : Swift.Codable, Swift.Hashable {
   case macOS(targetVersion: Swift.String)
   case watchOS(targetVersion: Swift.String)
   case tvOS(targetVersion: Swift.String)
+  case visionOS(targetVersion: Swift.String)
   public var targetVersion: Swift.String {
     get
   }
@@ -411,7 +414,8 @@ public struct ExecutionAction : Swift.Equatable, Swift.Codable {
   public let title: Swift.String
   public let scriptText: Swift.String
   public let target: ProjectDescription.TargetReference?
-  public init(title: Swift.String = "Run Script", scriptText: Swift.String, target: ProjectDescription.TargetReference? = nil)
+  public let shellPath: Swift.String?
+  public init(title: Swift.String = "Run Script", scriptText: Swift.String, target: ProjectDescription.TargetReference? = nil, shellPath: Swift.String? = nil)
   public static func == (a: ProjectDescription.ExecutionAction, b: ProjectDescription.ExecutionAction) -> Swift.Bool
   public func encode(to encoder: Swift.Encoder) throws
   public init(from decoder: Swift.Decoder) throws
@@ -663,6 +667,7 @@ public enum Platform : Swift.String, Swift.Codable, Swift.Equatable, Swift.CaseI
   case macOS
   case watchOS
   case tvOS
+  case visionOS
   public init?(rawValue: Swift.String)
   public typealias AllCases = [ProjectDescription.Platform]
   public typealias RawValue = Swift.String
@@ -717,6 +722,8 @@ public enum Product : Swift.String, Swift.Codable, Swift.Equatable {
   case messagesExtension
   case stickerPackExtension
   case xpc
+  case systemExtension
+  case extensionKitExtension
   public init?(rawValue: Swift.String)
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {

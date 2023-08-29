@@ -81,6 +81,7 @@ func appKitTestTarget() -> Target {
 let project = Project(
   name: "WhisperBoardKit",
   options: .options(
+    automaticSchemesOptions: .disabled,
     disableShowEnvironmentVarsInScriptPhases: true,
     textSettings: .textSettings(
       indentWidth: 2,
@@ -96,6 +97,14 @@ let project = Project(
   targets: [
     appKitTarget(),
     appKitTestTarget(),
+  ],
+  schemes: [
+    Scheme(
+      name: "WhisperBoardKit",
+      shared: true,
+      buildAction: .buildAction(targets: ["WhisperBoardKit"]),
+      testAction: .targets(["WhisperBoardKitTests"])
+    ),
   ],
   resourceSynthesizers: [
     .files(extensions: ["bin", "json"]),
