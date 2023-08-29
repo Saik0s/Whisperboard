@@ -27,4 +27,13 @@ format:
 secrets:
 	sh ./ci_scripts/secrets.sh
 
+analyze:
+	sh ./ci_scripts/cpd_run.sh
+	periphery scan > periphery.log
+	xcodebuild -workspace WhisperBoard.xcworkspace -scheme WhisperBoard -configuration Debug build CODE_SIGNING_ALLOWED="NO" ENABLE_BITCODE="NO" > xcodebuild.log
+	swiftlint analyze --compiler-log-path xcodebuild.log > swiftlint_analyze.log
+	
+clean:
+	rm -rf build
+
 .SILENT: all project_file update hot build_debug build_release format secrets

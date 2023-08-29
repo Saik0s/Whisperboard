@@ -1,0 +1,8 @@
+schemes:
+- WhisperBoard
+targets:
+- WhisperBoardKit
+- WhisperBoard
+- ShareExtension
+verbose: false
+workspace: WhisperBoard.xcworkspace

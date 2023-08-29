@@ -134,7 +134,7 @@ struct RecordingCardView: View {
     .multilineTextAlignment(.leading)
     .padding(.grid(4))
     .cardStyle(isPrimary: viewStore.mode.isPlaying)
-    .offset(y: showItem ? 0 : 500)
+    .offset(y: showItem ? 0 : 200)
     .opacity(showItem ? 1 : 0)
     .animation(
       .spring(response: 0.6, dampingFraction: 0.75)

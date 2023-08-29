@@ -6,7 +6,7 @@
       "location" : "https://github.com/johnno1962/HotReloading.git",
       "state" : {
         "branch" : "main",
-        "revision" : "7365c3384d9124f2d0ad770ab0ce055a8c19915c"
+        "revision" : "f08412464bab85610182a2ae79d4608455a983e2"
       }
     },
     {
@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/johnno1962/SwiftTrace",
       "state" : {
-        "revision" : "cf0d763a91c5b74fc1209ce82b7a138d6ce60c5c",
-        "version" : "8.4.4"
+        "revision" : "e9e20db9780a90d0cd22be0cff43de54934e9ad7",
+        "version" : "8.4.6"
       }
     },
     {

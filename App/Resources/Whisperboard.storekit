@@ -1,0 +1,21 @@
+{
+  "identifier" : "13BD7222",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "1661442906",
+    "_developerTeamID" : "8A76N862C8",
+    "_lastSynchronizedDate" : 714978908.86436701
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 2,
+    "minor" : 0
+  }
+}

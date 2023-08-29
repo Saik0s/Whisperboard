@@ -91,45 +91,45 @@ struct SettingsScreenView: View {
         .listRowSeparator(.hidden)
 
         #if DEBUG
-        Section {
-          RemoteTranscriptionImage()
-          SettingsToggleButton(
-            icon: Image(systemName: "mic"),
-            iconBGColor: .systemOrange.darken(by: 0.1),
-            title: "Fast Cloud Transcription",
-            isOn: viewStore.$settings.isRemoteTranscriptionEnabled
-          )
-        } header: {
-          Text("Pro Features")
-        }
+          Section {
+            RemoteTranscriptionImage()
+            SettingsToggleButton(
+              icon: Image(systemName: "mic"),
+              iconBGColor: .systemPurple,
+              title: "Fast Cloud Transcription",
+              isOn: viewStore.$settings.isRemoteTranscriptionEnabled
+            )
+          } header: {
+            Text("Pro Features")
+          }
+          .listRowBackground(Color.DS.Background.secondary)
+          .listRowSeparator(.hidden)
+
+          Section {
+            SettingsToggleButton(
+              icon: Image(systemName: "wand.and.stars"),
+              iconBGColor: .systemTeal,
+              title: "Enable Fixtures",
+              isOn: viewStore.$settings.useMockedClients
+            )
+            SettingsSheetButton(
+              icon: Image(systemName: "ladybug"),
+              iconBGColor: .systemGreen,
+              title: "Show logs"
+            ) {
+              ScrollView {
+                Text((try? String(contentsOfFile: Configs.logFileURL.path())) ?? "No logs...")
+                  .font(.footnote)
+                  .monospaced()
+                  .padding()
+              }
+            }
+          } header: {
+            Text("Debug")
+          }
           .listRowBackground(Color.DS.Background.secondary)
           .listRowSeparator(.hidden)
         #endif
-
-        Section {
-          SettingsToggleButton(
-            icon: Image(systemName: "wand.and.stars"),
-            iconBGColor: .systemPink.darken(by: 0.05),
-            title: "Enable Fixtures",
-            isOn: viewStore.$settings.useMockedClients
-          )
-          SettingsSheetButton(
-            icon: Image(systemName: "ladybug"),
-            iconBGColor: .systemRed.darken(by: 0.05),
-            title: "Show logs"
-          ) {
-            ScrollView {
-              Text((try? String(contentsOfFile: Configs.logFileURL.path())) ?? "No logs...")
-                .font(.footnote)
-                .monospaced()
-                .padding()
-            }
-          }
-        } header: {
-          Text("Debug")
-        }
-        .listRowBackground(Color.DS.Background.secondary)
-        .listRowSeparator(.hidden)
 
         Section {
           Group {
@@ -161,17 +161,15 @@ struct SettingsScreenView: View {
               .frame(height: .grid(4))
               .continuousCornerRadius(.grid(1))
             }
-            .padding(.horizontal, .grid(4))
-            .padding(.vertical, .grid(2))
           }
 
           #if DEBUG
-          SettingsToggleButton(
-            icon: Image(systemName: "icloud.and.arrow.up"),
-            iconBGColor: .systemBlue,
-            title: "iCloud Sync",
-            isOn: viewStore.$settings.isICloudSyncEnabled
-          )
+            SettingsToggleButton(
+              icon: Image(systemName: "icloud.and.arrow.up"),
+              iconBGColor: .systemBlue,
+              title: "iCloud Sync",
+              isOn: viewStore.$settings.isICloudSyncEnabled
+            )
             .disabled(viewStore.isICloudSyncInProgress)
             .blur(radius: viewStore.isICloudSyncInProgress ? 3 : 0)
             .overlay(viewStore.isICloudSyncInProgress ? ProgressView().progressViewStyle(.circular) : nil)
@@ -179,7 +177,7 @@ struct SettingsScreenView: View {
 
           SettingsButton(
             icon: Image(systemName: "trash"),
-            iconBGColor: .systemYellow,
+            iconBGColor: .systemYellow.darken(by: 0.1),
             title: "Delete Storage"
           ) {
             viewStore.send(.deleteStorageTapped)
