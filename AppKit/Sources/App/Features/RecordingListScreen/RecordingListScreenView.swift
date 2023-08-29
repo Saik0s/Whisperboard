@@ -261,6 +261,7 @@ public struct RecordingListScreenView: View {
           EmptyStateView()
         }
       }
+        .applyTabBarContentInset()
       .navigationTitle("Recordings")
       .navigationBarTitleDisplayMode(.inline)
       .navigationBarItems(

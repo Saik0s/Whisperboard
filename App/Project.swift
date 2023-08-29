@@ -1,7 +1,7 @@
 import Foundation
 import ProjectDescription
 
-let version = "1.10.4"
+let version = "1.10.5"
 
 let projectSettings: SettingsDictionary = [
   "GCC_TREAT_WARNINGS_AS_ERRORS": "YES",
@@ -70,7 +70,7 @@ func appTarget() -> Target {
         "iCloud.me.igortarasenko.whisperboard": [
           "NSUbiquitousContainerIsDocumentScopePublic": true,
           "NSUbiquitousContainerName": "WhisperBoard",
-          "NSUbiquitousContainerSupportedFolderLevels": "One",
+          "NSUbiquitousContainerSupportedFolderLevels": "Any",
         ],
       ],
     ]),
@@ -79,8 +79,9 @@ func appTarget() -> Target {
     entitlements: .relativeToManifest("Resources/app.entitlements"),
     dependencies: [
       .target(name: "ShareExtension"),
-
       .project(target: "WhisperBoardKit", path: "../AppKit"),
+      .sdk(name: "CloudKit", type: .framework, status: .optional),
+      .sdk(name: "StoreKit", type: .framework, status: .optional),
     ] + (Environment.isHotReloadingEnabled.getBoolean(default: false) ? [.package(product: "HotReloading")] : [])
   )
 }
@@ -131,6 +132,7 @@ func shareExtensionTarget() -> Target {
 let project = Project(
   name: "WhisperBoard",
   options: .options(
+    automaticSchemesOptions: .disabled,
     disableShowEnvironmentVarsInScriptPhases: true,
     textSettings: .textSettings(
       indentWidth: 2,
@@ -149,5 +151,16 @@ let project = Project(
   targets: [
     appTarget(),
     shareExtensionTarget(),
+  ],
+  schemes: [
+    Scheme(
+      name: "WhisperBoard",
+      shared: true,
+      buildAction: .buildAction(targets: ["WhisperBoard"]),
+      runAction: .runAction(executable: "WhisperBoard", options: .options(storeKitConfigurationPath: "Resources/Whisperboard.storekit"))
+    ),
+  ],
+  additionalFiles: [
+    "Resources/Whisperboard.storekit",
   ]
 )
