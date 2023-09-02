@@ -75,9 +75,11 @@ public struct RecordingDetailsView: View {
 
           if viewStore.recordingCard.recording.isTranscribed == false
             && !viewStore.recordingCard.recording.isTranscribing {
-            PrimaryButton("Transcribe") {
+            Button("Transcribe") {
               viewStore.send(.recordingCard(action: .transcribeTapped))
-            }.padding(.grid(4))
+            }
+              .tertiaryButtonStyle()
+              .padding(.grid(4))
           } else {
             if !viewStore.recordingCard.isTranscribing {
               HStack(spacing: .grid(2)) {

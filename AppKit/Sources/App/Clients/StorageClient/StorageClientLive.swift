@@ -3,6 +3,7 @@ import AVFoundation
 import Combine
 import ComposableArchitecture
 import Dependencies
+import DependenciesAdditions
 import Foundation
 import SwiftUI
 import UIKit
@@ -81,48 +82,44 @@ extension StorageClient: DependencyKey {
       totalSpace: { totalDiskSpaceInBytes() },
       takenSpace: { takenSpace() },
       deleteStorage: { try await deleteStorage(storage) },
-      uploadRecordingsToICloud: {
+      uploadRecordingsToICloud: { reset in
         log.verbose("iCloud Sync started")
 
-        guard let iCloudURL = FileManager.default.url(forUbiquityContainerIdentifier: nil) else {
+        guard let iCloudURL = FileManager.default.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("Documents") else {
           log.error("Unable to access iCloud Account")
           log.error("Make sure you are signed in to iCloud and try again")
           throw StorageError.iCloudNotAvailable
         }
 
-        try await Task(priority: .background) {
+        await Task(priority: .background) {
           var uploadedFiles: [String] {
             get { UserDefaults.standard.array(forKey: "uploadedFiles") as? [String] ?? [] }
             set { UserDefaults.standard.set(newValue, forKey: "uploadedFiles") }
           }
 
-          uploadedFiles = []
-
           let fileManager = FileManager.default
-          let cachesDirURL = try fileManager.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-          let tempDirURL = cachesDirURL.appending(path: "temp")
-          try fileManager.createDirectory(at: tempDirURL, withIntermediateDirectories: true, attributes: nil)
 
-          let dateFormater = DateFormatter().then { $0.dateFormat = "yyyy_MM_dd_HH_mm_ss" }
+          if reset {
+            uploadedFiles = []
+          }
+
+          try? fileManager.createDirectory(at: iCloudURL, withIntermediateDirectories: true, attributes: nil)
+
           for recording in storage.currentRecordings {
             let fileName = recording.fileName
-            let readableFileName = (recording.title.isEmpty
-              ? dateFormater.string(from: recording.date) + "_\(recording.id)"
-              : recording.title) + ".wav"
+            let readableFileName = recording.title.isEmpty ? recording.id : (recording.title + "_" + recording.id)
             log.verbose("Uploading file: \(fileName), readable name: \(readableFileName)")
-            let url = documentsURL.appending(path: fileName)
-            let tempURL = tempDirURL.appending(path: "\(UUID().uuidString)_\(fileName)")
+
+            let source = documentsURL.appending(path: fileName)
             let destination = iCloudURL.appending(path: readableFileName)
 
             if !uploadedFiles.contains(fileName) {
-              log.verbose("Uploading file: \(fileName)")
-              try fileManager.copyItem(at: url, to: tempURL)
-
               do {
-                try fileManager.setUbiquitous(true, itemAt: tempURL, destinationURL: destination)
+                try fileManager.copyItem(at: source, to: destination)
               } catch {
                 log.error(error)
               }
+
               uploadedFiles.append(fileName)
             } else {
               log.verbose("File already uploaded: \(fileName)")
@@ -237,7 +234,7 @@ extension StorageClient: DependencyKey {
         totalSpace: { 0 },
         takenSpace: { 0 },
         deleteStorage: {},
-        uploadRecordingsToICloud: {}
+        uploadRecordingsToICloud: { _ in }
       )
     }
   }

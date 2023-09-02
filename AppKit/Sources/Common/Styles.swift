@@ -31,23 +31,6 @@ extension View {
   }
 }
 
-// MARK: - PrimaryButton
-
-struct PrimaryButton: View {
-  let action: () -> Void
-  let label: String
-
-  init(_ label: String, action: @escaping () -> Void) {
-    self.label = label
-    self.action = action
-  }
-
-  var body: some View {
-    Button(label, action: action)
-      .primaryButtonStyle()
-  }
-}
-
 // MARK: - SecondaryButtonStyle
 
 struct SecondaryButtonStyle: ButtonStyle {
