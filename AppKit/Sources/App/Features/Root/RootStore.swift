@@ -81,7 +81,7 @@ struct Root: ReducerProtocol {
           return .run { send in
             if settings.getSettings().isICloudSyncEnabled {
               await send(.settingsScreen(.set(\.$isICloudSyncInProgress, true)))
-              try await storage.uploadRecordingsToICloud()
+              try await storage.uploadRecordingsToICloud(false)
               await send(.settingsScreen(.set(\.$isICloudSyncInProgress, false)))
             }
           } catch: { error, send in

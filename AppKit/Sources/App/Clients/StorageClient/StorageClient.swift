@@ -22,7 +22,7 @@ struct StorageClient {
   var totalSpace: () -> UInt64
   var takenSpace: () -> UInt64
   var deleteStorage: () async throws -> Void
-  var uploadRecordingsToICloud: () async throws -> Void
+  var uploadRecordingsToICloud: (_ reset: Bool) async throws -> Void
 }
 
 extension DependencyValues {

@@ -60,7 +60,7 @@ struct SettingsScreen: ReducerProtocol {
             return .run { send in
               if settingsClient.getSettings().isICloudSyncEnabled != newValue {
                 await send(.set(\.$isICloudSyncInProgress, true))
-                try await storage.uploadRecordingsToICloud()
+                try await storage.uploadRecordingsToICloud(true)
                 await send(.set(\.$isICloudSyncInProgress, false))
               }
               try await settingsClient.updateSettings(settingsClient.getSettings().with(\.isICloudSyncEnabled, setTo: newValue))

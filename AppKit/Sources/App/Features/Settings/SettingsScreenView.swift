@@ -147,17 +147,16 @@ struct SettingsScreenView: View {
         }
       }
 
-      #if DEBUG
-        SettingsToggleButton(
-          icon: Image(systemName: "icloud.and.arrow.up"),
-          iconBGColor: .systemBlue,
-          title: "iCloud Sync",
-          isOn: viewStore.$settings.isICloudSyncEnabled
-        )
-        .disabled(viewStore.isICloudSyncInProgress)
-        .blur(radius: viewStore.isICloudSyncInProgress ? 3 : 0)
-        .overlay(viewStore.isICloudSyncInProgress ? ProgressView().progressViewStyle(.circular) : nil)
-      #endif
+      SettingsToggleButton(
+        icon: Image(systemName: "icloud.and.arrow.up"),
+        iconBGColor: .systemBlue,
+        title: "iCloud Backup",
+        isOn: viewStore.$settings.isICloudSyncEnabled
+      )
+      .disabled(viewStore.isICloudSyncInProgress)
+      .blur(radius: viewStore.isICloudSyncInProgress ? 3 : 0)
+      .overlay(viewStore.isICloudSyncInProgress ? ProgressView().progressViewStyle(.circular) : nil)
+      .animation(.easeInOut, value: viewStore.isICloudSyncInProgress)
 
       SettingsButton(
         icon: Image(systemName: "trash"),
