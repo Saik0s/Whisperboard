@@ -241,7 +241,7 @@ public struct RecordingListScreenView: View {
   }
 
   public var body: some View {
-    NavigationView {
+    NavigationStack {
       ScrollView {
         ForEachStore(
           store.scope(
@@ -261,7 +261,7 @@ public struct RecordingListScreenView: View {
           EmptyStateView()
         }
       }
-        .applyTabBarContentInset()
+      .applyTabBarContentInset()
       .navigationTitle("Recordings")
       .navigationBarTitleDisplayMode(.inline)
       .navigationBarItems(
@@ -289,7 +289,6 @@ public struct RecordingListScreenView: View {
       }
     }
     .messagePopup(store: store.scope(state: \.$alert, action: { .alert($0) }))
-    .navigationViewStyle(.stack)
     .enableInjection()
   }
 }
