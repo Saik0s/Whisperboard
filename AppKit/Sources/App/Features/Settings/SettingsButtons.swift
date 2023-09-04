@@ -65,7 +65,7 @@ struct SettingsSheetButton<Content: View>: View {
 
   @State var isActive = false
 
-  init(icon: Image, iconBGColor: Color, title: String, trailingText: String? = nil, content: @escaping () -> Content) {
+  init(icon: Image, iconBGColor: Color, title: String, trailingText: String? = nil, @ViewBuilder content: @escaping () -> Content) {
     self.icon = icon
     self.iconBGColor = iconBGColor
     self.title = title

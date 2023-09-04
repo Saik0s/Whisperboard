@@ -64,12 +64,30 @@
       }
     },
     {
+      "identity" : "keychainaccess",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kishikawakatsumi/KeychainAccess.git",
+      "state" : {
+        "revision" : "8d33ffd6f74b3bcfc99af759d4204c6395a3f918",
+        "version" : "3.2.1"
+      }
+    },
+    {
       "identity" : "popovers",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aheze/Popovers.git",
       "state" : {
         "branch" : "main",
         "revision" : "54728a9ca199ffbffe444d5b04a9354f6a02da7c"
+      }
+    },
+    {
+      "identity" : "purchases-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/RevenueCat/purchases-ios.git",
+      "state" : {
+        "revision" : "f3df9274cca6228ac4775205e095390296192fa3",
+        "version" : "4.25.8"
       }
     },
     {

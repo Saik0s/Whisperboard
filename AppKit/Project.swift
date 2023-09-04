@@ -41,23 +41,21 @@ func appKitTarget() -> Target {
     ],
     dependencies: [
       .external(name: "AppDevUtils"),
-      .external(name: "Inject"),
 
+      .external(name: "AsyncAlgorithms"),
+      .external(name: "AudioKit"),
+      .external(name: "BetterCodable"),
+      .external(name: "ComposableArchitecture"),
       .external(name: "DSWaveformImage"),
       .external(name: "DSWaveformImageViews"),
-      .external(name: "DynamicColor"),
-      .external(name: "Popovers"),
-
-      .external(name: "AudioKit"),
-
-      .external(name: "ComposableArchitecture"),
-      .external(name: "AsyncAlgorithms"),
       .external(name: "DependenciesAdditions"),
-
-      .external(name: "VariableBlurView"),
+      .external(name: "DynamicColor"),
+      .external(name: "Inject"),
+      .external(name: "KeychainAccess"),
+      .external(name: "Popovers"),
+      .external(name: "RevenueCat"),
       .external(name: "SwiftUIIntrospect"),
-      .external(name: "BetterCodable"),
-
+      .external(name: "VariableBlurView"),
       .external(name: "whisper"),
     ]
   )
