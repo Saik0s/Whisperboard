@@ -10,8 +10,6 @@ final class TestHostingController<Content: View>: UIHostingController<Content> {
 
     view.window?.overrideUserInterfaceStyle = .dark
     view.overrideUserInterfaceStyle = .dark
-
-    configureDesignSystem()
   }
 
   override func viewDidAppear(_ animated: Bool) {

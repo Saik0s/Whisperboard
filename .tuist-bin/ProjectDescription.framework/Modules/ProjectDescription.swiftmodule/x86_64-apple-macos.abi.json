@@ -8737,9 +8737,70 @@
                 ]
               },
               {
+                "kind": "Var",
+                "name": "clonedSourcePackagesDirPath",
+                "printedName": "clonedSourcePackagesDirPath",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "ProjectDescription.Path?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Path",
+                        "printedName": "ProjectDescription.Path",
+                        "usr": "s:18ProjectDescription4PathV"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Var",
+                "usr": "s:18ProjectDescription6ConfigV17GenerationOptionsV27clonedSourcePackagesDirPathAA0J0VSgvp",
+                "mangledName": "$s18ProjectDescription6ConfigV17GenerationOptionsV27clonedSourcePackagesDirPathAA0J0VSgvp",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "HasStorage",
+                  "AccessControl",
+                  "RawDocComment"
+                ],
+                "isLet": true,
+                "hasStorage": true,
+                "accessors": [
+                  {
+                    "kind": "Accessor",
+                    "name": "Get",
+                    "printedName": "Get()",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Optional",
+                        "printedName": "ProjectDescription.Path?",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Path",
+                            "printedName": "ProjectDescription.Path",
+                            "usr": "s:18ProjectDescription4PathV"
+                          }
+                        ],
+                        "usr": "s:Sq"
+                      }
+                    ],
+                    "declKind": "Accessor",
+                    "usr": "s:18ProjectDescription6ConfigV17GenerationOptionsV27clonedSourcePackagesDirPathAA0J0VSgvg",
+                    "mangledName": "$s18ProjectDescription6ConfigV17GenerationOptionsV27clonedSourcePackagesDirPathAA0J0VSgvg",
+                    "moduleName": "ProjectDescription",
+                    "implicit": true,
+                    "accessorKind": "get"
+                  }
+                ]
+              },
+              {
                 "kind": "Function",
                 "name": "options",
-                "printedName": "options(resolveDependenciesWithSystemScm:disablePackageVersionLocking:)",
+                "printedName": "options(resolveDependenciesWithSystemScm:disablePackageVersionLocking:clonedSourcePackagesDirPath:)",
                 "children": [
                   {
                     "kind": "TypeNominal",
@@ -8760,11 +8821,26 @@
                     "printedName": "Swift.Bool",
                     "hasDefaultArg": true,
                     "usr": "s:Sb"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "ProjectDescription.Path?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Path",
+                        "printedName": "ProjectDescription.Path",
+                        "usr": "s:18ProjectDescription4PathV"
+                      }
+                    ],
+                    "hasDefaultArg": true,
+                    "usr": "s:Sq"
                   }
                 ],
                 "declKind": "Func",
-                "usr": "s:18ProjectDescription6ConfigV17GenerationOptionsV7options32resolveDependenciesWithSystemScm28disablePackageVersionLockingAESb_SbtFZ",
-                "mangledName": "$s18ProjectDescription6ConfigV17GenerationOptionsV7options32resolveDependenciesWithSystemScm28disablePackageVersionLockingAESb_SbtFZ",
+                "usr": "s:18ProjectDescription6ConfigV17GenerationOptionsV7options32resolveDependenciesWithSystemScm28disablePackageVersionLocking27clonedSourcePackagesDirPathAESb_SbAA0T0VSgtFZ",
+                "mangledName": "$s18ProjectDescription6ConfigV17GenerationOptionsV7options32resolveDependenciesWithSystemScm28disablePackageVersionLocking27clonedSourcePackagesDirPathAESb_SbAA0T0VSgtFZ",
                 "moduleName": "ProjectDescription",
                 "static": true,
                 "declAttributes": [
@@ -25436,12 +25512,12 @@
                       {
                         "kind": "TypeFunc",
                         "name": "Function",
-                        "printedName": "(ProjectDescription.Project.Options.AutomaticSchemesOptions.Type) -> (ProjectDescription.Project.Options.AutomaticSchemesOptions.TargetSchemesGrouping, Swift.Bool, ProjectDescription.TestingOptions, ProjectDescription.SchemeLanguage?, Swift.String?, ProjectDescription.SchemeLanguage?, Swift.String?) -> ProjectDescription.Project.Options.AutomaticSchemesOptions",
+                        "printedName": "(ProjectDescription.Project.Options.AutomaticSchemesOptions.Type) -> (ProjectDescription.Project.Options.AutomaticSchemesOptions.TargetSchemesGrouping, Swift.Bool, ProjectDescription.TestingOptions, ProjectDescription.SchemeLanguage?, Swift.String?, ProjectDescription.ScreenCaptureFormat?, ProjectDescription.SchemeLanguage?, Swift.String?) -> ProjectDescription.Project.Options.AutomaticSchemesOptions",
                         "children": [
                           {
                             "kind": "TypeFunc",
                             "name": "Function",
-                            "printedName": "(ProjectDescription.Project.Options.AutomaticSchemesOptions.TargetSchemesGrouping, Swift.Bool, ProjectDescription.TestingOptions, ProjectDescription.SchemeLanguage?, Swift.String?, ProjectDescription.SchemeLanguage?, Swift.String?) -> ProjectDescription.Project.Options.AutomaticSchemesOptions",
+                            "printedName": "(ProjectDescription.Project.Options.AutomaticSchemesOptions.TargetSchemesGrouping, Swift.Bool, ProjectDescription.TestingOptions, ProjectDescription.SchemeLanguage?, Swift.String?, ProjectDescription.ScreenCaptureFormat?, ProjectDescription.SchemeLanguage?, Swift.String?) -> ProjectDescription.Project.Options.AutomaticSchemesOptions",
                             "children": [
                               {
                                 "kind": "TypeNominal",
@@ -25452,7 +25528,7 @@
                               {
                                 "kind": "TypeNominal",
                                 "name": "Tuple",
-                                "printedName": "(targetSchemesGrouping: ProjectDescription.Project.Options.AutomaticSchemesOptions.TargetSchemesGrouping, codeCoverageEnabled: Swift.Bool, testingOptions: ProjectDescription.TestingOptions, testLanguage: ProjectDescription.SchemeLanguage?, testRegion: Swift.String?, runLanguage: ProjectDescription.SchemeLanguage?, runRegion: Swift.String?)",
+                                "printedName": "(targetSchemesGrouping: ProjectDescription.Project.Options.AutomaticSchemesOptions.TargetSchemesGrouping, codeCoverageEnabled: Swift.Bool, testingOptions: ProjectDescription.TestingOptions, testLanguage: ProjectDescription.SchemeLanguage?, testRegion: Swift.String?, testScreenCaptureFormat: ProjectDescription.ScreenCaptureFormat?, runLanguage: ProjectDescription.SchemeLanguage?, runRegion: Swift.String?)",
                                 "children": [
                                   {
                                     "kind": "TypeNominal",
@@ -25496,6 +25572,20 @@
                                         "name": "String",
                                         "printedName": "Swift.String",
                                         "usr": "s:SS"
+                                      }
+                                    ],
+                                    "usr": "s:Sq"
+                                  },
+                                  {
+                                    "kind": "TypeNominal",
+                                    "name": "Optional",
+                                    "printedName": "ProjectDescription.ScreenCaptureFormat?",
+                                    "children": [
+                                      {
+                                        "kind": "TypeNominal",
+                                        "name": "ScreenCaptureFormat",
+                                        "printedName": "ProjectDescription.ScreenCaptureFormat",
+                                        "usr": "s:18ProjectDescription19ScreenCaptureFormatO"
                                       }
                                     ],
                                     "usr": "s:Sq"
@@ -25549,8 +25639,8 @@
                       }
                     ],
                     "declKind": "EnumElement",
-                    "usr": "s:18ProjectDescription0A0V7OptionsV016AutomaticSchemesC0O7enabledyA2G06TargetE8GroupingO_SbAA07TestingC0VAA14SchemeLanguageVSgSSSgAoPtcAGmF",
-                    "mangledName": "$s18ProjectDescription0A0V7OptionsV016AutomaticSchemesC0O7enabledyA2G06TargetE8GroupingO_SbAA07TestingC0VAA14SchemeLanguageVSgSSSgAoPtcAGmF",
+                    "usr": "s:18ProjectDescription0A0V7OptionsV016AutomaticSchemesC0O7enabledyA2G06TargetE8GroupingO_SbAA07TestingC0VAA14SchemeLanguageVSgSSSgAA19ScreenCaptureFormatOSgAoPtcAGmF",
+                    "mangledName": "$s18ProjectDescription0A0V7OptionsV016AutomaticSchemesC0O7enabledyA2G06TargetE8GroupingO_SbAA07TestingC0VAA14SchemeLanguageVSgSSSgAA19ScreenCaptureFormatOSgAoPtcAGmF",
                     "moduleName": "ProjectDescription",
                     "declAttributes": [
                       "RawDocComment"
@@ -31772,6 +31862,126 @@
         "children": [
           {
             "kind": "Var",
+            "name": "enableAddressSanitizer",
+            "printedName": "enableAddressSanitizer",
+            "children": [
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(ProjectDescription.SchemeDiagnosticsOption.Type) -> ProjectDescription.SchemeDiagnosticsOption",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "SchemeDiagnosticsOption",
+                    "printedName": "ProjectDescription.SchemeDiagnosticsOption",
+                    "usr": "s:18ProjectDescription23SchemeDiagnosticsOptionO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Metatype",
+                    "printedName": "ProjectDescription.SchemeDiagnosticsOption.Type",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "SchemeDiagnosticsOption",
+                        "printedName": "ProjectDescription.SchemeDiagnosticsOption",
+                        "usr": "s:18ProjectDescription23SchemeDiagnosticsOptionO"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "declKind": "EnumElement",
+            "usr": "s:18ProjectDescription23SchemeDiagnosticsOptionO22enableAddressSanitizeryA2CmF",
+            "mangledName": "$s18ProjectDescription23SchemeDiagnosticsOptionO22enableAddressSanitizeryA2CmF",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "RawDocComment"
+            ]
+          },
+          {
+            "kind": "Var",
+            "name": "enableDetectStackUseAfterReturn",
+            "printedName": "enableDetectStackUseAfterReturn",
+            "children": [
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(ProjectDescription.SchemeDiagnosticsOption.Type) -> ProjectDescription.SchemeDiagnosticsOption",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "SchemeDiagnosticsOption",
+                    "printedName": "ProjectDescription.SchemeDiagnosticsOption",
+                    "usr": "s:18ProjectDescription23SchemeDiagnosticsOptionO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Metatype",
+                    "printedName": "ProjectDescription.SchemeDiagnosticsOption.Type",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "SchemeDiagnosticsOption",
+                        "printedName": "ProjectDescription.SchemeDiagnosticsOption",
+                        "usr": "s:18ProjectDescription23SchemeDiagnosticsOptionO"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "declKind": "EnumElement",
+            "usr": "s:18ProjectDescription23SchemeDiagnosticsOptionO31enableDetectStackUseAfterReturnyA2CmF",
+            "mangledName": "$s18ProjectDescription23SchemeDiagnosticsOptionO31enableDetectStackUseAfterReturnyA2CmF",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "RawDocComment"
+            ]
+          },
+          {
+            "kind": "Var",
+            "name": "enableThreadSanitizer",
+            "printedName": "enableThreadSanitizer",
+            "children": [
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(ProjectDescription.SchemeDiagnosticsOption.Type) -> ProjectDescription.SchemeDiagnosticsOption",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "SchemeDiagnosticsOption",
+                    "printedName": "ProjectDescription.SchemeDiagnosticsOption",
+                    "usr": "s:18ProjectDescription23SchemeDiagnosticsOptionO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Metatype",
+                    "printedName": "ProjectDescription.SchemeDiagnosticsOption.Type",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "SchemeDiagnosticsOption",
+                        "printedName": "ProjectDescription.SchemeDiagnosticsOption",
+                        "usr": "s:18ProjectDescription23SchemeDiagnosticsOptionO"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "declKind": "EnumElement",
+            "usr": "s:18ProjectDescription23SchemeDiagnosticsOptionO21enableThreadSanitizeryA2CmF",
+            "mangledName": "$s18ProjectDescription23SchemeDiagnosticsOptionO21enableThreadSanitizeryA2CmF",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "RawDocComment"
+            ]
+          },
+          {
+            "kind": "Var",
             "name": "mainThreadChecker",
             "printedName": "mainThreadChecker",
             "children": [
@@ -32496,6 +32706,233 @@
             ],
             "usr": "s:s33ExpressibleByUnicodeScalarLiteralP",
             "mangledName": "$ss33ExpressibleByUnicodeScalarLiteralP"
+          }
+        ]
+      },
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "ProjectDescription"
+      },
+      {
+        "kind": "TypeDecl",
+        "name": "ScreenCaptureFormat",
+        "printedName": "ScreenCaptureFormat",
+        "children": [
+          {
+            "kind": "Var",
+            "name": "screenshots",
+            "printedName": "screenshots",
+            "children": [
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(ProjectDescription.ScreenCaptureFormat.Type) -> ProjectDescription.ScreenCaptureFormat",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "ScreenCaptureFormat",
+                    "printedName": "ProjectDescription.ScreenCaptureFormat",
+                    "usr": "s:18ProjectDescription19ScreenCaptureFormatO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Metatype",
+                    "printedName": "ProjectDescription.ScreenCaptureFormat.Type",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "ScreenCaptureFormat",
+                        "printedName": "ProjectDescription.ScreenCaptureFormat",
+                        "usr": "s:18ProjectDescription19ScreenCaptureFormatO"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "declKind": "EnumElement",
+            "usr": "s:18ProjectDescription19ScreenCaptureFormatO11screenshotsyA2CmF",
+            "mangledName": "$s18ProjectDescription19ScreenCaptureFormatO11screenshotsyA2CmF",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "RawDocComment"
+            ]
+          },
+          {
+            "kind": "Var",
+            "name": "screenRecording",
+            "printedName": "screenRecording",
+            "children": [
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(ProjectDescription.ScreenCaptureFormat.Type) -> ProjectDescription.ScreenCaptureFormat",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "ScreenCaptureFormat",
+                    "printedName": "ProjectDescription.ScreenCaptureFormat",
+                    "usr": "s:18ProjectDescription19ScreenCaptureFormatO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Metatype",
+                    "printedName": "ProjectDescription.ScreenCaptureFormat.Type",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "ScreenCaptureFormat",
+                        "printedName": "ProjectDescription.ScreenCaptureFormat",
+                        "usr": "s:18ProjectDescription19ScreenCaptureFormatO"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "declKind": "EnumElement",
+            "usr": "s:18ProjectDescription19ScreenCaptureFormatO15screenRecordingyA2CmF",
+            "mangledName": "$s18ProjectDescription19ScreenCaptureFormatO15screenRecordingyA2CmF",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "RawDocComment"
+            ]
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(rawValue:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "ProjectDescription.ScreenCaptureFormat?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "ScreenCaptureFormat",
+                    "printedName": "ProjectDescription.ScreenCaptureFormat",
+                    "usr": "s:18ProjectDescription19ScreenCaptureFormatO"
+                  }
+                ],
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "String",
+                "printedName": "Swift.String",
+                "usr": "s:SS"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:18ProjectDescription19ScreenCaptureFormatO8rawValueACSgSS_tcfc",
+            "mangledName": "$s18ProjectDescription19ScreenCaptureFormatO8rawValueACSgSS_tcfc",
+            "moduleName": "ProjectDescription",
+            "implicit": true,
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Var",
+            "name": "rawValue",
+            "printedName": "rawValue",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "String",
+                "printedName": "Swift.String",
+                "usr": "s:SS"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:18ProjectDescription19ScreenCaptureFormatO8rawValueSSvp",
+            "mangledName": "$s18ProjectDescription19ScreenCaptureFormatO8rawValueSSvp",
+            "moduleName": "ProjectDescription",
+            "implicit": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:18ProjectDescription19ScreenCaptureFormatO8rawValueSSvg",
+                "mangledName": "$s18ProjectDescription19ScreenCaptureFormatO8rawValueSSvg",
+                "moduleName": "ProjectDescription",
+                "implicit": true,
+                "accessorKind": "get"
+              }
+            ]
+          }
+        ],
+        "declKind": "Enum",
+        "usr": "s:18ProjectDescription19ScreenCaptureFormatO",
+        "mangledName": "$s18ProjectDescription19ScreenCaptureFormatO",
+        "moduleName": "ProjectDescription",
+        "declAttributes": [
+          "AccessControl",
+          "RawDocComment"
+        ],
+        "enumRawTypeName": "String",
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "Equatable",
+            "printedName": "Equatable",
+            "usr": "s:SQ",
+            "mangledName": "$sSQ"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Hashable",
+            "printedName": "Hashable",
+            "usr": "s:SH",
+            "mangledName": "$sSH"
+          },
+          {
+            "kind": "Conformance",
+            "name": "RawRepresentable",
+            "printedName": "RawRepresentable",
+            "children": [
+              {
+                "kind": "TypeWitness",
+                "name": "RawValue",
+                "printedName": "RawValue",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  }
+                ]
+              }
+            ],
+            "usr": "s:SY",
+            "mangledName": "$sSY"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Decodable",
+            "printedName": "Decodable",
+            "usr": "s:Se",
+            "mangledName": "$sSe"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Encodable",
+            "printedName": "Encodable",
+            "usr": "s:SE",
+            "mangledName": "$sSE"
           }
         ]
       },
@@ -38624,6 +39061,66 @@
           },
           {
             "kind": "Var",
+            "name": "packagePlugin",
+            "printedName": "packagePlugin",
+            "children": [
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(ProjectDescription.TargetDependency.Type) -> (Swift.String) -> ProjectDescription.TargetDependency",
+                "children": [
+                  {
+                    "kind": "TypeFunc",
+                    "name": "Function",
+                    "printedName": "(Swift.String) -> ProjectDescription.TargetDependency",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "TargetDependency",
+                        "printedName": "ProjectDescription.TargetDependency",
+                        "usr": "s:18ProjectDescription16TargetDependencyO"
+                      },
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Tuple",
+                        "printedName": "(product: Swift.String)",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "String",
+                            "printedName": "Swift.String",
+                            "usr": "s:SS"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Metatype",
+                    "printedName": "ProjectDescription.TargetDependency.Type",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "TargetDependency",
+                        "printedName": "ProjectDescription.TargetDependency",
+                        "usr": "s:18ProjectDescription16TargetDependencyO"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "declKind": "EnumElement",
+            "usr": "s:18ProjectDescription16TargetDependencyO13packagePluginyACSS_tcACmF",
+            "mangledName": "$s18ProjectDescription16TargetDependencyO13packagePluginyACSS_tcACmF",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "RawDocComment"
+            ]
+          },
+          {
+            "kind": "Var",
             "name": "sdk",
             "printedName": "sdk",
             "children": [
@@ -40413,21 +40910,21 @@
               {
                 "kind": "TypeNominal",
                 "name": "Array",
-                "printedName": "[ProjectDescription.Path]",
+                "printedName": "[ProjectDescription.FileListGlob]",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "FileListGlob",
+                    "printedName": "ProjectDescription.FileListGlob",
+                    "usr": "s:18ProjectDescription12FileListGlobV"
                   }
                 ],
                 "usr": "s:Sa"
               }
             ],
             "declKind": "Var",
-            "usr": "s:18ProjectDescription12TargetScriptV10inputPathsSayAA4PathVGvp",
-            "mangledName": "$s18ProjectDescription12TargetScriptV10inputPathsSayAA4PathVGvp",
+            "usr": "s:18ProjectDescription12TargetScriptV10inputPathsSayAA12FileListGlobVGvp",
+            "mangledName": "$s18ProjectDescription12TargetScriptV10inputPathsSayAA12FileListGlobVGvp",
             "moduleName": "ProjectDescription",
             "declAttributes": [
               "HasStorage",
@@ -40445,21 +40942,21 @@
                   {
                     "kind": "TypeNominal",
                     "name": "Array",
-                    "printedName": "[ProjectDescription.Path]",
+                    "printedName": "[ProjectDescription.FileListGlob]",
                     "children": [
                       {
                         "kind": "TypeNominal",
-                        "name": "Path",
-                        "printedName": "ProjectDescription.Path",
-                        "usr": "s:18ProjectDescription4PathV"
+                        "name": "FileListGlob",
+                        "printedName": "ProjectDescription.FileListGlob",
+                        "usr": "s:18ProjectDescription12FileListGlobV"
                       }
                     ],
                     "usr": "s:Sa"
                   }
                 ],
                 "declKind": "Accessor",
-                "usr": "s:18ProjectDescription12TargetScriptV10inputPathsSayAA4PathVGvg",
-                "mangledName": "$s18ProjectDescription12TargetScriptV10inputPathsSayAA4PathVGvg",
+                "usr": "s:18ProjectDescription12TargetScriptV10inputPathsSayAA12FileListGlobVGvg",
+                "mangledName": "$s18ProjectDescription12TargetScriptV10inputPathsSayAA12FileListGlobVGvg",
                 "moduleName": "ProjectDescription",
                 "implicit": true,
                 "accessorKind": "get"
@@ -40901,13 +41398,13 @@
               {
                 "kind": "TypeNominal",
                 "name": "Array",
-                "printedName": "[ProjectDescription.Path]",
+                "printedName": "[ProjectDescription.FileListGlob]",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "FileListGlob",
+                    "printedName": "ProjectDescription.FileListGlob",
+                    "usr": "s:18ProjectDescription12FileListGlobV"
                   }
                 ],
                 "hasDefaultArg": true,
@@ -41004,8 +41501,8 @@
               }
             ],
             "declKind": "Func",
-            "usr": "s:18ProjectDescription12TargetScriptV3pre4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SSdSSSayAQGA3RSbSgSbSSAQSgtFZ",
-            "mangledName": "$s18ProjectDescription12TargetScriptV3pre4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SSdSSSayAQGA3RSbSgSbSSAQSgtFZ",
+            "usr": "s:18ProjectDescription12TargetScriptV3pre4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SSdSSSayAA0kL4GlobVGSayAQGA2USbSgSbSSAQSgtFZ",
+            "mangledName": "$s18ProjectDescription12TargetScriptV3pre4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SSdSSSayAA0kL4GlobVGSayAQGA2USbSgSbSSAQSgtFZ",
             "moduleName": "ProjectDescription",
             "static": true,
             "declAttributes": [
@@ -41054,13 +41551,13 @@
               {
                 "kind": "TypeNominal",
                 "name": "Array",
-                "printedName": "[ProjectDescription.Path]",
+                "printedName": "[ProjectDescription.FileListGlob]",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "FileListGlob",
+                    "printedName": "ProjectDescription.FileListGlob",
+                    "usr": "s:18ProjectDescription12FileListGlobV"
                   }
                 ],
                 "hasDefaultArg": true,
@@ -41157,8 +41654,8 @@
               }
             ],
             "declKind": "Func",
-            "usr": "s:18ProjectDescription12TargetScriptV3pre4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SaySSGSSSayAQGA3SSbSgSbSSAQSgtFZ",
-            "mangledName": "$s18ProjectDescription12TargetScriptV3pre4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SaySSGSSSayAQGA3SSbSgSbSSAQSgtFZ",
+            "usr": "s:18ProjectDescription12TargetScriptV3pre4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SaySSGSSSayAA0kL4GlobVGSayAQGA2VSbSgSbSSAQSgtFZ",
+            "mangledName": "$s18ProjectDescription12TargetScriptV3pre4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SaySSGSSSayAA0kL4GlobVGSayAQGA2VSbSgSbSSAQSgtFZ",
             "moduleName": "ProjectDescription",
             "static": true,
             "declAttributes": [
@@ -41207,13 +41704,13 @@
               {
                 "kind": "TypeNominal",
                 "name": "Array",
-                "printedName": "[ProjectDescription.Path]",
+                "printedName": "[ProjectDescription.FileListGlob]",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "FileListGlob",
+                    "printedName": "ProjectDescription.FileListGlob",
+                    "usr": "s:18ProjectDescription12FileListGlobV"
                   }
                 ],
                 "hasDefaultArg": true,
@@ -41310,8 +41807,8 @@
               }
             ],
             "declKind": "Func",
-            "usr": "s:18ProjectDescription12TargetScriptV4post4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SSdSSSayAQGA3RSbSgSbSSAQSgtFZ",
-            "mangledName": "$s18ProjectDescription12TargetScriptV4post4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SSdSSSayAQGA3RSbSgSbSSAQSgtFZ",
+            "usr": "s:18ProjectDescription12TargetScriptV4post4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SSdSSSayAA0kL4GlobVGSayAQGA2USbSgSbSSAQSgtFZ",
+            "mangledName": "$s18ProjectDescription12TargetScriptV4post4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SSdSSSayAA0kL4GlobVGSayAQGA2USbSgSbSSAQSgtFZ",
             "moduleName": "ProjectDescription",
             "static": true,
             "declAttributes": [
@@ -41360,13 +41857,13 @@
               {
                 "kind": "TypeNominal",
                 "name": "Array",
-                "printedName": "[ProjectDescription.Path]",
+                "printedName": "[ProjectDescription.FileListGlob]",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "FileListGlob",
+                    "printedName": "ProjectDescription.FileListGlob",
+                    "usr": "s:18ProjectDescription12FileListGlobV"
                   }
                 ],
                 "hasDefaultArg": true,
@@ -41463,8 +41960,8 @@
               }
             ],
             "declKind": "Func",
-            "usr": "s:18ProjectDescription12TargetScriptV4post4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SaySSGSSSayAQGA3SSbSgSbSSAQSgtFZ",
-            "mangledName": "$s18ProjectDescription12TargetScriptV4post4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SaySSGSSSayAQGA3SSbSgSbSSAQSgtFZ",
+            "usr": "s:18ProjectDescription12TargetScriptV4post4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SaySSGSSSayAA0kL4GlobVGSayAQGA2VSbSgSbSSAQSgtFZ",
+            "mangledName": "$s18ProjectDescription12TargetScriptV4post4path9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0AcA0X0V_SaySSGSSSayAA0kL4GlobVGSayAQGA2VSbSgSbSSAQSgtFZ",
             "moduleName": "ProjectDescription",
             "static": true,
             "declAttributes": [
@@ -41513,13 +42010,13 @@
               {
                 "kind": "TypeNominal",
                 "name": "Array",
-                "printedName": "[ProjectDescription.Path]",
+                "printedName": "[ProjectDescription.FileListGlob]",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "FileListGlob",
+                    "printedName": "ProjectDescription.FileListGlob",
+                    "usr": "s:18ProjectDescription12FileListGlobV"
                   }
                 ],
                 "hasDefaultArg": true,
@@ -41616,8 +42113,8 @@
               }
             ],
             "declKind": "Func",
-            "usr": "s:18ProjectDescription12TargetScriptV3pre4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SSdSSSayAA0X0VGA3RSbSgSbSSAQSgtFZ",
-            "mangledName": "$s18ProjectDescription12TargetScriptV3pre4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SSdSSSayAA0X0VGA3RSbSgSbSSAQSgtFZ",
+            "usr": "s:18ProjectDescription12TargetScriptV3pre4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SSdSSSayAA0kL4GlobVGSayAA0X0VGA2USbSgSbSSATSgtFZ",
+            "mangledName": "$s18ProjectDescription12TargetScriptV3pre4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SSdSSSayAA0kL4GlobVGSayAA0X0VGA2USbSgSbSSATSgtFZ",
             "moduleName": "ProjectDescription",
             "static": true,
             "declAttributes": [
@@ -41666,13 +42163,13 @@
               {
                 "kind": "TypeNominal",
                 "name": "Array",
-                "printedName": "[ProjectDescription.Path]",
+                "printedName": "[ProjectDescription.FileListGlob]",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "FileListGlob",
+                    "printedName": "ProjectDescription.FileListGlob",
+                    "usr": "s:18ProjectDescription12FileListGlobV"
                   }
                 ],
                 "hasDefaultArg": true,
@@ -41769,8 +42266,8 @@
               }
             ],
             "declKind": "Func",
-            "usr": "s:18ProjectDescription12TargetScriptV3pre4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SaySSGSSSayAA0X0VGA3SSbSgSbSSARSgtFZ",
-            "mangledName": "$s18ProjectDescription12TargetScriptV3pre4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SaySSGSSSayAA0X0VGA3SSbSgSbSSARSgtFZ",
+            "usr": "s:18ProjectDescription12TargetScriptV3pre4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SaySSGSSSayAA0kL4GlobVGSayAA0X0VGA2VSbSgSbSSAUSgtFZ",
+            "mangledName": "$s18ProjectDescription12TargetScriptV3pre4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SaySSGSSSayAA0kL4GlobVGSayAA0X0VGA2VSbSgSbSSAUSgtFZ",
             "moduleName": "ProjectDescription",
             "static": true,
             "declAttributes": [
@@ -41819,13 +42316,13 @@
               {
                 "kind": "TypeNominal",
                 "name": "Array",
-                "printedName": "[ProjectDescription.Path]",
+                "printedName": "[ProjectDescription.FileListGlob]",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "FileListGlob",
+                    "printedName": "ProjectDescription.FileListGlob",
+                    "usr": "s:18ProjectDescription12FileListGlobV"
                   }
                 ],
                 "hasDefaultArg": true,
@@ -41922,8 +42419,8 @@
               }
             ],
             "declKind": "Func",
-            "usr": "s:18ProjectDescription12TargetScriptV4post4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SSdSSSayAA0X0VGA3RSbSgSbSSAQSgtFZ",
-            "mangledName": "$s18ProjectDescription12TargetScriptV4post4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SSdSSSayAA0X0VGA3RSbSgSbSSAQSgtFZ",
+            "usr": "s:18ProjectDescription12TargetScriptV4post4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SSdSSSayAA0kL4GlobVGSayAA0X0VGA2USbSgSbSSATSgtFZ",
+            "mangledName": "$s18ProjectDescription12TargetScriptV4post4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SSdSSSayAA0kL4GlobVGSayAA0X0VGA2USbSgSbSSATSgtFZ",
             "moduleName": "ProjectDescription",
             "static": true,
             "declAttributes": [
@@ -41972,13 +42469,13 @@
               {
                 "kind": "TypeNominal",
                 "name": "Array",
-                "printedName": "[ProjectDescription.Path]",
+                "printedName": "[ProjectDescription.FileListGlob]",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "FileListGlob",
+                    "printedName": "ProjectDescription.FileListGlob",
+                    "usr": "s:18ProjectDescription12FileListGlobV"
                   }
                 ],
                 "hasDefaultArg": true,
@@ -42075,8 +42572,8 @@
               }
             ],
             "declKind": "Func",
-            "usr": "s:18ProjectDescription12TargetScriptV4post4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SaySSGSSSayAA0X0VGA3SSbSgSbSSARSgtFZ",
-            "mangledName": "$s18ProjectDescription12TargetScriptV4post4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SaySSGSSSayAA0X0VGA3SSbSgSbSSARSgtFZ",
+            "usr": "s:18ProjectDescription12TargetScriptV4post4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SaySSGSSSayAA0kL4GlobVGSayAA0X0VGA2VSbSgSbSSAUSgtFZ",
+            "mangledName": "$s18ProjectDescription12TargetScriptV4post4tool9arguments4name10inputPaths0i8FileListJ006outputJ00mklJ025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyK0ACSS_SaySSGSSSayAA0kL4GlobVGSayAA0X0VGA2VSbSgSbSSAUSgtFZ",
             "moduleName": "ProjectDescription",
             "static": true,
             "declAttributes": [
@@ -42111,13 +42608,13 @@
               {
                 "kind": "TypeNominal",
                 "name": "Array",
-                "printedName": "[ProjectDescription.Path]",
+                "printedName": "[ProjectDescription.FileListGlob]",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "FileListGlob",
+                    "printedName": "ProjectDescription.FileListGlob",
+                    "usr": "s:18ProjectDescription12FileListGlobV"
                   }
                 ],
                 "hasDefaultArg": true,
@@ -42214,8 +42711,8 @@
               }
             ],
             "declKind": "Func",
-            "usr": "s:18ProjectDescription12TargetScriptV3pre6script4name10inputPaths0h8FileListI006outputI00ljkI025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyJ0ACSS_SSSayAA0W0VGA3QSbSgSbSSAPSgtFZ",
-            "mangledName": "$s18ProjectDescription12TargetScriptV3pre6script4name10inputPaths0h8FileListI006outputI00ljkI025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyJ0ACSS_SSSayAA0W0VGA3QSbSgSbSSAPSgtFZ",
+            "usr": "s:18ProjectDescription12TargetScriptV3pre6script4name10inputPaths0h8FileListI006outputI00ljkI025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyJ0ACSS_SSSayAA0jK4GlobVGSayAA0W0VGA2TSbSgSbSSASSgtFZ",
+            "mangledName": "$s18ProjectDescription12TargetScriptV3pre6script4name10inputPaths0h8FileListI006outputI00ljkI025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyJ0ACSS_SSSayAA0jK4GlobVGSayAA0W0VGA2TSbSgSbSSASSgtFZ",
             "moduleName": "ProjectDescription",
             "static": true,
             "declAttributes": [
@@ -42250,13 +42747,13 @@
               {
                 "kind": "TypeNominal",
                 "name": "Array",
-                "printedName": "[ProjectDescription.Path]",
+                "printedName": "[ProjectDescription.FileListGlob]",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "FileListGlob",
+                    "printedName": "ProjectDescription.FileListGlob",
+                    "usr": "s:18ProjectDescription12FileListGlobV"
                   }
                 ],
                 "hasDefaultArg": true,
@@ -42353,8 +42850,8 @@
               }
             ],
             "declKind": "Func",
-            "usr": "s:18ProjectDescription12TargetScriptV4post6script4name10inputPaths0h8FileListI006outputI00ljkI025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyJ0ACSS_SSSayAA0W0VGA3QSbSgSbSSAPSgtFZ",
-            "mangledName": "$s18ProjectDescription12TargetScriptV4post6script4name10inputPaths0h8FileListI006outputI00ljkI025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyJ0ACSS_SSSayAA0W0VGA3QSbSgSbSSAPSgtFZ",
+            "usr": "s:18ProjectDescription12TargetScriptV4post6script4name10inputPaths0h8FileListI006outputI00ljkI025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyJ0ACSS_SSSayAA0jK4GlobVGSayAA0W0VGA2TSbSgSbSSASSgtFZ",
+            "mangledName": "$s18ProjectDescription12TargetScriptV4post6script4name10inputPaths0h8FileListI006outputI00ljkI025basedOnDependencyAnalysis23runForInstallBuildsOnly9shellPath010dependencyJ0ACSS_SSSayAA0jK4GlobVGSayAA0W0VGA2TSbSgSbSSASSgtFZ",
             "moduleName": "ProjectDescription",
             "static": true,
             "declAttributes": [
@@ -45367,6 +45864,67 @@
           },
           {
             "kind": "Var",
+            "name": "preferredScreenCaptureFormat",
+            "printedName": "preferredScreenCaptureFormat",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "ProjectDescription.ScreenCaptureFormat?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "ScreenCaptureFormat",
+                    "printedName": "ProjectDescription.ScreenCaptureFormat",
+                    "usr": "s:18ProjectDescription19ScreenCaptureFormatO"
+                  }
+                ],
+                "usr": "s:Sq"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:18ProjectDescription17TestActionOptionsV28preferredScreenCaptureFormatAA0ghI0OSgvp",
+            "mangledName": "$s18ProjectDescription17TestActionOptionsV28preferredScreenCaptureFormatAA0ghI0OSgvp",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "HasStorage",
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "isLet": true,
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "ProjectDescription.ScreenCaptureFormat?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "ScreenCaptureFormat",
+                        "printedName": "ProjectDescription.ScreenCaptureFormat",
+                        "usr": "s:18ProjectDescription19ScreenCaptureFormatO"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:18ProjectDescription17TestActionOptionsV28preferredScreenCaptureFormatAA0ghI0OSgvg",
+                "mangledName": "$s18ProjectDescription17TestActionOptionsV28preferredScreenCaptureFormatAA0ghI0OSgvg",
+                "moduleName": "ProjectDescription",
+                "implicit": true,
+                "accessorKind": "get"
+              }
+            ]
+          },
+          {
+            "kind": "Var",
             "name": "coverage",
             "printedName": "coverage",
             "children": [
@@ -45474,7 +46032,7 @@
           {
             "kind": "Function",
             "name": "options",
-            "printedName": "options(language:region:coverage:codeCoverageTargets:)",
+            "printedName": "options(language:region:preferredScreenCaptureFormat:coverage:codeCoverageTargets:)",
             "children": [
               {
                 "kind": "TypeNominal",
@@ -45514,6 +46072,21 @@
               },
               {
                 "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "ProjectDescription.ScreenCaptureFormat?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "ScreenCaptureFormat",
+                    "printedName": "ProjectDescription.ScreenCaptureFormat",
+                    "usr": "s:18ProjectDescription19ScreenCaptureFormatO"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
                 "name": "Bool",
                 "printedName": "Swift.Bool",
                 "hasDefaultArg": true,
@@ -45536,8 +46109,8 @@
               }
             ],
             "declKind": "Func",
-            "usr": "s:18ProjectDescription17TestActionOptionsV7options8language6region8coverage19codeCoverageTargetsAcA14SchemeLanguageVSg_SSSgSbSayAA15TargetReferenceVGtFZ",
-            "mangledName": "$s18ProjectDescription17TestActionOptionsV7options8language6region8coverage19codeCoverageTargetsAcA14SchemeLanguageVSg_SSSgSbSayAA15TargetReferenceVGtFZ",
+            "usr": "s:18ProjectDescription17TestActionOptionsV7options8language6region28preferredScreenCaptureFormat8coverage19codeCoverageTargetsAcA14SchemeLanguageVSg_SSSgAA0jkL0OSgSbSayAA15TargetReferenceVGtFZ",
+            "mangledName": "$s18ProjectDescription17TestActionOptionsV7options8language6region28preferredScreenCaptureFormat8coverage19codeCoverageTargetsAcA14SchemeLanguageVSg_SSSgAA0jkL0OSgSbSayAA15TargetReferenceVGtFZ",
             "moduleName": "ProjectDescription",
             "static": true,
             "declAttributes": [
@@ -48066,12 +48639,12 @@
                       {
                         "kind": "TypeFunc",
                         "name": "Function",
-                        "printedName": "(ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes.Type) -> (ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes.CodeCoverageMode, ProjectDescription.TestingOptions, ProjectDescription.SchemeLanguage?, Swift.String?) -> ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes",
+                        "printedName": "(ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes.Type) -> (ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes.CodeCoverageMode, ProjectDescription.TestingOptions, ProjectDescription.SchemeLanguage?, Swift.String?, ProjectDescription.ScreenCaptureFormat?) -> ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes",
                         "children": [
                           {
                             "kind": "TypeFunc",
                             "name": "Function",
-                            "printedName": "(ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes.CodeCoverageMode, ProjectDescription.TestingOptions, ProjectDescription.SchemeLanguage?, Swift.String?) -> ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes",
+                            "printedName": "(ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes.CodeCoverageMode, ProjectDescription.TestingOptions, ProjectDescription.SchemeLanguage?, Swift.String?, ProjectDescription.ScreenCaptureFormat?) -> ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes",
                             "children": [
                               {
                                 "kind": "TypeNominal",
@@ -48082,7 +48655,7 @@
                               {
                                 "kind": "TypeNominal",
                                 "name": "Tuple",
-                                "printedName": "(codeCoverageMode: ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes.CodeCoverageMode, testingOptions: ProjectDescription.TestingOptions, testLanguage: ProjectDescription.SchemeLanguage?, testRegion: Swift.String?)",
+                                "printedName": "(codeCoverageMode: ProjectDescription.Workspace.GenerationOptions.AutogeneratedWorkspaceSchemes.CodeCoverageMode, testingOptions: ProjectDescription.TestingOptions, testLanguage: ProjectDescription.SchemeLanguage?, testRegion: Swift.String?, testScreenCaptureFormat: ProjectDescription.ScreenCaptureFormat?)",
                                 "children": [
                                   {
                                     "kind": "TypeNominal",
@@ -48123,6 +48696,20 @@
                                       }
                                     ],
                                     "usr": "s:Sq"
+                                  },
+                                  {
+                                    "kind": "TypeNominal",
+                                    "name": "Optional",
+                                    "printedName": "ProjectDescription.ScreenCaptureFormat?",
+                                    "children": [
+                                      {
+                                        "kind": "TypeNominal",
+                                        "name": "ScreenCaptureFormat",
+                                        "printedName": "ProjectDescription.ScreenCaptureFormat",
+                                        "usr": "s:18ProjectDescription19ScreenCaptureFormatO"
+                                      }
+                                    ],
+                                    "usr": "s:Sq"
                                   }
                                 ]
                               }
@@ -48145,8 +48732,8 @@
                       }
                     ],
                     "declKind": "EnumElement",
-                    "usr": "s:18ProjectDescription9WorkspaceV17GenerationOptionsV013AutogeneratedC7SchemesO7enabledyA2G16CodeCoverageModeO_AA07TestingE0VAA14SchemeLanguageVSgSSSgtcAGmF",
-                    "mangledName": "$s18ProjectDescription9WorkspaceV17GenerationOptionsV013AutogeneratedC7SchemesO7enabledyA2G16CodeCoverageModeO_AA07TestingE0VAA14SchemeLanguageVSgSSSgtcAGmF",
+                    "usr": "s:18ProjectDescription9WorkspaceV17GenerationOptionsV013AutogeneratedC7SchemesO7enabledyA2G16CodeCoverageModeO_AA07TestingE0VAA14SchemeLanguageVSgSSSgAA19ScreenCaptureFormatOSgtcAGmF",
+                    "mangledName": "$s18ProjectDescription9WorkspaceV17GenerationOptionsV013AutogeneratedC7SchemesO7enabledyA2G16CodeCoverageModeO_AA07TestingE0VAA14SchemeLanguageVSgSSSgAA19ScreenCaptureFormatOSgtcAGmF",
                     "moduleName": "ProjectDescription",
                     "declAttributes": [
                       "RawDocComment"
@@ -52277,14 +52864,14 @@
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/ConfigGenerationOptions.swift",
       "kind": "BooleanLiteral",
-      "offset": 659,
+      "offset": 903,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/ConfigGenerationOptions.swift",
       "kind": "BooleanLiteral",
-      "offset": 715,
+      "offset": 959,
       "length": 5,
       "value": "false"
     },
@@ -52921,469 +53508,469 @@
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "StringLiteral",
-      "offset": 3009,
+      "offset": 3019,
       "length": 2,
       "value": "\"\""
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 3065,
+      "offset": 3083,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 3106,
+      "offset": 3124,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 3140,
+      "offset": 3158,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 3182,
+      "offset": 3200,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "BooleanLiteral",
-      "offset": 3274,
+      "offset": 3292,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "StringLiteral",
-      "offset": 3309,
+      "offset": 3327,
       "length": 9,
       "value": "\"\/bin\/sh\""
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 4945,
+      "offset": 4973,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 4986,
+      "offset": 5014,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 5020,
+      "offset": 5048,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 5062,
+      "offset": 5090,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "BooleanLiteral",
-      "offset": 5154,
+      "offset": 5182,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "StringLiteral",
-      "offset": 5189,
+      "offset": 5217,
       "length": 9,
       "value": "\"\/bin\/sh\""
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 6867,
+      "offset": 6905,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 6908,
+      "offset": 6946,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 6942,
+      "offset": 6980,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 6984,
+      "offset": 7022,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "BooleanLiteral",
-      "offset": 7076,
+      "offset": 7114,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "StringLiteral",
-      "offset": 7111,
+      "offset": 7149,
       "length": 9,
       "value": "\"\/bin\/sh\""
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 8790,
+      "offset": 8838,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 8831,
+      "offset": 8879,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 8865,
+      "offset": 8913,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 8907,
+      "offset": 8955,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "BooleanLiteral",
-      "offset": 8999,
+      "offset": 9047,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "StringLiteral",
-      "offset": 9034,
+      "offset": 9082,
       "length": 9,
       "value": "\"\/bin\/sh\""
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 10713,
+      "offset": 10771,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 10754,
+      "offset": 10812,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 10788,
+      "offset": 10846,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 10830,
+      "offset": 10888,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "BooleanLiteral",
-      "offset": 10922,
+      "offset": 10980,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "StringLiteral",
-      "offset": 10957,
+      "offset": 11015,
       "length": 9,
       "value": "\"\/bin\/sh\""
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 12719,
+      "offset": 12787,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 12760,
+      "offset": 12828,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 12794,
+      "offset": 12862,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 12836,
+      "offset": 12904,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "BooleanLiteral",
-      "offset": 12928,
+      "offset": 12996,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "StringLiteral",
-      "offset": 12963,
+      "offset": 13031,
       "length": 9,
       "value": "\"\/bin\/sh\""
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 14690,
+      "offset": 14768,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 14731,
+      "offset": 14809,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 14765,
+      "offset": 14843,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 14807,
+      "offset": 14885,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "BooleanLiteral",
-      "offset": 14899,
+      "offset": 14977,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "StringLiteral",
-      "offset": 14934,
+      "offset": 15012,
       "length": 9,
       "value": "\"\/bin\/sh\""
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 16662,
+      "offset": 16750,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 16703,
+      "offset": 16791,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 16737,
+      "offset": 16825,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 16779,
+      "offset": 16867,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "BooleanLiteral",
-      "offset": 16871,
+      "offset": 16959,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "StringLiteral",
-      "offset": 16906,
+      "offset": 16994,
       "length": 9,
       "value": "\"\/bin\/sh\""
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 18634,
+      "offset": 18732,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 18675,
+      "offset": 18773,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 18709,
+      "offset": 18807,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 18751,
+      "offset": 18849,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "BooleanLiteral",
-      "offset": 18843,
+      "offset": 18941,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "StringLiteral",
-      "offset": 18878,
+      "offset": 18976,
       "length": 9,
       "value": "\"\/bin\/sh\""
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 20590,
+      "offset": 20698,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 20631,
+      "offset": 20739,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 20665,
+      "offset": 20773,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 20707,
+      "offset": 20815,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "BooleanLiteral",
-      "offset": 20799,
+      "offset": 20907,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "StringLiteral",
-      "offset": 20834,
+      "offset": 20942,
       "length": 9,
       "value": "\"\/bin\/sh\""
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 22410,
+      "offset": 22528,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 22451,
+      "offset": 22569,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 22485,
+      "offset": 22603,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "Array",
-      "offset": 22527,
+      "offset": 22645,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "BooleanLiteral",
-      "offset": 22619,
+      "offset": 22737,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TargetScript.swift",
       "kind": "StringLiteral",
-      "offset": 22654,
+      "offset": 22772,
       "length": 9,
       "value": "\"\/bin\/sh\""
     },
@@ -53460,14 +54047,14 @@
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TestActionOptions.swift",
       "kind": "BooleanLiteral",
-      "offset": 1407,
+      "offset": 1747,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/TestActionOptions.swift",
       "kind": "Array",
-      "offset": 1463,
+      "offset": 1803,
       "length": 2,
       "value": "[]"
     },
@@ -53558,14 +54145,14 @@
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/WorkspaceGenerationOptions.swift",
       "kind": "BooleanLiteral",
-      "offset": 2383,
+      "offset": 2452,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/WorkspaceGenerationOptions.swift",
       "kind": "BooleanLiteral",
-      "offset": 2569,
+      "offset": 2638,
       "length": 5,
       "value": "false"
     }

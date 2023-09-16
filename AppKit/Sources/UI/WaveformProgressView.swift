@@ -1,4 +1,3 @@
-import AppDevUtils
 import ComposableArchitecture
 import DSWaveformImage
 import DSWaveformImageViews
@@ -13,15 +12,15 @@ enum WaveformProgressError: Error {
 
 // MARK: - WaveformProgress
 
-public struct WaveformProgress: ReducerProtocol {
-  public struct State: Equatable, Then {
+struct WaveformProgress: ReducerProtocol {
+  struct State: Equatable, Then {
     var fileName = ""
     var progress = 0.0
     var isPlaying = false
     var waveFormImageURL: URL?
   }
 
-  public enum Action: Equatable {
+  enum Action: Equatable {
     case didAppear
     case waveFormImageCreated(TaskResult<URL>)
     case didTouchAtHorizontalLocation(Double)
@@ -41,7 +40,7 @@ public struct WaveformProgress: ReducerProtocol {
     shouldAntialias: true
   )
 
-  public var body: some ReducerProtocol<State, Action> {
+  var body: some ReducerProtocol<State, Action> {
     Reduce<State, Action> { state, action in
       switch action {
       case .didAppear:
@@ -88,18 +87,18 @@ public struct WaveformProgress: ReducerProtocol {
 // MARK: - WaveformProgressView
 
 @MainActor
-public struct WaveformProgressView: View {
+struct WaveformProgressView: View {
   @ObserveInjection var inject
 
   let store: StoreOf<WaveformProgress>
   @ObservedObject var viewStore: ViewStoreOf<WaveformProgress>
 
-  public init(store: StoreOf<WaveformProgress>) {
+  init(store: StoreOf<WaveformProgress>) {
     self.store = store
     viewStore = ViewStore(store) { $0 }
   }
 
-  public var body: some View {
+  var body: some View {
     Rectangle()
       .fill(Color.clear)
       .background {

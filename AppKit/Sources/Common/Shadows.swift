@@ -2,12 +2,12 @@ import SwiftUI
 
 // MARK: - ShadowStyle
 
-public enum ShadowStyle {
+enum ShadowStyle {
   case card
   case button
 }
 
-public extension View {
+extension View {
   func shadow(style: ShadowStyle) -> some View {
     switch style {
     case .card:
