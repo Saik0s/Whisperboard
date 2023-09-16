@@ -76,7 +76,14 @@ func appTarget() -> Target {
     ]),
     sources: .paths([.relativeToManifest("Sources/**")]),
     resources: ["Resources/Assets.xcassets"],
-    entitlements: .relativeToManifest("Resources/app.entitlements"),
+    entitlements: .relativeToManifest("Support/app.entitlements"),
+    scripts: [
+      .post(
+        path: "../ci_scripts/post_build_checks.sh",
+        name: "Additional Checks",
+        basedOnDependencyAnalysis: false
+      ),
+    ],
     dependencies: [
       .target(name: "ShareExtension"),
       .project(target: "WhisperBoardKit", path: "../AppKit"),
@@ -122,7 +129,7 @@ func shareExtensionTarget() -> Target {
       ],
     ]),
     sources: .paths([.relativeToManifest("ShareExtension/ShareViewController.swift")]),
-    entitlements: .relativeToManifest("ShareExtension/ShareExtension.entitlements"),
+    entitlements: .relativeToManifest("Support/ShareExtension.entitlements"),
     dependencies: [
       .external(name: "AudioKit"),
     ]
@@ -157,7 +164,7 @@ let project = Project(
       name: "WhisperBoard",
       shared: true,
       buildAction: .buildAction(targets: ["WhisperBoard"]),
-      runAction: .runAction(executable: "WhisperBoard", options: .options(storeKitConfigurationPath: "Resources/Whisperboard.storekit"))
+      runAction: .runAction(executable: "WhisperBoard", options: .options(storeKitConfigurationPath: "Support/Whisperboard.storekit"))
     ),
   ],
   additionalFiles: [

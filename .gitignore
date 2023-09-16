@@ -125,7 +125,7 @@ Tuist/Dependencies/graph.json
 Derived/
 analyzer.py
 .env
-AppKit/Sources/App/Clients/Secrets.swift
+AppKit/Sources/Clients/Secrets.swift
 ci_scripts/__pycache__/
 ci_scripts/gyb
 ci_scripts/gyb.py

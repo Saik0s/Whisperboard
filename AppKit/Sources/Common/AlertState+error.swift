@@ -1,6 +1,6 @@
 import ComposableArchitecture
 
-public extension AlertState {
+extension AlertState {
   static func error(_ error: Error) -> Self {
     Self(
       title: TextState("Something went wrong"),

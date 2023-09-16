@@ -28,12 +28,13 @@ secrets:
 	sh ./ci_scripts/secrets.sh
 
 analyze:
-	sh ./ci_scripts/cpd_run.sh
-	periphery scan > periphery.log
-	xcodebuild -workspace WhisperBoard.xcworkspace -scheme WhisperBoard -configuration Debug build CODE_SIGNING_ALLOWED="NO" ENABLE_BITCODE="NO" > xcodebuild.log
-	swiftlint analyze --compiler-log-path xcodebuild.log > swiftlint_analyze.log
+	sh ./ci_scripts/cpd_run.sh && echo "CPD done"
+	periphery scan --report-exclude **/Derived/**/*.swift > periphery.log && echo "Periphery done"
+	xcodebuild -workspace WhisperBoard.xcworkspace -scheme WhisperBoard -configuration Debug build CODE_SIGNING_ALLOWED="NO" ENABLE_BITCODE="NO" > xcodebuild.log && echo "Xcodebuild done"
+	swiftlint analyze --compiler-log-path xcodebuild.log > swiftlint_analyze.log && echo "Swiftlint done"
 	
 clean:
 	rm -rf build
+	$(TUIST) clean
 
 .SILENT: all project_file update hot build_debug build_release format secrets

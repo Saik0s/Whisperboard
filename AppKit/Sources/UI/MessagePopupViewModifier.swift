@@ -3,7 +3,7 @@ import Foundation
 import Popovers
 import SwiftUI
 
-public extension View {
+extension View {
   func messagePopup<ButtonAction>(
     store: Store<PresentationState<AlertState<ButtonAction>>, PresentationAction<ButtonAction>>
   ) -> some View {

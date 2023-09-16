@@ -23,7 +23,7 @@ func appKitTarget() -> Target {
   Target(
     name: "WhisperBoardKit",
     platform: .iOS,
-    product: .staticFramework,
+    product: .framework,
     bundleId: "me.igortarasenko.WhisperboardKit",
     deploymentTarget: .iOS(targetVersion: "16.0", devices: [.iphone, .ipad]),
     infoPlist: .extendingDefault(with: [:]),
@@ -32,19 +32,9 @@ func appKitTarget() -> Target {
       "Resources/Assets.xcassets",
       "Resources/ggml-tiny.bin",
     ],
-    scripts: [
-      .post(
-        path: "../ci_scripts/post_build_checks.sh",
-        name: "Additional Checks",
-        basedOnDependencyAnalysis: false
-      ),
-    ],
     dependencies: [
-      .external(name: "AppDevUtils"),
-
       .external(name: "AsyncAlgorithms"),
       .external(name: "AudioKit"),
-      .external(name: "BetterCodable"),
       .external(name: "ComposableArchitecture"),
       .external(name: "DSWaveformImage"),
       .external(name: "DSWaveformImageViews"),

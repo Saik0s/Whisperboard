@@ -1,4 +1,3 @@
-import AppDevUtils
 import Inject
 import SwiftUI
 
@@ -148,12 +147,12 @@ extension View {
 
 // MARK: - CardStyle
 
-public struct CardStyle: ViewModifier {
+struct CardStyle: ViewModifier {
   @ObserveInjection var inject
 
   var isPrimary: Bool
 
-  public func body(content: Content) -> some View {
+  func body(content: Content) -> some View {
     content
       .cornerRadius(.grid(4))
       .background {
@@ -202,7 +201,7 @@ public struct CardStyle: ViewModifier {
   }
 }
 
-public extension View {
+extension View {
   func primaryCardStyle() -> some View {
     modifier(CardStyle(isPrimary: true))
   }

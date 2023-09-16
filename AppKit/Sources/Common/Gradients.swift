@@ -1,8 +1,7 @@
-import AppDevUtils
 import DynamicColor
 import SwiftUI
 
-public extension LinearGradient {
+extension LinearGradient {
   static let screenBackground: Self = .easedGradient(colors: [
     .DS.Background.primary.lighten(by: 0.05),
     .DS.Background.primary,
@@ -10,7 +9,7 @@ public extension LinearGradient {
   ])
 }
 
-public extension RadialGradient {
+extension RadialGradient {
   static let accent: Self = RadialGradient(
     gradient: Gradient(stops: [
       .init(color: .DS.Background.accent.lighten(by: 0.03), location: 0),
@@ -34,7 +33,7 @@ public extension RadialGradient {
   )
 }
 
-public extension View {
+extension View {
   @ViewBuilder
   func screenRadialBackground() -> some View {
     ZStack {

@@ -1,6 +1,6 @@
 # file options
 
---exclude .build,.tuist-bin
+--exclude .build,.tuist-bin,build
 --swiftversion 5.8
 
 # format options
@@ -20,19 +20,19 @@
 
 # rules
 
---disable                               \
-    andOperator,                        \
-    wrapMultilineStatementBraces,       \
-    wrapSwitchCases,                    \
-    organizeDeclarations,               \
-    wrapEnumCases,                      \
-    redundantNilInit
+--disable \
+ andOperator, \
+ wrapMultilineStatementBraces, \
+ wrapSwitchCases, \
+ organizeDeclarations, \
+ wrapEnumCases, \
+ redundantNilInit
 
---enable                                \
-    blankLinesBetweenImports,           \
-    blankLineAfterImports,              \
-    markTypes,                          \
-    blockComments,                      \
-    sortSwitchCases,                    \
-    docComments,                        \
-    isEmpty
+--enable \
+ blankLinesBetweenImports, \
+ blankLineAfterImports, \
+ markTypes, \
+ blockComments, \
+ sortSwitchCases, \
+ docComments, \
+ isEmpty
