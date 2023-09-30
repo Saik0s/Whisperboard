@@ -6,7 +6,7 @@ let packages: [Package] = [
   .package(url: "https://github.com/aheze/Popovers.git", .branch("main")),
   .package(url: "https://github.com/aheze/VariableBlurView.git", .branch("main")),
   .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "0.1.0"),
-  .package(url: "https://github.com/dmrschmidt/DSWaveformImage.git", from: "11.0.0"),
+  .package(url: "https://github.com/dmrschmidt/DSWaveformImage.git", from: "13.0.2"),
   .package(url: "https://github.com/ggerganov/whisper.spm.git", .branch("master")),
   .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "3.0.0"),
   .package(url: "https://github.com/krzysztofzablocki/Inject.git", .branch("main")),

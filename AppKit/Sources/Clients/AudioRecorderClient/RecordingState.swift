@@ -6,5 +6,5 @@ enum RecordingState: Equatable {
   case paused
   case stopped
   case finished(Bool)
-  case error(EquatableErrorWrapper)
+  case error(EquatableError)
 }

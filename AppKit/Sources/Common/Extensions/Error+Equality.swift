@@ -1,72 +1,33 @@
 import Foundation
 
-// MARK: - ErrorUtility
-
-// https://kandelvijaya.com/2018/04/21/blog_equalityonerror/
-
-class ErrorUtility {
-  static func areEqual(_ lhs: Error, _ rhs: Error) -> Bool {
-    lhs.reflectedString == rhs.reflectedString
-  }
-}
-
-extension Error {
-  var reflectedString: String {
-    String(reflecting: self)
-  }
-}
-
 // MARK: - EquatableError
 
-@propertyWrapper
-struct EquatableError: Equatable {
-  typealias Value = Error
+struct EquatableError: Error, Equatable, Hashable {
+  private let _base: Error
+  private let _message: String
 
-  var wrappedValue: Value
-
-  init(wrappedValue: Value) {
-    self.wrappedValue = wrappedValue
-  }
-
-  var projectedValue: Self {
-    get { self }
-    set { self = newValue }
+  init(_ base: Error) {
+    _base = base
+    _message = String(describing: base)
   }
 
   static func == (lhs: EquatableError, rhs: EquatableError) -> Bool {
-    ErrorUtility.areEqual(lhs.wrappedValue, rhs.wrappedValue)
-  }
-}
-
-// MARK: - EquatableErrorWrapper
-
-struct EquatableErrorWrapper: Equatable, Error, CustomStringConvertible {
-  @EquatableError var error: Error
-
-  init(error: Error) {
-    self.error = error
-  }
-}
-
-// MARK: CustomStringConvertible
-
-extension EquatableErrorWrapper {
-  var _domain: String { error._domain }
-  var _code: Int { error._code }
-  var _userInfo: AnyObject? { error._userInfo }
-  func _getEmbeddedNSError() -> AnyObject? { error._getEmbeddedNSError() }
-
-  var description: String {
-    "\(error)"
+    lhs._message == rhs._message
   }
 
-  var localizedDescription: String {
-    error.localizedDescription
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(_message)
   }
 }
 
 extension Error {
-  var equatable: EquatableErrorWrapper {
-    EquatableErrorWrapper(error: self)
+  var equatable: EquatableError {
+    EquatableError(self)
+  }
+}
+
+extension Error {
+  static var unknown: EquatableError {
+    NSError(domain: "Unknown", code: 0, userInfo: nil).equatable
   }
 }

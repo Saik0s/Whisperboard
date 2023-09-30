@@ -702,13 +702,13 @@
         "children": [
           {
             "kind": "Var",
-            "name": "environment",
-            "printedName": "environment",
+            "name": "environmentVariables",
+            "printedName": "environmentVariables",
             "children": [
               {
                 "kind": "TypeNominal",
                 "name": "Dictionary",
-                "printedName": "[Swift.String : Swift.String]",
+                "printedName": "[Swift.String : ProjectDescription.EnvironmentVariable]",
                 "children": [
                   {
                     "kind": "TypeNominal",
@@ -718,17 +718,17 @@
                   },
                   {
                     "kind": "TypeNominal",
-                    "name": "String",
-                    "printedName": "Swift.String",
-                    "usr": "s:SS"
+                    "name": "EnvironmentVariable",
+                    "printedName": "ProjectDescription.EnvironmentVariable",
+                    "usr": "s:18ProjectDescription19EnvironmentVariableV"
                   }
                 ],
                 "usr": "s:SD"
               }
             ],
             "declKind": "Var",
-            "usr": "s:18ProjectDescription9ArgumentsV11environmentSDyS2SGvp",
-            "mangledName": "$s18ProjectDescription9ArgumentsV11environmentSDyS2SGvp",
+            "usr": "s:18ProjectDescription9ArgumentsV20environmentVariablesSDySSAA19EnvironmentVariableVGvp",
+            "mangledName": "$s18ProjectDescription9ArgumentsV20environmentVariablesSDySSAA19EnvironmentVariableVGvp",
             "moduleName": "ProjectDescription",
             "declAttributes": [
               "HasStorage",
@@ -745,7 +745,7 @@
                   {
                     "kind": "TypeNominal",
                     "name": "Dictionary",
-                    "printedName": "[Swift.String : Swift.String]",
+                    "printedName": "[Swift.String : ProjectDescription.EnvironmentVariable]",
                     "children": [
                       {
                         "kind": "TypeNominal",
@@ -755,17 +755,17 @@
                       },
                       {
                         "kind": "TypeNominal",
-                        "name": "String",
-                        "printedName": "Swift.String",
-                        "usr": "s:SS"
+                        "name": "EnvironmentVariable",
+                        "printedName": "ProjectDescription.EnvironmentVariable",
+                        "usr": "s:18ProjectDescription19EnvironmentVariableV"
                       }
                     ],
                     "usr": "s:SD"
                   }
                 ],
                 "declKind": "Accessor",
-                "usr": "s:18ProjectDescription9ArgumentsV11environmentSDyS2SGvg",
-                "mangledName": "$s18ProjectDescription9ArgumentsV11environmentSDyS2SGvg",
+                "usr": "s:18ProjectDescription9ArgumentsV20environmentVariablesSDySSAA19EnvironmentVariableVGvg",
+                "mangledName": "$s18ProjectDescription9ArgumentsV20environmentVariablesSDySSAA19EnvironmentVariableVGvg",
                 "moduleName": "ProjectDescription",
                 "implicit": true,
                 "accessorKind": "get"
@@ -883,6 +883,100 @@
             "declKind": "Constructor",
             "usr": "s:18ProjectDescription9ArgumentsV11environment06launchC0ACSDyS2SG_SayAA14LaunchArgumentVGtcfc",
             "mangledName": "$s18ProjectDescription9ArgumentsV11environment06launchC0ACSDyS2SG_SayAA14LaunchArgumentVGtcfc",
+            "moduleName": "ProjectDescription",
+            "deprecated": true,
+            "declAttributes": [
+              "AccessControl",
+              "Available"
+            ],
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(environmentVariables:launchArguments:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Arguments",
+                "printedName": "ProjectDescription.Arguments",
+                "usr": "s:18ProjectDescription9ArgumentsV"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Dictionary",
+                "printedName": "[Swift.String : ProjectDescription.EnvironmentVariable]",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "EnvironmentVariable",
+                    "printedName": "ProjectDescription.EnvironmentVariable",
+                    "usr": "s:18ProjectDescription19EnvironmentVariableV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:SD"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Array",
+                "printedName": "[ProjectDescription.LaunchArgument]",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "LaunchArgument",
+                    "printedName": "ProjectDescription.LaunchArgument",
+                    "usr": "s:18ProjectDescription14LaunchArgumentV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sa"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:18ProjectDescription9ArgumentsV20environmentVariables06launchC0ACSDySSAA19EnvironmentVariableVG_SayAA14LaunchArgumentVGtcfc",
+            "mangledName": "$s18ProjectDescription9ArgumentsV20environmentVariables06launchC0ACSDySSAA19EnvironmentVariableVG_SayAA14LaunchArgumentVGtcfc",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "AccessControl"
+            ],
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(launchArguments:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Arguments",
+                "printedName": "ProjectDescription.Arguments",
+                "usr": "s:18ProjectDescription9ArgumentsV"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Array",
+                "printedName": "[ProjectDescription.LaunchArgument]",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "LaunchArgument",
+                    "printedName": "ProjectDescription.LaunchArgument",
+                    "usr": "s:18ProjectDescription14LaunchArgumentV"
+                  }
+                ],
+                "usr": "s:Sa"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:18ProjectDescription9ArgumentsV06launchC0ACSayAA14LaunchArgumentVG_tcfc",
+            "mangledName": "$s18ProjectDescription9ArgumentsV06launchC0ACSayAA14LaunchArgumentVG_tcfc",
             "moduleName": "ProjectDescription",
             "declAttributes": [
               "AccessControl"
@@ -14230,6 +14324,515 @@
       },
       {
         "kind": "TypeDecl",
+        "name": "Entitlements",
+        "printedName": "Entitlements",
+        "children": [
+          {
+            "kind": "Var",
+            "name": "file",
+            "printedName": "file",
+            "children": [
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(ProjectDescription.Entitlements.Type) -> (ProjectDescription.Path) -> ProjectDescription.Entitlements",
+                "children": [
+                  {
+                    "kind": "TypeFunc",
+                    "name": "Function",
+                    "printedName": "(ProjectDescription.Path) -> ProjectDescription.Entitlements",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Entitlements",
+                        "printedName": "ProjectDescription.Entitlements",
+                        "usr": "s:18ProjectDescription12EntitlementsO"
+                      },
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Tuple",
+                        "printedName": "(path: ProjectDescription.Path)",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Path",
+                            "printedName": "ProjectDescription.Path",
+                            "usr": "s:18ProjectDescription4PathV"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Metatype",
+                    "printedName": "ProjectDescription.Entitlements.Type",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Entitlements",
+                        "printedName": "ProjectDescription.Entitlements",
+                        "usr": "s:18ProjectDescription12EntitlementsO"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "declKind": "EnumElement",
+            "usr": "s:18ProjectDescription12EntitlementsO4fileyAcA4PathV_tcACmF",
+            "mangledName": "$s18ProjectDescription12EntitlementsO4fileyAcA4PathV_tcACmF",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "RawDocComment"
+            ]
+          },
+          {
+            "kind": "Var",
+            "name": "dictionary",
+            "printedName": "dictionary",
+            "children": [
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(ProjectDescription.Entitlements.Type) -> ([Swift.String : ProjectDescription.Plist.Value]) -> ProjectDescription.Entitlements",
+                "children": [
+                  {
+                    "kind": "TypeFunc",
+                    "name": "Function",
+                    "printedName": "([Swift.String : ProjectDescription.Plist.Value]) -> ProjectDescription.Entitlements",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Entitlements",
+                        "printedName": "ProjectDescription.Entitlements",
+                        "usr": "s:18ProjectDescription12EntitlementsO"
+                      },
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Dictionary",
+                        "printedName": "[Swift.String : ProjectDescription.Plist.Value]",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "String",
+                            "printedName": "Swift.String",
+                            "usr": "s:SS"
+                          },
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          }
+                        ],
+                        "usr": "s:SD"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Metatype",
+                    "printedName": "ProjectDescription.Entitlements.Type",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Entitlements",
+                        "printedName": "ProjectDescription.Entitlements",
+                        "usr": "s:18ProjectDescription12EntitlementsO"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "declKind": "EnumElement",
+            "usr": "s:18ProjectDescription12EntitlementsO10dictionaryyACSDySSAA5PlistO5ValueOGcACmF",
+            "mangledName": "$s18ProjectDescription12EntitlementsO10dictionaryyACSDySSAA5PlistO5ValueOGcACmF",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "RawDocComment"
+            ]
+          },
+          {
+            "kind": "TypeDecl",
+            "name": "CodingError",
+            "printedName": "CodingError",
+            "children": [
+              {
+                "kind": "Var",
+                "name": "invalidType",
+                "printedName": "invalidType",
+                "children": [
+                  {
+                    "kind": "TypeFunc",
+                    "name": "Function",
+                    "printedName": "(ProjectDescription.Entitlements.CodingError.Type) -> (Swift.String) -> ProjectDescription.Entitlements.CodingError",
+                    "children": [
+                      {
+                        "kind": "TypeFunc",
+                        "name": "Function",
+                        "printedName": "(Swift.String) -> ProjectDescription.Entitlements.CodingError",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "CodingError",
+                            "printedName": "ProjectDescription.Entitlements.CodingError",
+                            "usr": "s:18ProjectDescription12EntitlementsO11CodingErrorO"
+                          },
+                          {
+                            "kind": "TypeNominal",
+                            "name": "String",
+                            "printedName": "Swift.String",
+                            "usr": "s:SS"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Metatype",
+                        "printedName": "ProjectDescription.Entitlements.CodingError.Type",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "CodingError",
+                            "printedName": "ProjectDescription.Entitlements.CodingError",
+                            "usr": "s:18ProjectDescription12EntitlementsO11CodingErrorO"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "declKind": "EnumElement",
+                "usr": "s:18ProjectDescription12EntitlementsO11CodingErrorO11invalidTypeyAESScAEmF",
+                "mangledName": "$s18ProjectDescription12EntitlementsO11CodingErrorO11invalidTypeyAESScAEmF",
+                "moduleName": "ProjectDescription"
+              }
+            ],
+            "declKind": "Enum",
+            "usr": "s:18ProjectDescription12EntitlementsO11CodingErrorO",
+            "mangledName": "$s18ProjectDescription12EntitlementsO11CodingErrorO",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "conformances": [
+              {
+                "kind": "Conformance",
+                "name": "Error",
+                "printedName": "Error",
+                "usr": "s:s5ErrorP",
+                "mangledName": "$ss5ErrorP"
+              },
+              {
+                "kind": "Conformance",
+                "name": "Sendable",
+                "printedName": "Sendable",
+                "usr": "s:s8SendableP",
+                "mangledName": "$ss8SendableP"
+              }
+            ]
+          },
+          {
+            "kind": "Var",
+            "name": "path",
+            "printedName": "path",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "ProjectDescription.Path?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Path",
+                    "printedName": "ProjectDescription.Path",
+                    "usr": "s:18ProjectDescription4PathV"
+                  }
+                ],
+                "usr": "s:Sq"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:18ProjectDescription12EntitlementsO4pathAA4PathVSgvp",
+            "mangledName": "$s18ProjectDescription12EntitlementsO4pathAA4PathVSgvp",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "ProjectDescription.Path?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Path",
+                        "printedName": "ProjectDescription.Path",
+                        "usr": "s:18ProjectDescription4PathV"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:18ProjectDescription12EntitlementsO4pathAA4PathVSgvg",
+                "mangledName": "$s18ProjectDescription12EntitlementsO4pathAA4PathVSgvg",
+                "moduleName": "ProjectDescription",
+                "accessorKind": "get"
+              }
+            ]
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(from:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Entitlements",
+                "printedName": "ProjectDescription.Entitlements",
+                "usr": "s:18ProjectDescription12EntitlementsO"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Decoder",
+                "printedName": "Swift.Decoder",
+                "usr": "s:s7DecoderP"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:18ProjectDescription12EntitlementsO4fromACs7Decoder_p_tKcfc",
+            "mangledName": "$s18ProjectDescription12EntitlementsO4fromACs7Decoder_p_tKcfc",
+            "moduleName": "ProjectDescription",
+            "implicit": true,
+            "throwing": true,
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Function",
+            "name": "encode",
+            "printedName": "encode(to:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Encoder",
+                "printedName": "Swift.Encoder",
+                "usr": "s:s7EncoderP"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:18ProjectDescription12EntitlementsO6encode2toys7Encoder_p_tKF",
+            "mangledName": "$s18ProjectDescription12EntitlementsO6encode2toys7Encoder_p_tKF",
+            "moduleName": "ProjectDescription",
+            "implicit": true,
+            "throwing": true,
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Function",
+            "name": "==",
+            "printedName": "==(_:_:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Bool",
+                "printedName": "Swift.Bool",
+                "usr": "s:Sb"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Entitlements",
+                "printedName": "ProjectDescription.Entitlements",
+                "usr": "s:18ProjectDescription12EntitlementsO"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Entitlements",
+                "printedName": "ProjectDescription.Entitlements",
+                "usr": "s:18ProjectDescription12EntitlementsO"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:18ProjectDescription12EntitlementsO2eeoiySbAC_ACtFZ",
+            "mangledName": "$s18ProjectDescription12EntitlementsO2eeoiySbAC_ACtFZ",
+            "moduleName": "ProjectDescription",
+            "static": true,
+            "implicit": true,
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(stringLiteral:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Entitlements",
+                "printedName": "ProjectDescription.Entitlements",
+                "usr": "s:18ProjectDescription12EntitlementsO"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "String",
+                "printedName": "Swift.String",
+                "usr": "s:SS"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:18ProjectDescription12EntitlementsO13stringLiteralACSS_tcfc",
+            "mangledName": "$s18ProjectDescription12EntitlementsO13stringLiteralACSS_tcfc",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "AccessControl"
+            ],
+            "isFromExtension": true,
+            "init_kind": "Designated"
+          }
+        ],
+        "declKind": "Enum",
+        "usr": "s:18ProjectDescription12EntitlementsO",
+        "mangledName": "$s18ProjectDescription12EntitlementsO",
+        "moduleName": "ProjectDescription",
+        "declAttributes": [
+          "AccessControl",
+          "RawDocComment"
+        ],
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "Decodable",
+            "printedName": "Decodable",
+            "usr": "s:Se",
+            "mangledName": "$sSe"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Encodable",
+            "printedName": "Encodable",
+            "usr": "s:SE",
+            "mangledName": "$sSE"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Equatable",
+            "printedName": "Equatable",
+            "usr": "s:SQ",
+            "mangledName": "$sSQ"
+          },
+          {
+            "kind": "Conformance",
+            "name": "ExpressibleByStringInterpolation",
+            "printedName": "ExpressibleByStringInterpolation",
+            "children": [
+              {
+                "kind": "TypeWitness",
+                "name": "StringInterpolation",
+                "printedName": "StringInterpolation",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "DefaultStringInterpolation",
+                    "printedName": "Swift.DefaultStringInterpolation",
+                    "usr": "s:s26DefaultStringInterpolationV"
+                  }
+                ]
+              }
+            ],
+            "usr": "s:s32ExpressibleByStringInterpolationP",
+            "mangledName": "$ss32ExpressibleByStringInterpolationP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "ExpressibleByStringLiteral",
+            "printedName": "ExpressibleByStringLiteral",
+            "children": [
+              {
+                "kind": "TypeWitness",
+                "name": "StringLiteralType",
+                "printedName": "StringLiteralType",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  }
+                ]
+              }
+            ],
+            "usr": "s:s26ExpressibleByStringLiteralP",
+            "mangledName": "$ss26ExpressibleByStringLiteralP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "ExpressibleByExtendedGraphemeClusterLiteral",
+            "printedName": "ExpressibleByExtendedGraphemeClusterLiteral",
+            "children": [
+              {
+                "kind": "TypeWitness",
+                "name": "ExtendedGraphemeClusterLiteralType",
+                "printedName": "ExtendedGraphemeClusterLiteralType",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  }
+                ]
+              }
+            ],
+            "usr": "s:s43ExpressibleByExtendedGraphemeClusterLiteralP",
+            "mangledName": "$ss43ExpressibleByExtendedGraphemeClusterLiteralP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "ExpressibleByUnicodeScalarLiteral",
+            "printedName": "ExpressibleByUnicodeScalarLiteral",
+            "children": [
+              {
+                "kind": "TypeWitness",
+                "name": "UnicodeScalarLiteralType",
+                "printedName": "UnicodeScalarLiteralType",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  }
+                ]
+              }
+            ],
+            "usr": "s:s33ExpressibleByUnicodeScalarLiteralP",
+            "mangledName": "$ss33ExpressibleByUnicodeScalarLiteralP"
+          }
+        ]
+      },
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "ProjectDescription"
+      },
+      {
+        "kind": "TypeDecl",
         "name": "Environment",
         "printedName": "Environment",
         "children": [
@@ -14417,6 +15020,422 @@
           "AccessControl",
           "DynamicMemberLookup",
           "RawDocComment"
+        ]
+      },
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "ProjectDescription"
+      },
+      {
+        "kind": "TypeDecl",
+        "name": "EnvironmentVariable",
+        "printedName": "EnvironmentVariable",
+        "children": [
+          {
+            "kind": "Var",
+            "name": "value",
+            "printedName": "value",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "String",
+                "printedName": "Swift.String",
+                "usr": "s:SS"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:18ProjectDescription19EnvironmentVariableV5valueSSvp",
+            "mangledName": "$s18ProjectDescription19EnvironmentVariableV5valueSSvp",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "HasStorage",
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "isLet": true,
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:18ProjectDescription19EnvironmentVariableV5valueSSvg",
+                "mangledName": "$s18ProjectDescription19EnvironmentVariableV5valueSSvg",
+                "moduleName": "ProjectDescription",
+                "implicit": true,
+                "accessorKind": "get"
+              }
+            ]
+          },
+          {
+            "kind": "Var",
+            "name": "isEnabled",
+            "printedName": "isEnabled",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Bool",
+                "printedName": "Swift.Bool",
+                "usr": "s:Sb"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:18ProjectDescription19EnvironmentVariableV9isEnabledSbvp",
+            "mangledName": "$s18ProjectDescription19EnvironmentVariableV9isEnabledSbvp",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "HasStorage",
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "isLet": true,
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Bool",
+                    "printedName": "Swift.Bool",
+                    "usr": "s:Sb"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:18ProjectDescription19EnvironmentVariableV9isEnabledSbvg",
+                "mangledName": "$s18ProjectDescription19EnvironmentVariableV9isEnabledSbvg",
+                "moduleName": "ProjectDescription",
+                "implicit": true,
+                "accessorKind": "get"
+              }
+            ]
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(value:isEnabled:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "EnvironmentVariable",
+                "printedName": "ProjectDescription.EnvironmentVariable",
+                "usr": "s:18ProjectDescription19EnvironmentVariableV"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "String",
+                "printedName": "Swift.String",
+                "usr": "s:SS"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Bool",
+                "printedName": "Swift.Bool",
+                "usr": "s:Sb"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:18ProjectDescription19EnvironmentVariableV5value9isEnabledACSS_Sbtcfc",
+            "mangledName": "$s18ProjectDescription19EnvironmentVariableV5value9isEnabledACSS_Sbtcfc",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(stringLiteral:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "EnvironmentVariable",
+                "printedName": "ProjectDescription.EnvironmentVariable",
+                "usr": "s:18ProjectDescription19EnvironmentVariableV"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "String",
+                "printedName": "Swift.String",
+                "usr": "s:SS"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:18ProjectDescription19EnvironmentVariableV13stringLiteralACSS_tcfc",
+            "mangledName": "$s18ProjectDescription19EnvironmentVariableV13stringLiteralACSS_tcfc",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "AccessControl"
+            ],
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(from:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "EnvironmentVariable",
+                "printedName": "ProjectDescription.EnvironmentVariable",
+                "usr": "s:18ProjectDescription19EnvironmentVariableV"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Decoder",
+                "printedName": "Swift.Decoder",
+                "usr": "s:s7DecoderP"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:18ProjectDescription19EnvironmentVariableV4fromACs7Decoder_p_tKcfc",
+            "mangledName": "$s18ProjectDescription19EnvironmentVariableV4fromACs7Decoder_p_tKcfc",
+            "moduleName": "ProjectDescription",
+            "implicit": true,
+            "throwing": true,
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Function",
+            "name": "==",
+            "printedName": "==(_:_:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Bool",
+                "printedName": "Swift.Bool",
+                "usr": "s:Sb"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "EnvironmentVariable",
+                "printedName": "ProjectDescription.EnvironmentVariable",
+                "usr": "s:18ProjectDescription19EnvironmentVariableV"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "EnvironmentVariable",
+                "printedName": "ProjectDescription.EnvironmentVariable",
+                "usr": "s:18ProjectDescription19EnvironmentVariableV"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:18ProjectDescription19EnvironmentVariableV2eeoiySbAC_ACtFZ",
+            "mangledName": "$s18ProjectDescription19EnvironmentVariableV2eeoiySbAC_ACtFZ",
+            "moduleName": "ProjectDescription",
+            "static": true,
+            "implicit": true,
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Function",
+            "name": "encode",
+            "printedName": "encode(to:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Encoder",
+                "printedName": "Swift.Encoder",
+                "usr": "s:s7EncoderP"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:18ProjectDescription19EnvironmentVariableV6encode2toys7Encoder_p_tKF",
+            "mangledName": "$s18ProjectDescription19EnvironmentVariableV6encode2toys7Encoder_p_tKF",
+            "moduleName": "ProjectDescription",
+            "implicit": true,
+            "throwing": true,
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Var",
+            "name": "hashValue",
+            "printedName": "hashValue",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Int",
+                "printedName": "Swift.Int",
+                "usr": "s:Si"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:18ProjectDescription19EnvironmentVariableV9hashValueSivp",
+            "mangledName": "$s18ProjectDescription19EnvironmentVariableV9hashValueSivp",
+            "moduleName": "ProjectDescription",
+            "implicit": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Int",
+                    "printedName": "Swift.Int",
+                    "usr": "s:Si"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:18ProjectDescription19EnvironmentVariableV9hashValueSivg",
+                "mangledName": "$s18ProjectDescription19EnvironmentVariableV9hashValueSivg",
+                "moduleName": "ProjectDescription",
+                "implicit": true,
+                "accessorKind": "get"
+              }
+            ]
+          },
+          {
+            "kind": "Function",
+            "name": "hash",
+            "printedName": "hash(into:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Hasher",
+                "printedName": "Swift.Hasher",
+                "paramValueOwnership": "InOut",
+                "usr": "s:s6HasherV"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:18ProjectDescription19EnvironmentVariableV4hash4intoys6HasherVz_tF",
+            "mangledName": "$s18ProjectDescription19EnvironmentVariableV4hash4intoys6HasherVz_tF",
+            "moduleName": "ProjectDescription",
+            "implicit": true,
+            "funcSelfKind": "NonMutating"
+          }
+        ],
+        "declKind": "Struct",
+        "usr": "s:18ProjectDescription19EnvironmentVariableV",
+        "mangledName": "$s18ProjectDescription19EnvironmentVariableV",
+        "moduleName": "ProjectDescription",
+        "declAttributes": [
+          "AccessControl",
+          "RawDocComment"
+        ],
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "Equatable",
+            "printedName": "Equatable",
+            "usr": "s:SQ",
+            "mangledName": "$sSQ"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Decodable",
+            "printedName": "Decodable",
+            "usr": "s:Se",
+            "mangledName": "$sSe"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Encodable",
+            "printedName": "Encodable",
+            "usr": "s:SE",
+            "mangledName": "$sSE"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Hashable",
+            "printedName": "Hashable",
+            "usr": "s:SH",
+            "mangledName": "$sSH"
+          },
+          {
+            "kind": "Conformance",
+            "name": "ExpressibleByStringLiteral",
+            "printedName": "ExpressibleByStringLiteral",
+            "children": [
+              {
+                "kind": "TypeWitness",
+                "name": "StringLiteralType",
+                "printedName": "StringLiteralType",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  }
+                ]
+              }
+            ],
+            "usr": "s:s26ExpressibleByStringLiteralP",
+            "mangledName": "$ss26ExpressibleByStringLiteralP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "ExpressibleByExtendedGraphemeClusterLiteral",
+            "printedName": "ExpressibleByExtendedGraphemeClusterLiteral",
+            "children": [
+              {
+                "kind": "TypeWitness",
+                "name": "ExtendedGraphemeClusterLiteralType",
+                "printedName": "ExtendedGraphemeClusterLiteralType",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  }
+                ]
+              }
+            ],
+            "usr": "s:s43ExpressibleByExtendedGraphemeClusterLiteralP",
+            "mangledName": "$ss43ExpressibleByExtendedGraphemeClusterLiteralP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "ExpressibleByUnicodeScalarLiteral",
+            "printedName": "ExpressibleByUnicodeScalarLiteral",
+            "children": [
+              {
+                "kind": "TypeWitness",
+                "name": "UnicodeScalarLiteralType",
+                "printedName": "UnicodeScalarLiteralType",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  }
+                ]
+              }
+            ],
+            "usr": "s:s33ExpressibleByUnicodeScalarLiteralP",
+            "mangledName": "$ss33ExpressibleByUnicodeScalarLiteralP"
+          }
         ]
       },
       {
@@ -17592,876 +18611,6 @@
         "printedName": "InfoPlist",
         "children": [
           {
-            "kind": "TypeDecl",
-            "name": "Value",
-            "printedName": "Value",
-            "children": [
-              {
-                "kind": "Var",
-                "name": "string",
-                "printedName": "string",
-                "children": [
-                  {
-                    "kind": "TypeFunc",
-                    "name": "Function",
-                    "printedName": "(ProjectDescription.InfoPlist.Value.Type) -> (Swift.String) -> ProjectDescription.InfoPlist.Value",
-                    "children": [
-                      {
-                        "kind": "TypeFunc",
-                        "name": "Function",
-                        "printedName": "(Swift.String) -> ProjectDescription.InfoPlist.Value",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          },
-                          {
-                            "kind": "TypeNominal",
-                            "name": "String",
-                            "printedName": "Swift.String",
-                            "usr": "s:SS"
-                          }
-                        ]
-                      },
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Metatype",
-                        "printedName": "ProjectDescription.InfoPlist.Value.Type",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ],
-                "declKind": "EnumElement",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO6stringyAESScAEmF",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO6stringyAESScAEmF",
-                "moduleName": "ProjectDescription",
-                "declAttributes": [
-                  "RawDocComment"
-                ]
-              },
-              {
-                "kind": "Var",
-                "name": "integer",
-                "printedName": "integer",
-                "children": [
-                  {
-                    "kind": "TypeFunc",
-                    "name": "Function",
-                    "printedName": "(ProjectDescription.InfoPlist.Value.Type) -> (Swift.Int) -> ProjectDescription.InfoPlist.Value",
-                    "children": [
-                      {
-                        "kind": "TypeFunc",
-                        "name": "Function",
-                        "printedName": "(Swift.Int) -> ProjectDescription.InfoPlist.Value",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          },
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Int",
-                            "printedName": "Swift.Int",
-                            "usr": "s:Si"
-                          }
-                        ]
-                      },
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Metatype",
-                        "printedName": "ProjectDescription.InfoPlist.Value.Type",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ],
-                "declKind": "EnumElement",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO7integeryAESicAEmF",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO7integeryAESicAEmF",
-                "moduleName": "ProjectDescription",
-                "declAttributes": [
-                  "RawDocComment"
-                ]
-              },
-              {
-                "kind": "Var",
-                "name": "real",
-                "printedName": "real",
-                "children": [
-                  {
-                    "kind": "TypeFunc",
-                    "name": "Function",
-                    "printedName": "(ProjectDescription.InfoPlist.Value.Type) -> (Swift.Double) -> ProjectDescription.InfoPlist.Value",
-                    "children": [
-                      {
-                        "kind": "TypeFunc",
-                        "name": "Function",
-                        "printedName": "(Swift.Double) -> ProjectDescription.InfoPlist.Value",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          },
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Double",
-                            "printedName": "Swift.Double",
-                            "usr": "s:Sd"
-                          }
-                        ]
-                      },
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Metatype",
-                        "printedName": "ProjectDescription.InfoPlist.Value.Type",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ],
-                "declKind": "EnumElement",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO4realyAESdcAEmF",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO4realyAESdcAEmF",
-                "moduleName": "ProjectDescription",
-                "declAttributes": [
-                  "RawDocComment"
-                ]
-              },
-              {
-                "kind": "Var",
-                "name": "boolean",
-                "printedName": "boolean",
-                "children": [
-                  {
-                    "kind": "TypeFunc",
-                    "name": "Function",
-                    "printedName": "(ProjectDescription.InfoPlist.Value.Type) -> (Swift.Bool) -> ProjectDescription.InfoPlist.Value",
-                    "children": [
-                      {
-                        "kind": "TypeFunc",
-                        "name": "Function",
-                        "printedName": "(Swift.Bool) -> ProjectDescription.InfoPlist.Value",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          },
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Bool",
-                            "printedName": "Swift.Bool",
-                            "usr": "s:Sb"
-                          }
-                        ]
-                      },
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Metatype",
-                        "printedName": "ProjectDescription.InfoPlist.Value.Type",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ],
-                "declKind": "EnumElement",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO7booleanyAESbcAEmF",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO7booleanyAESbcAEmF",
-                "moduleName": "ProjectDescription",
-                "declAttributes": [
-                  "RawDocComment"
-                ]
-              },
-              {
-                "kind": "Var",
-                "name": "dictionary",
-                "printedName": "dictionary",
-                "children": [
-                  {
-                    "kind": "TypeFunc",
-                    "name": "Function",
-                    "printedName": "(ProjectDescription.InfoPlist.Value.Type) -> ([Swift.String : ProjectDescription.InfoPlist.Value]) -> ProjectDescription.InfoPlist.Value",
-                    "children": [
-                      {
-                        "kind": "TypeFunc",
-                        "name": "Function",
-                        "printedName": "([Swift.String : ProjectDescription.InfoPlist.Value]) -> ProjectDescription.InfoPlist.Value",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          },
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Dictionary",
-                            "printedName": "[Swift.String : ProjectDescription.InfoPlist.Value]",
-                            "children": [
-                              {
-                                "kind": "TypeNominal",
-                                "name": "String",
-                                "printedName": "Swift.String",
-                                "usr": "s:SS"
-                              },
-                              {
-                                "kind": "TypeNominal",
-                                "name": "Value",
-                                "printedName": "ProjectDescription.InfoPlist.Value",
-                                "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                              }
-                            ],
-                            "usr": "s:SD"
-                          }
-                        ]
-                      },
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Metatype",
-                        "printedName": "ProjectDescription.InfoPlist.Value.Type",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ],
-                "declKind": "EnumElement",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO10dictionaryyAESDySSAEGcAEmF",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO10dictionaryyAESDySSAEGcAEmF",
-                "moduleName": "ProjectDescription",
-                "declAttributes": [
-                  "RawDocComment"
-                ]
-              },
-              {
-                "kind": "Var",
-                "name": "array",
-                "printedName": "array",
-                "children": [
-                  {
-                    "kind": "TypeFunc",
-                    "name": "Function",
-                    "printedName": "(ProjectDescription.InfoPlist.Value.Type) -> ([ProjectDescription.InfoPlist.Value]) -> ProjectDescription.InfoPlist.Value",
-                    "children": [
-                      {
-                        "kind": "TypeFunc",
-                        "name": "Function",
-                        "printedName": "([ProjectDescription.InfoPlist.Value]) -> ProjectDescription.InfoPlist.Value",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          },
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Array",
-                            "printedName": "[ProjectDescription.InfoPlist.Value]",
-                            "children": [
-                              {
-                                "kind": "TypeNominal",
-                                "name": "Value",
-                                "printedName": "ProjectDescription.InfoPlist.Value",
-                                "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                              }
-                            ],
-                            "usr": "s:Sa"
-                          }
-                        ]
-                      },
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Metatype",
-                        "printedName": "ProjectDescription.InfoPlist.Value.Type",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ],
-                "declKind": "EnumElement",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO5arrayyAESayAEGcAEmF",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO5arrayyAESayAEGcAEmF",
-                "moduleName": "ProjectDescription",
-                "declAttributes": [
-                  "RawDocComment"
-                ]
-              },
-              {
-                "kind": "Constructor",
-                "name": "init",
-                "printedName": "init(from:)",
-                "children": [
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Value",
-                    "printedName": "ProjectDescription.InfoPlist.Value",
-                    "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                  },
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Decoder",
-                    "printedName": "Swift.Decoder",
-                    "usr": "s:s7DecoderP"
-                  }
-                ],
-                "declKind": "Constructor",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO4fromAEs7Decoder_p_tKcfc",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO4fromAEs7Decoder_p_tKcfc",
-                "moduleName": "ProjectDescription",
-                "implicit": true,
-                "throwing": true,
-                "init_kind": "Designated"
-              },
-              {
-                "kind": "Function",
-                "name": "encode",
-                "printedName": "encode(to:)",
-                "children": [
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Void",
-                    "printedName": "()"
-                  },
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Encoder",
-                    "printedName": "Swift.Encoder",
-                    "usr": "s:s7EncoderP"
-                  }
-                ],
-                "declKind": "Func",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO6encode2toys7Encoder_p_tKF",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO6encode2toys7Encoder_p_tKF",
-                "moduleName": "ProjectDescription",
-                "implicit": true,
-                "throwing": true,
-                "funcSelfKind": "NonMutating"
-              },
-              {
-                "kind": "Function",
-                "name": "==",
-                "printedName": "==(_:_:)",
-                "children": [
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Bool",
-                    "printedName": "Swift.Bool",
-                    "usr": "s:Sb"
-                  },
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Value",
-                    "printedName": "ProjectDescription.InfoPlist.Value",
-                    "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                  },
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Value",
-                    "printedName": "ProjectDescription.InfoPlist.Value",
-                    "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                  }
-                ],
-                "declKind": "Func",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO2eeoiySbAE_AEtFZ",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO2eeoiySbAE_AEtFZ",
-                "moduleName": "ProjectDescription",
-                "static": true,
-                "implicit": true,
-                "funcSelfKind": "NonMutating"
-              },
-              {
-                "kind": "Constructor",
-                "name": "init",
-                "printedName": "init(stringLiteral:)",
-                "children": [
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Value",
-                    "printedName": "ProjectDescription.InfoPlist.Value",
-                    "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                  },
-                  {
-                    "kind": "TypeNominal",
-                    "name": "String",
-                    "printedName": "Swift.String",
-                    "usr": "s:SS"
-                  }
-                ],
-                "declKind": "Constructor",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO13stringLiteralAESS_tcfc",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO13stringLiteralAESS_tcfc",
-                "moduleName": "ProjectDescription",
-                "declAttributes": [
-                  "AccessControl"
-                ],
-                "isFromExtension": true,
-                "init_kind": "Designated"
-              },
-              {
-                "kind": "Constructor",
-                "name": "init",
-                "printedName": "init(integerLiteral:)",
-                "children": [
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Value",
-                    "printedName": "ProjectDescription.InfoPlist.Value",
-                    "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                  },
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Int",
-                    "printedName": "Swift.Int",
-                    "usr": "s:Si"
-                  }
-                ],
-                "declKind": "Constructor",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO14integerLiteralAESi_tcfc",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO14integerLiteralAESi_tcfc",
-                "moduleName": "ProjectDescription",
-                "declAttributes": [
-                  "AccessControl"
-                ],
-                "isFromExtension": true,
-                "init_kind": "Designated"
-              },
-              {
-                "kind": "Constructor",
-                "name": "init",
-                "printedName": "init(floatLiteral:)",
-                "children": [
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Value",
-                    "printedName": "ProjectDescription.InfoPlist.Value",
-                    "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                  },
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Double",
-                    "printedName": "Swift.Double",
-                    "usr": "s:Sd"
-                  }
-                ],
-                "declKind": "Constructor",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO12floatLiteralAESd_tcfc",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO12floatLiteralAESd_tcfc",
-                "moduleName": "ProjectDescription",
-                "declAttributes": [
-                  "AccessControl"
-                ],
-                "isFromExtension": true,
-                "init_kind": "Designated"
-              },
-              {
-                "kind": "Constructor",
-                "name": "init",
-                "printedName": "init(booleanLiteral:)",
-                "children": [
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Value",
-                    "printedName": "ProjectDescription.InfoPlist.Value",
-                    "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                  },
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Bool",
-                    "printedName": "Swift.Bool",
-                    "usr": "s:Sb"
-                  }
-                ],
-                "declKind": "Constructor",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO14booleanLiteralAESb_tcfc",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO14booleanLiteralAESb_tcfc",
-                "moduleName": "ProjectDescription",
-                "declAttributes": [
-                  "AccessControl"
-                ],
-                "isFromExtension": true,
-                "init_kind": "Designated"
-              },
-              {
-                "kind": "Constructor",
-                "name": "init",
-                "printedName": "init(dictionaryLiteral:)",
-                "children": [
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Value",
-                    "printedName": "ProjectDescription.InfoPlist.Value",
-                    "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                  },
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Array",
-                    "printedName": "[(Swift.String, ProjectDescription.InfoPlist.Value)]",
-                    "children": [
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Tuple",
-                        "printedName": "(Swift.String, ProjectDescription.InfoPlist.Value)",
-                        "children": [
-                          {
-                            "kind": "TypeNominal",
-                            "name": "String",
-                            "printedName": "Swift.String",
-                            "usr": "s:SS"
-                          },
-                          {
-                            "kind": "TypeNominal",
-                            "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                          }
-                        ]
-                      }
-                    ],
-                    "usr": "s:Sa"
-                  }
-                ],
-                "declKind": "Constructor",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO17dictionaryLiteralAESS_AEtd_tcfc",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO17dictionaryLiteralAESS_AEtd_tcfc",
-                "moduleName": "ProjectDescription",
-                "declAttributes": [
-                  "AccessControl"
-                ],
-                "isFromExtension": true,
-                "init_kind": "Designated"
-              },
-              {
-                "kind": "Constructor",
-                "name": "init",
-                "printedName": "init(arrayLiteral:)",
-                "children": [
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Value",
-                    "printedName": "ProjectDescription.InfoPlist.Value",
-                    "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                  },
-                  {
-                    "kind": "TypeNominal",
-                    "name": "Array",
-                    "printedName": "[ProjectDescription.InfoPlist.Value]",
-                    "children": [
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Value",
-                        "printedName": "ProjectDescription.InfoPlist.Value",
-                        "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                      }
-                    ],
-                    "usr": "s:Sa"
-                  }
-                ],
-                "declKind": "Constructor",
-                "usr": "s:18ProjectDescription9InfoPlistO5ValueO12arrayLiteralA2Ed_tcfc",
-                "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO12arrayLiteralA2Ed_tcfc",
-                "moduleName": "ProjectDescription",
-                "declAttributes": [
-                  "AccessControl"
-                ],
-                "isFromExtension": true,
-                "init_kind": "Designated"
-              }
-            ],
-            "declKind": "Enum",
-            "usr": "s:18ProjectDescription9InfoPlistO5ValueO",
-            "mangledName": "$s18ProjectDescription9InfoPlistO5ValueO",
-            "moduleName": "ProjectDescription",
-            "declAttributes": [
-              "Indirect",
-              "AccessControl",
-              "RawDocComment"
-            ],
-            "conformances": [
-              {
-                "kind": "Conformance",
-                "name": "Decodable",
-                "printedName": "Decodable",
-                "usr": "s:Se",
-                "mangledName": "$sSe"
-              },
-              {
-                "kind": "Conformance",
-                "name": "Encodable",
-                "printedName": "Encodable",
-                "usr": "s:SE",
-                "mangledName": "$sSE"
-              },
-              {
-                "kind": "Conformance",
-                "name": "Equatable",
-                "printedName": "Equatable",
-                "usr": "s:SQ",
-                "mangledName": "$sSQ"
-              },
-              {
-                "kind": "Conformance",
-                "name": "ExpressibleByStringInterpolation",
-                "printedName": "ExpressibleByStringInterpolation",
-                "children": [
-                  {
-                    "kind": "TypeWitness",
-                    "name": "StringInterpolation",
-                    "printedName": "StringInterpolation",
-                    "children": [
-                      {
-                        "kind": "TypeNominal",
-                        "name": "DefaultStringInterpolation",
-                        "printedName": "Swift.DefaultStringInterpolation",
-                        "usr": "s:s26DefaultStringInterpolationV"
-                      }
-                    ]
-                  }
-                ],
-                "usr": "s:s32ExpressibleByStringInterpolationP",
-                "mangledName": "$ss32ExpressibleByStringInterpolationP"
-              },
-              {
-                "kind": "Conformance",
-                "name": "ExpressibleByStringLiteral",
-                "printedName": "ExpressibleByStringLiteral",
-                "children": [
-                  {
-                    "kind": "TypeWitness",
-                    "name": "StringLiteralType",
-                    "printedName": "StringLiteralType",
-                    "children": [
-                      {
-                        "kind": "TypeNominal",
-                        "name": "String",
-                        "printedName": "Swift.String",
-                        "usr": "s:SS"
-                      }
-                    ]
-                  }
-                ],
-                "usr": "s:s26ExpressibleByStringLiteralP",
-                "mangledName": "$ss26ExpressibleByStringLiteralP"
-              },
-              {
-                "kind": "Conformance",
-                "name": "ExpressibleByExtendedGraphemeClusterLiteral",
-                "printedName": "ExpressibleByExtendedGraphemeClusterLiteral",
-                "children": [
-                  {
-                    "kind": "TypeWitness",
-                    "name": "ExtendedGraphemeClusterLiteralType",
-                    "printedName": "ExtendedGraphemeClusterLiteralType",
-                    "children": [
-                      {
-                        "kind": "TypeNominal",
-                        "name": "String",
-                        "printedName": "Swift.String",
-                        "usr": "s:SS"
-                      }
-                    ]
-                  }
-                ],
-                "usr": "s:s43ExpressibleByExtendedGraphemeClusterLiteralP",
-                "mangledName": "$ss43ExpressibleByExtendedGraphemeClusterLiteralP"
-              },
-              {
-                "kind": "Conformance",
-                "name": "ExpressibleByUnicodeScalarLiteral",
-                "printedName": "ExpressibleByUnicodeScalarLiteral",
-                "children": [
-                  {
-                    "kind": "TypeWitness",
-                    "name": "UnicodeScalarLiteralType",
-                    "printedName": "UnicodeScalarLiteralType",
-                    "children": [
-                      {
-                        "kind": "TypeNominal",
-                        "name": "String",
-                        "printedName": "Swift.String",
-                        "usr": "s:SS"
-                      }
-                    ]
-                  }
-                ],
-                "usr": "s:s33ExpressibleByUnicodeScalarLiteralP",
-                "mangledName": "$ss33ExpressibleByUnicodeScalarLiteralP"
-              },
-              {
-                "kind": "Conformance",
-                "name": "ExpressibleByIntegerLiteral",
-                "printedName": "ExpressibleByIntegerLiteral",
-                "children": [
-                  {
-                    "kind": "TypeWitness",
-                    "name": "IntegerLiteralType",
-                    "printedName": "IntegerLiteralType",
-                    "children": [
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Int",
-                        "printedName": "Swift.Int",
-                        "usr": "s:Si"
-                      }
-                    ]
-                  }
-                ],
-                "usr": "s:s27ExpressibleByIntegerLiteralP",
-                "mangledName": "$ss27ExpressibleByIntegerLiteralP"
-              },
-              {
-                "kind": "Conformance",
-                "name": "ExpressibleByFloatLiteral",
-                "printedName": "ExpressibleByFloatLiteral",
-                "children": [
-                  {
-                    "kind": "TypeWitness",
-                    "name": "FloatLiteralType",
-                    "printedName": "FloatLiteralType",
-                    "children": [
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Double",
-                        "printedName": "Swift.Double",
-                        "usr": "s:Sd"
-                      }
-                    ]
-                  }
-                ],
-                "usr": "s:s25ExpressibleByFloatLiteralP",
-                "mangledName": "$ss25ExpressibleByFloatLiteralP"
-              },
-              {
-                "kind": "Conformance",
-                "name": "ExpressibleByBooleanLiteral",
-                "printedName": "ExpressibleByBooleanLiteral",
-                "children": [
-                  {
-                    "kind": "TypeWitness",
-                    "name": "BooleanLiteralType",
-                    "printedName": "BooleanLiteralType",
-                    "children": [
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Bool",
-                        "printedName": "Swift.Bool",
-                        "usr": "s:Sb"
-                      }
-                    ]
-                  }
-                ],
-                "usr": "s:s27ExpressibleByBooleanLiteralP",
-                "mangledName": "$ss27ExpressibleByBooleanLiteralP"
-              },
-              {
-                "kind": "Conformance",
-                "name": "ExpressibleByDictionaryLiteral",
-                "printedName": "ExpressibleByDictionaryLiteral",
-                "children": [
-                  {
-                    "kind": "TypeWitness",
-                    "name": "Key",
-                    "printedName": "Key",
-                    "children": [
-                      {
-                        "kind": "TypeNominal",
-                        "name": "String",
-                        "printedName": "Swift.String",
-                        "usr": "s:SS"
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "TypeWitness",
-                    "name": "Value",
-                    "printedName": "Value",
-                    "children": [
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Value",
-                        "printedName": "ProjectDescription.InfoPlist.Value",
-                        "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                      }
-                    ]
-                  }
-                ],
-                "usr": "s:s30ExpressibleByDictionaryLiteralP",
-                "mangledName": "$ss30ExpressibleByDictionaryLiteralP"
-              },
-              {
-                "kind": "Conformance",
-                "name": "ExpressibleByArrayLiteral",
-                "printedName": "ExpressibleByArrayLiteral",
-                "children": [
-                  {
-                    "kind": "TypeWitness",
-                    "name": "ArrayLiteralElement",
-                    "printedName": "ArrayLiteralElement",
-                    "children": [
-                      {
-                        "kind": "TypeNominal",
-                        "name": "Value",
-                        "printedName": "ProjectDescription.InfoPlist.Value",
-                        "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
-                      }
-                    ]
-                  }
-                ],
-                "usr": "s:s25ExpressibleByArrayLiteralP",
-                "mangledName": "$ss25ExpressibleByArrayLiteralP"
-              }
-            ]
-          },
-          {
             "kind": "Var",
             "name": "file",
             "printedName": "file",
@@ -18529,12 +18678,12 @@
               {
                 "kind": "TypeFunc",
                 "name": "Function",
-                "printedName": "(ProjectDescription.InfoPlist.Type) -> ([Swift.String : ProjectDescription.InfoPlist.Value]) -> ProjectDescription.InfoPlist",
+                "printedName": "(ProjectDescription.InfoPlist.Type) -> ([Swift.String : ProjectDescription.Plist.Value]) -> ProjectDescription.InfoPlist",
                 "children": [
                   {
                     "kind": "TypeFunc",
                     "name": "Function",
-                    "printedName": "([Swift.String : ProjectDescription.InfoPlist.Value]) -> ProjectDescription.InfoPlist",
+                    "printedName": "([Swift.String : ProjectDescription.Plist.Value]) -> ProjectDescription.InfoPlist",
                     "children": [
                       {
                         "kind": "TypeNominal",
@@ -18545,7 +18694,7 @@
                       {
                         "kind": "TypeNominal",
                         "name": "Dictionary",
-                        "printedName": "[Swift.String : ProjectDescription.InfoPlist.Value]",
+                        "printedName": "[Swift.String : ProjectDescription.Plist.Value]",
                         "children": [
                           {
                             "kind": "TypeNominal",
@@ -18556,8 +18705,8 @@
                           {
                             "kind": "TypeNominal",
                             "name": "Value",
-                            "printedName": "ProjectDescription.InfoPlist.Value",
-                            "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
                           }
                         ],
                         "usr": "s:SD"
@@ -18581,8 +18730,8 @@
               }
             ],
             "declKind": "EnumElement",
-            "usr": "s:18ProjectDescription9InfoPlistO10dictionaryyACSDySSAC5ValueOGcACmF",
-            "mangledName": "$s18ProjectDescription9InfoPlistO10dictionaryyACSDySSAC5ValueOGcACmF",
+            "usr": "s:18ProjectDescription9InfoPlistO10dictionaryyACSDySSAA0D0O5ValueOGcACmF",
+            "mangledName": "$s18ProjectDescription9InfoPlistO10dictionaryyACSDySSAA0D0O5ValueOGcACmF",
             "moduleName": "ProjectDescription",
             "declAttributes": [
               "RawDocComment"
@@ -18596,12 +18745,12 @@
               {
                 "kind": "TypeFunc",
                 "name": "Function",
-                "printedName": "(ProjectDescription.InfoPlist.Type) -> ([Swift.String : ProjectDescription.InfoPlist.Value]) -> ProjectDescription.InfoPlist",
+                "printedName": "(ProjectDescription.InfoPlist.Type) -> ([Swift.String : ProjectDescription.Plist.Value]) -> ProjectDescription.InfoPlist",
                 "children": [
                   {
                     "kind": "TypeFunc",
                     "name": "Function",
-                    "printedName": "([Swift.String : ProjectDescription.InfoPlist.Value]) -> ProjectDescription.InfoPlist",
+                    "printedName": "([Swift.String : ProjectDescription.Plist.Value]) -> ProjectDescription.InfoPlist",
                     "children": [
                       {
                         "kind": "TypeNominal",
@@ -18612,12 +18761,12 @@
                       {
                         "kind": "TypeNominal",
                         "name": "Tuple",
-                        "printedName": "(with: [Swift.String : ProjectDescription.InfoPlist.Value])",
+                        "printedName": "(with: [Swift.String : ProjectDescription.Plist.Value])",
                         "children": [
                           {
                             "kind": "TypeNominal",
                             "name": "Dictionary",
-                            "printedName": "[Swift.String : ProjectDescription.InfoPlist.Value]",
+                            "printedName": "[Swift.String : ProjectDescription.Plist.Value]",
                             "children": [
                               {
                                 "kind": "TypeNominal",
@@ -18628,8 +18777,8 @@
                               {
                                 "kind": "TypeNominal",
                                 "name": "Value",
-                                "printedName": "ProjectDescription.InfoPlist.Value",
-                                "usr": "s:18ProjectDescription9InfoPlistO5ValueO"
+                                "printedName": "ProjectDescription.Plist.Value",
+                                "usr": "s:18ProjectDescription5PlistO5ValueO"
                               }
                             ],
                             "usr": "s:SD"
@@ -18655,8 +18804,8 @@
               }
             ],
             "declKind": "EnumElement",
-            "usr": "s:18ProjectDescription9InfoPlistO16extendingDefaultyACSDySSAC5ValueOG_tcACmF",
-            "mangledName": "$s18ProjectDescription9InfoPlistO16extendingDefaultyACSDySSAC5ValueOG_tcACmF",
+            "usr": "s:18ProjectDescription9InfoPlistO16extendingDefaultyACSDySSAA0D0O5ValueOG_tcACmF",
+            "mangledName": "$s18ProjectDescription9InfoPlistO16extendingDefaultyACSDySSAA0D0O5ValueOG_tcACmF",
             "moduleName": "ProjectDescription",
             "declAttributes": [
               "RawDocComment"
@@ -21473,6 +21622,898 @@
             "usr": "s:s12CaseIterableP",
             "mangledName": "$ss12CaseIterableP"
           }
+        ]
+      },
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "ProjectDescription"
+      },
+      {
+        "kind": "TypeDecl",
+        "name": "Plist",
+        "printedName": "Plist",
+        "children": [
+          {
+            "kind": "TypeDecl",
+            "name": "Value",
+            "printedName": "Value",
+            "children": [
+              {
+                "kind": "Var",
+                "name": "string",
+                "printedName": "string",
+                "children": [
+                  {
+                    "kind": "TypeFunc",
+                    "name": "Function",
+                    "printedName": "(ProjectDescription.Plist.Value.Type) -> (Swift.String) -> ProjectDescription.Plist.Value",
+                    "children": [
+                      {
+                        "kind": "TypeFunc",
+                        "name": "Function",
+                        "printedName": "(Swift.String) -> ProjectDescription.Plist.Value",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          },
+                          {
+                            "kind": "TypeNominal",
+                            "name": "String",
+                            "printedName": "Swift.String",
+                            "usr": "s:SS"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Metatype",
+                        "printedName": "ProjectDescription.Plist.Value.Type",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "declKind": "EnumElement",
+                "usr": "s:18ProjectDescription5PlistO5ValueO6stringyAESScAEmF",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO6stringyAESScAEmF",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "RawDocComment"
+                ]
+              },
+              {
+                "kind": "Var",
+                "name": "integer",
+                "printedName": "integer",
+                "children": [
+                  {
+                    "kind": "TypeFunc",
+                    "name": "Function",
+                    "printedName": "(ProjectDescription.Plist.Value.Type) -> (Swift.Int) -> ProjectDescription.Plist.Value",
+                    "children": [
+                      {
+                        "kind": "TypeFunc",
+                        "name": "Function",
+                        "printedName": "(Swift.Int) -> ProjectDescription.Plist.Value",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          },
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Int",
+                            "printedName": "Swift.Int",
+                            "usr": "s:Si"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Metatype",
+                        "printedName": "ProjectDescription.Plist.Value.Type",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "declKind": "EnumElement",
+                "usr": "s:18ProjectDescription5PlistO5ValueO7integeryAESicAEmF",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO7integeryAESicAEmF",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "RawDocComment"
+                ]
+              },
+              {
+                "kind": "Var",
+                "name": "real",
+                "printedName": "real",
+                "children": [
+                  {
+                    "kind": "TypeFunc",
+                    "name": "Function",
+                    "printedName": "(ProjectDescription.Plist.Value.Type) -> (Swift.Double) -> ProjectDescription.Plist.Value",
+                    "children": [
+                      {
+                        "kind": "TypeFunc",
+                        "name": "Function",
+                        "printedName": "(Swift.Double) -> ProjectDescription.Plist.Value",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          },
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Double",
+                            "printedName": "Swift.Double",
+                            "usr": "s:Sd"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Metatype",
+                        "printedName": "ProjectDescription.Plist.Value.Type",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "declKind": "EnumElement",
+                "usr": "s:18ProjectDescription5PlistO5ValueO4realyAESdcAEmF",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO4realyAESdcAEmF",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "RawDocComment"
+                ]
+              },
+              {
+                "kind": "Var",
+                "name": "boolean",
+                "printedName": "boolean",
+                "children": [
+                  {
+                    "kind": "TypeFunc",
+                    "name": "Function",
+                    "printedName": "(ProjectDescription.Plist.Value.Type) -> (Swift.Bool) -> ProjectDescription.Plist.Value",
+                    "children": [
+                      {
+                        "kind": "TypeFunc",
+                        "name": "Function",
+                        "printedName": "(Swift.Bool) -> ProjectDescription.Plist.Value",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          },
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Bool",
+                            "printedName": "Swift.Bool",
+                            "usr": "s:Sb"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Metatype",
+                        "printedName": "ProjectDescription.Plist.Value.Type",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "declKind": "EnumElement",
+                "usr": "s:18ProjectDescription5PlistO5ValueO7booleanyAESbcAEmF",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO7booleanyAESbcAEmF",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "RawDocComment"
+                ]
+              },
+              {
+                "kind": "Var",
+                "name": "dictionary",
+                "printedName": "dictionary",
+                "children": [
+                  {
+                    "kind": "TypeFunc",
+                    "name": "Function",
+                    "printedName": "(ProjectDescription.Plist.Value.Type) -> ([Swift.String : ProjectDescription.Plist.Value]) -> ProjectDescription.Plist.Value",
+                    "children": [
+                      {
+                        "kind": "TypeFunc",
+                        "name": "Function",
+                        "printedName": "([Swift.String : ProjectDescription.Plist.Value]) -> ProjectDescription.Plist.Value",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          },
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Dictionary",
+                            "printedName": "[Swift.String : ProjectDescription.Plist.Value]",
+                            "children": [
+                              {
+                                "kind": "TypeNominal",
+                                "name": "String",
+                                "printedName": "Swift.String",
+                                "usr": "s:SS"
+                              },
+                              {
+                                "kind": "TypeNominal",
+                                "name": "Value",
+                                "printedName": "ProjectDescription.Plist.Value",
+                                "usr": "s:18ProjectDescription5PlistO5ValueO"
+                              }
+                            ],
+                            "usr": "s:SD"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Metatype",
+                        "printedName": "ProjectDescription.Plist.Value.Type",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "declKind": "EnumElement",
+                "usr": "s:18ProjectDescription5PlistO5ValueO10dictionaryyAESDySSAEGcAEmF",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO10dictionaryyAESDySSAEGcAEmF",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "RawDocComment"
+                ]
+              },
+              {
+                "kind": "Var",
+                "name": "array",
+                "printedName": "array",
+                "children": [
+                  {
+                    "kind": "TypeFunc",
+                    "name": "Function",
+                    "printedName": "(ProjectDescription.Plist.Value.Type) -> ([ProjectDescription.Plist.Value]) -> ProjectDescription.Plist.Value",
+                    "children": [
+                      {
+                        "kind": "TypeFunc",
+                        "name": "Function",
+                        "printedName": "([ProjectDescription.Plist.Value]) -> ProjectDescription.Plist.Value",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          },
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Array",
+                            "printedName": "[ProjectDescription.Plist.Value]",
+                            "children": [
+                              {
+                                "kind": "TypeNominal",
+                                "name": "Value",
+                                "printedName": "ProjectDescription.Plist.Value",
+                                "usr": "s:18ProjectDescription5PlistO5ValueO"
+                              }
+                            ],
+                            "usr": "s:Sa"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Metatype",
+                        "printedName": "ProjectDescription.Plist.Value.Type",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "declKind": "EnumElement",
+                "usr": "s:18ProjectDescription5PlistO5ValueO5arrayyAESayAEGcAEmF",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO5arrayyAESayAEGcAEmF",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "RawDocComment"
+                ]
+              },
+              {
+                "kind": "Constructor",
+                "name": "init",
+                "printedName": "init(from:)",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Value",
+                    "printedName": "ProjectDescription.Plist.Value",
+                    "usr": "s:18ProjectDescription5PlistO5ValueO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Decoder",
+                    "printedName": "Swift.Decoder",
+                    "usr": "s:s7DecoderP"
+                  }
+                ],
+                "declKind": "Constructor",
+                "usr": "s:18ProjectDescription5PlistO5ValueO4fromAEs7Decoder_p_tKcfc",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO4fromAEs7Decoder_p_tKcfc",
+                "moduleName": "ProjectDescription",
+                "implicit": true,
+                "throwing": true,
+                "init_kind": "Designated"
+              },
+              {
+                "kind": "Function",
+                "name": "encode",
+                "printedName": "encode(to:)",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Encoder",
+                    "printedName": "Swift.Encoder",
+                    "usr": "s:s7EncoderP"
+                  }
+                ],
+                "declKind": "Func",
+                "usr": "s:18ProjectDescription5PlistO5ValueO6encode2toys7Encoder_p_tKF",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO6encode2toys7Encoder_p_tKF",
+                "moduleName": "ProjectDescription",
+                "implicit": true,
+                "throwing": true,
+                "funcSelfKind": "NonMutating"
+              },
+              {
+                "kind": "Function",
+                "name": "==",
+                "printedName": "==(_:_:)",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Bool",
+                    "printedName": "Swift.Bool",
+                    "usr": "s:Sb"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Value",
+                    "printedName": "ProjectDescription.Plist.Value",
+                    "usr": "s:18ProjectDescription5PlistO5ValueO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Value",
+                    "printedName": "ProjectDescription.Plist.Value",
+                    "usr": "s:18ProjectDescription5PlistO5ValueO"
+                  }
+                ],
+                "declKind": "Func",
+                "usr": "s:18ProjectDescription5PlistO5ValueO2eeoiySbAE_AEtFZ",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO2eeoiySbAE_AEtFZ",
+                "moduleName": "ProjectDescription",
+                "static": true,
+                "implicit": true,
+                "funcSelfKind": "NonMutating"
+              },
+              {
+                "kind": "Constructor",
+                "name": "init",
+                "printedName": "init(stringLiteral:)",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Value",
+                    "printedName": "ProjectDescription.Plist.Value",
+                    "usr": "s:18ProjectDescription5PlistO5ValueO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  }
+                ],
+                "declKind": "Constructor",
+                "usr": "s:18ProjectDescription5PlistO5ValueO13stringLiteralAESS_tcfc",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO13stringLiteralAESS_tcfc",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "AccessControl"
+                ],
+                "isFromExtension": true,
+                "init_kind": "Designated"
+              },
+              {
+                "kind": "Constructor",
+                "name": "init",
+                "printedName": "init(integerLiteral:)",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Value",
+                    "printedName": "ProjectDescription.Plist.Value",
+                    "usr": "s:18ProjectDescription5PlistO5ValueO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Int",
+                    "printedName": "Swift.Int",
+                    "usr": "s:Si"
+                  }
+                ],
+                "declKind": "Constructor",
+                "usr": "s:18ProjectDescription5PlistO5ValueO14integerLiteralAESi_tcfc",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO14integerLiteralAESi_tcfc",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "AccessControl"
+                ],
+                "isFromExtension": true,
+                "init_kind": "Designated"
+              },
+              {
+                "kind": "Constructor",
+                "name": "init",
+                "printedName": "init(floatLiteral:)",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Value",
+                    "printedName": "ProjectDescription.Plist.Value",
+                    "usr": "s:18ProjectDescription5PlistO5ValueO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Double",
+                    "printedName": "Swift.Double",
+                    "usr": "s:Sd"
+                  }
+                ],
+                "declKind": "Constructor",
+                "usr": "s:18ProjectDescription5PlistO5ValueO12floatLiteralAESd_tcfc",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO12floatLiteralAESd_tcfc",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "AccessControl"
+                ],
+                "isFromExtension": true,
+                "init_kind": "Designated"
+              },
+              {
+                "kind": "Constructor",
+                "name": "init",
+                "printedName": "init(booleanLiteral:)",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Value",
+                    "printedName": "ProjectDescription.Plist.Value",
+                    "usr": "s:18ProjectDescription5PlistO5ValueO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Bool",
+                    "printedName": "Swift.Bool",
+                    "usr": "s:Sb"
+                  }
+                ],
+                "declKind": "Constructor",
+                "usr": "s:18ProjectDescription5PlistO5ValueO14booleanLiteralAESb_tcfc",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO14booleanLiteralAESb_tcfc",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "AccessControl"
+                ],
+                "isFromExtension": true,
+                "init_kind": "Designated"
+              },
+              {
+                "kind": "Constructor",
+                "name": "init",
+                "printedName": "init(dictionaryLiteral:)",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Value",
+                    "printedName": "ProjectDescription.Plist.Value",
+                    "usr": "s:18ProjectDescription5PlistO5ValueO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Array",
+                    "printedName": "[(Swift.String, ProjectDescription.Plist.Value)]",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Tuple",
+                        "printedName": "(Swift.String, ProjectDescription.Plist.Value)",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "String",
+                            "printedName": "Swift.String",
+                            "usr": "s:SS"
+                          },
+                          {
+                            "kind": "TypeNominal",
+                            "name": "Value",
+                            "printedName": "ProjectDescription.Plist.Value",
+                            "usr": "s:18ProjectDescription5PlistO5ValueO"
+                          }
+                        ]
+                      }
+                    ],
+                    "usr": "s:Sa"
+                  }
+                ],
+                "declKind": "Constructor",
+                "usr": "s:18ProjectDescription5PlistO5ValueO17dictionaryLiteralAESS_AEtd_tcfc",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO17dictionaryLiteralAESS_AEtd_tcfc",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "AccessControl"
+                ],
+                "isFromExtension": true,
+                "init_kind": "Designated"
+              },
+              {
+                "kind": "Constructor",
+                "name": "init",
+                "printedName": "init(arrayLiteral:)",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Value",
+                    "printedName": "ProjectDescription.Plist.Value",
+                    "usr": "s:18ProjectDescription5PlistO5ValueO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Array",
+                    "printedName": "[ProjectDescription.Plist.Value]",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Value",
+                        "printedName": "ProjectDescription.Plist.Value",
+                        "usr": "s:18ProjectDescription5PlistO5ValueO"
+                      }
+                    ],
+                    "usr": "s:Sa"
+                  }
+                ],
+                "declKind": "Constructor",
+                "usr": "s:18ProjectDescription5PlistO5ValueO12arrayLiteralA2Ed_tcfc",
+                "mangledName": "$s18ProjectDescription5PlistO5ValueO12arrayLiteralA2Ed_tcfc",
+                "moduleName": "ProjectDescription",
+                "declAttributes": [
+                  "AccessControl"
+                ],
+                "isFromExtension": true,
+                "init_kind": "Designated"
+              }
+            ],
+            "declKind": "Enum",
+            "usr": "s:18ProjectDescription5PlistO5ValueO",
+            "mangledName": "$s18ProjectDescription5PlistO5ValueO",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "Indirect",
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "conformances": [
+              {
+                "kind": "Conformance",
+                "name": "Decodable",
+                "printedName": "Decodable",
+                "usr": "s:Se",
+                "mangledName": "$sSe"
+              },
+              {
+                "kind": "Conformance",
+                "name": "Encodable",
+                "printedName": "Encodable",
+                "usr": "s:SE",
+                "mangledName": "$sSE"
+              },
+              {
+                "kind": "Conformance",
+                "name": "Equatable",
+                "printedName": "Equatable",
+                "usr": "s:SQ",
+                "mangledName": "$sSQ"
+              },
+              {
+                "kind": "Conformance",
+                "name": "ExpressibleByStringInterpolation",
+                "printedName": "ExpressibleByStringInterpolation",
+                "children": [
+                  {
+                    "kind": "TypeWitness",
+                    "name": "StringInterpolation",
+                    "printedName": "StringInterpolation",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "DefaultStringInterpolation",
+                        "printedName": "Swift.DefaultStringInterpolation",
+                        "usr": "s:s26DefaultStringInterpolationV"
+                      }
+                    ]
+                  }
+                ],
+                "usr": "s:s32ExpressibleByStringInterpolationP",
+                "mangledName": "$ss32ExpressibleByStringInterpolationP"
+              },
+              {
+                "kind": "Conformance",
+                "name": "ExpressibleByStringLiteral",
+                "printedName": "ExpressibleByStringLiteral",
+                "children": [
+                  {
+                    "kind": "TypeWitness",
+                    "name": "StringLiteralType",
+                    "printedName": "StringLiteralType",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "String",
+                        "printedName": "Swift.String",
+                        "usr": "s:SS"
+                      }
+                    ]
+                  }
+                ],
+                "usr": "s:s26ExpressibleByStringLiteralP",
+                "mangledName": "$ss26ExpressibleByStringLiteralP"
+              },
+              {
+                "kind": "Conformance",
+                "name": "ExpressibleByExtendedGraphemeClusterLiteral",
+                "printedName": "ExpressibleByExtendedGraphemeClusterLiteral",
+                "children": [
+                  {
+                    "kind": "TypeWitness",
+                    "name": "ExtendedGraphemeClusterLiteralType",
+                    "printedName": "ExtendedGraphemeClusterLiteralType",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "String",
+                        "printedName": "Swift.String",
+                        "usr": "s:SS"
+                      }
+                    ]
+                  }
+                ],
+                "usr": "s:s43ExpressibleByExtendedGraphemeClusterLiteralP",
+                "mangledName": "$ss43ExpressibleByExtendedGraphemeClusterLiteralP"
+              },
+              {
+                "kind": "Conformance",
+                "name": "ExpressibleByUnicodeScalarLiteral",
+                "printedName": "ExpressibleByUnicodeScalarLiteral",
+                "children": [
+                  {
+                    "kind": "TypeWitness",
+                    "name": "UnicodeScalarLiteralType",
+                    "printedName": "UnicodeScalarLiteralType",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "String",
+                        "printedName": "Swift.String",
+                        "usr": "s:SS"
+                      }
+                    ]
+                  }
+                ],
+                "usr": "s:s33ExpressibleByUnicodeScalarLiteralP",
+                "mangledName": "$ss33ExpressibleByUnicodeScalarLiteralP"
+              },
+              {
+                "kind": "Conformance",
+                "name": "ExpressibleByIntegerLiteral",
+                "printedName": "ExpressibleByIntegerLiteral",
+                "children": [
+                  {
+                    "kind": "TypeWitness",
+                    "name": "IntegerLiteralType",
+                    "printedName": "IntegerLiteralType",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Int",
+                        "printedName": "Swift.Int",
+                        "usr": "s:Si"
+                      }
+                    ]
+                  }
+                ],
+                "usr": "s:s27ExpressibleByIntegerLiteralP",
+                "mangledName": "$ss27ExpressibleByIntegerLiteralP"
+              },
+              {
+                "kind": "Conformance",
+                "name": "ExpressibleByFloatLiteral",
+                "printedName": "ExpressibleByFloatLiteral",
+                "children": [
+                  {
+                    "kind": "TypeWitness",
+                    "name": "FloatLiteralType",
+                    "printedName": "FloatLiteralType",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Double",
+                        "printedName": "Swift.Double",
+                        "usr": "s:Sd"
+                      }
+                    ]
+                  }
+                ],
+                "usr": "s:s25ExpressibleByFloatLiteralP",
+                "mangledName": "$ss25ExpressibleByFloatLiteralP"
+              },
+              {
+                "kind": "Conformance",
+                "name": "ExpressibleByBooleanLiteral",
+                "printedName": "ExpressibleByBooleanLiteral",
+                "children": [
+                  {
+                    "kind": "TypeWitness",
+                    "name": "BooleanLiteralType",
+                    "printedName": "BooleanLiteralType",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Bool",
+                        "printedName": "Swift.Bool",
+                        "usr": "s:Sb"
+                      }
+                    ]
+                  }
+                ],
+                "usr": "s:s27ExpressibleByBooleanLiteralP",
+                "mangledName": "$ss27ExpressibleByBooleanLiteralP"
+              },
+              {
+                "kind": "Conformance",
+                "name": "ExpressibleByDictionaryLiteral",
+                "printedName": "ExpressibleByDictionaryLiteral",
+                "children": [
+                  {
+                    "kind": "TypeWitness",
+                    "name": "Key",
+                    "printedName": "Key",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "String",
+                        "printedName": "Swift.String",
+                        "usr": "s:SS"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "TypeWitness",
+                    "name": "Value",
+                    "printedName": "Value",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Value",
+                        "printedName": "ProjectDescription.Plist.Value",
+                        "usr": "s:18ProjectDescription5PlistO5ValueO"
+                      }
+                    ]
+                  }
+                ],
+                "usr": "s:s30ExpressibleByDictionaryLiteralP",
+                "mangledName": "$ss30ExpressibleByDictionaryLiteralP"
+              },
+              {
+                "kind": "Conformance",
+                "name": "ExpressibleByArrayLiteral",
+                "printedName": "ExpressibleByArrayLiteral",
+                "children": [
+                  {
+                    "kind": "TypeWitness",
+                    "name": "ArrayLiteralElement",
+                    "printedName": "ArrayLiteralElement",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Value",
+                        "printedName": "ProjectDescription.Plist.Value",
+                        "usr": "s:18ProjectDescription5PlistO5ValueO"
+                      }
+                    ]
+                  }
+                ],
+                "usr": "s:s25ExpressibleByArrayLiteralP",
+                "mangledName": "$ss25ExpressibleByArrayLiteralP"
+              }
+            ]
+          }
+        ],
+        "declKind": "Enum",
+        "usr": "s:18ProjectDescription5PlistO",
+        "mangledName": "$s18ProjectDescription5PlistO",
+        "moduleName": "ProjectDescription",
+        "declAttributes": [
+          "AccessControl",
+          "RawDocComment"
         ]
       },
       {
@@ -37313,21 +38354,21 @@
               {
                 "kind": "TypeNominal",
                 "name": "Optional",
-                "printedName": "ProjectDescription.Path?",
+                "printedName": "ProjectDescription.Entitlements?",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "Entitlements",
+                    "printedName": "ProjectDescription.Entitlements",
+                    "usr": "s:18ProjectDescription12EntitlementsO"
                   }
                 ],
                 "usr": "s:Sq"
               }
             ],
             "declKind": "Var",
-            "usr": "s:18ProjectDescription6TargetV12entitlementsAA4PathVSgvp",
-            "mangledName": "$s18ProjectDescription6TargetV12entitlementsAA4PathVSgvp",
+            "usr": "s:18ProjectDescription6TargetV12entitlementsAA12EntitlementsOSgvp",
+            "mangledName": "$s18ProjectDescription6TargetV12entitlementsAA12EntitlementsOSgvp",
             "moduleName": "ProjectDescription",
             "declAttributes": [
               "HasStorage",
@@ -37345,21 +38386,21 @@
                   {
                     "kind": "TypeNominal",
                     "name": "Optional",
-                    "printedName": "ProjectDescription.Path?",
+                    "printedName": "ProjectDescription.Entitlements?",
                     "children": [
                       {
                         "kind": "TypeNominal",
-                        "name": "Path",
-                        "printedName": "ProjectDescription.Path",
-                        "usr": "s:18ProjectDescription4PathV"
+                        "name": "Entitlements",
+                        "printedName": "ProjectDescription.Entitlements",
+                        "usr": "s:18ProjectDescription12EntitlementsO"
                       }
                     ],
                     "usr": "s:Sq"
                   }
                 ],
                 "declKind": "Accessor",
-                "usr": "s:18ProjectDescription6TargetV12entitlementsAA4PathVSgvg",
-                "mangledName": "$s18ProjectDescription6TargetV12entitlementsAA4PathVSgvg",
+                "usr": "s:18ProjectDescription6TargetV12entitlementsAA12EntitlementsOSgvg",
+                "mangledName": "$s18ProjectDescription6TargetV12entitlementsAA12EntitlementsOSgvg",
                 "moduleName": "ProjectDescription",
                 "implicit": true,
                 "accessorKind": "get"
@@ -37612,13 +38653,13 @@
           },
           {
             "kind": "Var",
-            "name": "environment",
-            "printedName": "environment",
+            "name": "environmentVariables",
+            "printedName": "environmentVariables",
             "children": [
               {
                 "kind": "TypeNominal",
                 "name": "Dictionary",
-                "printedName": "[Swift.String : Swift.String]",
+                "printedName": "[Swift.String : ProjectDescription.EnvironmentVariable]",
                 "children": [
                   {
                     "kind": "TypeNominal",
@@ -37628,17 +38669,17 @@
                   },
                   {
                     "kind": "TypeNominal",
-                    "name": "String",
-                    "printedName": "Swift.String",
-                    "usr": "s:SS"
+                    "name": "EnvironmentVariable",
+                    "printedName": "ProjectDescription.EnvironmentVariable",
+                    "usr": "s:18ProjectDescription19EnvironmentVariableV"
                   }
                 ],
                 "usr": "s:SD"
               }
             ],
             "declKind": "Var",
-            "usr": "s:18ProjectDescription6TargetV11environmentSDyS2SGvp",
-            "mangledName": "$s18ProjectDescription6TargetV11environmentSDyS2SGvp",
+            "usr": "s:18ProjectDescription6TargetV20environmentVariablesSDySSAA19EnvironmentVariableVGvp",
+            "mangledName": "$s18ProjectDescription6TargetV20environmentVariablesSDySSAA19EnvironmentVariableVGvp",
             "moduleName": "ProjectDescription",
             "declAttributes": [
               "HasStorage",
@@ -37656,7 +38697,7 @@
                   {
                     "kind": "TypeNominal",
                     "name": "Dictionary",
-                    "printedName": "[Swift.String : Swift.String]",
+                    "printedName": "[Swift.String : ProjectDescription.EnvironmentVariable]",
                     "children": [
                       {
                         "kind": "TypeNominal",
@@ -37666,17 +38707,17 @@
                       },
                       {
                         "kind": "TypeNominal",
-                        "name": "String",
-                        "printedName": "Swift.String",
-                        "usr": "s:SS"
+                        "name": "EnvironmentVariable",
+                        "printedName": "ProjectDescription.EnvironmentVariable",
+                        "usr": "s:18ProjectDescription19EnvironmentVariableV"
                       }
                     ],
                     "usr": "s:SD"
                   }
                 ],
                 "declKind": "Accessor",
-                "usr": "s:18ProjectDescription6TargetV11environmentSDyS2SGvg",
-                "mangledName": "$s18ProjectDescription6TargetV11environmentSDyS2SGvg",
+                "usr": "s:18ProjectDescription6TargetV20environmentVariablesSDySSAA19EnvironmentVariableVGvg",
+                "mangledName": "$s18ProjectDescription6TargetV20environmentVariablesSDySSAA19EnvironmentVariableVGvg",
                 "moduleName": "ProjectDescription",
                 "implicit": true,
                 "accessorKind": "get"
@@ -37869,6 +38910,305 @@
           {
             "kind": "Constructor",
             "name": "init",
+            "printedName": "init(name:platform:product:productName:bundleId:deploymentTarget:infoPlist:sources:resources:copyFiles:headers:entitlements:scripts:dependencies:settings:coreDataModels:environmentVariables:launchArguments:additionalFiles:buildRules:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Target",
+                "printedName": "ProjectDescription.Target",
+                "usr": "s:18ProjectDescription6TargetV"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "String",
+                "printedName": "Swift.String",
+                "usr": "s:SS"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Platform",
+                "printedName": "ProjectDescription.Platform",
+                "usr": "s:18ProjectDescription8PlatformO"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Product",
+                "printedName": "ProjectDescription.Product",
+                "usr": "s:18ProjectDescription7ProductO"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "Swift.String?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "String",
+                "printedName": "Swift.String",
+                "usr": "s:SS"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "ProjectDescription.DeploymentTarget?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "DeploymentTarget",
+                    "printedName": "ProjectDescription.DeploymentTarget",
+                    "usr": "s:18ProjectDescription16DeploymentTargetO"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "ProjectDescription.InfoPlist?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "InfoPlist",
+                    "printedName": "ProjectDescription.InfoPlist",
+                    "usr": "s:18ProjectDescription9InfoPlistO"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "ProjectDescription.SourceFilesList?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "SourceFilesList",
+                    "printedName": "ProjectDescription.SourceFilesList",
+                    "usr": "s:18ProjectDescription15SourceFilesListV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "ProjectDescription.ResourceFileElements?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "ResourceFileElements",
+                    "printedName": "ProjectDescription.ResourceFileElements",
+                    "usr": "s:18ProjectDescription20ResourceFileElementsV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "[ProjectDescription.CopyFilesAction]?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Array",
+                    "printedName": "[ProjectDescription.CopyFilesAction]",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "CopyFilesAction",
+                        "printedName": "ProjectDescription.CopyFilesAction",
+                        "usr": "s:18ProjectDescription15CopyFilesActionV"
+                      }
+                    ],
+                    "usr": "s:Sa"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "ProjectDescription.Headers?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Headers",
+                    "printedName": "ProjectDescription.Headers",
+                    "usr": "s:18ProjectDescription7HeadersV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "ProjectDescription.Entitlements?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Entitlements",
+                    "printedName": "ProjectDescription.Entitlements",
+                    "usr": "s:18ProjectDescription12EntitlementsO"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Array",
+                "printedName": "[ProjectDescription.TargetScript]",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "TargetScript",
+                    "printedName": "ProjectDescription.TargetScript",
+                    "usr": "s:18ProjectDescription12TargetScriptV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sa"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Array",
+                "printedName": "[ProjectDescription.TargetDependency]",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "TargetDependency",
+                    "printedName": "ProjectDescription.TargetDependency",
+                    "usr": "s:18ProjectDescription16TargetDependencyO"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sa"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "ProjectDescription.Settings?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Settings",
+                    "printedName": "ProjectDescription.Settings",
+                    "usr": "s:18ProjectDescription8SettingsV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Array",
+                "printedName": "[ProjectDescription.CoreDataModel]",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "CoreDataModel",
+                    "printedName": "ProjectDescription.CoreDataModel",
+                    "usr": "s:18ProjectDescription13CoreDataModelV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sa"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Dictionary",
+                "printedName": "[Swift.String : ProjectDescription.EnvironmentVariable]",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "String",
+                    "printedName": "Swift.String",
+                    "usr": "s:SS"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "EnvironmentVariable",
+                    "printedName": "ProjectDescription.EnvironmentVariable",
+                    "usr": "s:18ProjectDescription19EnvironmentVariableV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:SD"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Array",
+                "printedName": "[ProjectDescription.LaunchArgument]",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "LaunchArgument",
+                    "printedName": "ProjectDescription.LaunchArgument",
+                    "usr": "s:18ProjectDescription14LaunchArgumentV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sa"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Array",
+                "printedName": "[ProjectDescription.FileElement]",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "FileElement",
+                    "printedName": "ProjectDescription.FileElement",
+                    "usr": "s:18ProjectDescription11FileElementO"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sa"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Array",
+                "printedName": "[ProjectDescription.BuildRule]",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "BuildRule",
+                    "printedName": "ProjectDescription.BuildRule",
+                    "usr": "s:18ProjectDescription9BuildRuleV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sa"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:18ProjectDescription6TargetV4name8platform7product0F4Name8bundleId010deploymentC09infoPlist7sources9resources9copyFiles7headers12entitlements7scripts12dependencies8settings14coreDataModels20environmentVariables15launchArguments010additionalP010buildRulesACSS_AA8PlatformOAA7ProductOSSSgSSAA010DeploymentC0OSgAA04InfoL0OSgAA06SourceP4ListVSgAA20ResourceFileElementsVSgSayAA04CopyP6ActionVGSgAA7HeadersVSgAA12EntitlementsOSgSayAA0C6ScriptVGSayAA0C10DependencyOGAA8SettingsVSgSayAA04CoreW5ModelVGSDySSAA19EnvironmentVariableVGSayAA14LaunchArgumentVGSayAA11FileElementOGSayAA9BuildRuleVGtcfc",
+            "mangledName": "$s18ProjectDescription6TargetV4name8platform7product0F4Name8bundleId010deploymentC09infoPlist7sources9resources9copyFiles7headers12entitlements7scripts12dependencies8settings14coreDataModels20environmentVariables15launchArguments010additionalP010buildRulesACSS_AA8PlatformOAA7ProductOSSSgSSAA010DeploymentC0OSgAA04InfoL0OSgAA06SourceP4ListVSgAA20ResourceFileElementsVSgSayAA04CopyP6ActionVGSgAA7HeadersVSgAA12EntitlementsOSgSayAA0C6ScriptVGSayAA0C10DependencyOGAA8SettingsVSgSayAA04CoreW5ModelVGSDySSAA19EnvironmentVariableVGSayAA14LaunchArgumentVGSayAA11FileElementOGSayAA9BuildRuleVGtcfc",
+            "moduleName": "ProjectDescription",
+            "declAttributes": [
+              "AccessControl"
+            ],
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
             "printedName": "init(name:platform:product:productName:bundleId:deploymentTarget:infoPlist:sources:resources:copyFiles:headers:entitlements:scripts:dependencies:settings:coreDataModels:environment:launchArguments:additionalFiles:buildRules:)",
             "children": [
               {
@@ -38017,13 +39357,13 @@
               {
                 "kind": "TypeNominal",
                 "name": "Optional",
-                "printedName": "ProjectDescription.Path?",
+                "printedName": "ProjectDescription.Entitlements?",
                 "children": [
                   {
                     "kind": "TypeNominal",
-                    "name": "Path",
-                    "printedName": "ProjectDescription.Path",
-                    "usr": "s:18ProjectDescription4PathV"
+                    "name": "Entitlements",
+                    "printedName": "ProjectDescription.Entitlements",
+                    "usr": "s:18ProjectDescription12EntitlementsO"
                   }
                 ],
                 "hasDefaultArg": true,
@@ -38107,7 +39447,6 @@
                     "usr": "s:SS"
                   }
                 ],
-                "hasDefaultArg": true,
                 "usr": "s:SD"
               },
               {
@@ -38157,11 +39496,13 @@
               }
             ],
             "declKind": "Constructor",
-            "usr": "s:18ProjectDescription6TargetV4name8platform7product0F4Name8bundleId010deploymentC09infoPlist7sources9resources9copyFiles7headers12entitlements7scripts12dependencies8settings14coreDataModels11environment15launchArguments010additionalP010buildRulesACSS_AA8PlatformOAA7ProductOSSSgSSAA010DeploymentC0OSgAA04InfoL0OSgAA06SourceP4ListVSgAA20ResourceFileElementsVSgSayAA04CopyP6ActionVGSgAA7HeadersVSgAA4PathVSgSayAA0C6ScriptVGSayAA0C10DependencyOGAA8SettingsVSgSayAA04CoreW5ModelVGSDyS2SGSayAA14LaunchArgumentVGSayAA11FileElementOGSayAA9BuildRuleVGtcfc",
-            "mangledName": "$s18ProjectDescription6TargetV4name8platform7product0F4Name8bundleId010deploymentC09infoPlist7sources9resources9copyFiles7headers12entitlements7scripts12dependencies8settings14coreDataModels11environment15launchArguments010additionalP010buildRulesACSS_AA8PlatformOAA7ProductOSSSgSSAA010DeploymentC0OSgAA04InfoL0OSgAA06SourceP4ListVSgAA20ResourceFileElementsVSgSayAA04CopyP6ActionVGSgAA7HeadersVSgAA4PathVSgSayAA0C6ScriptVGSayAA0C10DependencyOGAA8SettingsVSgSayAA04CoreW5ModelVGSDyS2SGSayAA14LaunchArgumentVGSayAA11FileElementOGSayAA9BuildRuleVGtcfc",
+            "usr": "s:18ProjectDescription6TargetV4name8platform7product0F4Name8bundleId010deploymentC09infoPlist7sources9resources9copyFiles7headers12entitlements7scripts12dependencies8settings14coreDataModels11environment15launchArguments010additionalP010buildRulesACSS_AA8PlatformOAA7ProductOSSSgSSAA010DeploymentC0OSgAA04InfoL0OSgAA06SourceP4ListVSgAA20ResourceFileElementsVSgSayAA04CopyP6ActionVGSgAA7HeadersVSgAA12EntitlementsOSgSayAA0C6ScriptVGSayAA0C10DependencyOGAA8SettingsVSgSayAA04CoreW5ModelVGSDyS2SGSayAA14LaunchArgumentVGSayAA11FileElementOGSayAA9BuildRuleVGtcfc",
+            "mangledName": "$s18ProjectDescription6TargetV4name8platform7product0F4Name8bundleId010deploymentC09infoPlist7sources9resources9copyFiles7headers12entitlements7scripts12dependencies8settings14coreDataModels11environment15launchArguments010additionalP010buildRulesACSS_AA8PlatformOAA7ProductOSSSgSSAA010DeploymentC0OSgAA04InfoL0OSgAA06SourceP4ListVSgAA20ResourceFileElementsVSgSayAA04CopyP6ActionVGSgAA7HeadersVSgAA12EntitlementsOSgSayAA0C6ScriptVGSayAA0C10DependencyOGAA8SettingsVSgSayAA04CoreW5ModelVGSDyS2SGSayAA14LaunchArgumentVGSayAA11FileElementOGSayAA9BuildRuleVGtcfc",
             "moduleName": "ProjectDescription",
+            "deprecated": true,
             "declAttributes": [
-              "AccessControl"
+              "AccessControl",
+              "Available"
             ],
             "init_kind": "Designated"
           },
@@ -52759,14 +54100,28 @@
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Arguments.swift",
       "kind": "Dictionary",
-      "offset": 274,
+      "offset": 378,
       "length": 3,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Arguments.swift",
       "kind": "Array",
-      "offset": 323,
+      "offset": 427,
+      "length": 2,
+      "value": "[]"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Arguments.swift",
+      "kind": "Dictionary",
+      "offset": 708,
+      "length": 3,
+      "value": "[]"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Arguments.swift",
+      "kind": "Array",
+      "offset": 757,
       "length": 2,
       "value": "[]"
     },
@@ -53459,49 +54814,91 @@
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
       "kind": "Array",
-      "offset": 2701,
+      "offset": 2728,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
       "kind": "Array",
-      "offset": 2748,
+      "offset": 2775,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
       "kind": "Array",
-      "offset": 2829,
+      "offset": 2856,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
       "kind": "Dictionary",
-      "offset": 2873,
+      "offset": 2922,
       "length": 3,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
       "kind": "Array",
-      "offset": 2922,
+      "offset": 2971,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
       "kind": "Array",
-      "offset": 2967,
+      "offset": 3016,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
       "kind": "Array",
-      "offset": 3005,
+      "offset": 3054,
+      "length": 2,
+      "value": "[]"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
+      "kind": "Array",
+      "offset": 4402,
+      "length": 2,
+      "value": "[]"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
+      "kind": "Array",
+      "offset": 4449,
+      "length": 2,
+      "value": "[]"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
+      "kind": "Array",
+      "offset": 4530,
+      "length": 2,
+      "value": "[]"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
+      "kind": "Array",
+      "offset": 4617,
+      "length": 2,
+      "value": "[]"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
+      "kind": "Array",
+      "offset": 4662,
+      "length": 2,
+      "value": "[]"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/tuist\/tuist\/Sources\/ProjectDescription\/Target.swift",
+      "kind": "Array",
+      "offset": 4700,
       "length": 2,
       "value": "[]"
     },

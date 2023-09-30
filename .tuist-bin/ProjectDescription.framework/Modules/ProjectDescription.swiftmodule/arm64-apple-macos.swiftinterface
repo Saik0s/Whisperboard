@@ -24,9 +24,12 @@ public struct ArchiveAction : Swift.Equatable, Swift.Codable {
   public init(from decoder: Swift.Decoder) throws
 }
 public struct Arguments : Swift.Equatable, Swift.Codable {
-  public let environment: [Swift.String : Swift.String]
+  public let environmentVariables: [Swift.String : ProjectDescription.EnvironmentVariable]
   public let launchArguments: [ProjectDescription.LaunchArgument]
+  @available(*, deprecated, message: "please use environmentVariables instead")
   public init(environment: [Swift.String : Swift.String] = [:], launchArguments: [ProjectDescription.LaunchArgument] = [])
+  public init(environmentVariables: [Swift.String : ProjectDescription.EnvironmentVariable] = [:], launchArguments: [ProjectDescription.LaunchArgument] = [])
+  public init(launchArguments: [ProjectDescription.LaunchArgument])
   public static func == (a: ProjectDescription.Arguments, b: ProjectDescription.Arguments) -> Swift.Bool
   public func encode(to encoder: Swift.Encoder) throws
   public init(from decoder: Swift.Decoder) throws
@@ -398,6 +401,26 @@ public enum DeploymentTarget : Swift.Codable, Swift.Hashable {
   }
   public init(from decoder: Swift.Decoder) throws
 }
+public enum Entitlements : Swift.Codable, Swift.Equatable {
+  case file(path: ProjectDescription.Path)
+  case dictionary([Swift.String : ProjectDescription.Plist.Value])
+  public enum CodingError : Swift.Error {
+    case invalidType(Swift.String)
+  }
+  public var path: ProjectDescription.Path? {
+    get
+  }
+  public static func == (a: ProjectDescription.Entitlements, b: ProjectDescription.Entitlements) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
+extension ProjectDescription.Entitlements : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
 @dynamicMemberLookup public enum Environment {
   public enum Value : Swift.Equatable {
     case string(Swift.String)
@@ -410,6 +433,22 @@ public enum DeploymentTarget : Swift.Codable, Swift.Hashable {
 extension Swift.Optional where Wrapped == ProjectDescription.Environment.Value {
   public func getString(default defaultString: Swift.String) -> Swift.String
   public func getBoolean(default defaultBoolean: Swift.Bool) -> Swift.Bool
+}
+public struct EnvironmentVariable : Swift.Equatable, Swift.Codable, Swift.Hashable, Swift.ExpressibleByStringLiteral {
+  public let value: Swift.String
+  public let isEnabled: Swift.Bool
+  public init(value: Swift.String, isEnabled: Swift.Bool)
+  public init(stringLiteral value: Swift.String)
+  public static func == (a: ProjectDescription.EnvironmentVariable, b: ProjectDescription.EnvironmentVariable) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+  public func encode(to encoder: Swift.Encoder) throws
+  public var hashValue: Swift.Int {
+    get
+  }
+  public init(from decoder: Swift.Decoder) throws
 }
 public struct ExecutionAction : Swift.Equatable, Swift.Codable {
   public let title: Swift.String
@@ -525,20 +564,9 @@ public struct Headers : Swift.Codable, Swift.Equatable {
   public init(from decoder: Swift.Decoder) throws
 }
 public enum InfoPlist : Swift.Codable, Swift.Equatable {
-  indirect public enum Value : Swift.Codable, Swift.Equatable {
-    case string(Swift.String)
-    case integer(Swift.Int)
-    case real(Swift.Double)
-    case boolean(Swift.Bool)
-    case dictionary([Swift.String : ProjectDescription.InfoPlist.Value])
-    case array([ProjectDescription.InfoPlist.Value])
-    public static func == (a: ProjectDescription.InfoPlist.Value, b: ProjectDescription.InfoPlist.Value) -> Swift.Bool
-    public func encode(to encoder: Swift.Encoder) throws
-    public init(from decoder: Swift.Decoder) throws
-  }
   case file(path: ProjectDescription.Path)
-  case dictionary([Swift.String : ProjectDescription.InfoPlist.Value])
-  case extendingDefault(with: [Swift.String : ProjectDescription.InfoPlist.Value])
+  case dictionary([Swift.String : ProjectDescription.Plist.Value])
+  case extendingDefault(with: [Swift.String : ProjectDescription.Plist.Value])
   public static var `default`: ProjectDescription.InfoPlist {
     get
   }
@@ -559,33 +587,9 @@ extension ProjectDescription.InfoPlist : Swift.ExpressibleByStringInterpolation 
   public typealias StringLiteralType = Swift.String
   public typealias UnicodeScalarLiteralType = Swift.String
 }
-extension ProjectDescription.InfoPlist.Value : Swift.ExpressibleByStringInterpolation {
-  public init(stringLiteral value: Swift.String)
-  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
-  public typealias StringInterpolation = Swift.DefaultStringInterpolation
-  public typealias StringLiteralType = Swift.String
-  public typealias UnicodeScalarLiteralType = Swift.String
-}
-extension ProjectDescription.InfoPlist.Value : Swift.ExpressibleByIntegerLiteral {
-  public init(integerLiteral value: Swift.Int)
-  public typealias IntegerLiteralType = Swift.Int
-}
-extension ProjectDescription.InfoPlist.Value : Swift.ExpressibleByFloatLiteral {
-  public init(floatLiteral value: Swift.Double)
-  public typealias FloatLiteralType = Swift.Double
-}
-extension ProjectDescription.InfoPlist.Value : Swift.ExpressibleByBooleanLiteral {
-  public init(booleanLiteral value: Swift.Bool)
-  public typealias BooleanLiteralType = Swift.Bool
-}
-extension ProjectDescription.InfoPlist.Value : Swift.ExpressibleByDictionaryLiteral {
-  public init(dictionaryLiteral elements: (Swift.String, ProjectDescription.InfoPlist.Value)...)
-  public typealias Key = Swift.String
-  public typealias Value = ProjectDescription.InfoPlist.Value
-}
-extension ProjectDescription.InfoPlist.Value : Swift.ExpressibleByArrayLiteral {
-  public init(arrayLiteral elements: ProjectDescription.InfoPlist.Value...)
-  public typealias ArrayLiteralElement = ProjectDescription.InfoPlist.Value
+extension ProjectDescription.InfoPlist {
+  @available(*, deprecated, message: "InfoPlist.Value was renamed to Plist.Value")
+  public typealias Value = ProjectDescription.Plist.Value
 }
 public struct LaunchArgument : Swift.Equatable, Swift.Codable {
   public let name: Swift.String
@@ -678,6 +682,47 @@ public enum Platform : Swift.String, Swift.Codable, Swift.Equatable, Swift.CaseI
   public var rawValue: Swift.String {
     get
   }
+}
+public enum Plist {
+  indirect public enum Value : Swift.Codable, Swift.Equatable {
+    case string(Swift.String)
+    case integer(Swift.Int)
+    case real(Swift.Double)
+    case boolean(Swift.Bool)
+    case dictionary([Swift.String : ProjectDescription.Plist.Value])
+    case array([ProjectDescription.Plist.Value])
+    public static func == (a: ProjectDescription.Plist.Value, b: ProjectDescription.Plist.Value) -> Swift.Bool
+    public func encode(to encoder: Swift.Encoder) throws
+    public init(from decoder: Swift.Decoder) throws
+  }
+}
+extension ProjectDescription.Plist.Value : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+extension ProjectDescription.Plist.Value : Swift.ExpressibleByIntegerLiteral {
+  public init(integerLiteral value: Swift.Int)
+  public typealias IntegerLiteralType = Swift.Int
+}
+extension ProjectDescription.Plist.Value : Swift.ExpressibleByFloatLiteral {
+  public init(floatLiteral value: Swift.Double)
+  public typealias FloatLiteralType = Swift.Double
+}
+extension ProjectDescription.Plist.Value : Swift.ExpressibleByBooleanLiteral {
+  public init(booleanLiteral value: Swift.Bool)
+  public typealias BooleanLiteralType = Swift.Bool
+}
+extension ProjectDescription.Plist.Value : Swift.ExpressibleByDictionaryLiteral {
+  public init(dictionaryLiteral elements: (Swift.String, ProjectDescription.Plist.Value)...)
+  public typealias Key = Swift.String
+  public typealias Value = ProjectDescription.Plist.Value
+}
+extension ProjectDescription.Plist.Value : Swift.ExpressibleByArrayLiteral {
+  public init(arrayLiteral elements: ProjectDescription.Plist.Value...)
+  public typealias ArrayLiteralElement = ProjectDescription.Plist.Value
 }
 public struct Plugin : Swift.Codable, Swift.Equatable {
   public let name: Swift.String
@@ -1216,16 +1261,18 @@ public struct Target : Swift.Codable, Swift.Equatable {
   public let resources: ProjectDescription.ResourceFileElements?
   public let copyFiles: [ProjectDescription.CopyFilesAction]?
   public let headers: ProjectDescription.Headers?
-  public let entitlements: ProjectDescription.Path?
+  public let entitlements: ProjectDescription.Entitlements?
   public let scripts: [ProjectDescription.TargetScript]
   public let dependencies: [ProjectDescription.TargetDependency]
   public let settings: ProjectDescription.Settings?
   public let coreDataModels: [ProjectDescription.CoreDataModel]
-  public let environment: [Swift.String : Swift.String]
+  public let environmentVariables: [Swift.String : ProjectDescription.EnvironmentVariable]
   public let launchArguments: [ProjectDescription.LaunchArgument]
   public let additionalFiles: [ProjectDescription.FileElement]
   public let buildRules: [ProjectDescription.BuildRule]
-  public init(name: Swift.String, platform: ProjectDescription.Platform, product: ProjectDescription.Product, productName: Swift.String? = nil, bundleId: Swift.String, deploymentTarget: ProjectDescription.DeploymentTarget? = nil, infoPlist: ProjectDescription.InfoPlist? = .default, sources: ProjectDescription.SourceFilesList? = nil, resources: ProjectDescription.ResourceFileElements? = nil, copyFiles: [ProjectDescription.CopyFilesAction]? = nil, headers: ProjectDescription.Headers? = nil, entitlements: ProjectDescription.Path? = nil, scripts: [ProjectDescription.TargetScript] = [], dependencies: [ProjectDescription.TargetDependency] = [], settings: ProjectDescription.Settings? = nil, coreDataModels: [ProjectDescription.CoreDataModel] = [], environment: [Swift.String : Swift.String] = [:], launchArguments: [ProjectDescription.LaunchArgument] = [], additionalFiles: [ProjectDescription.FileElement] = [], buildRules: [ProjectDescription.BuildRule] = [])
+  public init(name: Swift.String, platform: ProjectDescription.Platform, product: ProjectDescription.Product, productName: Swift.String? = nil, bundleId: Swift.String, deploymentTarget: ProjectDescription.DeploymentTarget? = nil, infoPlist: ProjectDescription.InfoPlist? = .default, sources: ProjectDescription.SourceFilesList? = nil, resources: ProjectDescription.ResourceFileElements? = nil, copyFiles: [ProjectDescription.CopyFilesAction]? = nil, headers: ProjectDescription.Headers? = nil, entitlements: ProjectDescription.Entitlements? = nil, scripts: [ProjectDescription.TargetScript] = [], dependencies: [ProjectDescription.TargetDependency] = [], settings: ProjectDescription.Settings? = nil, coreDataModels: [ProjectDescription.CoreDataModel] = [], environmentVariables: [Swift.String : ProjectDescription.EnvironmentVariable] = [:], launchArguments: [ProjectDescription.LaunchArgument] = [], additionalFiles: [ProjectDescription.FileElement] = [], buildRules: [ProjectDescription.BuildRule] = [])
+  @available(*, deprecated, message: "please use environmentVariables instead")
+  public init(name: Swift.String, platform: ProjectDescription.Platform, product: ProjectDescription.Product, productName: Swift.String? = nil, bundleId: Swift.String, deploymentTarget: ProjectDescription.DeploymentTarget? = nil, infoPlist: ProjectDescription.InfoPlist? = .default, sources: ProjectDescription.SourceFilesList? = nil, resources: ProjectDescription.ResourceFileElements? = nil, copyFiles: [ProjectDescription.CopyFilesAction]? = nil, headers: ProjectDescription.Headers? = nil, entitlements: ProjectDescription.Entitlements? = nil, scripts: [ProjectDescription.TargetScript] = [], dependencies: [ProjectDescription.TargetDependency] = [], settings: ProjectDescription.Settings? = nil, coreDataModels: [ProjectDescription.CoreDataModel] = [], environment: [Swift.String : Swift.String], launchArguments: [ProjectDescription.LaunchArgument] = [], additionalFiles: [ProjectDescription.FileElement] = [], buildRules: [ProjectDescription.BuildRule] = [])
   public static func == (a: ProjectDescription.Target, b: ProjectDescription.Target) -> Swift.Bool
   public func encode(to encoder: Swift.Encoder) throws
   public init(from decoder: Swift.Decoder) throws

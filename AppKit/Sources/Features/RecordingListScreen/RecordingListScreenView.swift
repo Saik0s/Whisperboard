@@ -39,7 +39,7 @@ struct RecordingListScreen: ReducerProtocol {
     case recordingCard(id: RecordingCard.State.ID, action: RecordingCard.Action)
     case delete(id: RecordingInfo.ID)
     case addFileRecordings(urls: [URL])
-    case failedToAddRecordings(error: EquatableErrorWrapper)
+    case failedToAddRecordings(error: EquatableError)
     case details(action: PresentationAction<RecordingDetails.Action>)
     case alert(PresentationAction<Alert>)
     case didFinishImportingFiles
@@ -141,7 +141,7 @@ struct RecordingListScreen: ReducerProtocol {
         .animation(.gentleBounce())
 
       case let .failedToAddRecordings(error):
-        log.error(error.error)
+        log.error(error)
         state.alert = .error(error)
         return .none
 
@@ -327,7 +327,7 @@ struct EmptyStateView: View {
           isAnimating = true
         }
       VStack(spacing: .grid(1)) {
-        Text("No recordings yet")
+        Text("No recordings yet, lol")
           .font(.DS.headlineL)
           .foregroundColor(.DS.Text.base)
         Text("Your new recordings will appear here")

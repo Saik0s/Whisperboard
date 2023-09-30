@@ -9,12 +9,11 @@ let projectSettings: SettingsDictionary = [
   "CODE_SIGN_STYLE": "Automatic",
   "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
   "MARKETING_VERSION": SettingValue(stringLiteral: version),
-  "OTHER_LDFLAGS": "-lc++ $(inherited)",
 ]
 
 let debugSettings: SettingsDictionary = [
   "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -enable-actor-data-race-checks",
-  "OTHER_LDFLAGS": "-Xlinker -interposable -Xlinker -undefined -Xlinker dynamic_lookup $(inherited)",
+  "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
 ]
 
 let releaseSettings: SettingsDictionary = [
@@ -76,7 +75,7 @@ func appTarget() -> Target {
     ]),
     sources: .paths([.relativeToManifest("Sources/**")]),
     resources: ["Resources/Assets.xcassets"],
-    entitlements: .relativeToManifest("Support/app.entitlements"),
+    entitlements: "Support/app.entitlements",
     scripts: [
       .post(
         path: "../ci_scripts/post_build_checks.sh",
@@ -89,7 +88,14 @@ func appTarget() -> Target {
       .project(target: "WhisperBoardKit", path: "../AppKit"),
       .sdk(name: "CloudKit", type: .framework, status: .optional),
       .sdk(name: "StoreKit", type: .framework, status: .optional),
-    ] + (Environment.isHotReloadingEnabled.getBoolean(default: false) ? [.package(product: "HotReloading")] : [])
+      .sdk(name: "c++", type: .library, status: .required),
+    ] + (Environment.isHotReloadingEnabled.getBoolean(default: false) ? [.package(product: "InjectionLite")] : []),
+    environment: [
+      "OS_ACTIVITY_MODE": "disable",
+      "OS_ACTIVITY_DT_MODE": "NO",
+      "INJECTION_DIRECTORIES": "$(SRCROOT)/..",
+      "INJECTION_STANDALONE": "YES",
+    ]
   )
 }
 
@@ -129,7 +135,7 @@ func shareExtensionTarget() -> Target {
       ],
     ]),
     sources: .paths([.relativeToManifest("ShareExtension/ShareViewController.swift")]),
-    entitlements: .relativeToManifest("Support/ShareExtension.entitlements"),
+    entitlements: "Support/ShareExtension.entitlements",
     dependencies: [
       .external(name: "AudioKit"),
     ]
@@ -147,7 +153,7 @@ let project = Project(
     )
   ),
   packages: Environment.isHotReloadingEnabled.getBoolean(default: false)
-    ? [.remote(url: "https://github.com/johnno1962/HotReloading.git", requirement: .branch("main"))]
+    ? [.remote(url: "https://github.com/johnno1962/InjectionLite.git", requirement: .branch("main"))]
     : [],
   settings: .settings(
     base: projectSettings,
@@ -168,6 +174,6 @@ let project = Project(
     ),
   ],
   additionalFiles: [
-    "Resources/Whisperboard.storekit",
+    "Support/Whisperboard.storekit",
   ]
 )

@@ -1,0 +1,41 @@
+{
+  "pins" : [
+    {
+      "identity" : "dlkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/DLKit",
+      "state" : {
+        "revision" : "3bef581529dc7ad78d04f56333b7524e8f2c4ca9",
+        "version" : "3.1.0"
+      }
+    },
+    {
+      "identity" : "fishhook",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/fishhook",
+      "state" : {
+        "revision" : "5b59158940845f611a3a3180a49c7280bb2a22dc",
+        "version" : "1.1.0"
+      }
+    },
+    {
+      "identity" : "injectionlite",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/InjectionLite.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "585321538344a91e420dff94ee6833c9590db842"
+      }
+    },
+    {
+      "identity" : "popen",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/Popen",
+      "state" : {
+        "revision" : "e449e5b5beeb332cabe6adc21460696a10d8416b",
+        "version" : "1.2.4"
+      }
+    }
+  ],
+  "version" : 2
+}

@@ -33,8 +33,7 @@ struct WaveformProgress: ReducerProtocol {
     size: CGSize(width: 350, height: 120),
     backgroundColor: .clear,
     style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
-    dampening: .init(percentage: 0.125, sides: .both),
-    position: .middle,
+    damping: .init(percentage: 0.125, sides: .both),
     scale: DSScreen.scale,
     verticalScalingFactor: 0.95,
     shouldAntialias: true

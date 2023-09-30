@@ -6,24 +6,23 @@ let projectSettings: SettingsDictionary = [
   "SWIFT_TREAT_WARNINGS_AS_ERRORS": "YES",
   "CODE_SIGN_STYLE": "Automatic",
   "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
-  "OTHER_LDFLAGS": "-lc++ $(inherited)",
 ]
 
 let debugSettings: SettingsDictionary = [
   "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -enable-actor-data-race-checks",
-  "OTHER_LDFLAGS": "-Xlinker -interposable -Xlinker -undefined -Xlinker dynamic_lookup $(inherited)",
-  "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Sources/Common/Bridging.h",
+  "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
+  "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Support/Bridging.h",
 ]
 
 let releaseSettings: SettingsDictionary = [
-  "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Sources/Common/Bridging.h",
+  "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Support/Bridging.h",
 ]
 
 func appKitTarget() -> Target {
   Target(
     name: "WhisperBoardKit",
     platform: .iOS,
-    product: .framework,
+    product: .staticFramework,
     bundleId: "me.igortarasenko.WhisperboardKit",
     deploymentTarget: .iOS(targetVersion: "16.0", devices: [.iphone, .ipad]),
     infoPlist: .extendingDefault(with: [:]),
@@ -33,6 +32,7 @@ func appKitTarget() -> Target {
       "Resources/ggml-tiny.bin",
     ],
     dependencies: [
+      .sdk(name: "c++", type: .library, status: .required),      
       .external(name: "AsyncAlgorithms"),
       .external(name: "AudioKit"),
       .external(name: "ComposableArchitecture"),
@@ -68,6 +68,7 @@ func appKitTestTarget() -> Target {
 
 let project = Project(
   name: "WhisperBoardKit",
+
   options: .options(
     automaticSchemesOptions: .disabled,
     disableShowEnvironmentVarsInScriptPhases: true,
@@ -76,16 +77,19 @@ let project = Project(
       tabWidth: 2
     )
   ),
+
   settings: .settings(
     base: projectSettings,
     debug: debugSettings,
     release: releaseSettings,
     defaultSettings: .recommended
   ),
+
   targets: [
     appKitTarget(),
     appKitTestTarget(),
   ],
+
   schemes: [
     Scheme(
       name: "WhisperBoardKit",
@@ -94,6 +98,7 @@ let project = Project(
       testAction: .targets(["WhisperBoardKitTests"])
     ),
   ],
+
   resourceSynthesizers: [
     .files(extensions: ["bin", "json"]),
     .assets(),

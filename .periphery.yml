@@ -1,8 +1,13 @@
 schemes:
-- WhisperBoard
+  - WhisperBoard
 targets:
-- WhisperBoardKit
-- WhisperBoard
-- ShareExtension
+  - WhisperBoardKit
+  - WhisperBoard
+  - ShareExtension
 verbose: false
 workspace: WhisperBoard.xcworkspace
+report_exclude:
+  - App/Derived
+  - AppKit/Derived
+retain_assign_only_property_types:
+  - StoreOf

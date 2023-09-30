@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/dmrschmidt/DSWaveformImage.git",
       "state" : {
-        "revision" : "5814189fe74e7c2f76f07d941139c0758ea5b304",
-        "version" : "11.0.1"
+        "revision" : "e670b8da140c39036f171b9754ed25126b8d414b",
+        "version" : "13.0.2"
       }
     },
     {
@@ -42,7 +42,7 @@
       "location" : "https://github.com/krzysztofzablocki/Inject.git",
       "state" : {
         "branch" : "main",
-        "revision" : "2057eb9819813b89fd2107e99608d2d20890d9c5"
+        "revision" : "8f0458f7606fc0b6fa81d47e5748f23949b55782"
       }
     },
     {
@@ -68,8 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/RevenueCat/purchases-ios.git",
       "state" : {
-        "revision" : "f3df9274cca6228ac4775205e095390296192fa3",
-        "version" : "4.25.8"
+        "revision" : "02a7da2dae8ca74c97ae0130b87a2787a4f36edf",
+        "version" : "4.26.1"
       }
     },
     {
@@ -167,8 +167,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-snapshot-testing",
       "state" : {
-        "revision" : "dc46eeb3928a75390651fac6c1ef7f93ad59a73b",
-        "version" : "1.11.1"
+        "revision" : "696b86a6d151578bca7c1a2a3ed419a5f834d40f",
+        "version" : "1.13.0"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-syntax.git",
+      "state" : {
+        "revision" : "74203046135342e4a4a627476dd6caf8b28fe11b",
+        "version" : "509.0.0"
       }
     },
     {

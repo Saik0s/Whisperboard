@@ -21,11 +21,12 @@ extension View {
 extension View {
   func previewPreset() -> some View {
     let content = padding()
+      .background(Color.black)
+      .environment(\.colorScheme, .dark)
 
     return Group {
       content.previewSupportedLocales()
       content.previewRightToLeft()
-      content.previewDarkTheme()
       content.previewContentSize(.extraSmall)
       content.previewContentSize(.medium)
       content.previewContentSize(.extraExtraExtraLarge)
