@@ -6,11 +6,12 @@ import Dependencies
 import DynamicColor
 import SwiftUI
 
-
 // MARK: - AppView
 
 public struct AppView: View {
-  public init() {}
+  public init() {
+    appSetup()
+  }
 
   public var body: some View {
     RootView(store: Store(initialState: Root.State()) {
@@ -25,7 +26,7 @@ public struct AppView: View {
           }
         }
       #endif
-        ._printChanges(.swiftLog())
+//        ._printChanges(.swiftLog())
     })
   }
 }
@@ -33,6 +34,11 @@ public struct AppView: View {
 public func appSetup() {
   @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
   transcriptionWorker.registerForProcessingTask()
+
+  @Dependency(\.keychainClient) var keychainClient: KeychainClient
+
+  @Dependency(\.subscriptionClient) var subscriptionClient: SubscriptionClient
+  subscriptionClient.configure(keychainClient.userID)
 
   #if DEBUG
     LoggerWrapper.Settings.destinations = [
@@ -55,4 +61,25 @@ public func appSetup() {
       },
     ]
   #endif
+}
+
+// MARK: - TestingAppView
+
+public struct TestingAppView: View {
+  public init() {
+    appSetup()
+  }
+
+  public var body: some View {
+    RootView(store: Store(initialState: Root.State()) {
+      Root()
+        .transformDependency(\.self) {
+          $0.storage = .testValue
+          $0.transcriptionWorker.transcriptionStream = { [worker = $0.transcriptionWorker] in
+            worker.transcriptionStream().filter { !$0.status.isError }.eraseToStream()
+          }
+        }
+        ._printChanges(.swiftLog())
+    })
+  }
 }

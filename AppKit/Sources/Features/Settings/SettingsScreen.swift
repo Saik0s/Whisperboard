@@ -40,7 +40,7 @@ struct SettingsScreen: ReducerProtocol {
     case openPersonalWebsite
     case rateAppTapped
     case reportBugTapped
-    case showError(EquatableErrorWrapper)
+    case showError(EquatableError)
     case suggestFeatureTapped
     case updateInfo
 

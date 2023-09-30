@@ -38,8 +38,8 @@ struct Root: ReducerProtocol {
     case selectTab(Int)
     case updateTranscription(Transcription)
     case alert(PresentationAction<Alert>)
-    case failedToUpdateRecording(RecordingInfo.ID, EquatableErrorWrapper)
-    case failedICloudSync(EquatableErrorWrapper)
+    case failedToUpdateRecording(RecordingInfo.ID, EquatableError)
+    case failedICloudSync(EquatableError)
 
     enum Alert: Hashable {}
   }

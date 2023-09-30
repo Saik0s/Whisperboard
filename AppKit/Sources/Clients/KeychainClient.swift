@@ -21,6 +21,21 @@ extension KeychainClient {
   }
 }
 
+extension KeychainClient {
+  var userID: String {
+    let storedValue: String? = try? getString(for: #function)
+    let uuidString: String = storedValue ?? UUID().uuidString
+    if storedValue == nil {
+      do {
+        try setString(uuidString, for: #function)
+      } catch {
+        log.error(error)
+      }
+    }
+    return uuidString
+  }
+}
+
 // MARK: DependencyKey
 
 extension KeychainClient: DependencyKey {

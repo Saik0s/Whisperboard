@@ -22,7 +22,7 @@ struct MicSelector: ReducerProtocol {
     case checkCurrentMic
     case setCurrentMic(Microphone?)
     case micSelected(Microphone)
-    case errorWhileSettingMic(EquatableErrorWrapper)
+    case errorWhileSettingMic(EquatableError)
     case alert(PresentationAction<Alert>)
 
     enum Alert: Equatable {}

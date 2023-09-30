@@ -1,5 +1,5 @@
 {
-  "identifier" : "13BD7222",
+  "identifier" : "D65E4EB1",
   "nonRenewingSubscriptions" : [
 
   ],
@@ -9,13 +9,94 @@
   "settings" : {
     "_applicationInternalID" : "1661442906",
     "_developerTeamID" : "8A76N862C8",
-    "_lastSynchronizedDate" : 714978908.86436701
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 717693608.44237995,
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
   },
   "subscriptionGroups" : [
+    {
+      "id" : "21372288",
+      "localizations" : [
 
+      ],
+      "name" : "Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "3.99",
+          "familyShareable" : true,
+          "groupNumber" : 1,
+          "internalID" : "6461014269",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Access to advanced cloud transcription",
+              "displayName" : "Premium",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "sub_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly Subscription",
+          "subscriptionGroupID" : "21372288",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
   ],
   "version" : {
-    "major" : 2,
+    "major" : 3,
     "minor" : 0
   }
 }
