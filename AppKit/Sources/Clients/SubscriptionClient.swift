@@ -6,7 +6,7 @@ import RevenueCat
 // MARK: - SubscriptionPackageType
 
 enum SubscriptionPackageType {
-  case yearly, monthly
+  case monthly, yearly, lifetime
 }
 
 // MARK: - SubscriptionPackage

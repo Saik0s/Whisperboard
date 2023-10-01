@@ -4,19 +4,20 @@ private let randomColors: [Color] = [.red, .orange, .yellow, .green, .blue, .pur
 
 extension View {
   func frameSize(color: Color? = nil, alignment: Alignment = .topTrailing, line: UInt = #line) -> some View {
-    modifier(FrameSize(color: color ?? randomColors[Int(line) % randomColors.count], alignment: alignment))
+    modifier(FrameModifier(color: color ?? randomColors[Int(line) % randomColors.count], alignment: alignment))
   }
 
   func framePosition(color: Color? = nil, alignment: Alignment = .topTrailing, space: CoordinateSpace = .global, line: UInt = #line) -> some View {
-    modifier(FramePosition(color: color ?? randomColors[Int(line) % randomColors.count], alignment: alignment, space: space))
+    modifier(FrameModifier(color: color ?? randomColors[Int(line) % randomColors.count], alignment: alignment, space: space))
   }
 }
 
-// MARK: - FrameSize
+// MARK: - FrameModifier
 
-private struct FrameSize: ViewModifier {
+private struct FrameModifier: ViewModifier {
   var color: Color
   var alignment: Alignment
+  var space: CoordinateSpace?
 
   func body(content: Content) -> some View {
     content
@@ -29,34 +30,16 @@ private struct FrameSize: ViewModifier {
         .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5]))
         .foregroundColor(color)
 
-      Text("\(Int(geometry.size.width))x\(Int(geometry.size.height))")
-        .font(.caption2)
-        .foregroundColor(color)
-        .padding(2)
-    }
-  }
-}
+      var text: String {
+        if let space {
+          let origin = geometry.frame(in: space).origin
+          return "x: \(Int(origin.x)) y: \(Int(origin.y))"
+        } else {
+          return "\(Int(geometry.size.width))x\(Int(geometry.size.height))"
+        }
+      }
 
-// MARK: - FramePosition
-
-private struct FramePosition: ViewModifier {
-  var color: Color
-  var alignment: Alignment
-  var space: CoordinateSpace
-
-  func body(content: Content) -> some View {
-    content
-      .overlay(GeometryReader(content: overlay(for:)))
-  }
-
-  func overlay(for geometry: GeometryProxy) -> some View {
-    ZStack(alignment: alignment) {
-      Rectangle()
-        .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5]))
-        .foregroundColor(color)
-
-      let origin = geometry.frame(in: .global).origin
-      Text("x: \(Int(origin.x)) y: \(Int(origin.y))")
+      Text(text)
         .font(.caption2)
         .foregroundColor(color)
         .padding(2)

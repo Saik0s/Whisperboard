@@ -20,3 +20,18 @@ extension LinearGradient {
     )
   }
 }
+
+extension Gradient {
+  static func easedGradient(
+    colors: [Color],
+    steps: UInt = 8
+  ) -> Self {
+    Gradient(
+      colors: colors
+        .map { DynamicColor($0) }
+        .gradient
+        .colorPalette(amount: steps, inColorSpace: .lab)
+        .map { Color($0) }
+    )
+  }
+}

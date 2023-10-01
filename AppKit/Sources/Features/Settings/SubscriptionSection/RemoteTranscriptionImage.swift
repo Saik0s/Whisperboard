@@ -28,11 +28,9 @@ struct RemoteTranscriptionImage: View {
 
       VStack(spacing: 0) {
         Text(featureDescription)
-          .font(.DS.headlineS)
-          .foregroundColor(.DS.Text.base)
+          .textStyle(.headline)
         Text(modelName).shadow(color: .black, radius: 1, y: 1)
           .background(Text(modelName).blur(radius: 7))
-          .font(.DS.headlineL)
           .foregroundStyle(
             LinearGradient(
               colors: [.DS.Text.accent, .DS.Background.accentAlt],
@@ -40,6 +38,7 @@ struct RemoteTranscriptionImage: View {
               endPoint: .trailing
             )
           )
+          .textStyle(.headline)
       }
       .multilineTextAlignment(.center)
       .padding([.leading, .bottom, .trailing], .grid(2))

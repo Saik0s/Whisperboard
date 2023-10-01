@@ -117,17 +117,14 @@ struct ModelRowView: View {
         VStack(alignment: .leading, spacing: .grid(1)) {
           HStack(alignment: .bottom, spacing: .grid(1)) {
             Text(viewStore.model.modelType.readableName)
-              .font(.DS.headlineM)
-              .foregroundColor(Color.DS.Text.base)
+              .textStyle(.headline)
 
             Text(viewStore.model.modelType.sizeLabel)
-              .font(.DS.captionM)
-              .foregroundColor(Color.DS.Text.subdued)
+              .textStyle(.subheadline)
           }
 
           Text(viewStore.model.modelType.modelDescription)
-            .font(.DS.bodyM)
-            .foregroundColor(Color.DS.Text.subdued)
+            .textStyle(.body)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -173,7 +170,8 @@ struct ActiveButtonStyle: ButtonStyle {
     configuration.label
       .padding(.horizontal, .grid(4))
       .padding(.vertical, .grid(2))
-      .font(.DS.headlineS)
+      .textStyle(.secondaryButton)
+
       .background {
         LinearGradient.easedGradient(colors: [
           Color.DS.Background.success.lighten(by: 0.03),

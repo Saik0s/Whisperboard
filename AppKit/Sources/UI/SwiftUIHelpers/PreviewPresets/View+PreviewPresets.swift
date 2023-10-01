@@ -19,9 +19,9 @@ extension View {
 }
 
 extension View {
-  func previewPreset() -> some View {
+  func previewAllPresets() -> some View {
     let content = padding()
-      .background(Color.black)
+      .background(Color.black.ignoresSafeArea())
       .environment(\.colorScheme, .dark)
 
     return Group {
@@ -31,5 +31,13 @@ extension View {
       content.previewContentSize(.medium)
       content.previewContentSize(.extraExtraExtraLarge)
     }
+  }
+
+  func previewBasePreset() -> some View {
+    ZStack {
+      Color(.systemBackground).ignoresSafeArea()
+      padding()
+    }
+    .environment(\.colorScheme, .dark)
   }
 }

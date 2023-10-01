@@ -103,9 +103,9 @@ struct TabBarButton: View {
   var body: some View {
     Button(action: action) {
       image
-        .font(.DS.titleM)
-        .fontWeight(isSelected ? .semibold : .light)
+        .font(.DS.title)
         .foregroundColor(isSelected ? Color.DS.Text.accent : Color.DS.Text.base)
+        .fontWeight(isSelected ? .semibold : .light)
         .shadow(color: Color.DS.Text.accent.opacity(isSelected ? 0.2 : 0), radius: 10, x: 0, y: 0)
         .frame(width: 30, height: 30)
         .padding()

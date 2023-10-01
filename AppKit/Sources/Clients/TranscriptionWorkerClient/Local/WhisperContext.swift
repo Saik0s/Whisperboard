@@ -13,9 +13,7 @@ import whisper
 
 enum WhisperError: Error {
   case cantLoadModel
-  case cantRunModel
   case noSamples
-  case referenceContainerNotFound
 }
 
 // MARK: - WhisperAction

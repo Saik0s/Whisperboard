@@ -9,6 +9,30 @@ extension Color {
   func darken(by amount: CGFloat = 0.2) -> Color {
     Color(DynamicColor(self).darkened(amount: amount))
   }
+
+  func adjustedHue(amount: CGFloat) -> Color {
+    Color(UIColor(self).adjustedHue(amount: amount))
+  }
+
+  func complemented() -> Color {
+    adjustedHue(amount: 180.0)
+  }
+
+  func saturated(amount: CGFloat = 0.2) -> Color {
+    Color(UIColor(self).saturated(amount: amount))
+  }
+
+  func desaturated(amount: CGFloat = 0.2) -> Color {
+    Color(UIColor(self).desaturated(amount: amount))
+  }
+
+  func grayscaled(mode: GrayscalingMode = .lightness) -> Color {
+    Color(UIColor(self).grayscaled(mode: mode))
+  }
+
+  func inverted() -> Color {
+    Color(UIColor(self).inverted())
+  }
 }
 
 extension Color {

@@ -135,3 +135,6 @@ periphery.log
 console.log
 cpd-output.xml
 build/
+TuistCache/
+AppKit/Resources/Fonts/
+AppKit/Resources/Lottie/

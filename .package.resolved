@@ -1,39 +1,48 @@
 {
   "pins" : [
     {
-      "identity" : "dlkit",
+      "identity" : "hotreloading",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/johnno1962/DLKit",
-      "state" : {
-        "revision" : "3bef581529dc7ad78d04f56333b7524e8f2c4ca9",
-        "version" : "3.1.0"
-      }
-    },
-    {
-      "identity" : "fishhook",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/johnno1962/fishhook",
-      "state" : {
-        "revision" : "5b59158940845f611a3a3180a49c7280bb2a22dc",
-        "version" : "1.1.0"
-      }
-    },
-    {
-      "identity" : "injectionlite",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/johnno1962/InjectionLite.git",
+      "location" : "https://github.com/johnno1962/HotReloading.git",
       "state" : {
         "branch" : "main",
-        "revision" : "585321538344a91e420dff94ee6833c9590db842"
+        "revision" : "72c6a366bc4550076e4677a7f62fffdb4699a41a"
       }
     },
     {
-      "identity" : "popen",
+      "identity" : "remote",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/johnno1962/Popen",
+      "location" : "https://github.com/johnno1962/Remote",
       "state" : {
-        "revision" : "e449e5b5beeb332cabe6adc21460696a10d8416b",
-        "version" : "1.2.4"
+        "revision" : "2a03313297a15f31b354dbf2b40c62ca9630b0a1",
+        "version" : "2.3.5"
+      }
+    },
+    {
+      "identity" : "swiftregex5",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/SwiftRegex5",
+      "state" : {
+        "revision" : "8ecb4a8570757b7f8bce72f82242742e13891f99",
+        "version" : "5.2.3"
+      }
+    },
+    {
+      "identity" : "swifttrace",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/SwiftTrace",
+      "state" : {
+        "revision" : "e9e20db9780a90d0cd22be0cff43de54934e9ad7",
+        "version" : "8.4.6"
+      }
+    },
+    {
+      "identity" : "xprobeplugin",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnno1962/XprobePlugin",
+      "state" : {
+        "revision" : "0b1a95a24433c4f679e126d917dcf3e3e52f4814",
+        "version" : "2.9.4"
       }
     }
   ],

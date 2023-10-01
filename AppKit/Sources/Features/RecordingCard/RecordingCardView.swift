@@ -35,28 +35,26 @@ struct RecordingCardView: View {
         VStack(alignment: .leading, spacing: .grid(1)) {
           if viewStore.recording.title.isEmpty {
             Text("Untitled")
-              .font(.DS.headlineS)
-              .foregroundColor(.DS.Text.subdued)
+              .textStyle(.bodyBold)
               .opacity(0.5)
           } else {
             Text(viewStore.recording.title)
-              .font(.DS.headlineS)
-              .foregroundColor(.DS.Text.base)
+              .textStyle(.bodyBold)
           }
 
           Text(viewStore.dateString)
-            .font(.DS.captionM)
-            .foregroundColor(.DS.Text.subdued)
+            .textStyle(.footnote)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
 
         Text(viewStore.currentTimeString)
-          .font(.DS.date)
           .foregroundColor(
             viewStore.mode.isPlaying
               ? Color.DS.Text.accent
               : Color.DS.Text.base
           )
+          .textStyle(.caption)
+          .monospaced()
       }
 
       if viewStore.mode.isPlaying {
@@ -72,8 +70,7 @@ struct RecordingCardView: View {
       ZStack(alignment: .top) {
         VStack(alignment: .leading, spacing: .grid(2)) {
           Text(viewStore.transcription)
-            .font(.DS.bodyS)
-            .foregroundColor(.DS.Text.base)
+            .textStyle(.body)
             .lineLimit(3)
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -104,13 +101,11 @@ struct RecordingCardView: View {
                       .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
 
                     Text(viewStore.recording.lastTranscription?.status.message ?? "")
-                      .font(.DS.bodyS)
-                      .foregroundColor(.DS.Text.accent)
+                      .textStyle(.subheadline)
                   }
                 } else if let queuePosition = viewStore.queuePosition, let queueTotal = viewStore.queueTotal {
                   Text("In queue: \(queuePosition) of \(queueTotal)")
-                    .font(.DS.bodyS)
-                    .foregroundColor(.DS.Text.accent)
+                    .textStyle(.body)
                 }
 
                 Button("Cancel") {
