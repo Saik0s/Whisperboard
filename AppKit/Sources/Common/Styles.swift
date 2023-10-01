@@ -6,15 +6,14 @@ import SwiftUI
 struct PrimaryButtonStyle: ButtonStyle {
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
-      .font(.DS.headlineM)
-      .foregroundColor(.DS.Text.overAccent)
+      .textStyle(.primaryButton)
       .padding(.grid(2))
       .padding(.horizontal, .grid(2))
       .background {
         LinearGradient.easedGradient(colors: [
           Color.DS.Background.accent.lighten(by: 0.22),
-            Color.DS.Background.accent.lighten(by: 0.15),
-          Color.DS.Background.accent
+          Color.DS.Background.accent.lighten(by: 0.15),
+          Color.DS.Background.accent,
         ], startPoint: .topLeading, endPoint: .bottomTrailing)
           .continuousCornerRadius(.grid(2))
           .shadow(color: Color.DS.Background.accent.opacity(configuration.isPressed ? 0 : 1), radius: 4, x: 0, y: 0)
@@ -35,8 +34,7 @@ extension View {
 struct SecondaryButtonStyle: ButtonStyle {
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
-      .font(.DS.headlineM)
-      .foregroundColor(.DS.Text.base)
+      .textStyle(.secondaryButton)
       .padding(.grid(2))
       .padding(.horizontal, .grid(2))
       .background {
@@ -64,8 +62,7 @@ extension View {
 struct TertiaryButtonStyle: ButtonStyle {
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
-      .font(.DS.headlineS)
-      .foregroundColor(.DS.Text.accent)
+      .textStyle(.secondaryButton)
       .padding(.grid(2))
       .padding(.horizontal, .grid(2))
       .background {
@@ -92,7 +89,7 @@ struct IconButtonStyle: ButtonStyle {
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
       .foregroundColor(isPrimary ? .DS.Text.accent : .DS.Text.base)
-      .font(isPrimary ? .DS.headlineS : .DS.bodyM)
+      .font(isPrimary ? .DS.action : .DS.actionSecondary)
       .frame(width: 30, height: 30)
       .padding(.grid(2))
       .scaleEffect(configuration.isPressed ? 0.9 : 1)
@@ -202,14 +199,6 @@ struct CardStyle: ViewModifier {
 }
 
 extension View {
-  func primaryCardStyle() -> some View {
-    modifier(CardStyle(isPrimary: true))
-  }
-
-  func secondaryCardStyle() -> some View {
-    modifier(CardStyle(isPrimary: false))
-  }
-
   func cardStyle(isPrimary: Bool = true) -> some View {
     modifier(CardStyle(isPrimary: isPrimary))
   }

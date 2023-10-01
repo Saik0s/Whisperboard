@@ -26,7 +26,6 @@ struct RecordScreen: ReducerProtocol {
   }
 
   @Dependency(\.storage) var storage: StorageClient
-  @Dependency(\.settings) var settings: SettingsClient
 
   var body: some ReducerProtocol<State, Action> {
     BindingReducer()

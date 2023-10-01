@@ -32,8 +32,14 @@ analyze:
 	periphery scan > periphery.log && echo "Periphery done"
 	xcodebuild -workspace WhisperBoard.xcworkspace -scheme WhisperBoard -configuration Debug build CODE_SIGNING_ALLOWED="NO" ENABLE_BITCODE="NO" > xcodebuild.log && echo "Xcodebuild done"
 	swiftlint analyze --compiler-log-path xcodebuild.log > swiftlint_analyze.log && echo "Swiftlint done"
+
+clear_analyze:
+	rm periphery.log
+	rm xcodebuild.log
+	rm swiftlint_analyze.log
+	rm cpd-output.xml
 	
-clean:
+clean: clear_analyze
 	rm -rf build
 	$(TUIST) clean
 

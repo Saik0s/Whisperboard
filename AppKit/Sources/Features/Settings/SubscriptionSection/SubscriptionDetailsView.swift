@@ -152,7 +152,7 @@ struct SubscriptionDetailsView: View {
       ScrollView {
         VStack(spacing: .grid(4)) {
           Text("WhisperBoard PRO")
-            .textStyle(.largeTitle)
+            .textStyle(.navigationTitle)
 
           FeatureView(
             icon: "doc.text.below.ecg",
@@ -209,7 +209,7 @@ struct SubscriptionDetailsView: View {
           }
         } else {
           Text("Error loading packages")
-            .textStyle(.largeTitle)
+            .textStyle(.navigationTitle)
         }
 
         HStack {
@@ -253,10 +253,10 @@ struct FeatureView: View {
 
       VStack(alignment: .leading, spacing: 0) {
         Text(title)
-          .textStyle(.subheading)
+          .textStyle(.subheadline)
 
         Text(description)
-          .textStyle(.bodyText)
+          .textStyle(.body)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       .fixedSize(horizontal: false, vertical: true)
@@ -273,7 +273,7 @@ struct FeatureView: View {
           reducer: { SubscriptionDetails() }
         )
       )
-      .previewPreset()
+      .previewAllPresets()
     }
   }
 #endif

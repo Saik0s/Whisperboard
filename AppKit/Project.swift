@@ -6,6 +6,7 @@ let projectSettings: SettingsDictionary = [
   "SWIFT_TREAT_WARNINGS_AS_ERRORS": "YES",
   "CODE_SIGN_STYLE": "Automatic",
   "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
+  "ENABLE_BITCODE": "NO",
 ]
 
 let debugSettings: SettingsDictionary = [
@@ -22,17 +23,18 @@ func appKitTarget() -> Target {
   Target(
     name: "WhisperBoardKit",
     platform: .iOS,
-    product: .staticFramework,
+    product: .framework,
     bundleId: "me.igortarasenko.WhisperboardKit",
     deploymentTarget: .iOS(targetVersion: "16.0", devices: [.iphone, .ipad]),
     infoPlist: .extendingDefault(with: [:]),
     sources: .paths([.relativeToManifest("Sources/**")]),
     resources: [
-      "Resources/Assets.xcassets",
-      "Resources/ggml-tiny.bin",
+      "Resources/**",
     ],
     dependencies: [
-      .sdk(name: "c++", type: .library, status: .required),      
+      .sdk(name: "c++", type: .library, status: .required),
+      .sdk(name: "CloudKit", type: .framework, status: .optional),
+      .sdk(name: "StoreKit", type: .framework, status: .optional),
       .external(name: "AsyncAlgorithms"),
       .external(name: "AudioKit"),
       .external(name: "ComposableArchitecture"),
@@ -47,6 +49,7 @@ func appKitTarget() -> Target {
       .external(name: "SwiftUIIntrospect"),
       .external(name: "VariableBlurView"),
       .external(name: "whisper"),
+      .external(name: "Lottie"),
     ]
   )
 }
@@ -100,7 +103,14 @@ let project = Project(
   ],
 
   resourceSynthesizers: [
-    .files(extensions: ["bin", "json"]),
+    .files(extensions: ["bin"]),
     .assets(),
+    .fonts(),
+    .strings(),
+    .custom(
+      name: "Lottie",
+      parser: .json,
+      extensions: ["lottie"]
+    ),
   ]
 )

@@ -50,12 +50,16 @@ struct SettingsScreenView: View {
 
   var body: some View {
     NavigationStack {
-      Form {
+      List {
+        SubscriptionSectionView(store: store.scope(state: \.subscriptionSection, action: SettingsScreen.Action.subscriptionSection))
+          .introspect(.listCell, on: .iOS(.v16, .v17)) {
+            $0.clipsToBounds = false
+          }
+
         ModelSectionView(viewStore: viewStore, modelSelectorStore: modelSelectorStore)
         SpeechSectionView(viewStore: viewStore)
 
         #if DEBUG
-          SubscriptionSectionView(store: store.scope(state: \.subscriptionSection, action: SettingsScreen.Action.subscriptionSection))
           DebugSectionView(viewStore: viewStore)
         #endif
 
@@ -88,8 +92,7 @@ struct ModelSectionView: View {
   var body: some View {
     Section {
       SettingsSheetButton(
-        icon: Image(systemName: "square.and.arrow.down"),
-        iconBGColor: .systemBlue.lighten(by: 0.1),
+        icon: .system(name: "square.and.arrow.down", background: .systemBlue.lighten(by: 0.1)),
         title: "Model",
         trailingText: viewStore.selectedModelReadableName
       ) {
@@ -126,8 +129,7 @@ struct SpeechSectionView: View {
   var body: some View {
     Section("Speech") {
       SettingsInlinePickerButton(
-        icon: Image(systemName: "globe"),
-        iconBGColor: .systemGreen.darken(by: 0.1),
+        icon: .system(name: "globe", background: .systemGreen.darken(by: 0.1)),
         title: "Language",
         choices: viewStore.availableLanguages.map(\.name.titleCased),
         selectedIndex: Binding(
@@ -148,12 +150,11 @@ struct DebugSectionView: View {
   var body: some View {
     Section {
       SettingsToggleButton(
-        icon: Image(systemName: "wand.and.stars"),
-        iconBGColor: .systemTeal,
+        icon: .system(name: "wand.and.stars", background: .systemTeal),
         title: "Enable Fixtures",
         isOn: viewStore.$settings.useMockedClients
       )
-      SettingsSheetButton(icon: Image(systemName: "ladybug"), iconBGColor: .systemGreen, title: "Show logs") {
+      SettingsSheetButton(icon: .system(name: "ladybug", background: .systemGreen), title: "Show logs") {
         ScrollView { Text((try? String(contentsOfFile: Configs.logFileURL.path())) ?? "No logs...").font(.footnote).monospaced().padding() }
       }
     } header: {
@@ -173,9 +174,12 @@ struct StorageSectionView: View {
       Group {
         VStack(alignment: .leading, spacing: .grid(1)) {
           HStack(spacing: 0) {
-            Text("Taken: \(viewStore.takenSpace)").font(.DS.bodyM).foregroundColor(.DS.Text.base)
+            Text("Taken: \(viewStore.takenSpace)")
+              .textStyle(.body)
+
             Spacer()
-            Text("Available: \(viewStore.freeSpace)").font(.DS.bodyM).foregroundColor(.DS.Text.base)
+            Text("Available: \(viewStore.freeSpace)")
+              .textStyle(.body)
           }
 
           GeometryReader { geometry in
@@ -190,8 +194,7 @@ struct StorageSectionView: View {
       }
 
       SettingsToggleButton(
-        icon: Image(systemName: "icloud.and.arrow.up"),
-        iconBGColor: .systemBlue,
+        icon: .system(name: "icloud.and.arrow.up", background: .systemBlue),
         title: "iCloud Backup",
         isOn: viewStore.$settings.isICloudSyncEnabled
       ).disabled(viewStore.isICloudSyncInProgress)
@@ -199,7 +202,7 @@ struct StorageSectionView: View {
         .overlay(viewStore.isICloudSyncInProgress ? ProgressView().progressViewStyle(.circular) : nil)
         .animation(.easeInOut, value: viewStore.isICloudSyncInProgress)
 
-      SettingsButton(icon: Image(systemName: "trash"), iconBGColor: .systemYellow.darken(by: 0.1), title: "Delete Storage") {
+      SettingsButton(icon: .system(name: "trash", background: .systemYellow.darken(by: 0.1)), title: "Delete Storage") {
         viewStore.send(.deleteStorageTapped)
       }
     } header: {
@@ -216,15 +219,15 @@ struct FeedbackSectionView: View {
 
   var body: some View {
     Section {
-      SettingsButton(icon: Image(systemName: "star.fill"), iconBGColor: .systemYellow.darken(by: 0.05), title: "Rate the App") {
+      SettingsButton(icon: .system(name: "star.fill", background: .systemYellow.darken(by: 0.05)), title: "Rate the App") {
         viewStore.send(.rateAppTapped)
       }
 
-      SettingsButton(icon: Image(systemName: "exclamationmark.triangle"), iconBGColor: .systemRed, title: "Report a Bug") {
+      SettingsButton(icon: .system(name: "exclamationmark.triangle", background: .systemRed), title: "Report a Bug") {
         viewStore.send(.reportBugTapped)
       }
 
-      SettingsButton(icon: Image(systemName: "sparkles"), iconBGColor: .systemPurple.darken(by: 0.1), title: "Suggest New Feature") {
+      SettingsButton(icon: .system(name: "sparkles", background: .systemPurple.darken(by: 0.1)), title: "Suggest New Feature") {
         viewStore.send(.suggestFeatureTapped)
       }
     }
@@ -240,13 +243,13 @@ struct FooterSectionView: View {
   var body: some View {
     Section {
       VStack(spacing: .grid(1)) {
-        Text("v\(viewStore.appVersion) (\(viewStore.buildNumber))").font(.DS.bodyM).foregroundColor(.DS.Text.subdued)
-        Text("Made with ♥ in Amsterdam").font(.DS.bodyM)
+        Text("v\(viewStore.appVersion) (\(viewStore.buildNumber))").textStyle(.caption)
+        Text("Made with ♥ in Amsterdam").foregroundColor(.DS.Text.accentAlt).textStyle(.bodyBold)
           .mask { LinearGradient.easedGradient(colors: [.systemPurple, .systemRed], startPoint: .bottomLeading, endPoint: .topTrailing) }
         Button {
           viewStore.send(.openPersonalWebsite)
         } label: {
-          Text("by Igor Tarasenko").font(.DS.bodyM).foregroundColor(.DS.Text.accentAlt)
+          Text("by Igor Tarasenko").foregroundColor(.DS.Text.accentAlt).textStyle(.bodyBold)
         }
       }
       .frame(maxWidth: .infinity)
@@ -263,8 +266,7 @@ struct FooterSectionView: View {
 struct SmallButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label
-      .font(.DS.bodyM)
-      .foregroundColor(.DS.Text.accentAlt)
+      .textStyle(.secondaryButton)
       .padding(.horizontal, .grid(2))
       .padding(.vertical, .grid(1))
       .background(RoundedRectangle(cornerRadius: .grid(1)).fill(Color.DS.Background.accentAlt.opacity(0.2)))

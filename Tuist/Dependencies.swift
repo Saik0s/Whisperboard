@@ -15,16 +15,15 @@ let packages: [Package] = [
   .package(url: "https://github.com/siteline/SwiftUI-Introspect.git", from: "0.6.1"),
   .package(url: "https://github.com/tgrapperon/swift-dependencies-additions", from: "0.5.2"),
   .package(url: "https://github.com/yannickl/DynamicColor.git", from: "5.0.1"),
+  .package(url: "https://github.com/airbnb/lottie-spm.git", from: "4.3.3"),
 ]
 
 let dependencies = Dependencies(
   swiftPackageManager: SwiftPackageManagerDependencies(
     packages,
-     productTypes: ["AppDevUtils": .framework],
     targetSettings: [
       "whisper": [
         "OTHER_CFLAGS": "-O3 -DNDEBUG -DGGML_USE_ACCELERATE -DWHISPER_COREML_ALLOW_FALLBACK -DWHISPER_USE_COREML $(inherited)",
-        "OTHER_LDFLAGS": "-lc++ $(inherited)",
       ],
     ]
   ),

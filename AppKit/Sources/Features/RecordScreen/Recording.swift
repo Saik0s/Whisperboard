@@ -44,8 +44,6 @@ struct Recording: ReducerProtocol {
 
   @Dependency(\.audioRecorder) var audioRecorder
 
-  @Dependency(\.continuousClock) var clock
-
   func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
     switch action {
     case .task:

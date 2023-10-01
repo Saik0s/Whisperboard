@@ -1,6 +1,6 @@
 import ComposableArchitecture
-import Foundation
 import DependenciesAdditions
+import Foundation
 import os
 
 extension _ReducerPrinter {

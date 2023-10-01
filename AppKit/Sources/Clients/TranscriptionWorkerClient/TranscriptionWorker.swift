@@ -36,7 +36,7 @@ final class TranscriptionWorkerImpl: TranscriptionWorker {
   init(executor: TranscriptionWorkExecutor) {
     self.executor = executor
     taskQueue = loadTasks()
-    log.debug("Restored:", taskQueue)
+    log.debug("Restored:", taskQueue.elements.map(\.id))
 
     let notificationCenter = NotificationCenter.default
 

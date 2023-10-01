@@ -1,10 +1,10 @@
 import Foundation
 
 func customAssert(_ condition: @autoclosure () -> Bool,
-                         _ message: @autoclosure () -> String = "",
-                         useDebugBreakpoint: Bool = true,
-                         file: StaticString = #file,
-                         line: UInt = #line) {
+                  _ message: @autoclosure () -> String = "",
+                  useDebugBreakpoint: Bool = true,
+                  file: StaticString = #file,
+                  line: UInt = #line) {
   guard condition() == false else {
     return
   }
@@ -21,8 +21,8 @@ func customAssert(_ condition: @autoclosure () -> Bool,
 }
 
 func customAssertionFailure(_ message: @autoclosure () -> String = String(),
-                                   useDebugBreakpoint: Bool = true,
-                                   file: StaticString = #file,
-                                   line: UInt = #line) {
+                            useDebugBreakpoint: Bool = true,
+                            file: StaticString = #file,
+                            line: UInt = #line) {
   customAssert(false, message(), useDebugBreakpoint: useDebugBreakpoint, file: file, line: line)
 }

@@ -2,7 +2,7 @@ import AVFoundation
 
 // MARK: - Microphone
 
-struct Microphone: Hashable {
+struct Microphone: Hashable, Identifiable {
   var id: String { port.uid }
 
   var port: AVAudioSessionPortDescription

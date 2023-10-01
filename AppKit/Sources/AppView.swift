@@ -31,7 +31,7 @@ public struct AppView: View {
   }
 }
 
-public func appSetup() {
+func appSetup() {
   @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
   transcriptionWorker.registerForProcessingTask()
 

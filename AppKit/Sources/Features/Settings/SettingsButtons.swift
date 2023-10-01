@@ -1,6 +1,26 @@
 import Inject
 import SwiftUI
 
+// MARK: - SettingsIconView
+
+struct SettingsIconView: View {
+  let icon: Image
+  let iconBGColor: Color
+
+  var body: some View {
+    icon
+      .font(.footnote)
+      .foregroundColor(.DS.Text.base)
+      .frame(width: 28, height: 28)
+      .background(iconBGColor)
+      .cornerRadius(6)
+  }
+
+  static func system(name systemName: String, background: Color = .DS.Background.accent) -> SettingsIconView {
+    SettingsIconView(icon: Image(systemName: systemName), iconBGColor: background)
+  }
+}
+
 // MARK: - SettingsButton
 
 struct SettingsButton: View {
@@ -8,8 +28,7 @@ struct SettingsButton: View {
     case openOutside, chevron
   }
 
-  let icon: Image
-  let iconBGColor: Color
+  let icon: SettingsIconView
   let title: String
   var trailingText: String?
   var indicator: TrailingIcon?
@@ -19,20 +38,15 @@ struct SettingsButton: View {
     Button(action: action) {
       HStack(spacing: .grid(3)) {
         icon
-          .font(.footnote)
-          .foregroundColor(.DS.Text.base)
-          .frame(width: 28, height: 28)
-          .background(iconBGColor)
-          .cornerRadius(6)
 
         Text(title)
-          .foregroundColor(.DS.Text.base)
+          .textStyle(.label)
           .fixedSize(horizontal: false, vertical: true)
           .frame(maxWidth: .infinity, alignment: .leading)
 
         if let trailingText {
           Text(trailingText)
-            .foregroundColor(.DS.Text.subdued)
+            .textStyle(.sublabel)
         }
 
         if let indicator {
@@ -57,17 +71,15 @@ struct SettingsButton: View {
 // MARK: - SettingsSheetButton
 
 struct SettingsSheetButton<Content: View>: View {
-  let icon: Image
-  let iconBGColor: Color
+  let icon: SettingsIconView
   let title: String
   var trailingText: String? = nil
   var content: Content
 
   @State var isActive = false
 
-  init(icon: Image, iconBGColor: Color, title: String, trailingText: String? = nil, @ViewBuilder content: @escaping () -> Content) {
+  init(icon: SettingsIconView, title: String, trailingText: String? = nil, @ViewBuilder content: () -> Content) {
     self.icon = icon
-    self.iconBGColor = iconBGColor
     self.title = title
     self.trailingText = trailingText
     self.content = content()
@@ -77,20 +89,15 @@ struct SettingsSheetButton<Content: View>: View {
     Button(action: { isActive.toggle() }) {
       HStack(spacing: .grid(3)) {
         icon
-          .font(.footnote)
-          .foregroundColor(.DS.Text.base)
-          .frame(width: 28, height: 28)
-          .background(iconBGColor)
-          .cornerRadius(6)
 
         Text(title)
-          .foregroundColor(.DS.Text.base)
+          .textStyle(.label)
           .fixedSize(horizontal: false, vertical: true)
           .frame(maxWidth: .infinity, alignment: .leading)
 
         if let trailingText {
           Text(trailingText)
-            .foregroundColor(.DS.Text.subdued)
+            .textStyle(.sublabel)
         }
 
         Image(systemName: "chevron.forward")
@@ -109,8 +116,7 @@ struct SettingsSheetButton<Content: View>: View {
 // MARK: - SettingsInlinePickerButton
 
 struct SettingsInlinePickerButton: View {
-  let icon: Image
-  let iconBGColor: Color
+  let icon: SettingsIconView
   let title: String
   var choices: [String]
   @Binding var selectedIndex: Int
@@ -118,20 +124,17 @@ struct SettingsInlinePickerButton: View {
   var body: some View {
     HStack(spacing: .grid(3)) {
       icon
-        .font(.footnote)
-        .foregroundColor(.DS.Text.base)
-        .frame(width: 28, height: 28)
-        .background(iconBGColor)
-        .cornerRadius(6)
 
       Text(title)
-        .foregroundColor(.DS.Text.base)
+        .textStyle(.label)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
 
       Picker("", selection: $selectedIndex) {
         ForEach(Array(zip(choices.indices, choices)), id: \.1) { index, choice in
-          Text(choice).tag(index)
+          Text(choice)
+            .textStyle(.label)
+            .tag(index)
         }
       }
       .pickerStyle(.menu)
@@ -145,22 +148,16 @@ struct SettingsInlinePickerButton: View {
 // MARK: - SettingsToggleButton
 
 struct SettingsToggleButton: View {
-  let icon: Image
-  let iconBGColor: Color
+  let icon: SettingsIconView
   let title: String
   @Binding var isOn: Bool
 
   var body: some View {
     HStack(spacing: .grid(3)) {
       icon
-        .font(.footnote)
-        .foregroundColor(.DS.Text.base)
-        .frame(width: 28, height: 28)
-        .background(iconBGColor)
-        .cornerRadius(6)
 
       Text(title)
-        .foregroundColor(.DS.Text.base)
+        .textStyle(.label)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
 

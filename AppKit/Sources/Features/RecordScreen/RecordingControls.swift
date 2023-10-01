@@ -166,16 +166,16 @@ struct RecordingControlsView: View {
       .frame(maxWidth: .infinity)
 
       Text(currentTime)
-        .font(.DS.titleL)
-        .monospaced()
         .foregroundColor(.DS.Text.accent)
+        .textStyle(.navigationTitle)
+        .monospaced()
 
       HStack(spacing: .grid(8)) {
         if viewStore.recording?.mode == .paused {
           Button { viewStore.send(.recording(.deleteButtonTapped), animation: .default) }
             label: {
               Image(systemName: "multiply")
-                .font(.DS.titleL)
+                .textStyle(.navigationTitle)
                 .frame(width: 50, height: 50)
                 .containerShape(Rectangle())
             }
@@ -188,18 +188,14 @@ struct RecordingControlsView: View {
               Circle()
                 .fill(RadialGradient.accent)
                 .shadow(color: .DS.Background.accent.opacity(0.5), radius: 20)
-                .overlay(Image(systemName: "pause.fill")
-                  .font(.DS.titleL)
-                  .foregroundColor(.DS.Text.base))
+                .overlay(Image(systemName: "pause.fill").textStyle(.headline))
             }
             .recordButtonStyle()
           } else if viewStore.recording?.mode == .paused {
             Button { viewStore.send(.recording(.continueButtonTapped), animation: .default) } label: {
               Circle()
                 .fill(RadialGradient.accent)
-                .overlay(Image(systemName: "mic")
-                  .font(.DS.titleL)
-                  .foregroundColor(.DS.Text.base))
+                .overlay(Image(systemName: "mic").textStyle(.headline))
             }
             .recordButtonStyle()
           } else {
@@ -216,7 +212,7 @@ struct RecordingControlsView: View {
           Button { viewStore.send(.recording(.saveButtonTapped), animation: .default) }
             label: {
               Image(systemName: "checkmark")
-                .font(.DS.titleL)
+                .textStyle(.navigationTitle)
                 .frame(width: 50, height: 50)
                 .containerShape(Rectangle())
             }
@@ -241,7 +237,7 @@ struct RecordingControlsView: View {
       ) {
         VStack {
           Text("Go to new recording?")
-            .font(.DS.headlineM)
+            .textStyle(.headline)
             .foregroundColor(.DS.Text.base)
 
           Button("Open Recording") {

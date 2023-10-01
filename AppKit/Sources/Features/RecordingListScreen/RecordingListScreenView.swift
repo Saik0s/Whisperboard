@@ -327,12 +327,10 @@ struct EmptyStateView: View {
           isAnimating = true
         }
       VStack(spacing: .grid(1)) {
-        Text("No recordings yet, lol")
-          .font(.DS.headlineL)
-          .foregroundColor(.DS.Text.base)
+        Text("No recordings yet")
+          .textStyle(.bodyBold)
         Text("Your new recordings will appear here")
-          .font(.DS.bodyM)
-          .foregroundColor(.DS.Text.base)
+          .textStyle(.body)
       }
     }
     .padding(.grid(4))

@@ -8,7 +8,7 @@ import SwiftUI
 
 struct MicSelector: ReducerProtocol {
   struct State: Equatable {
-    var mics: [Microphone] = []
+    var mics: IdentifiedArrayOf<Microphone> = []
 
     var currentMic: Microphone?
 
@@ -47,7 +47,7 @@ struct MicSelector: ReducerProtocol {
         }
 
       case let .micsUpdated(mics):
-        state.mics = mics
+        state.mics = mics.identifiedArray
         return .send(.checkCurrentMic)
 
       case .checkCurrentMic:
@@ -93,43 +93,41 @@ struct MicSelectorView: View {
   @ObserveInjection var inject
 
   let store: StoreOf<MicSelector>
+  @ObservedObject var viewStore: ViewStore<MicSelector.State, MicSelector.Action>
 
   init(store: StoreOf<MicSelector>) {
     self.store = store
+    viewStore = ViewStore(store) { $0 }
   }
 
   var body: some View {
-    WithViewStore(store, observe: { $0 }) { viewStore in
-      VStack(spacing: 0) {
-        ForEach(viewStore.mics, id: \.id) { mic in
-          Button(action: { viewStore.send(.micSelected(mic)) }) {
-            HStack(spacing: .grid(2)) {
-              let isSelected = mic.id == viewStore.currentMic?.id
-              Image(systemName: "checkmark")
-                .font(.DS.bodyS)
-                .foregroundColor(.DS.Text.success)
-                .hidden(!isSelected)
+    VStack(spacing: 0) {
+      ForEach(viewStore.mics.elements) { (mic: Microphone) in
+        Button(action: { viewStore.send(.micSelected(mic)) }) {
+          HStack(spacing: .grid(2)) {
+            let isSelected = mic.id == viewStore.currentMic?.id
+            Image(systemName: "checkmark")
+              .textStyle(.body)
+              .hidden(!isSelected)
 
-              VStack(alignment: .leading, spacing: 0) {
-                Text(mic.port.portName)
-                  .font(.DS.bodyS)
-                  .foregroundColor(.DS.Text.base)
-              }
+            VStack(alignment: .leading, spacing: 0) {
+              Text(mic.port.portName)
+                .textStyle(.body)
             }
-            .padding(.grid(2))
           }
+          .padding(.grid(2))
+        }
 
-          if mic.id != viewStore.mics.last?.id {
-            Divider()
-          }
+        if mic.id != viewStore.mics.last?.id {
+          Divider()
         }
       }
-      .fixedSize(horizontal: true, vertical: false)
-      .alert(
-        store: store.scope(state: \.$alert, action: { .alert($0) })
-      )
-      .task { viewStore.send(.task) }
     }
+    .fixedSize(horizontal: true, vertical: false)
+    .alert(
+      store: store.scope(state: \.$alert, action: { .alert($0) })
+    )
+    .task { viewStore.send(.task) }
     .enableInjection()
   }
 }

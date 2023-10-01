@@ -9,6 +9,7 @@ let projectSettings: SettingsDictionary = [
   "CODE_SIGN_STYLE": "Automatic",
   "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
   "MARKETING_VERSION": SettingValue(stringLiteral: version),
+  "ENABLE_BITCODE": "NO",
 ]
 
 let debugSettings: SettingsDictionary = [
@@ -86,16 +87,7 @@ func appTarget() -> Target {
     dependencies: [
       .target(name: "ShareExtension"),
       .project(target: "WhisperBoardKit", path: "../AppKit"),
-      .sdk(name: "CloudKit", type: .framework, status: .optional),
-      .sdk(name: "StoreKit", type: .framework, status: .optional),
-      .sdk(name: "c++", type: .library, status: .required),
-    ] + (Environment.isHotReloadingEnabled.getBoolean(default: false) ? [.package(product: "InjectionLite")] : []),
-    environment: [
-      "OS_ACTIVITY_MODE": "disable",
-      "OS_ACTIVITY_DT_MODE": "NO",
-      "INJECTION_DIRECTORIES": "$(SRCROOT)/..",
-      "INJECTION_STANDALONE": "YES",
-    ]
+    ] + (Environment.isHotReloadingEnabled.getBoolean(default: false) ? [.package(product: "HotReloading")] : [])
   )
 }
 
@@ -153,7 +145,7 @@ let project = Project(
     )
   ),
   packages: Environment.isHotReloadingEnabled.getBoolean(default: false)
-    ? [.remote(url: "https://github.com/johnno1962/InjectionLite.git", requirement: .branch("main"))]
+    ? [.remote(url: "https://github.com/johnno1962/HotReloading.git", requirement: .branch("main"))]
     : [],
   settings: .settings(
     base: projectSettings,
@@ -170,7 +162,13 @@ let project = Project(
       name: "WhisperBoard",
       shared: true,
       buildAction: .buildAction(targets: ["WhisperBoard"]),
-      runAction: .runAction(executable: "WhisperBoard", options: .options(storeKitConfigurationPath: "Support/Whisperboard.storekit"))
+      runAction: .runAction(
+        executable: "WhisperBoard",
+        arguments: .init(environment: [
+          "INJECTION_DIRECTORIES": "$(SRCROOT)/..",
+        ]),
+        options: .options(storeKitConfigurationPath: "Support/Whisperboard.storekit")
+      )
     ),
   ],
   additionalFiles: [

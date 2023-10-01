@@ -15,9 +15,10 @@ struct RecordButton: View {
         Button(action: action) {
           Circle()
             .fill(RadialGradient.accent)
-            .overlay(Image(systemName: "mic")
-              .font(.DS.titleL)
-              .foregroundColor(.DS.Text.base))
+            .overlay(
+              Image(systemName: "mic")
+                .textStyle(.navigationTitle)
+            )
         }
         .recordButtonStyle()
         .frame(width: 70, height: 70)
