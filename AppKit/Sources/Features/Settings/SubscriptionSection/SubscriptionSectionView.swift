@@ -182,7 +182,7 @@ struct TrySubscriptionButtonStyle: ButtonStyle {
           )
       }
       .shiningCard(defaultDegrees: 3, triggerDegrees: -8, isTapped: .constant(configuration.isPressed))
-      .shadow(color: Color.DS.Shadow.accent.darken(by: 0.1).opacity(0.3), radius: 35, x: 0, y: 20)
+      .shadow(color: Color.DS.Shadow.accent.opacity(0.4), radius: 35, x: 0, y: 20)
       .onChange(of: configuration.isPressed) { isPressed in
         if isPressed {
           playbackMode = .playing(.fromProgress(0, toProgress: 1, loopMode: .playOnce))

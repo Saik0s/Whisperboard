@@ -34,6 +34,28 @@ extension KeychainClient {
     }
     return uuidString
   }
+
+  var transactionID: String? {
+    get {
+      do {
+        return try getString(for: #function)
+      } catch {
+        log.error(error)
+        return nil
+      }
+    }
+    nonmutating set {
+      do {
+        if let newValue = newValue {
+          try setString(newValue, for: #function)
+        } else {
+          try remove(#function)
+        }
+      } catch {
+        log.error(error)
+      }
+    }
+  }
 }
 
 // MARK: DependencyKey

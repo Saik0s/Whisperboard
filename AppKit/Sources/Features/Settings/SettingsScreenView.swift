@@ -18,6 +18,7 @@ struct SettingsScreenView: View {
     var selectedModelReadableName: String
     var takenSpace: String
     var takenSpacePercentage: Double
+    var isSubscribed: Bool
   }
 
   let store: StoreOf<SettingsScreen>
@@ -43,7 +44,8 @@ struct SettingsScreenView: View {
         freeSpace: state.freeSpace,
         selectedModelReadableName: state.modelSelector.selectedModel.readableName,
         takenSpace: state.takenSpace,
-        takenSpacePercentage: state.takenSpacePercentage
+        takenSpacePercentage: state.takenSpacePercentage,
+        isSubscribed: state.isSubscribed
       )
     }
   }
@@ -51,10 +53,12 @@ struct SettingsScreenView: View {
   var body: some View {
     NavigationStack {
       List {
-        SubscriptionSectionView(store: store.scope(state: \.subscriptionSection, action: SettingsScreen.Action.subscriptionSection))
-          .introspect(.listCell, on: .iOS(.v16, .v17)) {
-            $0.clipsToBounds = false
-          }
+        if !viewStore.isSubscribed {
+          SubscriptionSectionView(store: store.scope(state: \.subscriptionSection, action: SettingsScreen.Action.subscriptionSection))
+            .introspect(.listCell, on: .iOS(.v16, .v17)) {
+              $0.clipsToBounds = false
+            }
+        }
 
         ModelSectionView(viewStore: viewStore, modelSelectorStore: modelSelectorStore)
         SpeechSectionView(viewStore: viewStore)
@@ -67,19 +71,19 @@ struct SettingsScreenView: View {
         FeedbackSectionView(viewStore: viewStore)
         FooterSectionView(viewStore: viewStore)
       }
-      .scrollContentBackground(.hidden)
-      .removeNavigationBackground()
-      .navigationBarTitle("Settings")
-      .navigationBarTitleDisplayMode(.inline)
-      .applyTabBarContentInset()
+        .scrollContentBackground(.hidden)
+        .removeNavigationBackground()
+        .navigationBarTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .applyTabBarContentInset()
     }
-    .alert(store: store.scope(state: \.$alert, action: { .alert($0) }))
-    .task { viewStore.send(.task) }
-    .onAppear {
-      viewStore.send(.modelSelector(.reloadSelectedModel))
-      viewStore.send(.updateInfo)
-    }
-    .enableInjection()
+      .alert(store: store.scope(state: \.$alert, action: { .alert($0) }))
+      .task { viewStore.send(.task) }
+      .onAppear {
+        viewStore.send(.modelSelector(.reloadSelectedModel))
+        viewStore.send(.updateInfo)
+      }
+      .enableInjection()
   }
 }
 
@@ -101,23 +105,23 @@ struct ModelSectionView: View {
             ForEachStore(modelSelectorStore.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
               ModelRowView(store: modelRowStore)
             }
-            .listRowBackground(Color.DS.Background.secondary)
+              .listRowBackground(Color.DS.Background.secondary)
           }
         }
-        .onAppear { viewStore.send(.modelSelector(.reloadSelectedModel)) }
-        .alert(store: modelSelectorStore.scope(state: \.$alert, action: { .alert($0) }))
+          .onAppear { viewStore.send(.modelSelector(.reloadSelectedModel)) }
+          .alert(store: modelSelectorStore.scope(state: \.$alert, action: { .alert($0) }))
       }
-      .onAppear { viewStore.send(.modelSelector(.reloadSelectedModel)) }
+        .onAppear { viewStore.send(.modelSelector(.reloadSelectedModel)) }
     } header: {
       Text("Local Transcription")
     } footer: {
       Text("Whisper Model").bold() + Text("""
-       - OpenAI's Automatic Speech Recognition tool. The 'tiny' model is optimal for long transcriptions due to its speed. \
-      The 'medium' model specializes in high-quality slow transcriptions. Larger models consume significant resources \
-      and might not perform well on older iOS devices.
-      """)
+                                           - OpenAI's Automatic Speech Recognition tool. The 'tiny' model is optimal for long transcriptions due to its speed. \
+                                          The 'medium' model specializes in high-quality slow transcriptions. Larger models consume significant resources \
+                                          and might not perform well on older iOS devices.
+                                          """)
     }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
   }
 }
 
@@ -138,7 +142,7 @@ struct SpeechSectionView: View {
         )
       )
     }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
   }
 }
 
@@ -160,7 +164,7 @@ struct DebugSectionView: View {
     } header: {
       Text("Debug")
     }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
   }
 }
 
@@ -189,7 +193,7 @@ struct StorageSectionView: View {
               Color.DS.Background.tertiary
             }
           }
-          .frame(height: .grid(4)).continuousCornerRadius(.grid(1))
+            .frame(height: .grid(4)).continuousCornerRadius(.grid(1))
         }
       }
 
@@ -208,7 +212,7 @@ struct StorageSectionView: View {
     } header: {
       Text("Storage")
     }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
   }
 }
 
@@ -231,7 +235,7 @@ struct FeedbackSectionView: View {
         viewStore.send(.suggestFeatureTapped)
       }
     }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
   }
 }
 
@@ -252,12 +256,12 @@ struct FooterSectionView: View {
           Text("by Igor Tarasenko").foregroundColor(.DS.Text.accentAlt).textStyle(.caption)
         }
       }
-      .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity)
 
       HStack(spacing: .grid(1)) { Button("Saik0s/Whisperboard") { viewStore.send(.openGitHub) } }.buttonStyle(SmallButtonStyle())
         .frame(maxWidth: .infinity)
     }
-    .listRowBackground(Color.clear).listRowSeparator(.hidden)
+      .listRowBackground(Color.clear).listRowSeparator(.hidden)
   }
 }
 

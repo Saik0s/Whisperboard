@@ -43,78 +43,95 @@ struct SubscriptionClient {
 
 enum SubscriptionClientError: Error {
   case noCurrentOffering
+  case noPackageInOffering
   case cancelled
   case noTransaction
+
+  var errorDescription: String? {
+    switch self {
+    case .noCurrentOffering:
+      return "No current offering available."
+    case .noPackageInOffering:
+      return "No package in the current offering."
+    case .cancelled:
+      return "The transaction was cancelled."
+    case .noTransaction:
+      return "No transaction found."
+    }
+  }
 }
 
 // MARK: - SubscriptionClient + DependencyKey
 
 extension SubscriptionClient: DependencyKey {
-  static let liveValue = {
-    let delegate = PurchasesDelegateHandler()
-
-    return SubscriptionClient(
-      configure: { userID in
-        Purchases.configure(withAPIKey: Secrets.REVENUECAT_API_KEY, appUserID: userID)
-        Purchases.shared.delegate = delegate
-      },
-      checkIfSubscribed: {
-        let customerInfo = try await Purchases.shared.customerInfo()
-        delegate.customerInfo = customerInfo
-        return customerInfo.entitlements[Secrets.STORE_ENTITLEMENT_ID]?.isActive == true
-      },
-      isSubscribedStream: {
-        delegate.$customerInfo
-          .map { $0?.entitlements[Secrets.STORE_ENTITLEMENT_ID]?.isActive == true }
-          .values
-          .eraseToStream()
-      },
-      purchase: { packageID in
-        guard let offering = delegate.offerings?.current else {
-          throw SubscriptionClientError.noCurrentOffering
+  static let liveValue: SubscriptionClient = .init(
+    configure: { userID in
+      Purchases.configure(withAPIKey: Secrets.REVENUECAT_API_KEY, appUserID: userID)
+    },
+    checkIfSubscribed: {
+      let customerInfo = try await Purchases.shared.customerInfo()
+      return customerInfo.entitlements[Secrets.STORE_ENTITLEMENT_ID]?.isActive == true
+    },
+    isSubscribedStream: {
+      Purchases.shared.customerInfoStream
+        .map {
+          $0.entitlements[Secrets.STORE_ENTITLEMENT_ID]?.isActive == true
         }
-
-        guard let package = offering.package(identifier: packageID) else {
-          throw SubscriptionClientError.noCurrentOffering
-        }
-
-        let (transaction, customerInfo, userCancelled) = try await Purchases.shared.purchase(package: package)
-        delegate.customerInfo = customerInfo
-        guard !userCancelled else { throw SubscriptionClientError.cancelled }
-        await transaction?.sk2Transaction?.finish()
-        guard let transaction, let skTransaction = transaction.sk2Transaction else { throw SubscriptionClientError.noTransaction }
-        return SubscriptionTransaction(
-          id: transaction.transactionIdentifier,
-          date: transaction.purchaseDate,
-          dataRepresentation: skTransaction.jsonRepresentation
-        )
-      },
-      restore: {
-        let customerInfo = try await Purchases.shared.restorePurchases()
-        delegate.customerInfo = customerInfo
-        return customerInfo.entitlements[Secrets.STORE_ENTITLEMENT_ID]?.isActive == true
-      },
-      getAvailablePackages: {
-        let offerings = try await Purchases.shared.offerings()
-        guard let current = offerings.current else {
-          throw SubscriptionClientError.noCurrentOffering
-        }
-
-        return current.availablePackages
-          .map { package in
-            SubscriptionPackage(
-              id: package.identifier,
-              packageType: package.packageType,
-              localizedTitle: package.storeProduct.localizedTitle,
-              localizedDescription: package.storeProduct.localizedDescription,
-              localizedPriceString: package.localizedPriceString,
-              localizedIntroductoryPriceString: package.localizedIntroductoryPriceString
-            )
-          }
-          .identifiedArray
+        .eraseToStream()
+    },
+    purchase: { packageID in
+      guard let offering = try await Purchases.shared.offerings().current else {
+        throw SubscriptionClientError.noCurrentOffering
       }
-    )
-  }()
+
+      guard let package = offering.package(identifier: packageID) else {
+        throw SubscriptionClientError.noPackageInOffering
+      }
+
+      let (transaction, customerInfo, userCancelled) = try await Purchases.shared.purchase(package: package)
+      guard !userCancelled else {
+        throw SubscriptionClientError.cancelled
+      }
+
+      guard let transaction, let skTransaction = transaction.sk2Transaction else {
+        throw SubscriptionClientError.noTransaction
+      }
+
+      await transaction.sk2Transaction?.finish()
+
+      @Dependency(\.keychainClient) var keychainClient
+      keychainClient.transactionID = transaction.transactionIdentifier
+
+      return SubscriptionTransaction(
+        id: transaction.transactionIdentifier,
+        date: transaction.purchaseDate,
+        dataRepresentation: skTransaction.jsonRepresentation
+      )
+    },
+    restore: {
+      let customerInfo = try await Purchases.shared.restorePurchases()
+      return customerInfo.entitlements[Secrets.STORE_ENTITLEMENT_ID]?.isActive == true
+    },
+    getAvailablePackages: {
+      let offerings = try await Purchases.shared.offerings()
+      guard let current = offerings.current else {
+        throw SubscriptionClientError.noCurrentOffering
+      }
+
+      return current.availablePackages
+        .map { package in
+          SubscriptionPackage(
+            id: package.identifier,
+            packageType: package.packageType,
+            localizedTitle: package.storeProduct.localizedTitle,
+            localizedDescription: package.storeProduct.localizedDescription,
+            localizedPriceString: package.localizedPriceString,
+            localizedIntroductoryPriceString: package.localizedIntroductoryPriceString
+          )
+        }
+        .identifiedArray
+    }
+  )
 }
 
 // MARK: - Dependencies
@@ -123,34 +140,5 @@ extension DependencyValues {
   var subscriptionClient: SubscriptionClient {
     get { self[SubscriptionClient.self] }
     set { self[SubscriptionClient.self] = newValue }
-  }
-}
-
-// MARK: - PurchasesDelegateHandler
-
-private final class PurchasesDelegateHandler: NSObject {
-  @Published var customerInfo: CustomerInfo?
-  @Published var offerings: Offerings? = nil
-  @Published var subscriptionActive: Bool = false
-}
-
-// MARK: PurchasesDelegate
-
-extension PurchasesDelegateHandler: PurchasesDelegate {
-  func purchases(_: Purchases, receivedUpdated customerInfo: CustomerInfo) {
-    updateCustomerInfo(customerInfo)
-  }
-
-  func purchases(_: Purchases, readyForPromotedProduct _: StoreProduct, purchase startPurchase: @escaping StartPurchaseBlock) {
-    startPurchase { [weak self] _, info, error, cancelled in
-      if let info, error == nil, !cancelled {
-        self?.updateCustomerInfo(info)
-      }
-    }
-  }
-
-  private func updateCustomerInfo(_ customerInfo: CustomerInfo) {
-    self.customerInfo = customerInfo
-    subscriptionActive = customerInfo.entitlements[Secrets.STORE_ENTITLEMENT_ID]?.isActive == true
   }
 }

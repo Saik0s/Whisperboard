@@ -8,9 +8,15 @@
   ],
   "settings" : {
     "_applicationInternalID" : "1661442906",
+    "_billingGracePeriodEnabled" : false,
+    "_compatibilityTimeRate" : {
+      "3" : 6
+    },
     "_developerTeamID" : "8A76N862C8",
     "_failTransactionsEnabled" : false,
-    "_lastSynchronizedDate" : 717693608.44237995,
+    "_lastSynchronizedDate" : 718577546.378582,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
     "_storeKitErrors" : [
       {
         "current" : null,
@@ -57,7 +63,8 @@
         "enabled" : false,
         "name" : "Offer Code Redeem Sheet"
       }
-    ]
+    ],
+    "_timeRate" : 13
   },
   "subscriptionGroups" : [
     {
@@ -78,7 +85,12 @@
           "familyShareable" : true,
           "groupNumber" : 1,
           "internalID" : "6461014269",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "internalID" : "25A18C6F",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
           "localizations" : [
             {
               "description" : "Access to advanced cloud transcription",
