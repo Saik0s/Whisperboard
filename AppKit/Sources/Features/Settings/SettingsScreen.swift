@@ -19,6 +19,7 @@ struct SettingsScreen: ReducerProtocol {
     var freeSpace: String = ""
     var takenSpace: String = ""
     var takenSpacePercentage: Double = 0
+    var isSubscribed: Bool = false
 
     @BindingState var isICloudSyncInProgress = false
     @BindingState var isDebugLogPresented = false
@@ -43,6 +44,7 @@ struct SettingsScreen: ReducerProtocol {
     case showError(EquatableError)
     case suggestFeatureTapped
     case updateInfo
+    case updateIsSubscribed(Bool)
 
     enum Alert: Equatable {
       case deleteDialogConfirmed
@@ -54,6 +56,7 @@ struct SettingsScreen: ReducerProtocol {
   @Dependency(\.openURL) var openURL: OpenURLEffect
   @Dependency(\.build) var build: BuildClient
   @Dependency(\.storage) var storage: StorageClient
+  @Dependency(\.subscriptionClient) var subscriptionClient: SubscriptionClient
 
   var body: some ReducerProtocol<State, Action> {
     BindingReducer()
@@ -115,7 +118,17 @@ struct SettingsScreen: ReducerProtocol {
           }
         } catch: { error, send in
           await send(.showError(error.equatable))
-        }
+        }.merge(with: .run { send in
+            do {
+              let isSubscribed = try await subscriptionClient.checkIfSubscribed()
+              await send(.updateIsSubscribed(isSubscribed))
+            } catch {
+              await send(.showError(error.equatable))
+            }
+            for await isSubscribed in subscriptionClient.isSubscribedStream() {
+              await send(.updateIsSubscribed(isSubscribed))
+            }
+        })
 
       case .updateInfo:
         updateInfo(state: &state)
@@ -163,6 +176,10 @@ struct SettingsScreen: ReducerProtocol {
         return .run { _ in
           await openURL(build.featureRequestURL())
         }
+
+        case .updateIsSubscribed(let isSubscribed):
+          state.isSubscribed = isSubscribed
+          return .none
 
       case .alert:
         return .none
