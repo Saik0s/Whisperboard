@@ -54,6 +54,7 @@ struct ShiningCardEffect: ViewModifier {
   var isReallyTapped: Bool {
     isTapped?.wrappedValue ?? false
   }
+
   var isTriggered: Bool {
     (isHovering || isReallyTapped) && isEnabled
   }

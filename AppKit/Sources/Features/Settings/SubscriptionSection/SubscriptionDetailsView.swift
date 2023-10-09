@@ -2,14 +2,6 @@ import ComposableArchitecture
 import Inject
 import SwiftUI
 
-// MARK: - Terms
-
-enum Terms: Hashable {
-  case termsOfUse
-  case subscriptionTerms
-  case privacyPolicy
-}
-
 // MARK: - SubscriptionDetails
 
 struct SubscriptionDetails: ReducerProtocol {
@@ -18,7 +10,6 @@ struct SubscriptionDetails: ReducerProtocol {
     var availablePackages: ProgressiveResultOf<IdentifiedArrayOf<SubscriptionPackage>> = .none
 
     @PresentationState var alert: AlertState<Action.Alert>?
-    @PresentationState var termsOverlay: Terms?
 
     var isSubscribed: Bool = false
   }
@@ -32,21 +23,19 @@ struct SubscriptionDetails: ReducerProtocol {
     case restorePurchaseCompleted(TaskResult<Bool>)
 
     case termsOfUseTapped
-    case subscrtiptionTermsTapped
     case privacyPolicyTapped
     case restorePurchasesTapped
 
     case alert(PresentationAction<Alert>)
-    case termsOverlay(PresentationAction<Terms>)
 
     case showAlert(AlertState<Action.Alert>)
 
     enum Alert: Equatable {}
-
-    enum Terms: Equatable {}
   }
 
   @Dependency(\.subscriptionClient) var subscriptionClient: SubscriptionClient
+  @Dependency(\.openURL) var openURL: OpenURLEffect
+  @Dependency(\.build) var build: BuildClient
 
   var body: some ReducerProtocol<State, Action> {
     Reduce { state, action in
@@ -71,16 +60,14 @@ struct SubscriptionDetails: ReducerProtocol {
         return .none
 
       case .termsOfUseTapped:
-        state.termsOverlay = .termsOfUse
-        return .none
-
-      case .subscrtiptionTermsTapped:
-        state.termsOverlay = .subscriptionTerms
-        return .none
+        return .run { _ in
+          await openURL(build.termsOfServiceURL())
+        }
 
       case .privacyPolicyTapped:
-        state.termsOverlay = .privacyPolicy
-        return .none
+        return .run { _ in
+          await openURL(build.privacyPolicyURL())
+        }
 
       case .restorePurchasesTapped:
         return .run { send in
@@ -108,9 +95,6 @@ struct SubscriptionDetails: ReducerProtocol {
 
       case .alert:
         return .none
-
-      case .termsOverlay:
-        return .none
       }
     }
     .onChange(of: \.availablePackages.errorValue?.equatable) { _, newValue in
@@ -135,6 +119,8 @@ struct SubscriptionDetails: ReducerProtocol {
 // MARK: - SubscriptionDetailsView
 
 struct SubscriptionDetailsView: View {
+  @Environment(\.dismiss) var dismiss
+
   @ObserveInjection var inject
 
   let store: StoreOf<SubscriptionDetails>
@@ -150,50 +136,44 @@ struct SubscriptionDetailsView: View {
       Color.DS.Background.primary.ignoresSafeArea()
 
       VStack(spacing: .grid(4)) {
-        WhisperBoardKitAsset.subscriptionHeader.swiftUIImage
-          .resizable()
-          .scaledToFit()
+        HStack(spacing: .grid(1)) {
+          Text("WhisperBoard")
+            .font(WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: 28))
+
+          Text("PRO")
+            .font(WhisperBoardKitFontFamily.Poppins.bold.swiftUIFont(size: 14))
+            .padding(.horizontal, 3)
+            .padding(.vertical, 1)
+            .background {
+              RoundedRectangle(cornerRadius: .grid(1))
+                .fill(Color.DS.Text.accent)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .padding(.top, .grid(8))
 
         Spacer()
 
-        VStack(spacing: .grid(6)) {
-          HStack(spacing: .grid(1)) {
-            Text("WhisperBoard")
-              .font(.DS.title)
-
-            Text("PRO")
-              .font(.DS.badge)
-              .padding(.horizontal, 3)
-              .padding(.vertical, 1)
-              .background {
-                RoundedRectangle(cornerRadius: .grid(1))
-                  .fill(Color.DS.Text.accent)
-              }
-          }
-          .accessibilityElement(children: .combine)
-
-          FeatureView(
-            icon: "doc.text.below.ecg",
-            title: "Fast Cloud Transcription",
-            description: "Using large v2 whisper model."
-          )
-          //          FeatureView(
-          //            icon: "speaker.wave.2",
-          //            title: "Voice Generation",
-          //            description: "Generate audio from final transcription using user's voice."
-          //          )
-          FeatureView(
-            icon: "ellipsis.message",
-            title: "AI text processing",
-            description: "Edit transcription using AI."
-          )
-          FeatureView(
-            icon: "star.circle.fill",
-            title: "More Pro Features",
-            description: "And more to come!"
-          )
-        }
-        .frame(maxWidth: .infinity)
+        FeatureView(
+          icon: "doc.text.below.ecg",
+          title: "Fast Cloud Transcription",
+          description: "Using large v2 whisper model."
+        )
+        FeatureView(
+          icon: "ellipsis.message",
+          title: "AI text processing",
+          description: "Edit transcription using AI."
+        )
+        FeatureView(
+          icon: "star.circle.fill",
+          title: "More Pro Features",
+          description: "All future pro features."
+        )
+        FeatureView(
+          icon: "bolt.heart",
+          title: "Support Development",
+          description: "Help build the future of WhisperBoard."
+        )
 
         Spacer()
 
@@ -202,17 +182,25 @@ struct SubscriptionDetailsView: View {
             .progressViewStyle(.circular)
             .padding(.top, .grid(4))
         } else if let package = viewStore.availablePackages.successValue?.first {
-          Text(package.localizedDescription)
-            .textStyle(.label)
-
-          Text("Only " + (package.localizedIntroductoryPriceString ?? package.localizedPriceString))
-            .textStyle(.label)
+          Text("2 weeks free, then ")
+            .font(WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: 18))
+            .foregroundColor(.DS.Text.base)
+            +
+            Text(package.localizedPriceString)
+            .font(WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: 24))
+            .foregroundColor(.DS.Text.base)
+            +
+            Text("/month.")
+            .font(WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: 18))
+            .foregroundColor(.DS.Text.base)
 
           Button {
             viewStore.send(.purchasePackage(id: package.id))
           } label: {
-            Text("Subscribe")
-              .font(.DS.titleBold)
+            Text("Try It Free")
+              .font(WhisperBoardKitFontFamily.Poppins.bold.swiftUIFont(size: 24))
+              .foregroundColor(.DS.Text.base)
+              .frame(maxWidth: .infinity)
           }
           .primaryButtonStyle()
         } else {
@@ -220,23 +208,40 @@ struct SubscriptionDetailsView: View {
             .textStyle(.navigationTitle)
         }
 
+        Button { viewStore.send(.restorePurchasesTapped) } label: {
+          Text("Restore Purchases")
+            .foregroundColor(.DS.Text.accent)
+            .font(.DS.body)
+        }
+
         HStack {
           Button(action: { viewStore.send(.privacyPolicyTapped) }) {
             Text("Privacy Policy")
+              .foregroundColor(.DS.Text.subdued)
+              .textStyle(.captionBase)
           }
+
+          Text("•")
+            .foregroundColor(.DS.Text.subdued)
+            .textStyle(.captionBase)
 
           Button(action: { viewStore.send(.termsOfUseTapped) }) {
             Text("Terms of Use")
-          }
-
-          Button("Restore Purchases") {
-            viewStore.send(.restorePurchasesTapped)
+              .foregroundColor(.DS.Text.subdued)
+              .textStyle(.captionBase)
           }
         }
       }
       .padding(.horizontal, .grid(8))
-      .padding(.bottom, .grid(4))
-      .frame(maxHeight: .infinity, alignment: .bottom)
+      .overlay(alignment: .topTrailing) {
+        Button { dismiss() } label: {
+          Image(systemName: "x.circle.fill")
+            .symbolRenderingMode(.hierarchical)
+            .font(.system(size: 30))
+            .foregroundColor(.DS.Text.base)
+            .padding(.grid(4))
+        }
+      }
     }
     .alert(store: store.scope(state: \.$alert, action: SubscriptionDetails.Action.alert))
     .task { viewStore.send(.onTask) }
@@ -255,14 +260,14 @@ struct FeatureView: View {
     HStack(alignment: .top, spacing: .grid(4)) {
       Image(systemName: icon)
         .resizable()
-        .foregroundStyle(Color.DS.Text.accent)
+        .foregroundStyle(Color.DS.accents05)
         .scaledToFit()
         .frame(width: 25, height: 25)
         .padding(.top, .grid(1))
 
       VStack(alignment: .leading, spacing: 0) {
         Text(title)
-          .textStyle(.label)
+          .textStyle(.bodyBold)
 
         Text(description)
           .textStyle(.sublabel)

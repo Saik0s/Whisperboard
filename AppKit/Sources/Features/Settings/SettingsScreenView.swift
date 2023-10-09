@@ -244,12 +244,12 @@ struct FooterSectionView: View {
     Section {
       VStack(spacing: .grid(1)) {
         Text("v\(viewStore.appVersion) (\(viewStore.buildNumber))").textStyle(.caption)
-        Text("Made with ♥ in Amsterdam").foregroundColor(.DS.Text.accentAlt).textStyle(.bodyBold)
+        Text("Made with ♥ in Amsterdam").foregroundColor(.DS.Text.accentAlt).textStyle(.caption)
           .mask { LinearGradient.easedGradient(colors: [.systemPurple, .systemRed], startPoint: .bottomLeading, endPoint: .topTrailing) }
         Button {
           viewStore.send(.openPersonalWebsite)
         } label: {
-          Text("by Igor Tarasenko").foregroundColor(.DS.Text.accentAlt).textStyle(.bodyBold)
+          Text("by Igor Tarasenko").foregroundColor(.DS.Text.accentAlt).textStyle(.caption)
         }
       }
       .frame(maxWidth: .infinity)
