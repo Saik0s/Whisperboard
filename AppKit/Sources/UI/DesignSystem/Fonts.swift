@@ -14,5 +14,6 @@ extension Font {
     static let badge = WhisperBoardKitFontFamily.Poppins.semiBold.swiftUIFont(size: 10)
     static let title = WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: 22)
     static let titleSmall = WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: 18)
+    static let titleBold = WhisperBoardKitFontFamily.Poppins.bold.swiftUIFont(size: 24)
   }
 }

@@ -149,25 +149,43 @@ struct SubscriptionDetailsView: View {
     ZStack {
       Color.DS.Background.primary.ignoresSafeArea()
 
-      ScrollView {
-        VStack(spacing: .grid(4)) {
-          Text("WhisperBoard PRO")
-            .textStyle(.navigationTitle)
+      VStack(spacing: .grid(4)) {
+        WhisperBoardKitAsset.subscriptionHeader.swiftUIImage
+          .resizable()
+          .scaledToFit()
+
+        Spacer()
+
+        VStack(spacing: .grid(6)) {
+          HStack(spacing: .grid(1)) {
+            Text("WhisperBoard")
+              .font(.DS.title)
+
+            Text("PRO")
+              .font(.DS.badge)
+              .padding(.horizontal, 3)
+              .padding(.vertical, 1)
+              .background {
+                RoundedRectangle(cornerRadius: .grid(1))
+                  .fill(Color.DS.Text.accent)
+              }
+          }
+          .accessibilityElement(children: .combine)
 
           FeatureView(
             icon: "doc.text.below.ecg",
             title: "Fast Cloud Transcription",
-            description: "Super fast cloud based transcription using large whisper model with privacy as a priority."
+            description: "Using large v2 whisper model."
           )
-          FeatureView(
-            icon: "speaker.wave.2",
-            title: "Voice Generation",
-            description: "Generate audio from final transcription using user's voice."
-          )
+          //          FeatureView(
+          //            icon: "speaker.wave.2",
+          //            title: "Voice Generation",
+          //            description: "Generate audio from final transcription using user's voice."
+          //          )
           FeatureView(
             icon: "ellipsis.message",
             title: "AI text processing",
-            description: "Clean and format transcription using AI."
+            description: "Edit transcription using AI."
           )
           FeatureView(
             icon: "star.circle.fill",
@@ -175,38 +193,28 @@ struct SubscriptionDetailsView: View {
             description: "And more to come!"
           )
         }
-        .padding(.horizontal, .grid(4))
-      }
-      .safeAreaInset(edge: .top) {
-        WhisperBoardKitAsset.subscriptionHeader.swiftUIImage
-          .resizable()
-          .scaledToFit()
-          .padding(.horizontal, .grid(4))
-      }
+        .frame(maxWidth: .infinity)
 
-      VStack(spacing: .grid(4)) {
+        Spacer()
+
         if viewStore.availablePackages.isInProgress {
           ProgressView()
             .progressViewStyle(.circular)
             .padding(.top, .grid(4))
-        } else if let packages = viewStore.availablePackages.successValue {
-          ForEach(packages) { package in
-            Button {
-              viewStore.send(.purchasePackage(id: package.id))
-            } label: {
-              VStack(spacing: .grid(0)) {
-                Text("Subscribe")
-                  .font(.largeTitle)
+        } else if let package = viewStore.availablePackages.successValue?.first {
+          Text(package.localizedDescription)
+            .textStyle(.label)
 
-                VStack {
-                  Text(package.localizedTitle)
-                  Text(package.localizedDescription)
-                  Text(package.localizedPriceString)
-                }
-              }
-            }
-            .primaryButtonStyle()
+          Text("Only " + (package.localizedIntroductoryPriceString ?? package.localizedPriceString))
+            .textStyle(.label)
+
+          Button {
+            viewStore.send(.purchasePackage(id: package.id))
+          } label: {
+            Text("Subscribe")
+              .font(.DS.titleBold)
           }
+          .primaryButtonStyle()
         } else {
           Text("Error loading packages")
             .textStyle(.navigationTitle)
@@ -226,6 +234,7 @@ struct SubscriptionDetailsView: View {
           }
         }
       }
+      .padding(.horizontal, .grid(8))
       .padding(.bottom, .grid(4))
       .frame(maxHeight: .infinity, alignment: .bottom)
     }
@@ -248,15 +257,15 @@ struct FeatureView: View {
         .resizable()
         .foregroundStyle(Color.DS.Text.accent)
         .scaledToFit()
-        .frame(width: 30, height: 30)
+        .frame(width: 25, height: 25)
         .padding(.top, .grid(1))
 
       VStack(alignment: .leading, spacing: 0) {
         Text(title)
-          .textStyle(.subheadline)
+          .textStyle(.label)
 
         Text(description)
-          .textStyle(.body)
+          .textStyle(.sublabel)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       .fixedSize(horizontal: false, vertical: true)
