@@ -12,6 +12,8 @@ struct BuildClient {
   var appStoreReviewURL: () -> URL
   var bugReportURL: () -> URL
   var featureRequestURL: () -> URL
+  var privacyPolicyURL: () -> URL
+  var termsOfServiceURL: () -> URL
 }
 
 // MARK: DependencyKey
@@ -29,7 +31,9 @@ extension BuildClient: DependencyKey {
       },
       featureRequestURL: {
         URL(staticString: "https://docs.google.com/forms/d/e/1FAIpQLSd6SW5sMmbaTCkMxp-6AUbWF4CdGu-cFWa8dO0UKKhrMlzrtA/viewform")
-      }
+      },
+      privacyPolicyURL: { URL(staticString: "https://whisperboard.unicornplatform.page/privacy-policy/") },
+      termsOfServiceURL: { URL(staticString: "https://whisperboard.unicornplatform.page/terms-of-service/") }
     )
   }
 }
@@ -42,7 +46,9 @@ extension BuildClient {
     personalWebsiteURL: { URL(staticString: "https://www.mywebsite.com") },
     appStoreReviewURL: { URL(staticString: "https://www.appstore.com/app/id") },
     bugReportURL: { URL(staticString: "https://www.mywebsite.com/bugreport") },
-    featureRequestURL: { URL(staticString: "https://www.mywebsite.com/featurerequest") }
+    featureRequestURL: { URL(staticString: "https://www.mywebsite.com/featurerequest") },
+    privacyPolicyURL: { URL(staticString: "https://www.mywebsite.com/privacypolicy") },
+    termsOfServiceURL: { URL(staticString: "https://www.mywebsite.com/termsofservice") }
   )
 }
 
