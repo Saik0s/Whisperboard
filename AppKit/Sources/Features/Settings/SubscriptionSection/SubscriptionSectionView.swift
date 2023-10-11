@@ -81,7 +81,7 @@ struct SubscriptionSectionView: View {
           }
           .accessibilityElement(children: .combine)
 
-          Text("Get 2 weeks free.\nContribute to ongoing development.")
+          Text("Get 3 days free.\nContribute to ongoing development.")
             .textStyle(.captionBase)
             .lineLimit(2)
             .fixedSize(horizontal: false, vertical: true)
@@ -161,7 +161,6 @@ struct SubscriptionSectionView: View {
         .opacity(0.3)
     }
     .clipped()
-    .compositingGroup()
   }
 }
 

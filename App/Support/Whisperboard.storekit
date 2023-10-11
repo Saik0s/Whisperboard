@@ -10,11 +10,11 @@
     "_applicationInternalID" : "1661442906",
     "_billingGracePeriodEnabled" : false,
     "_compatibilityTimeRate" : {
-      "3" : 6
+      "3" : 3
     },
     "_developerTeamID" : "8A76N862C8",
     "_failTransactionsEnabled" : false,
-    "_lastSynchronizedDate" : 718577546.378582,
+    "_lastSynchronizedDate" : 718750596.95476305,
     "_locale" : "en_US",
     "_storefront" : "USA",
     "_storeKitErrors" : [
@@ -64,7 +64,7 @@
         "name" : "Offer Code Redeem Sheet"
       }
     ],
-    "_timeRate" : 13
+    "_timeRate" : 10
   },
   "subscriptionGroups" : [
     {
@@ -86,10 +86,10 @@
           "groupNumber" : 1,
           "internalID" : "6461014269",
           "introductoryOffer" : {
-            "internalID" : "25A18C6F",
+            "internalID" : "D6C5B084",
             "numberOfPeriods" : 1,
             "paymentMode" : "free",
-            "subscriptionPeriod" : "P1W"
+            "subscriptionPeriod" : "P3D"
           },
           "localizations" : [
             {
