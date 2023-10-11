@@ -6,12 +6,11 @@ import SwiftUI
 
 struct SubscriptionDetails: ReducerProtocol {
   struct State: Equatable {
-    var purchaseProgress: ProgressiveResultOf<SubscriptionTransaction> = .none
-    var availablePackages: ProgressiveResultOf<IdentifiedArrayOf<SubscriptionPackage>> = .none
+    var purchaseProgress: ProgressiveResultOf<Bool> = .none
+    var restoreProgress: ProgressiveResultOf<Bool> = .none
+    var availablePackage: ProgressiveResultOf<SubscriptionPackage> = .none
 
     @PresentationState var alert: AlertState<Action.Alert>?
-
-    var isSubscribed: Bool = false
   }
 
   enum Action: Equatable {
@@ -19,7 +18,7 @@ struct SubscriptionDetails: ReducerProtocol {
 
     case availablePackagesDidLoad(TaskResult<IdentifiedArrayOf<SubscriptionPackage>>)
     case purchasePackage(id: SubscriptionPackage.ID)
-    case purchaseCompleted(TaskResult<SubscriptionTransaction>)
+    case purchaseCompleted(TaskResult<Bool>)
     case restorePurchaseCompleted(TaskResult<Bool>)
 
     case termsOfUseTapped
@@ -36,17 +35,29 @@ struct SubscriptionDetails: ReducerProtocol {
   @Dependency(\.subscriptionClient) var subscriptionClient: SubscriptionClient
   @Dependency(\.openURL) var openURL: OpenURLEffect
   @Dependency(\.build) var build: BuildClient
+  @Dependency(\.dismiss) var dismiss
 
   var body: some ReducerProtocol<State, Action> {
     Reduce { state, action in
       switch action {
       case .onTask:
+        state.availablePackage = .inProgress
         return .run { send in
           await send(.availablePackagesDidLoad(TaskResult { try await subscriptionClient.getAvailablePackages() }))
         }
 
-      case let .availablePackagesDidLoad(result):
-        state.availablePackages = result.toProgressiveResult()
+      case let .availablePackagesDidLoad(.success(packages)):
+        guard let package = packages.first(where: { $0.packageType == .monthly }) else {
+          enum AvailablePackageError: Error { case cantFindMonthlyPackage }
+
+          state.availablePackage = .failure(AvailablePackageError.cantFindMonthlyPackage)
+          return .none
+        }
+        state.availablePackage = .success(package)
+        return .none
+
+      case let .availablePackagesDidLoad(.failure(error)):
+        state.availablePackage = .failure(error)
         return .none
 
       case let .purchasePackage(package):
@@ -55,8 +66,20 @@ struct SubscriptionDetails: ReducerProtocol {
           await send(.purchaseCompleted(TaskResult { try await subscriptionClient.purchase(package) }))
         }
 
-      case let .purchaseCompleted(result):
-        state.purchaseProgress = result.toProgressiveResult()
+      case let .purchaseCompleted(.success(value)):
+        state.purchaseProgress = .success(value)
+        return .run { _ in
+          await dismiss()
+        }
+
+      case let .purchaseCompleted(.failure(error)):
+        switch error {
+        case SubscriptionClientError.cancelled:
+          state.purchaseProgress = .none
+        default:
+          state.purchaseProgress = .failure(error)
+          state.alert = .error(error)
+        }
         return .none
 
       case .termsOfUseTapped:
@@ -70,22 +93,28 @@ struct SubscriptionDetails: ReducerProtocol {
         }
 
       case .restorePurchasesTapped:
+        state.restoreProgress = .inProgress
         return .run { send in
           await send(.restorePurchaseCompleted(TaskResult { try await subscriptionClient.restore() }))
         }
 
       case let .restorePurchaseCompleted(.success(isSubscribed)):
-        state.isSubscribed = isSubscribed
+        state.restoreProgress = .success(isSubscribed)
         if !isSubscribed {
           state.alert = .init(
             title: .init("No Purchases Found"),
             message: .init("We couldn't find any purchases associated with your account."),
             dismissButton: .default(.init("OK"))
           )
+          return .none
+        } else {
+          return .run { _ in
+            await dismiss()
+          }
         }
-        return .none
 
       case let .restorePurchaseCompleted(.failure(error)):
+        state.restoreProgress = .failure(error)
         state.alert = .error(error)
         return .none
 
@@ -94,22 +123,6 @@ struct SubscriptionDetails: ReducerProtocol {
         return .none
 
       case .alert:
-        return .none
-      }
-    }
-    .onChange(of: \.availablePackages.errorValue?.equatable) { _, newValue in
-      Reduce { state, _ in
-        if let newValue {
-          state.alert = .error(newValue)
-        }
-        return .none
-      }
-    }
-    .onChange(of: \.purchaseProgress.errorValue?.equatable) { _, newValue in
-      Reduce { state, _ in
-        if let newValue {
-          state.alert = .error(newValue)
-        }
         return .none
       }
     }
@@ -136,6 +149,15 @@ struct SubscriptionDetailsView: View {
       Color.DS.Background.primary.ignoresSafeArea()
 
       VStack(spacing: .grid(4)) {
+        WhisperBoardKitAsset.subscriptionHeader.swiftUIImage
+          .resizable()
+          .scaledToFit()
+          .frame(maxWidth: .infinity)
+          .shining(
+            animation: .easeInOut(duration: 3).delay(7).repeatForever(autoreverses: false),
+            gradient: .init(colors: [.black.opacity(0.5), .black, .black.opacity(0.5)])
+          )
+
         HStack(spacing: .grid(1)) {
           Text("WhisperBoard")
             .font(WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: 28))
@@ -150,7 +172,6 @@ struct SubscriptionDetailsView: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .padding(.top, .grid(8))
 
         Spacer()
 
@@ -177,41 +198,54 @@ struct SubscriptionDetailsView: View {
 
         Spacer()
 
-        if viewStore.availablePackages.isInProgress {
+        switch viewStore.availablePackage {
+        case .inProgress, .none:
           ProgressView()
             .progressViewStyle(.circular)
-            .padding(.top, .grid(4))
-        } else if let package = viewStore.availablePackages.successValue?.first {
-          Text("2 weeks free, then ")
-            .font(WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: 18))
-            .foregroundColor(.DS.Text.base)
-            +
-            Text(package.localizedPriceString)
-            .font(WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: 24))
-            .foregroundColor(.DS.Text.base)
-            +
-            Text("/month.")
-            .font(WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: 18))
-            .foregroundColor(.DS.Text.base)
+            .padding(.vertical, .grid(4))
 
-          Button {
-            viewStore.send(.purchasePackage(id: package.id))
-          } label: {
-            Text("Try It Free")
-              .font(WhisperBoardKitFontFamily.Poppins.bold.swiftUIFont(size: 24))
-              .foregroundColor(.DS.Text.base)
-              .frame(maxWidth: .infinity)
-          }
-          .primaryButtonStyle()
-        } else {
+        case .error:
           Text("Error loading packages")
-            .textStyle(.navigationTitle)
+            .textStyle(.error)
+            .padding(.vertical, .grid(4))
+
+        case let .success(package):
+          if viewStore.purchaseProgress.isInProgress || viewStore.restoreProgress.isInProgress {
+            ProgressView()
+              .progressViewStyle(.circular)
+              .padding(.vertical, .grid(8))
+          } else if viewStore.purchaseProgress.isNone || viewStore.purchaseProgress.isError {
+            Text("3 days free, then ")
+              .font(.DS.body)
+              .foregroundColor(.DS.Text.base)
+              +
+              Text(package.localizedPriceString)
+              .font(.DS.bodyBold)
+              .foregroundColor(.DS.Text.base)
+              +
+              Text("/month.")
+              .font(.DS.body)
+              .foregroundColor(.DS.Text.base)
+
+            Button {
+              viewStore.send(.purchasePackage(id: package.id))
+            } label: {
+              Text("Try It Free")
+                .font(WhisperBoardKitFontFamily.Poppins.semiBold.swiftUIFont(size: 24))
+                .foregroundColor(.DS.Text.base)
+                .frame(maxWidth: .infinity)
+            }
+            .primaryButtonStyle()
+            .transition(.scale)
+          }
         }
 
-        Button { viewStore.send(.restorePurchasesTapped) } label: {
-          Text("Restore Purchases")
-            .foregroundColor(.DS.Text.accent)
-            .font(.DS.body)
+        if viewStore.restoreProgress.isNone || viewStore.restoreProgress.isError {
+          Button { viewStore.send(.restorePurchasesTapped) } label: {
+            Text("Restore Purchases")
+              .foregroundColor(.DS.Text.accent)
+              .font(.DS.body)
+          }
         }
 
         HStack {
@@ -243,6 +277,9 @@ struct SubscriptionDetailsView: View {
         }
       }
     }
+    .animation(.gentleBounce(), value: viewStore.purchaseProgress)
+    .animation(.gentleBounce(), value: viewStore.restoreProgress)
+    .animation(.gentleBounce(), value: viewStore.availablePackage)
     .alert(store: store.scope(state: \.$alert, action: SubscriptionDetails.Action.alert))
     .task { viewStore.send(.onTask) }
     .enableInjection()
@@ -265,9 +302,9 @@ struct FeatureView: View {
         .frame(width: 25, height: 25)
         .padding(.top, .grid(1))
 
-      VStack(alignment: .leading, spacing: 0) {
+      VStack(alignment: .leading, spacing: .grid(1)) {
         Text(title)
-          .textStyle(.bodyBold)
+          .textStyle(.label)
 
         Text(description)
           .textStyle(.sublabel)

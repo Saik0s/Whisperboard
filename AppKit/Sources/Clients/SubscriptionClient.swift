@@ -3,12 +3,6 @@ import Foundation
 import IdentifiedCollections
 import RevenueCat
 
-// MARK: - SubscriptionPackageType
-
-enum SubscriptionPackageType {
-  case monthly, yearly, lifetime
-}
-
 // MARK: - SubscriptionPackage
 
 struct SubscriptionPackage: Identifiable, Hashable {
@@ -20,21 +14,13 @@ struct SubscriptionPackage: Identifiable, Hashable {
   let localizedIntroductoryPriceString: String?
 }
 
-// MARK: - SubscriptionTransaction
-
-struct SubscriptionTransaction: Identifiable, Hashable {
-  let id: String
-  let date: Date
-  let dataRepresentation: Data
-}
-
 // MARK: - SubscriptionClient
 
 struct SubscriptionClient {
   var configure: @Sendable (_ userID: String) -> Void
   var checkIfSubscribed: @Sendable () async throws -> Bool
   var isSubscribedStream: @Sendable () -> AsyncStream<Bool>
-  var purchase: @Sendable (_ packageID: SubscriptionPackage.ID) async throws -> SubscriptionTransaction
+  var purchase: @Sendable (_ packageID: SubscriptionPackage.ID) async throws -> Bool
   var restore: @Sendable () async throws -> Bool
   var getAvailablePackages: @Sendable () async throws -> IdentifiedArrayOf<SubscriptionPackage>
 }
@@ -93,20 +79,7 @@ extension SubscriptionClient: DependencyKey {
         throw SubscriptionClientError.cancelled
       }
 
-      guard let transaction, let skTransaction = transaction.sk2Transaction else {
-        throw SubscriptionClientError.noTransaction
-      }
-
-      await transaction.sk2Transaction?.finish()
-
-      @Dependency(\.keychainClient) var keychainClient
-      keychainClient.transactionID = transaction.transactionIdentifier
-
-      return SubscriptionTransaction(
-        id: transaction.transactionIdentifier,
-        date: transaction.purchaseDate,
-        dataRepresentation: skTransaction.jsonRepresentation
-      )
+      return true
     },
     restore: {
       let customerInfo = try await Purchases.shared.restorePurchases()
