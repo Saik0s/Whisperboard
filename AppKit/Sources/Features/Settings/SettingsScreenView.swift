@@ -95,6 +95,11 @@ struct ModelSectionView: View {
 
   var body: some View {
     Section {
+      SettingsToggleButton(
+        icon: .system(name: "wand.and.stars", background: .DS.Background.accent),
+        title: "Cloud Transcription",
+        isOn: viewStore.$settings.isRemoteTranscriptionEnabled
+      )
       SettingsSheetButton(
         icon: .system(name: "square.and.arrow.down", background: .systemBlue.lighten(by: 0.1)),
         title: "Model",
