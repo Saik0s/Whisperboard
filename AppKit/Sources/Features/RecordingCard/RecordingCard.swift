@@ -1,4 +1,3 @@
-
 import ComposableArchitecture
 import Foundation
 
@@ -95,7 +94,8 @@ struct RecordingCard: ReducerProtocol {
           state.mode = .notPlaying
           return .run { _ in
             await audioPlayer.pause()
-          }.merge(with: .cancel(id: PlayID()))
+          }
+            .merge(with: .cancel(id: PlayID()))
         }
 
         return play(state: &state)
@@ -120,7 +120,12 @@ struct RecordingCard: ReducerProtocol {
         let fileURL = storage.audioFileURLWithName(state.recording.fileName)
         let parameters = settings.getSettings().parameters
         let model = settings.getSettings().selectedModel
-        let task = TranscriptionTask(fileURL: fileURL, parameters: parameters, modelType: model)
+        let task = TranscriptionTask(
+          fileURL: fileURL,
+          parameters: parameters,
+          modelType: model,
+          isRemote: settings.getSettings().isRemoteTranscriptionEnabled
+        )
         return .run { _ in
           await transcriptionWorker.enqueueTask(task)
         }
@@ -154,7 +159,8 @@ struct RecordingCard: ReducerProtocol {
       case .alert:
         return .none
       }
-    }.ifLet(\.$alert, action: /Action.alert)
+    }
+      .ifLet(\.$alert, action: /Action.alert)
   }
 
   private func play(state: inout State) -> EffectPublisher<Action, Never> {
@@ -178,7 +184,7 @@ struct RecordingCard: ReducerProtocol {
         }
       }
     }
-    .cancellable(id: PlayID(), cancelInFlight: true)
+      .cancellable(id: PlayID(), cancelInFlight: true)
   }
 }
 

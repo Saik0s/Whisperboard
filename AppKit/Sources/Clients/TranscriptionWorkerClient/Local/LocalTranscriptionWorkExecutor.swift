@@ -1,16 +1,9 @@
-
 import Foundation
 
 // MARK: - LocalTranscriptionError
 
 enum LocalTranscriptionError: Error {
   case notEnoughMemory(available: UInt64, required: UInt64)
-}
-
-// MARK: - TranscriptionWorkExecutor
-
-protocol TranscriptionWorkExecutor {
-  func processTask(_ task: TranscriptionTask, updateTask: (TranscriptionTask) -> Void) async
 }
 
 // MARK: - LocalTranscriptionWorkExecutor
@@ -24,7 +17,7 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
     self.updateTranscription = updateTranscription
   }
 
-  func processTask(_ task: TranscriptionTask, updateTask: (TranscriptionTask) -> Void) async {
+  func processTask(_ task: TranscriptionTask, updateTask: @escaping (TranscriptionTask) -> Void) async {
     var task: TranscriptionTask = task {
       didSet { updateTask(task) }
     }
@@ -59,6 +52,10 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
     } catch {
       transcription.status = .error(message: error.localizedDescription)
     }
+  }
+
+  func cancel(task: TranscriptionTask) {
+    currentWhisperContext?.context.cancel()
   }
 
   private func resolveContextFor(task: TranscriptionTask, updateTask: (TranscriptionTask) -> Void) async throws -> WhisperContextProtocol {

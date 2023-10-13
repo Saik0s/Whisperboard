@@ -21,6 +21,9 @@ let packages: [Package] = [
 let dependencies = Dependencies(
   swiftPackageManager: SwiftPackageManagerDependencies(
     packages,
+    baseSettings: .settings(base: [
+      "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
+    ]),
     targetSettings: [
       "whisper": [
         "OTHER_CFLAGS": "-O3 -DNDEBUG -DGGML_USE_ACCELERATE -DWHISPER_COREML_ALLOW_FALLBACK -DWHISPER_USE_COREML $(inherited)",

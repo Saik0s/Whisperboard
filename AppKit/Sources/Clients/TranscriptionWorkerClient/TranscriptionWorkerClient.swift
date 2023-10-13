@@ -25,13 +25,14 @@ struct TranscriptionWorkerClient {
 extension TranscriptionWorkerClient: DependencyKey {
   static let liveValue: TranscriptionWorkerClient = {
     let transcriptionChannel = AsyncChannel<Transcription>()
-    let workExecutor = LocalTranscriptionWorkExecutor { transcription in
+    let updateTranscription: (_ transcription: Transcription) -> Void = { transcription in
       Task { @MainActor in
         await transcriptionChannel.send(transcription)
       }
     }
-
-    let worker: TranscriptionWorker = TranscriptionWorkerImpl(executor: workExecutor)
+    let combinedWorkExecutor = CombinedTranscriptionWorkExecutor(updateTranscription: updateTranscription)
+    
+    let worker: TranscriptionWorker = TranscriptionWorkerImpl(executor: combinedWorkExecutor)
 
     return TranscriptionWorkerClient(
       enqueueTask: { task in
@@ -40,13 +41,13 @@ extension TranscriptionWorkerClient: DependencyKey {
       cancelTaskForFile: { fileName in
         if let task = worker.getAllTasks().first(where: { $0.fileName == fileName }) {
           if worker.currentTaskID == task.id {
-            workExecutor.currentWhisperContext?.context.cancel()
+            combinedWorkExecutor.cancel(task: task)
           }
           worker.removeTask(with: task.id)
         }
       },
       cancelAllTasks: {
-        workExecutor.currentWhisperContext?.context.cancel()
+        worker.getAllTasks().forEach(combinedWorkExecutor.cancel(task:))
         worker.removeAllTasks()
       },
       registerForProcessingTask: {
