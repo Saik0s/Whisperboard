@@ -6,6 +6,8 @@ import Foundation
 enum APIClientError: Error {
   case uploadFailed
   case resultFailed
+  case resultNotReady
+  case resultErrorMessage(String)
 }
 
 // MARK: - UploadResponse
@@ -17,8 +19,18 @@ struct UploadResponse: Codable {
 // MARK: - ResultResponse
 
 struct ResultResponse: Codable {
-  let transcription: String
+  let transcription: RemoteTranscription?
   let isDone: Bool
+}
+
+struct RemoteTranscription: Codable {
+  struct Segment: Codable {
+    let text: String
+    let start: Double
+    let end: Double
+  }
+  let segments: [Segment]
+  let language: String
 }
 
 // MARK: - APIClient
@@ -69,7 +81,7 @@ extension APIClient: DependencyKey {
 
         let (response, data) = try await sessionDelegate.waitForTask(task)
         guard let httpResponse = response as? HTTPURLResponse,
-              (200 ... 299).contains(httpResponse.statusCode)
+              (200...299).contains(httpResponse.statusCode)
         else {
           throw APIClientError.uploadFailed
         }
@@ -86,13 +98,25 @@ extension APIClient: DependencyKey {
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200 ... 299).contains(httpResponse.statusCode)
-        else {
+        guard let httpResponse = response as? HTTPURLResponse else {
           throw APIClientError.resultFailed
         }
 
-        return try JSONDecoder().decode(ResultResponse.self, from: data)
+        log.verbose(httpResponse)
+        log.verbose(String(data: data, encoding: .utf8) ?? "No data")
+
+        switch httpResponse.statusCode {
+        case 200:
+          let transcription = try JSONDecoder().decode(RemoteTranscription.self, from: data)
+          return ResultResponse(transcription: transcription, isDone: true)
+        case 202:
+          return ResultResponse(transcription: nil, isDone: false)
+        case 500:
+          let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+          throw APIClientError.resultErrorMessage(message)
+        default:
+          throw APIClientError.resultFailed
+        }
       }
     )
   }
