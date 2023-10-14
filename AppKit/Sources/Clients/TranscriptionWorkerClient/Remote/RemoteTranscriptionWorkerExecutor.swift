@@ -37,12 +37,15 @@ final class RemoteTranscriptionWorkExecutor: TranscriptionWorkExecutor {
         let fileURL = task.fileURL
 
         let uploadResponse = try await apiClient.uploadRecordingAt(fileURL)
+        log.debug("Uploaded:", uploadResponse)
         task.remoteID = uploadResponse.id
         transcription.status = .progress(0.0)
 
         for try await _ in clock.timer(interval: .seconds(3)) {
           do {
+            log.debug("Checking transcription status")
             let resultResponse = try await apiClient.getTranscriptionResultFor(uploadResponse.id)
+            log.debug("Result:", resultResponse)
             guard resultResponse.isDone else {
               log.debug("Transcription is not done yet")
               continue
@@ -51,7 +54,7 @@ final class RemoteTranscriptionWorkExecutor: TranscriptionWorkExecutor {
             log.debug(resultResponse.transcription)
             //          transcription.segments = segments
             transcription.status = .done(Date())
-            break
+            return
           } catch {
             log.error(error)
           }
