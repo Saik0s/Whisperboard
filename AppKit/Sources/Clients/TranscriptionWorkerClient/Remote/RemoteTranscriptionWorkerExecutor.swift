@@ -42,24 +42,30 @@ final class RemoteTranscriptionWorkExecutor: TranscriptionWorkExecutor {
         transcription.status = .progress(0.0)
 
         for try await _ in clock.timer(interval: .seconds(3)) {
-          do {
-            log.debug("Checking transcription status")
-            let resultResponse = try await apiClient.getTranscriptionResultFor(uploadResponse.id)
-            log.debug("Result:", resultResponse)
-            guard resultResponse.isDone else {
-              log.debug("Transcription is not done yet")
-              continue
-            }
-
-            log.debug(resultResponse.transcription)
-            //          transcription.segments = segments
-            transcription.status = .done(Date())
-            return
-          } catch {
-            log.error(error)
+          log.debug("Checking transcription status")
+          let resultResponse = try await apiClient.getTranscriptionResultFor(uploadResponse.id)
+          log.debug("Result:", resultResponse)
+          guard resultResponse.isDone else {
+            log.debug("Transcription is not done yet")
+            continue
           }
+
+          log.debug(resultResponse.transcription as Any)
+          transcription.segments = resultResponse.transcription?.segments.enumerated().map { offset, segment in
+            Segment(
+              index: offset,
+              startTime: Int64(segment.start * 1000),
+              endTime: Int64(segment.end * 1000),
+              text: segment.text,
+              tokens: [],
+              speaker: nil
+            )
+          } ?? []
+          transcription.status = .done(Date())
+          return
         }
       } catch {
+        log.error(error)
         transcription.status = .error(message: error.localizedDescription)
       }
     }

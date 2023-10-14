@@ -42,6 +42,7 @@ func appSetup() {
 
   #if DEBUG
     LoggerWrapper.Settings.destinations = [
+      .print,
       .custom(format: "%d %t %F:%l %f %m") { _, text in
         DispatchQueue.global(qos: .utility).async {
           do {
@@ -54,7 +55,7 @@ func appSetup() {
             do {
               try text.write(toFile: Configs.logFileURL.path, atomically: true, encoding: .utf8)
             } catch {
-              log.error(error)
+              print(error)
             }
           }
         }
