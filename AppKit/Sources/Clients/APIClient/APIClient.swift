@@ -23,12 +23,15 @@ struct ResultResponse: Codable {
   let isDone: Bool
 }
 
+// MARK: - RemoteTranscription
+
 struct RemoteTranscription: Codable {
   struct Segment: Codable {
     let text: String
     let start: Double
     let end: Double
   }
+
   let segments: [Segment]
   let language: String
 }
@@ -81,7 +84,7 @@ extension APIClient: DependencyKey {
 
         let (response, data) = try await sessionDelegate.waitForTask(task)
         guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode)
+              (200 ... 299).contains(httpResponse.statusCode)
         else {
           throw APIClientError.uploadFailed
         }

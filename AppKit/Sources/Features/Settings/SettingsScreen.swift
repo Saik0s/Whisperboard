@@ -119,15 +119,15 @@ struct SettingsScreen: ReducerProtocol {
         } catch: { error, send in
           await send(.showError(error.equatable))
         }.merge(with: .run { send in
-            do {
-              let isSubscribed = try await subscriptionClient.checkIfSubscribed()
-              await send(.updateIsSubscribed(isSubscribed))
-            } catch {
-              await send(.showError(error.equatable))
-            }
-            for await isSubscribed in subscriptionClient.isSubscribedStream() {
-              await send(.updateIsSubscribed(isSubscribed))
-            }
+          do {
+            let isSubscribed = try await subscriptionClient.checkIfSubscribed()
+            await send(.updateIsSubscribed(isSubscribed))
+          } catch {
+            await send(.showError(error.equatable))
+          }
+          for await isSubscribed in subscriptionClient.isSubscribedStream() {
+            await send(.updateIsSubscribed(isSubscribed))
+          }
         })
 
       case .updateInfo:
@@ -177,9 +177,9 @@ struct SettingsScreen: ReducerProtocol {
           await openURL(build.featureRequestURL())
         }
 
-        case .updateIsSubscribed(let isSubscribed):
-          state.isSubscribed = isSubscribed
-          return .none
+      case let .updateIsSubscribed(isSubscribed):
+        state.isSubscribed = isSubscribed
+        return .none
 
       case .alert:
         return .none
