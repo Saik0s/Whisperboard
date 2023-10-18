@@ -38,12 +38,8 @@
 
 - [ ] Optimize the transcription process by eliminating silent portions of audio, which can reduce the processing time and improve overall efficiency.
 - [ ] Implement resumable transcription so that users can continue transcribing after the app has been terminated during the transcription process.
-- [ ] Enable background transcription when the app is minimized, allowing users to perform other tasks while the transcription proceeds.
-- [ ] Improve visualization of the current state of the transcription process, providing users with a clearer understanding of its progress.
 - [ ] Provide an estimated time remaining for the transcription to complete, helping users plan accordingly.
-- [ ] Introduce a transcription queue that allows users to select multiple files for transcription, streamlining the process for bulk transcriptions.
 - [ ] Implement real-time transcription using smaller, more efficient models, offering users faster results.
-- [ ] Offer an additional remote transcription option to enhance user experience with larger models, potentially providing more accurate transcriptions or faster processing times.
 
 ## Installation
 
@@ -54,10 +50,13 @@
 ## License
 
 This project is licensed under the GPL-3.0 license.
+
 The Poppins and Karla fonts used in project are licensed under the SIL Open Font License.
 
 ## Links
+
 <a href="https://www.buymeacoffee.com/saik0s" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp)
 - [OpenAI Whisper](https://github.com/openai/whisper)
 - [The Composable Architecture](https://github.com/pointfreeco/swift-composable-architecture)
