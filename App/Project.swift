@@ -1,7 +1,7 @@
 import Foundation
 import ProjectDescription
 
-let version = "1.10.5"
+let version = "1.11.0"
 
 let projectSettings: SettingsDictionary = [
   "GCC_TREAT_WARNINGS_AS_ERRORS": "YES",
