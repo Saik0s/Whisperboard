@@ -107,7 +107,7 @@ struct RecordingInfoMigration: Migration {
       )
     }
 
-    try newRecordings.saveToFile(path: fileURL.path)
+    try newRecordings.saveToFile(at: fileURL)
   }
 }
 
@@ -136,6 +136,6 @@ struct SettingsMigration: Migration {
       selectedModel: selectedModel,
       parameters: TranscriptionParameters(language: oldSettings.voiceLanguage)
     )
-    try newSettings.saveToFile(path: settingsURL.path)
+    try newSettings.saveToFile(at: settingsURL)
   }
 }

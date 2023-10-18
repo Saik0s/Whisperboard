@@ -35,7 +35,7 @@ extension SettingsClient: DependencyKey {
       updateSettings: { newSettings in
         guard newSettings != container.settings else { return }
         container.settings = newSettings
-        try newSettings.saveToFile(path: settingsURL.path)
+        try newSettings.saveToFile(at: settingsURL)
       }
     )
   }()

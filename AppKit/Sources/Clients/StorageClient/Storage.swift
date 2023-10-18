@@ -92,7 +92,7 @@ final class Storage {
     recordings = newRecordings.sorted { $0.date > $1.date }
 
     do {
-      try recordings.saveToFile(path: Self.dbURL.path)
+      try recordings.saveToFile(at: Self.dbURL)
     } catch {
       log.error(error)
     }
