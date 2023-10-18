@@ -54,7 +54,7 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
     }
   }
 
-  func cancel(task: TranscriptionTask) {
+  func cancel(task _: TranscriptionTask) {
     currentWhisperContext?.context.cancel()
   }
 

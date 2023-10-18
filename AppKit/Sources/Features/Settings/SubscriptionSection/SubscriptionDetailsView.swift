@@ -53,7 +53,9 @@ struct SubscriptionDetails: ReducerProtocol {
           state.availablePackage = .failure(AvailablePackageError.cantFindMonthlyPackage)
           return .none
         }
-        state.availablePackage = .success(package)
+        withAnimation {
+          state.availablePackage = .success(package)
+        }
         return .none
 
       case let .availablePackagesDidLoad(.failure(error)):
@@ -61,24 +63,30 @@ struct SubscriptionDetails: ReducerProtocol {
         return .none
 
       case let .purchasePackage(package):
-        state.purchaseProgress = .inProgress
+        withAnimation {
+          state.purchaseProgress = .inProgress
+        }
         return .run { send in
           await send(.purchaseCompleted(TaskResult { try await subscriptionClient.purchase(package) }))
         }
 
       case let .purchaseCompleted(.success(value)):
-        state.purchaseProgress = .success(value)
+        withAnimation {
+          state.purchaseProgress = .success(value)
+        }
         return .run { _ in
           await dismiss()
         }
 
       case let .purchaseCompleted(.failure(error)):
-        switch error {
-        case SubscriptionClientError.cancelled:
-          state.purchaseProgress = .none
-        default:
-          state.purchaseProgress = .failure(error)
-          state.alert = .error(error)
+        withAnimation {
+          switch error {
+          case SubscriptionClientError.cancelled:
+            state.purchaseProgress = .none
+          default:
+            state.purchaseProgress = .failure(error)
+            state.alert = .error(error)
+          }
         }
         return .none
 
@@ -93,13 +101,17 @@ struct SubscriptionDetails: ReducerProtocol {
         }
 
       case .restorePurchasesTapped:
-        state.restoreProgress = .inProgress
+        withAnimation {
+          state.restoreProgress = .inProgress
+        }
         return .run { send in
           await send(.restorePurchaseCompleted(TaskResult { try await subscriptionClient.restore() }))
         }
 
       case let .restorePurchaseCompleted(.success(isSubscribed)):
-        state.restoreProgress = .success(isSubscribed)
+        withAnimation {
+          state.restoreProgress = .success(isSubscribed)
+        }
         if !isSubscribed {
           state.alert = .init(
             title: .init("No Purchases Found"),
@@ -114,7 +126,9 @@ struct SubscriptionDetails: ReducerProtocol {
         }
 
       case let .restorePurchaseCompleted(.failure(error)):
-        state.restoreProgress = .failure(error)
+        withAnimation {
+          state.restoreProgress = .failure(error)
+        }
         state.alert = .error(error)
         return .none
 
@@ -145,36 +159,31 @@ struct SubscriptionDetailsView: View {
   }
 
   var body: some View {
-    ZStack {
-      Color.DS.Background.primary.ignoresSafeArea()
+    VStack(spacing: .grid(4)) {
+      WhisperBoardKitAsset.subscriptionHeader.swiftUIImage
+        .resizable()
+        .scaledToFit()
+        .shining(
+          animation: .easeInOut(duration: 3).delay(7).repeatForever(autoreverses: false),
+          gradient: .init(colors: [.black.opacity(0.5), .black, .black.opacity(0.5)])
+        )
+
+      HStack(spacing: .grid(1)) {
+        Text("WhisperBoard")
+          .font(WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: 28))
+
+        Text("PRO")
+          .font(WhisperBoardKitFontFamily.Poppins.bold.swiftUIFont(size: 14))
+          .padding(.horizontal, 3)
+          .padding(.vertical, 1)
+          .background {
+            RoundedRectangle(cornerRadius: .grid(1))
+              .fill(Color.DS.Text.accent)
+          }
+      }
+      .accessibilityElement(children: .combine)
 
       VStack(spacing: .grid(4)) {
-        WhisperBoardKitAsset.subscriptionHeader.swiftUIImage
-          .resizable()
-          .scaledToFit()
-          .frame(maxWidth: .infinity)
-          .shining(
-            animation: .easeInOut(duration: 3).delay(7).repeatForever(autoreverses: false),
-            gradient: .init(colors: [.black.opacity(0.5), .black, .black.opacity(0.5)])
-          )
-
-        HStack(spacing: .grid(1)) {
-          Text("WhisperBoard")
-            .font(WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: 28))
-
-          Text("PRO")
-            .font(WhisperBoardKitFontFamily.Poppins.bold.swiftUIFont(size: 14))
-            .padding(.horizontal, 3)
-            .padding(.vertical, 1)
-            .background {
-              RoundedRectangle(cornerRadius: .grid(1))
-                .fill(Color.DS.Text.accent)
-            }
-        }
-        .accessibilityElement(children: .combine)
-
-        Spacer()
-
         FeatureView(
           icon: "doc.text.below.ecg",
           title: "Fast Cloud Transcription",
@@ -195,9 +204,12 @@ struct SubscriptionDetailsView: View {
           title: "Support Development",
           description: "Help build the future of WhisperBoard."
         )
+      }
+      .padding(.top, .grid(4))
 
-        Spacer()
+      Spacer()
 
+      VStack(spacing: .grid(4)) {
         switch viewStore.availablePackage {
         case .inProgress, .none:
           ProgressView()
@@ -247,39 +259,38 @@ struct SubscriptionDetailsView: View {
               .font(.DS.body)
           }
         }
+      }
 
-        HStack {
-          Button(action: { viewStore.send(.privacyPolicyTapped) }) {
-            Text("Privacy Policy")
-              .foregroundColor(.DS.Text.subdued)
-              .textStyle(.captionBase)
-          }
-
-          Text("•")
+      HStack {
+        Button(action: { viewStore.send(.privacyPolicyTapped) }) {
+          Text("Privacy Policy")
             .foregroundColor(.DS.Text.subdued)
             .textStyle(.captionBase)
-
-          Button(action: { viewStore.send(.termsOfUseTapped) }) {
-            Text("Terms of Use")
-              .foregroundColor(.DS.Text.subdued)
-              .textStyle(.captionBase)
-          }
         }
-      }
-      .padding(.horizontal, .grid(8))
-      .overlay(alignment: .topTrailing) {
-        Button { dismiss() } label: {
-          Image(systemName: "x.circle.fill")
-            .symbolRenderingMode(.hierarchical)
-            .font(.system(size: 30))
-            .foregroundColor(.DS.Text.base)
-            .padding(.grid(4))
+
+        Text("•")
+          .foregroundColor(.DS.Text.subdued)
+          .textStyle(.captionBase)
+
+        Button(action: { viewStore.send(.termsOfUseTapped) }) {
+          Text("Terms of Use")
+            .foregroundColor(.DS.Text.subdued)
+            .textStyle(.captionBase)
         }
       }
     }
-    .animation(.gentleBounce(), value: viewStore.purchaseProgress)
-    .animation(.gentleBounce(), value: viewStore.restoreProgress)
-    .animation(.gentleBounce(), value: viewStore.availablePackage)
+    .padding(.grid(4))
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(Color.DS.Background.primary)
+    .overlay(alignment: .topTrailing) {
+      Button { dismiss() } label: {
+        Image(systemName: "x.circle.fill")
+          .symbolRenderingMode(.hierarchical)
+          .font(.system(size: 30))
+          .foregroundColor(.DS.Text.base)
+          .padding(.grid(4))
+      }
+    }
     .alert(store: store.scope(state: \.$alert, action: SubscriptionDetails.Action.alert))
     .task { viewStore.send(.onTask) }
     .enableInjection()

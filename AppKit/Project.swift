@@ -13,10 +13,12 @@ let debugSettings: SettingsDictionary = [
   "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -enable-actor-data-race-checks",
   "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
   "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Support/Bridging.h",
+  "SWIFT_ACTIVE_COMPILATION_CONDITIONS": Environment.isAppStore.getBoolean(default: false) ? "APPSTORE DEBUG" : "DEBUG",
 ]
 
 let releaseSettings: SettingsDictionary = [
   "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Support/Bridging.h",
+  "SWIFT_ACTIVE_COMPILATION_CONDITIONS": Environment.isAppStore.getBoolean(default: false) ? "APPSTORE" : "",
 ]
 
 func appKitTarget() -> Target {
@@ -50,7 +52,13 @@ func appKitTarget() -> Target {
       .external(name: "VariableBlurView"),
       .external(name: "whisper"),
       .external(name: "Lottie"),
-    ]
+    ],
+    settings: .settings(
+      base: projectSettings,
+      debug: debugSettings,
+      release: releaseSettings,
+      defaultSettings: .recommended
+    )
   )
 }
 
@@ -79,13 +87,6 @@ let project = Project(
       indentWidth: 2,
       tabWidth: 2
     )
-  ),
-
-  settings: .settings(
-    base: projectSettings,
-    debug: debugSettings,
-    release: releaseSettings,
-    defaultSettings: .recommended
   ),
 
   targets: [

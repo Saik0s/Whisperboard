@@ -95,7 +95,7 @@ struct RecordingCard: ReducerProtocol {
           return .run { _ in
             await audioPlayer.pause()
           }
-            .merge(with: .cancel(id: PlayID()))
+          .merge(with: .cancel(id: PlayID()))
         }
 
         return play(state: &state)
@@ -160,7 +160,7 @@ struct RecordingCard: ReducerProtocol {
         return .none
       }
     }
-      .ifLet(\.$alert, action: /Action.alert)
+    .ifLet(\.$alert, action: /Action.alert)
   }
 
   private func play(state: inout State) -> EffectPublisher<Action, Never> {
@@ -184,7 +184,7 @@ struct RecordingCard: ReducerProtocol {
         }
       }
     }
-      .cancellable(id: PlayID(), cancelInFlight: true)
+    .cancellable(id: PlayID(), cancelInFlight: true)
   }
 }
 

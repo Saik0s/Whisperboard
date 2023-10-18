@@ -15,6 +15,10 @@ hot:
 	TUIST_IS_HOT_RELOADING_ENABLED=1 $(TUIST) fetch
 	TUIST_IS_HOT_RELOADING_ENABLED=1 $(TUIST) generate --no-open --no-cache
 
+appstore: secrets
+	TUIST_IS_APP_STORE=1 $(TUIST) fetch
+	TUIST_IS_APP_STORE=1 $(TUIST) generate --no-open --no-cache
+
 build_debug:
 	$(TUIST) build --generate --configuration Debug --build-output-path .build/
 

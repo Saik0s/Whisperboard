@@ -1,7 +1,3 @@
-//
-// Created by Igor Tarasenko on 13/10/2023.
-//
-
 import Foundation
 
 final class CombinedTranscriptionWorkExecutor: TranscriptionWorkExecutor {

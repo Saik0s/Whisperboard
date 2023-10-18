@@ -31,7 +31,7 @@ extension TranscriptionWorkerClient: DependencyKey {
       }
     }
     let combinedWorkExecutor = CombinedTranscriptionWorkExecutor(updateTranscription: updateTranscription)
-    
+
     let worker: TranscriptionWorker = TranscriptionWorkerImpl(executor: combinedWorkExecutor)
 
     return TranscriptionWorkerClient(

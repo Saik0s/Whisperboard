@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import Inject
 import Lottie
+import Popovers
 import SwiftUI
 import VariableBlurView
 
@@ -53,17 +54,19 @@ struct SubscriptionSectionView: View {
       store.send(.sectionTapped)
     } label: {
       VStack(alignment: .leading, spacing: .grid(2)) {
-        LottieView(animation: AnimationAsset.wiredGradient407CrownKingLord.animation)
-          .resizable()
-          .playbackMode(playbackMode)
-          .animationDidFinish { _ in
-            playbackMode = .paused(at: .progress(0))
-          }
-          .frame(width: 30, height: 30)
-          .padding(.grid(1))
-          .background {
-            Circle().fill(Color.DS.neutral07100)
-          }
+        #if APPSTORE
+          LottieView(animation: AnimationAsset.wiredGradient407CrownKingLord.animation)
+            .resizable()
+            .playbackMode(playbackMode)
+            .animationDidFinish { _ in
+              playbackMode = .paused(at: .progress(0))
+            }
+            .frame(width: 30, height: 30)
+            .padding(.grid(1))
+            .background {
+              Circle().fill(Color.DS.neutral07100)
+            }
+        #endif
 
         VStack(alignment: .leading, spacing: .grid(1)) {
           HStack(spacing: .grid(1)) {
@@ -95,10 +98,12 @@ struct SubscriptionSectionView: View {
               Rectangle().fill(Color.DS.Text.base).frame(height: 1)
             }
 
-          LottieView(animation: AnimationAsset.wiredOutline225Arrow14.animation)
-            .resizable()
-            .playbackMode(playbackMode)
-            .frame(width: 30, height: 30)
+          #if APPSTORE
+            LottieView(animation: AnimationAsset.wiredOutline225Arrow14.animation)
+              .resizable()
+              .playbackMode(playbackMode)
+              .frame(width: 30, height: 30)
+          #endif
         }
         .padding(.vertical, .grid(1))
       }
@@ -121,6 +126,14 @@ struct SubscriptionSectionView: View {
     }
     .onAppear {
       playbackMode = .playing(.fromProgress(0, toProgress: 1, loopMode: .playOnce))
+    }
+    .task { 
+      try? await Task { 
+        while !Task.isCancelled {
+          try await Task.sleep(seconds: 5)
+          playbackMode = .playing(.fromProgress(0, toProgress: 1, loopMode: .playOnce))
+        }
+      }.value
     }
     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
     .listRowBackground(Color.clear)
@@ -161,6 +174,28 @@ struct SubscriptionSectionView: View {
         .opacity(0.3)
     }
     .clipped()
+  }
+}
+
+@_spi(Presentation) import ComposableArchitecture
+
+public extension View {
+  func popover<State, Action>(
+    store: Store<PresentationState<State>, PresentationAction<Action>>,
+    attributes buildAttributes: @escaping ((inout Popover.Attributes) -> Void) = { _ in },
+    @ViewBuilder content: @escaping (_ store: Store<State, Action>) -> some View,
+    @ViewBuilder background: @escaping () -> some View
+  ) -> some View {
+    presentation(store: store) { `self`, $item, destination in
+      self.popover(
+        present: $item,
+        attributes: buildAttributes,
+        view: {
+          destination(content)
+        },
+        background: background
+      )
+    }
   }
 }
 
