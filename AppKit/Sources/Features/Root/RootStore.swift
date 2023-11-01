@@ -101,7 +101,8 @@ struct Root: ReducerProtocol {
             let queue = transcriptionWorker.getTasks()
             let recordings = storage.read().map { recording in
               if let transcription = recording.lastTranscription, transcription.status.isLoadingOrProgress,
-                 !queue.contains(where: { $0.fileName == recording.fileName }) {
+                 !queue.contains(where: { $0.id == transcription.id }) {
+                log.debug("Marking \(recording.fileName) last transcription as failed")
                 var recording = recording
                 recording.transcriptionHistory[id: transcription.id]?.status = .error(message: "Transcription failed")
                 return recording

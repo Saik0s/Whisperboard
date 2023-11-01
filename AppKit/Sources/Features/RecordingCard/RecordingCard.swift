@@ -117,11 +117,11 @@ struct RecordingCard: ReducerProtocol {
 
       case .transcribeTapped:
         log.debug("Transcribe tapped for recording \(state.recording.id)")
-        let fileURL = storage.audioFileURLWithName(state.recording.fileName)
         let parameters = settings.getSettings().parameters
         let model = settings.getSettings().selectedModel
         let task = TranscriptionTask(
-          fileURL: fileURL,
+          fileName: state.recording.fileName,
+          duration: Int64(state.recording.duration * 1000),
           parameters: parameters,
           modelType: model,
           isRemote: settings.getSettings().isRemoteTranscriptionEnabled

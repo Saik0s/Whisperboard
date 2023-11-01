@@ -5,11 +5,16 @@ import Foundation
 
 struct TranscriptionTask: Identifiable, Codable, Equatable, Then {
   var id = UUID()
-  let fileURL: URL
+  var fileName: String
+  var duration: Int64
   var parameters: TranscriptionParameters
   var modelType: VoiceModelType
   var remoteID: String? = nil
   var isRemote: Bool = false
+  var segments: [Segment] = [] {
+    didSet { parameters.offsetMilliseconds = Int(offset) }
+  }
 
-  var fileName: String { fileURL.lastPathComponent }
+  var offset: Int64 { segments.last?.endTime ?? 0 }
+  var progress: Double { Double(offset) / Double(duration) }
 }

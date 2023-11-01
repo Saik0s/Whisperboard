@@ -189,7 +189,7 @@ struct CardStyle: ViewModifier {
             )
             .opacity(isPrimary ? 1 : 0)
         }
-        .cornerRadius(.grid(4))
+        .continuousCornerRadius(.grid(4))
         .shadow(color: .DS.Background.accentAlt.darken(by: 0.4).opacity(isPrimary ? 1 : 0),
                 radius: isPrimary ? 50 : 5,
                 x: 0,

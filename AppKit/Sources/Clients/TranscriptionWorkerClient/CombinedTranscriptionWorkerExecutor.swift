@@ -9,6 +9,8 @@ final class CombinedTranscriptionWorkExecutor: TranscriptionWorkExecutor {
     self.updateTranscription = updateTranscription
   }
 
+  // TODO: Check for existing transcription for the same task that is about to start
+  //  and provide starting transcription when needed and update task accordingly
   func processTask(_ task: TranscriptionTask, updateTask: @escaping (TranscriptionTask) -> Void) async {
     if task.isRemote {
       await remoteWorkExecutor.processTask(task, updateTask: updateTask)

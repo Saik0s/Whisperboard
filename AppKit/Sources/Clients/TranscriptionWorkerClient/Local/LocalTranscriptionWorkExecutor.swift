@@ -1,3 +1,4 @@
+import Dependencies
 import Foundation
 
 // MARK: - LocalTranscriptionError
@@ -13,41 +14,58 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
 
   private let updateTranscription: (_ transcription: Transcription) -> Void
 
+  @Dependency(\.storage) var storage
+
   init(updateTranscription: @escaping (_ transcription: Transcription) -> Void) {
     self.updateTranscription = updateTranscription
   }
 
   func processTask(_ task: TranscriptionTask, updateTask: @escaping (TranscriptionTask) -> Void) async {
+    let initialSegments = task.segments
     var task: TranscriptionTask = task {
       didSet { updateTask(task) }
     }
-    var transcription = Transcription(id: task.id, fileName: task.fileName, parameters: task.parameters, model: task.modelType) {
-      didSet { updateTranscription(transcription) }
+    var transcription = Transcription(
+      id: task.id,
+      fileName: task.fileName,
+      segments: task.segments,
+      parameters: task.parameters,
+      model: task.modelType
+    ) {
+      didSet {
+        task.segments = transcription.segments
+        updateTranscription(transcription)
+      }
     }
+
+    let fileURL = storage.audioFileURLWithName(task.fileName)
 
     do {
       transcription.status = .loading
 
       let context: WhisperContextProtocol = try await resolveContextFor(task: task) { task = $0 }
-      let samples = try decodeWaveFile(task.fileURL)
+      let samples = try decodeWaveFile(fileURL)
 
-      transcription.status = .progress(0.0)
+      transcription.status = .progress(task.progress)
 
       for await action in try await context.fullTranscribe(samples: samples, params: task.parameters) {
         log.debug(action)
+        var _transcription = transcription
         switch action {
         case let .newSegment(segment):
-          transcription.segments.append(segment)
+          _transcription.segments.append(segment)
+          _transcription.status = .progress(task.progress)
         case let .progress(progress):
-          transcription.status = .progress(progress)
+          log.debug("Progress: \(progress)")
         case let .error(error):
-          transcription.status = .error(message: error.localizedDescription)
+          _transcription.status = .error(message: error.localizedDescription)
         case .canceled:
-          transcription.status = .canceled
+          _transcription.status = .canceled
         case let .finished(segments):
-          transcription.segments = segments
-          transcription.status = .done(Date())
+          _transcription.segments = initialSegments + segments
+          _transcription.status = .done(Date())
         }
+        transcription = _transcription
       }
     } catch {
       transcription.status = .error(message: error.localizedDescription)

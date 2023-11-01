@@ -26,8 +26,8 @@ struct RecordingCardView: View {
   }
 
   var cardView: some View {
-    VStack(spacing: .grid(4)) {
-      HStack(spacing: .grid(4)) {
+    VStack(spacing: .grid(2)) {
+      HStack(spacing: .grid(2)) {
         PlayButton(isPlaying: viewStore.mode.isPlaying) {
           viewStore.send(.playButtonTapped, animation: .easeIn(duration: 0.3))
         }
@@ -40,6 +40,7 @@ struct RecordingCardView: View {
           } else {
             Text(viewStore.recording.title)
               .textStyle(.bodyBold)
+              .lineLimit(1)
           }
 
           Text(viewStore.dateString)
@@ -56,6 +57,7 @@ struct RecordingCardView: View {
           .textStyle(.caption)
           .monospaced()
       }
+      .padding([.horizontal, .top], .grid(2))
 
       if viewStore.mode.isPlaying {
         WaveformProgressView(
@@ -65,6 +67,7 @@ struct RecordingCardView: View {
           )
         )
         .transition(.scale.combined(with: .opacity))
+        .padding(.horizontal, .grid(2))
       }
 
       ZStack(alignment: .top) {
@@ -86,12 +89,13 @@ struct RecordingCardView: View {
             }.iconButtonStyle()
           }
         }
+        .padding([.horizontal, .bottom], .grid(2))
 
         if viewStore.isTranscribing || viewStore.queuePosition != nil || !viewStore.recording.isTranscribed {
           ZStack {
             Rectangle()
               .fill(.ultraThinMaterial)
-              .roundedCorners(radius: 8, corners: [.bottomLeft, .bottomRight])
+              .continuousCornerRadius(.grid(2))
 
             if viewStore.isTranscribing || viewStore.queuePosition != nil {
               VStack(spacing: .grid(2)) {
@@ -114,10 +118,17 @@ struct RecordingCardView: View {
               }
               .padding(.grid(2))
             } else if !viewStore.recording.isTranscribed {
-              Button("Transcribe") {
-                viewStore.send(.transcribeTapped)
+              VStack(spacing: .grid(1)) {
+                if let error = viewStore.recording.lastTranscriptionErrorMessage {
+                  Text(error)
+                    .textStyle(.error)
+                }
+
+                Button("Transcribe") {
+                  viewStore.send(.transcribeTapped)
+                }
+                .tertiaryButtonStyle()
               }
-              .tertiaryButtonStyle()
               .padding(.grid(2))
             }
           }
@@ -127,7 +138,7 @@ struct RecordingCardView: View {
     }
     .animation(.easeInOut(duration: 0.3), value: viewStore.state)
     .multilineTextAlignment(.leading)
-    .padding(.grid(4))
+    .padding(.grid(2))
     .cardStyle(isPrimary: viewStore.mode.isPlaying)
     .offset(y: showItem ? 0 : 200)
     .opacity(showItem ? 1 : 0)

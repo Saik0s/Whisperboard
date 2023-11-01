@@ -12,7 +12,7 @@ struct Transcription: Codable, Hashable, Identifiable {
   var status: Status = .notStarted
 
   var text: String {
-    segments.map(\.text).joined(separator: " ")
+    segments.map(\.text).joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
   }
 }
 
@@ -27,8 +27,7 @@ extension Transcription {
 // MARK: - Segment
 
 struct Segment: Codable, Hashable, Identifiable {
-  var id: Int { index }
-  let index: Int
+  var id: Int64 { startTime }
   let startTime: Int64
   let endTime: Int64
   let text: String
@@ -124,6 +123,15 @@ extension Transcription.Status {
     }
   }
 
+  var errorMessage: String? {
+    switch self {
+    case let .error(message: message):
+      return message
+    default:
+      return nil
+    }
+  }
+
   var isLoadingOrProgress: Bool {
     switch self {
     case .loading, .progress:
@@ -151,7 +159,6 @@ extension Transcription.Status {
       startDate: Date(),
       segments: [
         Segment(
-          index: 0,
           startTime: 0,
           endTime: 0,
           text: "This is a random sentence.",
@@ -188,7 +195,6 @@ extension Transcription.Status {
       startDate: Date(),
       segments: [
         Segment(
-          index: 0,
           startTime: 0,
           endTime: 0,
           text: "This is another random sentence. Here is a second sentence.",
@@ -225,7 +231,6 @@ extension Transcription.Status {
       startDate: Date(),
       segments: [
         Segment(
-          index: 0,
           startTime: 0,
           endTime: 0,
           text: "Here is a random sentence. This is a second sentence. And a third one.",
