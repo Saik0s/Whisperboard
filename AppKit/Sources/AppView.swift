@@ -1,4 +1,3 @@
-
 import AsyncAlgorithms
 import Combine
 import ComposableArchitecture
@@ -25,8 +24,8 @@ public struct AppView: View {
             }
           }
         }
-      #endif
 //        ._printChanges(.swiftLog())
+      #endif
     })
   }
 }

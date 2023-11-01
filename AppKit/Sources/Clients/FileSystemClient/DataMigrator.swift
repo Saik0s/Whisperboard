@@ -90,7 +90,6 @@ struct RecordingInfoMigration: Migration {
               fileName: $0.fileName,
               segments: [
                 .init(
-                  index: 0,
                   startTime: 0,
                   endTime: Int64($0.duration * 1000),
                   text: $0.text,

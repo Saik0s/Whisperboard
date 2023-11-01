@@ -38,8 +38,8 @@ func extractSegments(context: OpaquePointer?) -> [Segment] {
 }
 
 func getSegmentAt(context: OpaquePointer?, index: Int32) -> Segment {
-  let segmentT0 = whisper_full_get_segment_t0(context, index)
-  let segmentT1 = whisper_full_get_segment_t1(context, index)
+  let segmentT0 = whisper_full_get_segment_t0(context, index) * 10 // convert to ms
+  let segmentT1 = whisper_full_get_segment_t1(context, index) * 10 // convert to ms
   let segmentText = String(cString: whisper_full_get_segment_text(context, index))
 
   let nTokens: Int32 = whisper_full_n_tokens(context, index)
@@ -66,7 +66,7 @@ func getSegmentAt(context: OpaquePointer?, index: Int32) -> Segment {
     tokens.append(token)
   }
 
-  return Segment(index: Int(index), startTime: segmentT0, endTime: segmentT1, text: segmentText, tokens: tokens, speaker: nil)
+  return Segment(startTime: segmentT0, endTime: segmentT1, text: segmentText, tokens: tokens, speaker: nil)
 }
 
 extension ContextDataStore {

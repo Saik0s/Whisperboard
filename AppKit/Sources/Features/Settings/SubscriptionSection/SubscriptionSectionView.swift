@@ -127,8 +127,8 @@ struct SubscriptionSectionView: View {
     .onAppear {
       playbackMode = .playing(.fromProgress(0, toProgress: 1, loopMode: .playOnce))
     }
-    .task { 
-      try? await Task { 
+    .task {
+      try? await Task {
         while !Task.isCancelled {
           try await Task.sleep(seconds: 5)
           playbackMode = .playing(.fromProgress(0, toProgress: 1, loopMode: .playOnce))

@@ -15,6 +15,7 @@ final class RemoteTranscriptionWorkExecutor: TranscriptionWorkExecutor {
 
   @Dependency(\.apiClient) var apiClient: APIClient
   @Dependency(\.continuousClock) var clock
+  @Dependency(\.storage) var storage
 
   private var processingTask: Task<Void, Never>?
 
@@ -34,14 +35,14 @@ final class RemoteTranscriptionWorkExecutor: TranscriptionWorkExecutor {
       do {
         transcription.status = .loading
 
-        let fileURL = task.fileURL
+        let fileURL = storage.audioFileURLWithName(task.fileName)
 
         let uploadResponse = try await apiClient.uploadRecordingAt(fileURL)
         log.debug("Uploaded:", uploadResponse)
         task.remoteID = uploadResponse.id
         transcription.status = .progress(0.0)
 
-        for try await _ in clock.timer(interval: .seconds(3)) {
+        for try await _ in clock.timer(interval: .seconds(1)) {
           log.debug("Checking transcription status")
           let resultResponse = try await apiClient.getTranscriptionResultFor(uploadResponse.id)
           log.debug("Result:", resultResponse)
@@ -51,9 +52,8 @@ final class RemoteTranscriptionWorkExecutor: TranscriptionWorkExecutor {
           }
 
           log.debug(resultResponse.transcription as Any)
-          transcription.segments = resultResponse.transcription?.segments.enumerated().map { offset, segment in
+          transcription.segments = resultResponse.transcription?.segments.map { segment in
             Segment(
-              index: offset,
               startTime: Int64(segment.start * 1000),
               endTime: Int64(segment.end * 1000),
               text: segment.text,

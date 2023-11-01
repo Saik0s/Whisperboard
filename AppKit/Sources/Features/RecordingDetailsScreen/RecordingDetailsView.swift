@@ -62,11 +62,11 @@ struct RecordingDetailsView: View {
           text: viewStore.binding(
             get: { $0.recordingCard.recording.title },
             send: { RecordingDetails.Action.recordingCard(action: .titleChanged($0)) }
-          )
+          ),
+          axis: .vertical
         )
         .focused($focusedField, equals: .title)
         .textStyle(.headline)
-        .minimumScaleFactor(0.01)
         .foregroundColor(.DS.Text.base)
 
         Text("Created: \(viewStore.recordingCard.recording.date.formatted(date: .abbreviated, time: .shortened))")
@@ -75,6 +75,12 @@ struct RecordingDetailsView: View {
 
         if viewStore.recordingCard.recording.isTranscribed == false
           && !viewStore.recordingCard.recording.isTranscribing {
+          if let error = viewStore.recordingCard.recording.lastTranscriptionErrorMessage {
+            Text("Last transcription failed")
+              .textStyle(.error)
+            Text(error)
+              .textStyle(.error)
+          }
           Button("Transcribe") {
             viewStore.send(.recordingCard(action: .transcribeTapped))
           }

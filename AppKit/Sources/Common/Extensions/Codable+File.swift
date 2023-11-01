@@ -15,6 +15,6 @@ extension Decodable {
 extension Encodable {
   func saveToFile(at url: URL, encoder: JSONEncoder = JSONEncoder()) throws {
     let data = try encoder.encode(self)
-    try data.write(to: url)
+    try data.write(to: url, options: .atomic)
   }
 }

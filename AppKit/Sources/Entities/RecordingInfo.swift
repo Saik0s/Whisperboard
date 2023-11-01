@@ -18,14 +18,8 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
   var text: String { editedText ?? lastTranscription?.text ?? "" }
   var lastTranscription: Transcription? { transcriptionHistory.last }
   var isTranscribed: Bool { lastTranscription?.status.isDone == true }
-  var isTranscribing: Bool {
-    switch lastTranscription?.status {
-    case .loading, .progress:
-      return true
-    default:
-      return false
-    }
-  }
+  var isTranscribing: Bool { lastTranscription?.status.isLoadingOrProgress == true }
+  var lastTranscriptionErrorMessage: String? { lastTranscription?.status.errorMessage }
 
   // FIXME: This is a hack
   var fileURL: URL {

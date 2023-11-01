@@ -1,4 +1,3 @@
-
 import AsyncAlgorithms
 import Combine
 import ComposableArchitecture
@@ -102,7 +101,8 @@ struct RecordingListScreen: ReducerProtocol {
             card.queueTotal = nil
           }
           return card
-        }.identifiedArray
+        }
+        .identifiedArray
 
         let detailsState = state.selection.wrappedValue.flatMap { selection -> RecordingDetails.State? in
           guard let card = state.recordingCards.first(where: { $0.id == selection.recordingCard.id }) else {
@@ -243,15 +243,17 @@ struct RecordingListScreenView: View {
   var body: some View {
     NavigationStack {
       ScrollView {
-        ForEachStore(
-          store.scope(
-            state: \.recordingCards,
-            action: RecordingListScreen.Action.recordingCard(id:action:)
-          ),
-          content: { store in
-            makeRecordingCard(store: store, id: ViewStore(store) { $0 }.state.id)
-          }
-        )
+        VStack(spacing: .grid(4)) {
+          ForEachStore(
+            store.scope(
+              state: \.recordingCards,
+              action: RecordingListScreen.Action.recordingCard(id:action:)
+            ),
+            content: { store in
+              makeRecordingCard(store: store, id: ViewStore(store) { $0 }.state.id)
+            }
+          )
+        }
         .padding(.grid(4))
         .removeClipToBounds()
       }
