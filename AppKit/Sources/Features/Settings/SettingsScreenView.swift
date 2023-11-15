@@ -120,7 +120,7 @@ struct ModelSectionView: View {
       }
       .onAppear { viewStore.send(.modelSelector(.reloadSelectedModel)) }
     } header: {
-      Text("Local Transcription")
+      Text("Transcription")
     } footer: {
       Text("Whisper Model").bold() + Text("""
        - OpenAI's Automatic Speech Recognition tool. The 'tiny' model is optimal for long transcriptions due to its speed. \

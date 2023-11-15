@@ -1,103 +1,131 @@
 import Dependencies
 import Foundation
 
-// MARK: - APIClientError
-
-enum APIClientError: Error {
-  case uploadFailed
-  case resultFailed
-  case resultNotReady
-  case resultErrorMessage(String)
-}
-
-// MARK: - UploadResponse
-
-struct UploadResponse: Codable {
-  let id: String
-}
-
-// MARK: - ResultResponse
-
-struct ResultResponse: Codable {
-  let transcription: RemoteTranscription?
-  let isDone: Bool
-}
-
-// MARK: - RemoteTranscription
-
-struct RemoteTranscription: Codable {
-  struct Segment: Codable {
-    let text: String
-    let start: Double
-    let end: Double
-  }
-
-  let segments: [Segment]
-  let language: String
-}
-
 // MARK: - APIClient
 
 struct APIClient {
-  var uploadRecordingAt: @Sendable (_ fileURL: URL) async throws -> UploadResponse
+  // MARK: - APIClientError
+
+  enum APIClientError: Error, LocalizedError {
+    case uploadFailed
+    case resultFailed
+    case resultNotReady
+    case resultErrorMessage(String)
+
+    var errorDescription: String? {
+      switch self {
+      case .uploadFailed:
+        return "Failed to upload recording"
+      case .resultFailed:
+        return "Failed to get transcription result"
+      case .resultNotReady:
+        return "Transcription result is not ready yet"
+      case let .resultErrorMessage(message):
+        return message
+      }
+    }
+  }
+
+  // MARK: - UploadResponse
+
+  struct UploadResponse: Codable {
+    let id: String
+  }
+
+  enum RecordingUploadProgress {
+    case uploading(progress: Double)
+    case done(response: UploadResponse)
+  }
+
+  // MARK: - ResultResponse
+
+  struct ResultResponse: Codable {
+    let transcription: RemoteTranscription?
+    let isDone: Bool
+  }
+
+  // MARK: - RemoteTranscription
+
+  struct RemoteTranscription: Codable {
+    struct Segment: Codable {
+      let text: String
+      let start: Double
+      let end: Double
+    }
+
+    let segments: [Segment]
+    let language: String
+  }
+
+  var uploadRecordingAt: @Sendable (_ fileURL: URL) -> AsyncThrowingStream<RecordingUploadProgress, Error>
   var getTranscriptionResultFor: @Sendable (_ id: String) async throws -> ResultResponse
 }
 
 // MARK: DependencyKey
 
 extension APIClient: DependencyKey {
-  static var liveValue: APIClient {
-    @Sendable
-    func addHeaders(to request: inout URLRequest) {
-      @Dependency(\.keychainClient) var keychainClient: KeychainClient
-      request.addValue("application/json", forHTTPHeaderField: "Accept")
-      request.addValue(keychainClient.userID, forHTTPHeaderField: "X-User-ID")
-      request.addValue(Secrets.API_KEY, forHTTPHeaderField: "X-API-Key")
-    }
+  // MARK: - CustomHeaderFields
 
-    let sessionDelegate = UploadDelegate()
-    let backgroundSession = URLSession(
-      configuration: .background(withIdentifier: "me.igortarasenko.whisperboard.apiclient")
-        .then { $0.isDiscretionary = false },
-      delegate: sessionDelegate,
-      delegateQueue: nil
-    )
+  enum CustomHeaderFields: String {
+    case accept = "Accept"
+    case userID = "X-User-ID"
+    case apiKey = "X-API-Key"
+  }
+
+  static var liveValue: APIClient {
+    @Dependency(\.keychainClient) var keychainClient: KeychainClient
+
+    let chunkedUploader = ChunkedUploader()
+    let additionalHeaders = [
+      CustomHeaderFields.accept.rawValue: "application/json",
+      CustomHeaderFields.userID.rawValue: keychainClient.userID,
+      CustomHeaderFields.apiKey.rawValue: Secrets.API_KEY,
+    ]
 
     return APIClient(
       uploadRecordingAt: { fileURL in
-        let url = try URL(string: Secrets.BACKEND_URL + "/stream").require()
-        let dataToUpload = try Data(contentsOf: fileURL)
-        let fileName = fileURL.lastPathComponent
-        let stream = InputStream(data: dataToUpload)
+        AsyncThrowingStream { continuation in
+          Task {
+            do {
+              let uploadResponse = try chunkedUploader.uploadFile(
+                fileURL: fileURL,
+                serverURL: URL(string: Secrets.BACKEND_URL + "/upload").require(),
+                additionalHeaders: additionalHeaders,
+                chunkSize: 10 * 1024 * 1024
+              )
 
-        var request = URLRequest(url: url)
-        addHeaders(to: &request)
-        request.httpMethod = "POST"
-        request.addValue(fileName, forHTTPHeaderField: "X-File-Name")
-        request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
-        request.addValue(String(dataToUpload.count), forHTTPHeaderField: "Content-Length")
-        log.verbose(request.cURL(pretty: true))
-
-        let task = backgroundSession.uploadTask(withStreamedRequest: request)
-        sessionDelegate.addStream(stream, for: task)
-        task.resume()
-
-        let (response, data) = try await sessionDelegate.waitForTask(task)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200 ... 299).contains(httpResponse.statusCode)
-        else {
-          throw APIClientError.uploadFailed
+              for try await progress in uploadResponse {
+                switch progress {
+                case let .uploading(progress):
+                  continuation.yield(.uploading(progress: progress))
+                case let .done(response, data):
+                  log.verbose(response)
+                  log.verbose(String(data: data, encoding: .utf8) ?? "No data")
+                  guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                    continuation.finish(throwing: APIClientError.uploadFailed)
+                    return
+                  }
+                  try continuation.yield(.done(response: JSONDecoder().decode(UploadResponse.self, from: data)))
+                  continuation.finish()
+                }
+              }
+            } catch {
+              continuation.finish(throwing: error)
+            }
+          }
         }
-
-        return try JSONDecoder().decode(UploadResponse.self, from: data)
       },
       getTranscriptionResultFor: { id in
         let resultURL = try URL(string: Secrets.BACKEND_URL + "/result/\(id)").require()
         var request = URLRequest(url: resultURL)
-        addHeaders(to: &request)
         request.httpMethod = "GET"
+        for (key, value) in additionalHeaders {
+          request.addValue(value, forHTTPHeaderField: key)
+        }
 
-        log.verbose(request.cURL(pretty: true))
+        #if DEBUG
+          log.verbose(request.cURL(pretty: true))
+        #endif
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -122,54 +150,6 @@ extension APIClient: DependencyKey {
         }
       }
     )
-  }
-}
-
-// MARK: - UploadDelegate
-
-class UploadDelegate: NSObject, URLSessionTaskDelegate, URLSessionDataDelegate, URLSessionDelegate {
-  private var streams: [Int: InputStream] = [:]
-  private var taskCompletions: [Int: UnsafeContinuation<(URLResponse?, Data), Error>] = [:]
-
-  func addStream(_ stream: InputStream, for task: URLSessionTask) {
-    streams[task.taskIdentifier] = stream
-  }
-
-  func waitForTask(_ task: URLSessionTask) async throws -> (URLResponse?, Data) {
-    try await withUnsafeThrowingContinuation { (continuation: UnsafeContinuation<(URLResponse?, Data), Error>) in
-      taskCompletions[task.taskIdentifier] = continuation
-    }
-  }
-
-  func urlSession(
-    _: URLSession,
-    task _: URLSessionTask,
-    didSendBodyData _: Int64,
-    totalBytesSent _: Int64,
-    totalBytesExpectedToSend _: Int64
-  ) {}
-
-  func urlSession(_: URLSession, needNewBodyStreamForTask task: URLSessionTask) async -> InputStream? {
-    log.debug("needNewBodyStreamForTask")
-    guard let stream = streams[task.taskIdentifier] else {
-      log.error("No stream for task \(task.taskIdentifier)")
-      return nil
-    }
-    return stream
-  }
-
-  func urlSession(_: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-    log.debug("didCompleteWithError")
-    if let error {
-      log.error(error)
-      taskCompletions[task.taskIdentifier]?.resume(throwing: error)
-    }
-  }
-
-  func urlSession(_: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-    log.debug("didReceive data")
-    streams[dataTask.taskIdentifier]?.close()
-    taskCompletions[dataTask.taskIdentifier]?.resume(returning: (dataTask.response, data))
   }
 }
 

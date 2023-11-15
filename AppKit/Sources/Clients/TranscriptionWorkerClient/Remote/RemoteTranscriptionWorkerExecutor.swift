@@ -3,9 +3,18 @@ import Foundation
 
 // MARK: - RemoteTranscriptionError
 
-enum RemoteTranscriptionError: Error {
+enum RemoteTranscriptionError: Error, LocalizedError {
   case uploadFailed
   case resultFailed
+
+  var errorDescription: String? {
+    switch self {
+    case .uploadFailed:
+      return "Failed to upload recording"
+    case .resultFailed:
+      return "Failed to get transcription result"
+    }
+  }
 }
 
 // MARK: - RemoteTranscriptionWorkExecutor
@@ -33,18 +42,31 @@ final class RemoteTranscriptionWorkExecutor: TranscriptionWorkExecutor {
       }
 
       do {
-        transcription.status = .loading
+        transcription.status = .uploading(0.0)
 
         let fileURL = storage.audioFileURLWithName(task.fileName)
+        task.remoteID = nil
 
-        let uploadResponse = try await apiClient.uploadRecordingAt(fileURL)
-        log.debug("Uploaded:", uploadResponse)
-        task.remoteID = uploadResponse.id
-        transcription.status = .progress(0.0)
+        for try await uploadProgress in apiClient.uploadRecordingAt(fileURL) {
+          switch uploadProgress {
+          case let .uploading(progress):
+            transcription.status = .uploading(progress)
+          case let .done(response):
+            log.debug("Uploaded:", response)
+            task.remoteID = response.id
+            transcription.status = .progress(0.0)
+          }
+        }
+
+        guard let remoteID = task.remoteID else {
+          log.error("Failed to upload recording")
+          transcription.status = .error(message: "Failed to upload recording")
+          return
+        }
 
         for try await _ in clock.timer(interval: .seconds(1)) {
           log.debug("Checking transcription status")
-          let resultResponse = try await apiClient.getTranscriptionResultFor(uploadResponse.id)
+          let resultResponse = try await apiClient.getTranscriptionResultFor(remoteID)
           log.debug("Result:", resultResponse)
           guard resultResponse.isDone else {
             log.debug("Transcription is not done yet")

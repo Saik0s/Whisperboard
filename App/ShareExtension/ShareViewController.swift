@@ -8,10 +8,10 @@ import UniformTypeIdentifiers
 
 // MARK: - ShareError
 
-enum ShareError: Error {
+enum ShareError: Error, LocalizedError {
   case somethingWentWrong
 
-  var localizedDescription: String {
+  var errorDescription: String? {
     switch self {
     case .somethingWentWrong:
       return "Something went wrong."

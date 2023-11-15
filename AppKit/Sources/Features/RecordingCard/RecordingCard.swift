@@ -222,6 +222,8 @@ extension Transcription.Status {
       return "Waiting to start..."
     case .loading:
       return "Loading model..."
+    case let .uploading(progress):
+      return "Uploading... \(Int(progress * 100))%"
     case let .error(message: message):
       return message
     case let .progress(progress):
