@@ -20,7 +20,7 @@ struct Transcription: Codable, Hashable, Identifiable {
 
 extension Transcription {
   enum Status: Codable, Hashable {
-    case notStarted, loading, error(message: String), progress(Double), done(Date), canceled
+    case notStarted, loading, uploading(Double), error(message: String), progress(Double), done(Date), canceled
   }
 }
 
@@ -87,6 +87,15 @@ extension Transcription.Status {
     }
   }
 
+  var isUploading: Bool {
+    switch self {
+    case .uploading:
+      return true
+    default:
+      return false
+    }
+  }
+
   var isCanceled: Bool {
     switch self {
     case .canceled:
@@ -114,6 +123,15 @@ extension Transcription.Status {
     }
   }
 
+  var uploadProgress: Double? {
+    switch self {
+    case let .uploading(progress):
+      return progress
+    default:
+      return nil
+    }
+  }
+
   var progressValue: Double? {
     switch self {
     case let .progress(progress):
@@ -134,7 +152,7 @@ extension Transcription.Status {
 
   var isLoadingOrProgress: Bool {
     switch self {
-    case .loading, .progress:
+    case .loading, .progress, .uploading:
       return true
     default:
       return false
