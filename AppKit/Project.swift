@@ -47,7 +47,7 @@ func appKitTarget() -> Target {
       .external(name: "Inject"),
       .external(name: "KeychainAccess"),
       .external(name: "Popovers"),
-      .external(name: "RevenueCat"),
+      // .external(name: "RevenueCat"),
       .external(name: "SwiftUIIntrospect"),
       .external(name: "VariableBlurView"),
       .external(name: "whisper"),

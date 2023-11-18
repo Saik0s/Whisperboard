@@ -1,11 +1,11 @@
 import ProjectDescription
 
 let packages: [Package] = [
-  .package(url: "https://github.com/AudioKit/AudioKit.git", from: "5.6.0"),
-  .package(url: "https://github.com/RevenueCat/purchases-ios.git", from: "4.25.8"),
   .package(url: "https://github.com/aheze/Popovers.git", .branch("main")),
   .package(url: "https://github.com/aheze/VariableBlurView.git", .branch("main")),
+  .package(url: "https://github.com/airbnb/lottie-spm.git", from: "4.3.3"),
   .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "0.1.0"),
+  .package(url: "https://github.com/AudioKit/AudioKit.git", from: "5.6.0"),
   .package(url: "https://github.com/dmrschmidt/DSWaveformImage.git", from: "13.0.2"),
   .package(url: "https://github.com/ggerganov/whisper.spm.git", .branch("master")),
   .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "3.0.0"),
@@ -15,7 +15,8 @@ let packages: [Package] = [
   .package(url: "https://github.com/siteline/SwiftUI-Introspect.git", from: "0.6.1"),
   .package(url: "https://github.com/tgrapperon/swift-dependencies-additions", from: "0.5.2"),
   .package(url: "https://github.com/yannickl/DynamicColor.git", from: "5.0.1"),
-  .package(url: "https://github.com/airbnb/lottie-spm.git", from: "4.3.3"),
+
+//  .package(url: "https://github.com/RevenueCat/purchases-ios.git", from: "4.25.8"),
 ]
 
 let dependencies = Dependencies(

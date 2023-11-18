@@ -74,7 +74,23 @@ private actor AudioRecorder {
   var recorder: AVAudioRecorder?
   let recordingStateSubject = ReplaySubject<RecordingState, Never>(1)
   var task: Task<Void, Error>?
-  var selectedMicrophone: Microphone?
+
+  var microphones: [Microphone] {
+    AVAudioSession.sharedInstance().availableInputs?.map(Microphone.init) ?? []
+  }
+
+  var selectedMicrophone: Microphone? {
+    get {
+      guard let id = UserDefaults.standard.string(forKey: #function), let mic = microphones.first(where: { $0.id == id }) else {
+        return AVAudioSession.sharedInstance().currentRoute.inputs.first.map(Microphone.init) ?? microphones.first
+      }
+      return mic
+    }
+    set {
+      UserDefaults.standard.set(newValue?.id, forKey: #function)
+    }
+  }
+
   @Dependency(\.audioSession) var audioSession: AudioSessionClient
 
   lazy var delegate: Delegate = .init(
@@ -168,7 +184,6 @@ private actor AudioRecorder {
     try audioSession.enable(.record, false)
 
     return AsyncStream([Microphone].self) { continuation in
-      let microphones = AVAudioSession.sharedInstance().availableInputs?.map(Microphone.init) ?? []
       continuation.yield(microphones)
 
       Task {
@@ -209,8 +224,7 @@ private actor AudioRecorder {
 
 private final class Delegate: NSObject, AVAudioRecorderDelegate, Sendable {
   let didFinishRecording: @Sendable (_ successfully: Bool) -> Void
-  let encodeErrorDidOccur: @Sendable (Error?)
-    -> Void
+  let encodeErrorDidOccur: @Sendable (Error?) -> Void
 
   init(
     didFinishRecording: @escaping @Sendable (Bool) -> Void,

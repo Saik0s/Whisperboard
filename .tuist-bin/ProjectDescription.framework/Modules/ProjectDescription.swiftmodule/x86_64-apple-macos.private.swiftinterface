@@ -211,7 +211,7 @@ public struct Cloud : Swift.Codable, Swift.Equatable {
   public let url: Swift.String
   public let projectId: Swift.String
   public let options: [ProjectDescription.Cloud.Option]
-  public static func cloud(projectId: Swift.String, url: Swift.String, options: [ProjectDescription.Cloud.Option] = []) -> ProjectDescription.Cloud
+  public static func cloud(projectId: Swift.String, url: Swift.String = "https://cloud.tuist.io", options: [ProjectDescription.Cloud.Option] = []) -> ProjectDescription.Cloud
   public static func == (a: ProjectDescription.Cloud, b: ProjectDescription.Cloud) -> Swift.Bool
   public func encode(to encoder: Swift.Encoder) throws
   public init(from decoder: Swift.Decoder) throws
@@ -358,20 +358,25 @@ public struct Dependencies : Swift.Codable, Swift.Equatable {
   public func encode(to encoder: Swift.Encoder) throws
   public init(from decoder: Swift.Decoder) throws
 }
+public enum PackagesOrManifest : Swift.Codable, Swift.Equatable {
+  case packages([ProjectDescription.Package])
+  case manifest
+  public static func == (a: ProjectDescription.PackagesOrManifest, b: ProjectDescription.PackagesOrManifest) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
 public struct SwiftPackageManagerDependencies : Swift.Codable, Swift.Equatable {
-  public let packages: [ProjectDescription.Package]
+  public let packagesOrManifest: ProjectDescription.PackagesOrManifest
   public let productTypes: [Swift.String : ProjectDescription.Product]
   public let baseSettings: ProjectDescription.Settings
   public let targetSettings: [Swift.String : ProjectDescription.SettingsDictionary]
   public let projectOptions: [Swift.String : ProjectDescription.Project.Options]
+  @available(*, deprecated, message: "Use init without packages parameter instead")
   public init(_ packages: [ProjectDescription.Package], productTypes: [Swift.String : ProjectDescription.Product] = [:], baseSettings: ProjectDescription.Settings = .settings(), targetSettings: [Swift.String : ProjectDescription.SettingsDictionary] = [:], projectOptions: [Swift.String : ProjectDescription.Project.Options] = [:])
+  public init(productTypes: [Swift.String : ProjectDescription.Product] = [:], baseSettings: ProjectDescription.Settings = .settings(), targetSettings: [Swift.String : ProjectDescription.SettingsDictionary] = [:], projectOptions: [Swift.String : ProjectDescription.Project.Options] = [:])
   public static func == (a: ProjectDescription.SwiftPackageManagerDependencies, b: ProjectDescription.SwiftPackageManagerDependencies) -> Swift.Bool
   public func encode(to encoder: Swift.Encoder) throws
   public init(from decoder: Swift.Decoder) throws
-}
-extension ProjectDescription.SwiftPackageManagerDependencies : Swift.ExpressibleByArrayLiteral {
-  public init(arrayLiteral elements: ProjectDescription.Package...)
-  public typealias ArrayLiteralElement = ProjectDescription.Package
 }
 public struct DeploymentDevice : Swift.OptionSet, Swift.Codable, Swift.Hashable {
   public static let iphone: ProjectDescription.DeploymentDevice
@@ -599,6 +604,25 @@ public struct LaunchArgument : Swift.Equatable, Swift.Codable {
   public func encode(to encoder: Swift.Encoder) throws
   public init(from decoder: Swift.Decoder) throws
 }
+public enum LaunchStyle : Swift.Codable {
+  case automatically
+  case waitForExecutableToBeLaunched
+  public static func == (a: ProjectDescription.LaunchStyle, b: ProjectDescription.LaunchStyle) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public func encode(to encoder: Swift.Encoder) throws
+  public var hashValue: Swift.Int {
+    get
+  }
+  public init(from decoder: Swift.Decoder) throws
+}
+public enum MergedBinaryType : Swift.Equatable, Swift.Codable {
+  case disabled
+  case automatic
+  case manual(mergeableDependencies: Swift.Set<Swift.String>)
+  public static func == (a: ProjectDescription.MergedBinaryType, b: ProjectDescription.MergedBinaryType) -> Swift.Bool
+  public func encode(to encoder: Swift.Encoder) throws
+  public init(from decoder: Swift.Decoder) throws
+}
 public enum Package : Swift.Equatable, Swift.Codable {
   case remote(url: Swift.String, requirement: ProjectDescription.Package.Requirement)
   case local(path: ProjectDescription.Path)
@@ -770,6 +794,7 @@ public enum Product : Swift.String, Swift.Codable, Swift.Equatable {
   case xpc
   case systemExtension
   case extensionKitExtension
+  case macro
   public init?(rawValue: Swift.String)
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
@@ -885,6 +910,7 @@ extension ProjectDescription.ResourceFileElements : Swift.ExpressibleByArrayLite
 public struct ResourceSynthesizer : Swift.Codable, Swift.Equatable {
   public let templateType: ProjectDescription.ResourceSynthesizer.TemplateType
   public let parser: ProjectDescription.ResourceSynthesizer.Parser
+  public let parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option]
   public let extensions: Swift.Set<Swift.String>
   public enum TemplateType : Swift.Codable, Swift.Equatable {
     case plugin(name: Swift.String, resourceName: Swift.String)
@@ -903,32 +929,43 @@ public struct ResourceSynthesizer : Swift.Codable, Swift.Equatable {
     case json
     case yaml
     case files
+    public enum Option : Swift.Equatable, Swift.Codable {
+      case string(Swift.String)
+      case integer(Swift.Int)
+      case double(Swift.Double)
+      case boolean(Swift.Bool)
+      case dictionary([Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option])
+      case array([ProjectDescription.ResourceSynthesizer.Parser.Option])
+      public static func == (a: ProjectDescription.ResourceSynthesizer.Parser.Option, b: ProjectDescription.ResourceSynthesizer.Parser.Option) -> Swift.Bool
+      public func encode(to encoder: Swift.Encoder) throws
+      public init(from decoder: Swift.Decoder) throws
+    }
     public init?(rawValue: Swift.String)
     public typealias RawValue = Swift.String
     public var rawValue: Swift.String {
       get
     }
   }
-  public static func strings() -> ProjectDescription.ResourceSynthesizer
-  public static func strings(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
-  public static func assets() -> ProjectDescription.ResourceSynthesizer
-  public static func assets(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
-  public static func fonts() -> ProjectDescription.ResourceSynthesizer
-  public static func fonts(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
-  public static func plists() -> ProjectDescription.ResourceSynthesizer
-  public static func plists(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
-  public static func coreData(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
-  public static func coreData() -> ProjectDescription.ResourceSynthesizer
-  public static func interfaceBuilder(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
-  public static func interfaceBuilder() -> ProjectDescription.ResourceSynthesizer
-  public static func json(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
-  public static func json() -> ProjectDescription.ResourceSynthesizer
-  public static func yaml(plugin: Swift.String) -> ProjectDescription.ResourceSynthesizer
-  public static func yaml() -> ProjectDescription.ResourceSynthesizer
-  public static func files(plugin: Swift.String, extensions: Swift.Set<Swift.String>) -> ProjectDescription.ResourceSynthesizer
-  public static func files(extensions: Swift.Set<Swift.String>) -> ProjectDescription.ResourceSynthesizer
-  public static func custom(plugin: Swift.String, parser: ProjectDescription.ResourceSynthesizer.Parser, extensions: Swift.Set<Swift.String>, resourceName: Swift.String) -> ProjectDescription.ResourceSynthesizer
-  public static func custom(name: Swift.String, parser: ProjectDescription.ResourceSynthesizer.Parser, extensions: Swift.Set<Swift.String>) -> ProjectDescription.ResourceSynthesizer
+  public static func strings(parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func strings(plugin: Swift.String, parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func assets(parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func assets(plugin: Swift.String, parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func fonts(parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func fonts(plugin: Swift.String, parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func plists(parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func plists(plugin: Swift.String, parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func coreData(plugin: Swift.String, parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func coreData(parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func interfaceBuilder(plugin: Swift.String, parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func interfaceBuilder(parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func json(plugin: Swift.String, parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func json(parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func yaml(plugin: Swift.String, parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func yaml(parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:]) -> ProjectDescription.ResourceSynthesizer
+  public static func files(plugin: Swift.String, parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:], extensions: Swift.Set<Swift.String>) -> ProjectDescription.ResourceSynthesizer
+  public static func files(parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:], extensions: Swift.Set<Swift.String>) -> ProjectDescription.ResourceSynthesizer
+  public static func custom(plugin: Swift.String, parser: ProjectDescription.ResourceSynthesizer.Parser, parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:], extensions: Swift.Set<Swift.String>, resourceName: Swift.String) -> ProjectDescription.ResourceSynthesizer
+  public static func custom(name: Swift.String, parser: ProjectDescription.ResourceSynthesizer.Parser, parserOptions: [Swift.String : ProjectDescription.ResourceSynthesizer.Parser.Option] = [:], extensions: Swift.Set<Swift.String>) -> ProjectDescription.ResourceSynthesizer
   public static func == (a: ProjectDescription.ResourceSynthesizer, b: ProjectDescription.ResourceSynthesizer) -> Swift.Bool
   public func encode(to encoder: Swift.Encoder) throws
   public init(from decoder: Swift.Decoder) throws
@@ -937,6 +974,34 @@ extension Swift.Array where Element == ProjectDescription.ResourceSynthesizer {
   public static var `default`: Swift.Array<ProjectDescription.ResourceSynthesizer> {
     get
   }
+}
+extension ProjectDescription.ResourceSynthesizer.Parser.Option : Swift.ExpressibleByStringInterpolation {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringInterpolation = Swift.DefaultStringInterpolation
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+extension ProjectDescription.ResourceSynthesizer.Parser.Option : Swift.ExpressibleByIntegerLiteral {
+  public init(integerLiteral value: Swift.Int)
+  public typealias IntegerLiteralType = Swift.Int
+}
+extension ProjectDescription.ResourceSynthesizer.Parser.Option : Swift.ExpressibleByFloatLiteral {
+  public init(floatLiteral value: Swift.Double)
+  public typealias FloatLiteralType = Swift.Double
+}
+extension ProjectDescription.ResourceSynthesizer.Parser.Option : Swift.ExpressibleByBooleanLiteral {
+  public init(booleanLiteral value: Swift.Bool)
+  public typealias BooleanLiteralType = Swift.Bool
+}
+extension ProjectDescription.ResourceSynthesizer.Parser.Option : Swift.ExpressibleByDictionaryLiteral {
+  public init(dictionaryLiteral elements: (Swift.String, ProjectDescription.ResourceSynthesizer.Parser.Option)...)
+  public typealias Key = Swift.String
+  public typealias Value = ProjectDescription.ResourceSynthesizer.Parser.Option
+}
+extension ProjectDescription.ResourceSynthesizer.Parser.Option : Swift.ExpressibleByArrayLiteral {
+  public init(arrayLiteral elements: ProjectDescription.ResourceSynthesizer.Parser.Option...)
+  public typealias ArrayLiteralElement = ProjectDescription.ResourceSynthesizer.Parser.Option
 }
 public struct RunAction : Swift.Equatable, Swift.Codable {
   public let configuration: ProjectDescription.ConfigurationName
@@ -948,7 +1013,9 @@ public struct RunAction : Swift.Equatable, Swift.Codable {
   public let arguments: ProjectDescription.Arguments?
   public let options: ProjectDescription.RunActionOptions
   public let diagnosticsOptions: [ProjectDescription.SchemeDiagnosticsOption]
-  public static func runAction(configuration: ProjectDescription.ConfigurationName = .debug, attachDebugger: Swift.Bool = true, customLLDBInitFile: ProjectDescription.Path? = nil, preActions: [ProjectDescription.ExecutionAction] = [], postActions: [ProjectDescription.ExecutionAction] = [], executable: ProjectDescription.TargetReference? = nil, arguments: ProjectDescription.Arguments? = nil, options: ProjectDescription.RunActionOptions = .options(), diagnosticsOptions: [ProjectDescription.SchemeDiagnosticsOption] = [.mainThreadChecker]) -> ProjectDescription.RunAction
+  public let expandVariableFromTarget: ProjectDescription.TargetReference?
+  public let launchStyle: ProjectDescription.LaunchStyle
+  public static func runAction(configuration: ProjectDescription.ConfigurationName = .debug, attachDebugger: Swift.Bool = true, customLLDBInitFile: ProjectDescription.Path? = nil, preActions: [ProjectDescription.ExecutionAction] = [], postActions: [ProjectDescription.ExecutionAction] = [], executable: ProjectDescription.TargetReference? = nil, arguments: ProjectDescription.Arguments? = nil, options: ProjectDescription.RunActionOptions = .options(), diagnosticsOptions: [ProjectDescription.SchemeDiagnosticsOption] = [.mainThreadChecker], expandVariableFromTarget: ProjectDescription.TargetReference? = nil, launchStyle: ProjectDescription.LaunchStyle = .automatically) -> ProjectDescription.RunAction
   public static func == (a: ProjectDescription.RunAction, b: ProjectDescription.RunAction) -> Swift.Bool
   public func encode(to encoder: Swift.Encoder) throws
   public init(from decoder: Swift.Decoder) throws
@@ -1270,12 +1337,23 @@ public struct Target : Swift.Codable, Swift.Equatable {
   public let launchArguments: [ProjectDescription.LaunchArgument]
   public let additionalFiles: [ProjectDescription.FileElement]
   public let buildRules: [ProjectDescription.BuildRule]
-  public init(name: Swift.String, platform: ProjectDescription.Platform, product: ProjectDescription.Product, productName: Swift.String? = nil, bundleId: Swift.String, deploymentTarget: ProjectDescription.DeploymentTarget? = nil, infoPlist: ProjectDescription.InfoPlist? = .default, sources: ProjectDescription.SourceFilesList? = nil, resources: ProjectDescription.ResourceFileElements? = nil, copyFiles: [ProjectDescription.CopyFilesAction]? = nil, headers: ProjectDescription.Headers? = nil, entitlements: ProjectDescription.Entitlements? = nil, scripts: [ProjectDescription.TargetScript] = [], dependencies: [ProjectDescription.TargetDependency] = [], settings: ProjectDescription.Settings? = nil, coreDataModels: [ProjectDescription.CoreDataModel] = [], environmentVariables: [Swift.String : ProjectDescription.EnvironmentVariable] = [:], launchArguments: [ProjectDescription.LaunchArgument] = [], additionalFiles: [ProjectDescription.FileElement] = [], buildRules: [ProjectDescription.BuildRule] = [])
+  public let mergedBinaryType: ProjectDescription.MergedBinaryType
+  public let mergeable: Swift.Bool
+  public init(name: Swift.String, platform: ProjectDescription.Platform, product: ProjectDescription.Product, productName: Swift.String? = nil, bundleId: Swift.String, deploymentTarget: ProjectDescription.DeploymentTarget? = nil, infoPlist: ProjectDescription.InfoPlist? = .default, sources: ProjectDescription.SourceFilesList? = nil, resources: ProjectDescription.ResourceFileElements? = nil, copyFiles: [ProjectDescription.CopyFilesAction]? = nil, headers: ProjectDescription.Headers? = nil, entitlements: ProjectDescription.Entitlements? = nil, scripts: [ProjectDescription.TargetScript] = [], dependencies: [ProjectDescription.TargetDependency] = [], settings: ProjectDescription.Settings? = nil, coreDataModels: [ProjectDescription.CoreDataModel] = [], environmentVariables: [Swift.String : ProjectDescription.EnvironmentVariable] = [:], launchArguments: [ProjectDescription.LaunchArgument] = [], additionalFiles: [ProjectDescription.FileElement] = [], buildRules: [ProjectDescription.BuildRule] = [], mergedBinaryType: ProjectDescription.MergedBinaryType = .disabled, mergeable: Swift.Bool = false)
   @available(*, deprecated, message: "please use environmentVariables instead")
-  public init(name: Swift.String, platform: ProjectDescription.Platform, product: ProjectDescription.Product, productName: Swift.String? = nil, bundleId: Swift.String, deploymentTarget: ProjectDescription.DeploymentTarget? = nil, infoPlist: ProjectDescription.InfoPlist? = .default, sources: ProjectDescription.SourceFilesList? = nil, resources: ProjectDescription.ResourceFileElements? = nil, copyFiles: [ProjectDescription.CopyFilesAction]? = nil, headers: ProjectDescription.Headers? = nil, entitlements: ProjectDescription.Entitlements? = nil, scripts: [ProjectDescription.TargetScript] = [], dependencies: [ProjectDescription.TargetDependency] = [], settings: ProjectDescription.Settings? = nil, coreDataModels: [ProjectDescription.CoreDataModel] = [], environment: [Swift.String : Swift.String], launchArguments: [ProjectDescription.LaunchArgument] = [], additionalFiles: [ProjectDescription.FileElement] = [], buildRules: [ProjectDescription.BuildRule] = [])
+  public init(name: Swift.String, platform: ProjectDescription.Platform, product: ProjectDescription.Product, productName: Swift.String? = nil, bundleId: Swift.String, deploymentTarget: ProjectDescription.DeploymentTarget? = nil, infoPlist: ProjectDescription.InfoPlist? = .default, sources: ProjectDescription.SourceFilesList? = nil, resources: ProjectDescription.ResourceFileElements? = nil, copyFiles: [ProjectDescription.CopyFilesAction]? = nil, headers: ProjectDescription.Headers? = nil, entitlements: ProjectDescription.Entitlements? = nil, scripts: [ProjectDescription.TargetScript] = [], dependencies: [ProjectDescription.TargetDependency] = [], settings: ProjectDescription.Settings? = nil, coreDataModels: [ProjectDescription.CoreDataModel] = [], environment: [Swift.String : Swift.String], launchArguments: [ProjectDescription.LaunchArgument] = [], additionalFiles: [ProjectDescription.FileElement] = [], buildRules: [ProjectDescription.BuildRule] = [], mergedBinaryType: ProjectDescription.MergedBinaryType = .disabled, mergeable: Swift.Bool = false)
   public static func == (a: ProjectDescription.Target, b: ProjectDescription.Target) -> Swift.Bool
   public func encode(to encoder: Swift.Encoder) throws
   public init(from decoder: Swift.Decoder) throws
+}
+public enum FrameworkStatus : Swift.String, Swift.Codable, Swift.Hashable {
+  case required
+  case optional
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
 }
 public enum SDKStatus : Swift.String, Swift.Codable, Swift.Hashable {
   case required
@@ -1296,14 +1374,26 @@ public enum SDKType : Swift.String, Swift.Codable, Swift.Hashable {
   }
 }
 public enum TargetDependency : Swift.Codable, Swift.Hashable {
+  public enum PackageType : Swift.Codable, Swift.Hashable {
+    case runtime
+    case plugin
+    case macro
+    public static func == (a: ProjectDescription.TargetDependency.PackageType, b: ProjectDescription.TargetDependency.PackageType) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public func encode(to encoder: Swift.Encoder) throws
+    public var hashValue: Swift.Int {
+      get
+    }
+    public init(from decoder: Swift.Decoder) throws
+  }
   case target(name: Swift.String)
   case project(target: Swift.String, path: ProjectDescription.Path)
-  case framework(path: ProjectDescription.Path)
+  case framework(path: ProjectDescription.Path, status: ProjectDescription.FrameworkStatus = .required)
   case library(path: ProjectDescription.Path, publicHeaders: ProjectDescription.Path, swiftModuleMap: ProjectDescription.Path?)
-  case package(product: Swift.String)
+  case package(product: Swift.String, type: ProjectDescription.TargetDependency.PackageType = .runtime)
   case packagePlugin(product: Swift.String)
   case sdk(name: Swift.String, type: ProjectDescription.SDKType, status: ProjectDescription.SDKStatus)
-  case xcframework(path: ProjectDescription.Path)
+  case xcframework(path: ProjectDescription.Path, status: ProjectDescription.FrameworkStatus = .required)
   case xctest
   case external(name: Swift.String)
   public static func sdk(name: Swift.String, type: ProjectDescription.SDKType) -> ProjectDescription.TargetDependency
@@ -1602,6 +1692,8 @@ extension ProjectDescription.FileCodeGen : Swift.RawRepresentable {}
 extension ProjectDescription.Headers.AutomaticExclusionRule : Swift.Equatable {}
 extension ProjectDescription.Headers.AutomaticExclusionRule : Swift.Hashable {}
 extension ProjectDescription.Headers.AutomaticExclusionRule : Swift.RawRepresentable {}
+extension ProjectDescription.LaunchStyle : Swift.Equatable {}
+extension ProjectDescription.LaunchStyle : Swift.Hashable {}
 extension ProjectDescription.Path.PathType : Swift.Equatable {}
 extension ProjectDescription.Path.PathType : Swift.Hashable {}
 extension ProjectDescription.Path.PathType : Swift.RawRepresentable {}
@@ -1631,6 +1723,7 @@ extension ProjectDescription.DebugInformationFormat : Swift.RawRepresentable {}
 extension ProjectDescription.SwiftOptimizationLevel : Swift.Equatable {}
 extension ProjectDescription.SwiftOptimizationLevel : Swift.Hashable {}
 extension ProjectDescription.SwiftOptimizationLevel : Swift.RawRepresentable {}
+extension ProjectDescription.FrameworkStatus : Swift.RawRepresentable {}
 extension ProjectDescription.SDKStatus : Swift.RawRepresentable {}
 extension ProjectDescription.SDKType : Swift.RawRepresentable {}
 extension ProjectDescription.TargetScript.Order : Swift.Hashable {}

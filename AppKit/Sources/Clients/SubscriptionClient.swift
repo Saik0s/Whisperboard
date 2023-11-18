@@ -1,7 +1,12 @@
 import Dependencies
 import Foundation
 import IdentifiedCollections
-import RevenueCat
+
+#if APPSTORE && canImport(RevenueCat)
+  import RevenueCat
+#else
+enum PackageType: Hashable { case monthly }
+#endif
 
 // MARK: - SubscriptionPackage
 
@@ -27,7 +32,7 @@ struct SubscriptionClient {
 
 // MARK: - SubscriptionClientError
 
-enum SubscriptionClientError: Error {
+enum SubscriptionClientError: Error, LocalizedError {
   case noCurrentOffering
   case noPackageInOffering
   case cancelled
@@ -50,7 +55,7 @@ enum SubscriptionClientError: Error {
 // MARK: - SubscriptionClient + DependencyKey
 
 extension SubscriptionClient: DependencyKey {
-  #if APPSTORE
+  #if APPSTORE && canImport(RevenueCat)
     static let liveValue: SubscriptionClient = .init(
       configure: { userID in
         Purchases.configure(withAPIKey: Secrets.REVENUECAT_API_KEY, appUserID: userID)

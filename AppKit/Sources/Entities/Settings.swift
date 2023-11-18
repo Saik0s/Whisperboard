@@ -8,6 +8,8 @@ struct Settings: Hashable, Then {
   var selectedModel: VoiceModelType = .default
   var parameters = TranscriptionParameters()
   var isICloudSyncEnabled: Bool = false
+  var shouldMixWithOtherAudio: Bool = false
+  var isAutoTranscriptionEnabled: Bool = false
 
   var voiceLanguage: VoiceLanguage {
     get { parameters.language }
@@ -24,6 +26,8 @@ extension Settings: Codable {
     case selectedModel
     case parameters
     case isICloudSyncEnabled
+    case shouldMixWithOtherAudio
+    case isAutoTranscriptionEnabled
   }
 
   init(from decoder: Decoder) throws {
@@ -33,5 +37,7 @@ extension Settings: Codable {
     selectedModel = (try? container.decode(VoiceModelType.self, forKey: .selectedModel)) ?? .default
     parameters = (try? container.decode(TranscriptionParameters.self, forKey: .parameters)) ?? TranscriptionParameters()
     isICloudSyncEnabled = (try? container.decode(Bool.self, forKey: .isICloudSyncEnabled)) ?? false
+    shouldMixWithOtherAudio = (try? container.decode(Bool.self, forKey: .shouldMixWithOtherAudio)) ?? false
+    isAutoTranscriptionEnabled = (try? container.decode(Bool.self, forKey: .isAutoTranscriptionEnabled)) ?? false
   }
 }

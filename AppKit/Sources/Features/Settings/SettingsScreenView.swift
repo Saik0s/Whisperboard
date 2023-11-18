@@ -53,12 +53,14 @@ struct SettingsScreenView: View {
   var body: some View {
     NavigationStack {
       List {
-        if !viewStore.isSubscribed {
-          SubscriptionSectionView(store: store.scope(state: \.subscriptionSection, action: SettingsScreen.Action.subscriptionSection))
-            .introspect(.listCell, on: .iOS(.v16, .v17)) {
-              $0.clipsToBounds = false
-            }
-        }
+        #if APPSTORE && DEBUG
+          if !viewStore.isSubscribed {
+            SubscriptionSectionView(store: store.scope(state: \.subscriptionSection, action: SettingsScreen.Action.subscriptionSection))
+              .introspect(.listCell, on: .iOS(.v16, .v17)) {
+                $0.clipsToBounds = false
+              }
+          }
+        #endif
 
         ModelSectionView(viewStore: viewStore, modelSelectorStore: modelSelectorStore)
         SpeechSectionView(viewStore: viewStore)
@@ -95,13 +97,14 @@ struct ModelSectionView: View {
 
   var body: some View {
     Section {
-      #if APPSTORE
+      #if APPSTORE && DEBUG
         SettingsToggleButton(
           icon: .system(name: "wand.and.stars", background: .DS.Background.accent),
           title: "Cloud Transcription",
           isOn: viewStore.$settings.isRemoteTranscriptionEnabled
         )
       #endif
+
       SettingsSheetButton(
         icon: .system(name: "square.and.arrow.down", background: .systemBlue.lighten(by: 0.1)),
         title: "Model",
@@ -148,6 +151,16 @@ struct SpeechSectionView: View {
           set: { viewStore.$settings.voiceLanguage.wrappedValue = viewStore.availableLanguages[$0] }
         )
       )
+      SettingsToggleButton(
+        icon: .system(name: "waveform.path.ecg", background: .systemPurple),
+        title: "Mix with Other Audio",
+        isOn: viewStore.$settings.shouldMixWithOtherAudio
+      )
+      SettingsToggleButton(
+        icon: .system(name: "mic.fill", background: .systemRed),
+        title: "Auto Transcription",
+        isOn: viewStore.$settings.isAutoTranscriptionEnabled
+      )
     }
     .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
   }
@@ -155,25 +168,39 @@ struct SpeechSectionView: View {
 
 // MARK: - DebugSectionView
 
-struct DebugSectionView: View {
-  @ObservedObject var viewStore: ViewStore<SettingsScreenView.ViewState, SettingsScreen.Action>
+#if DEBUG
+  struct DebugSectionView: View {
+    @ObservedObject var viewStore: ViewStore<SettingsScreenView.ViewState, SettingsScreen.Action>
 
-  var body: some View {
-    Section {
-      SettingsToggleButton(
-        icon: .system(name: "wand.and.stars", background: .systemTeal),
-        title: "Enable Fixtures",
-        isOn: viewStore.$settings.useMockedClients
-      )
-      SettingsSheetButton(icon: .system(name: "ladybug", background: .systemGreen), title: "Show logs") {
-        ScrollView { Text((try? String(contentsOfFile: Configs.logFileURL.path())) ?? "No logs...").font(.footnote).monospaced().padding() }
+    @State private var logs: [String] = []
+
+    var body: some View {
+      Section {
+        SettingsToggleButton(
+          icon: .system(name: "wand.and.stars", background: .systemTeal),
+          title: "Enable Fixtures",
+          isOn: viewStore.$settings.useMockedClients
+        )
+
+        SettingsSheetButton(icon: .system(name: "ladybug", background: .systemGreen), title: "Show logs") {
+          ScrollView {
+            LazyVStack(alignment: .leading, spacing: .grid(1)) {
+              ForEach(logs.enumerated().reversed(), id: \.offset) { index, log in
+                Text("\(index + 1). \(log)").font(.footnote).monospaced()
+              }
+            }
+          }
+          .onAppear {
+            logs = (try? String(contentsOfFile: Configs.logFileURL.path()).split(separator: "\n").map(String.init)) ?? ["No logs..."]
+          }
+        }
+      } header: {
+        Text("Debug")
       }
-    } header: {
-      Text("Debug")
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
     }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
   }
-}
+#endif
 
 // MARK: - StorageSectionView
 
@@ -185,18 +212,18 @@ struct StorageSectionView: View {
       Group {
         VStack(alignment: .leading, spacing: .grid(1)) {
           HStack(spacing: 0) {
-            Text("Taken: \(viewStore.takenSpace)")
-              .textStyle(.body)
+            Text("Taken: \(viewStore.takenSpace)").textStyle(.body)
 
             Spacer()
-            Text("Available: \(viewStore.freeSpace)")
-              .textStyle(.body)
+
+            Text("Available: \(viewStore.freeSpace)").textStyle(.body)
           }
 
           GeometryReader { geometry in
             HStack(spacing: 0) {
               LinearGradient.easedGradient(colors: [.systemPurple, .systemOrange], startPoint: .bottomLeading, endPoint: .topTrailing)
                 .frame(width: geometry.size.width * viewStore.takenSpacePercentage)
+
               Color.DS.Background.tertiary
             }
           }
@@ -208,10 +235,11 @@ struct StorageSectionView: View {
         icon: .system(name: "icloud.and.arrow.up", background: .systemBlue),
         title: "iCloud Backup",
         isOn: viewStore.$settings.isICloudSyncEnabled
-      ).disabled(viewStore.isICloudSyncInProgress)
-        .blur(radius: viewStore.isICloudSyncInProgress ? 3 : 0)
-        .overlay(viewStore.isICloudSyncInProgress ? ProgressView().progressViewStyle(.circular) : nil)
-        .animation(.easeInOut, value: viewStore.isICloudSyncInProgress)
+      )
+      .disabled(viewStore.isICloudSyncInProgress)
+      .blur(radius: viewStore.isICloudSyncInProgress ? 3 : 0)
+      .overlay(viewStore.isICloudSyncInProgress ? ProgressView().progressViewStyle(.circular) : nil)
+      .animation(.easeInOut, value: viewStore.isICloudSyncInProgress)
 
       SettingsButton(icon: .system(name: "trash", background: .systemYellow.darken(by: 0.1)), title: "Delete Storage") {
         viewStore.send(.deleteStorageTapped)

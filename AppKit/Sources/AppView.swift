@@ -48,6 +48,7 @@ func appSetup() {
             let fileHandle = try FileHandle(forWritingTo: Configs.logFileURL)
             fileHandle.seekToEndOfFile()
             fileHandle.write(text.data(using: .utf8)!)
+            fileHandle.write("\n".data(using: .utf8)!)
             fileHandle.closeFile()
           } catch {
             FileManager.default.createFile(atPath: Configs.logFileURL.path, contents: text.data(using: .utf8), attributes: nil)

@@ -87,7 +87,11 @@ func appTarget() -> Target {
     dependencies: [
       .target(name: "ShareExtension"),
       .project(target: "WhisperBoardKit", path: "../AppKit"),
-    ] + (Environment.isHotReloadingEnabled.getBoolean(default: false) ? [.package(product: "HotReloading")] : [])
+    ] + (Environment.isHotReloadingEnabled.getBoolean(default: false) ? [.package(product: "HotReloading")] : []),
+    environmentVariables: [
+      // root of the whole project
+      "INJECTION_DIRECTORIES": .init(stringLiteral: "\(URL(filePath: #file).deletingLastPathComponent().deletingLastPathComponent().path)"),
+    ]
   )
 }
 
