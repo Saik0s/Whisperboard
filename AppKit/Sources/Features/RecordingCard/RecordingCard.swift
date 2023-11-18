@@ -59,8 +59,13 @@ struct RecordingCard: ReducerProtocol {
     case titleChanged(String)
     case recordingSelected
     case alert(PresentationAction<Alert>)
+    case delegate(Delegate)
 
     enum Alert: Equatable {}
+
+    enum Delegate: Equatable {
+      case didTapTranscribe(RecordingInfo)
+    }
   }
 
   @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
@@ -117,18 +122,8 @@ struct RecordingCard: ReducerProtocol {
 
       case .transcribeTapped:
         log.debug("Transcribe tapped for recording \(state.recording.id)")
-        let parameters = settings.getSettings().parameters
-        let model = settings.getSettings().selectedModel
-        let task = TranscriptionTask(
-          fileName: state.recording.fileName,
-          duration: Int64(state.recording.duration * 1000),
-          parameters: parameters,
-          modelType: model,
-          isRemote: settings.getSettings().isRemoteTranscriptionEnabled
-        )
-        return .run { _ in
-          await transcriptionWorker.enqueueTask(task)
-        }
+        // Handled in RootStore
+        return .send(.delegate(.didTapTranscribe(state.recording)))
 
       case .cancelTranscriptionTapped:
         state.queuePosition = nil
@@ -157,6 +152,9 @@ struct RecordingCard: ReducerProtocol {
         return .none
 
       case .alert:
+        return .none
+
+      case .delegate:
         return .none
       }
     }

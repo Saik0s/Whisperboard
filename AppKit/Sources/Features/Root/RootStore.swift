@@ -93,6 +93,35 @@ struct Root: ReducerProtocol {
         }
       }
 
+      Reduce { _, action in
+        switch action {
+        case let .recordingListScreen(.details(action: .presented(.recordingCard(.delegate(.didTapTranscribe(recording)))))),
+             let .recordingListScreen(.recordingCard(
+               _,
+               .delegate(.didTapTranscribe(recording))
+             )):
+          enqueueTranscriptionTask(recording: recording)
+          return .none
+
+        case let .recordScreen(.newRecordingCreated(recordingInfo)):
+          if settings.getSettings().isAutoTranscriptionEnabled {
+            enqueueTranscriptionTask(recording: recordingInfo)
+          }
+          return .run { send in
+            if settings.getSettings().isICloudSyncEnabled {
+              await send(.settingsScreen(.set(\.$isICloudSyncInProgress, true)))
+              try await storage.uploadRecordingsToICloud(false)
+              await send(.settingsScreen(.set(\.$isICloudSyncInProgress, false)))
+            }
+          } catch: { error, send in
+            await send(.failedICloudSync(error.equatable))
+          }
+
+        default:
+          return .none
+        }
+      }
+
       Reduce<State, Action> { state, action in
         switch action {
         case .task:
@@ -164,5 +193,10 @@ struct Root: ReducerProtocol {
         return .none
       }
     }
+  }
+
+  private func enqueueTranscriptionTask(recording: RecordingInfo) {
+    let settings = settings.getSettings()
+    transcriptionWorker.enqueueTaskForRecording(recording, settings)
   }
 }

@@ -10,7 +10,7 @@ import UIKit
 // MARK: - TranscriptionWorkerClient
 
 struct TranscriptionWorkerClient {
-  var enqueueTask: @Sendable (TranscriptionTask) async -> Void
+  var enqueueTaskForRecording: @Sendable (RecordingInfo, Settings) -> Void
   var cancelTaskForFile: @Sendable (_ fileName: String) async -> Void
   var cancelAllTasks: @Sendable () async -> Void
   var registerForProcessingTask: @Sendable () -> Void
@@ -35,7 +35,14 @@ extension TranscriptionWorkerClient: DependencyKey {
     let worker: TranscriptionWorker = TranscriptionWorkerImpl(executor: combinedWorkExecutor)
 
     return TranscriptionWorkerClient(
-      enqueueTask: { task in
+      enqueueTaskForRecording: { recording, settings in
+        let task = TranscriptionTask(
+          fileName: recording.fileName,
+          duration: Int64(recording.duration * 1000),
+          parameters: settings.parameters,
+          modelType: settings.selectedModel,
+          isRemote: settings.isRemoteTranscriptionEnabled
+        )
         worker.enqueueTask(task)
       },
       cancelTaskForFile: { fileName in
@@ -85,8 +92,15 @@ extension TranscriptionWorkerClient {
     let tasksChannel = AsyncChannel<IdentifiedArrayOf<TranscriptionTask>>()
 
     return TranscriptionWorkerClient(
-      enqueueTask: { task in
+      enqueueTaskForRecording: { recording, settings in
         Task {
+          let task = TranscriptionTask(
+            fileName: recording.fileName,
+            duration: Int64(recording.duration * 1000),
+            parameters: settings.parameters,
+            modelType: settings.selectedModel,
+            isRemote: settings.isRemoteTranscriptionEnabled
+          )
           await tasksChannel.send([task])
           await transcriptionChannel.send(Transcription(
             id: task.id,

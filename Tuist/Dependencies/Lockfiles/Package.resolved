@@ -42,7 +42,7 @@
       "location" : "https://github.com/krzysztofzablocki/Inject.git",
       "state" : {
         "branch" : "main",
-        "revision" : "8f0458f7606fc0b6fa81d47e5748f23949b55782"
+        "revision" : "bedc85ac06bc92b06ff0b9900b6335cb42e0d6be"
       }
     },
     {
@@ -69,7 +69,7 @@
       "location" : "https://github.com/aheze/Popovers.git",
       "state" : {
         "branch" : "main",
-        "revision" : "1a05e53c6c95b364e57de526a929c9142f72e0c9"
+        "revision" : "a6895602c7db1683be1c68363564de4fb09521cd"
       }
     },
     {
@@ -167,8 +167,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-snapshot-testing",
       "state" : {
-        "revision" : "bb0ea08db8e73324fe6c3727f755ca41a23ff2f4",
-        "version" : "1.14.2"
+        "revision" : "4862d48562483d274a2ac7522d905c9237a31a48",
+        "version" : "1.15.0"
       }
     },
     {
@@ -213,7 +213,7 @@
       "location" : "https://github.com/ggerganov/whisper.spm.git",
       "state" : {
         "branch" : "master",
-        "revision" : "52b2619d029f809b8ca0bfa4998e634701540fa0"
+        "revision" : "f5e5cf24caa589f7c8c0196031d1cbb6f6c231ec"
       }
     },
     {
