@@ -32,30 +32,42 @@ extension AudioSessionClient: DependencyKey {
     let isPlaybackActive = LockIsolated(false)
     let isRecordActive = LockIsolated(false)
 
+    var mode: AVAudioSession.Mode {
+      .voiceChat
+    }
+    var options: AVAudioSession.CategoryOptions {
+      @Dependency(\.settings) var settings: SettingsClient
+      let shouldMixWithOthers = settings.getSettings().shouldMixWithOtherAudio
+      let options: AVAudioSession.CategoryOptions = shouldMixWithOthers
+        ? [.allowBluetooth, .defaultToSpeaker, .mixWithOthers, .duckOthers]
+        : [.allowBluetooth, .defaultToSpeaker]
+      return options
+    }
+
     return AudioSessionClient(
       enable: { type, updateActivation in
         switch type {
         case .playback:
           isPlaybackActive.setValue(true)
           if AVAudioSession.sharedInstance().category != .playAndRecord {
-            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.allowBluetooth, .defaultToSpeaker])
+            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: mode, options: options)
           }
         case .record:
           isRecordActive.setValue(true)
           if isPlaybackActive.value {
-            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.allowBluetooth, .defaultToSpeaker])
+            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: mode, options: options)
           } else {
-            try AVAudioSession.sharedInstance().setCategory(.record, mode: .default, options: [.allowBluetooth])
+            try AVAudioSession.sharedInstance().setCategory(.record, mode: mode, options: options)
           }
         case .playAndRecord:
           isPlaybackActive.setValue(true)
           isRecordActive.setValue(true)
           if AVAudioSession.sharedInstance().category != .playAndRecord {
-            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.allowBluetooth, .defaultToSpeaker])
+            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: mode, options: options)
           }
         }
 
-        if updateActivation && (isPlaybackActive.value || isRecordActive.value) {
+        if updateActivation {
           try AVAudioSession.sharedInstance().setActive(true)
         }
       },
@@ -64,7 +76,7 @@ extension AudioSessionClient: DependencyKey {
         case .playback:
           isPlaybackActive.setValue(false)
           if AVAudioSession.sharedInstance().category == .playAndRecord {
-            try AVAudioSession.sharedInstance().setCategory(.record, mode: .default, options: [.allowBluetooth])
+            try AVAudioSession.sharedInstance().setCategory(.record, mode: mode, options: options)
           }
         case .record:
           isRecordActive.setValue(false)
