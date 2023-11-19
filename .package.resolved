@@ -37,6 +37,15 @@
       }
     },
     {
+      "identity" : "whisper.cpp",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ggerganov/whisper.cpp.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "e2f0eba2d4dbe4ded5625cbd8a9c17e13f2482f6"
+      }
+    },
+    {
       "identity" : "xprobeplugin",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/johnno1962/XprobePlugin",

@@ -115,7 +115,7 @@ struct ModelRowView: View {
     VStack(spacing: .grid(2)) {
       HStack(spacing: .grid(2)) {
         VStack(alignment: .leading, spacing: .grid(1)) {
-          HStack(alignment: .bottom, spacing: .grid(1)) {
+          VStack(alignment: .leading, spacing: 0) {
             Text(viewStore.model.modelType.readableName)
               .textStyle(.headline)
 
@@ -124,7 +124,7 @@ struct ModelRowView: View {
           }
 
           Text(viewStore.model.modelType.modelDescription)
-            .textStyle(.body)
+            .textStyle(.captionBase)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
 

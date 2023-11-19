@@ -5,19 +5,23 @@ all: project_file
 
 project_file: secrets
 	$(TUIST) fetch
-	$(TUIST) generate --no-open --no-cache
+	$(TUIST) generate --no-open
 
 update: secrets
 	$(TUIST) fetch --update
-	$(TUIST) generate --no-open --no-cache
+	$(TUIST) generate --no-open
 
-hot:
+hot: secrets
 	TUIST_IS_HOT_RELOADING_ENABLED=1 $(TUIST) fetch
-	TUIST_IS_HOT_RELOADING_ENABLED=1 $(TUIST) generate --no-open --no-cache
+	TUIST_IS_HOT_RELOADING_ENABLED=1 $(TUIST) generate --no-open
 
 appstore: secrets
 	TUIST_IS_APP_STORE=1 $(TUIST) fetch
-	TUIST_IS_APP_STORE=1 $(TUIST) generate --no-open --no-cache
+	TUIST_IS_APP_STORE=1 $(TUIST) generate --no-open
+
+hot_appstore: secrets
+	TUIST_IS_APP_STORE=1 TUIST_IS_HOT_RELOADING_ENABLED=1 $(TUIST) fetch
+	TUIST_IS_APP_STORE=1 TUIST_IS_HOT_RELOADING_ENABLED=1 $(TUIST) generate --no-open
 
 build_debug:
 	$(TUIST) build --generate --configuration Debug --build-output-path .build/
@@ -47,4 +51,4 @@ clean: clear_analyze
 	rm -rf build
 	$(TUIST) clean
 
-.SILENT: all project_file update hot build_debug build_release format secrets
+.SILENT: all project_file update hot appstore hot_appstore build_debug build_release format secrets

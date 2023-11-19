@@ -127,7 +127,8 @@ struct SettingsMigration: Migration {
       .appendingPathComponent("settings.json")
 
     let oldSettings = try Settings.fromFile(path: settingsURL.path)
-    let selectedModel = UserDefaults.standard.string(forKey: "selectedModelName").flatMap { VoiceModelType(rawValue: $0) } ?? .default
+    let selectedModelName = UserDefaults.standard.string(forKey: "selectedModelName")
+    let selectedModel = VoiceModelType.allCases.first(where: { $0.fileName == selectedModelName }) ?? .default
 
     let newSettings = Settings(
       isRemoteTranscriptionEnabled: oldSettings.isRemoteTranscriptionEnabled,

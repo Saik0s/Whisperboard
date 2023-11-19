@@ -110,16 +110,7 @@ struct ModelSectionView: View {
         title: "Model",
         trailingText: viewStore.selectedModelReadableName
       ) {
-        Form {
-          Section {
-            ForEachStore(modelSelectorStore.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
-              ModelRowView(store: modelRowStore)
-            }
-            .listRowBackground(Color.DS.Background.secondary)
-          }
-        }
-        .onAppear { viewStore.send(.modelSelector(.reloadSelectedModel)) }
-        .alert(store: modelSelectorStore.scope(state: \.$alert, action: { .alert($0) }))
+        ModelSelectorView(store: modelSelectorStore)
       }
       .onAppear { viewStore.send(.modelSelector(.reloadSelectedModel)) }
     } header: {

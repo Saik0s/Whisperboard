@@ -13,7 +13,7 @@ struct Root: ReducerProtocol {
     var recordScreen = RecordScreen.State()
     var settingsScreen = SettingsScreen.State()
 
-    @BindingState var selectedTab: Tab = .list
+    @BindingState var selectedTab: Tab = .record
     @PresentationState var alert: AlertState<Action.Alert>?
 
     var isRecording: Bool {

@@ -36,7 +36,8 @@ func appKitTarget() -> Target {
     dependencies: [
       .sdk(name: "c++", type: .library, status: .required),
       .sdk(name: "CloudKit", type: .framework, status: .optional),
-      .sdk(name: "StoreKit", type: .framework, status: .optional),
+      // .sdk(name: "StoreKit", type: .framework, status: .optional),
+
       .external(name: "AsyncAlgorithms"),
       .external(name: "AudioKit"),
       .external(name: "ComposableArchitecture"),
@@ -50,8 +51,9 @@ func appKitTarget() -> Target {
       // .external(name: "RevenueCat"),
       .external(name: "SwiftUIIntrospect"),
       .external(name: "VariableBlurView"),
-      .external(name: "whisper"),
       .external(name: "Lottie"),
+
+      .package(product: "whisper"),
     ],
     settings: .settings(
       base: projectSettings,
@@ -79,7 +81,6 @@ func appKitTestTarget() -> Target {
 
 let project = Project(
   name: "WhisperBoardKit",
-
   options: .options(
     automaticSchemesOptions: .disabled,
     disableShowEnvironmentVarsInScriptPhases: true,
@@ -88,12 +89,13 @@ let project = Project(
       tabWidth: 2
     )
   ),
-
+  packages: [
+    .remote(url: "https://github.com/ggerganov/whisper.cpp.git", requirement: .branch("master")),
+  ],
   targets: [
     appKitTarget(),
     appKitTestTarget(),
   ],
-
   schemes: [
     Scheme(
       name: "WhisperBoardKit",
@@ -102,7 +104,6 @@ let project = Project(
       testAction: .targets(["WhisperBoardKitTests"])
     ),
   ],
-
   resourceSynthesizers: [
     .files(extensions: ["bin"]),
     .assets(),
