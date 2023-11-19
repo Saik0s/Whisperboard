@@ -56,7 +56,9 @@ extension AudioSessionClient: DependencyKey {
           isRecordActive.setValue(true)
         }
 
-        if AVAudioSession.sharedInstance().category != .playAndRecord {
+        if AVAudioSession.sharedInstance().category != .playAndRecord
+          || AVAudioSession.sharedInstance().mode != mode
+          || AVAudioSession.sharedInstance().categoryOptions != options {
           try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: mode, options: options)
         }
 

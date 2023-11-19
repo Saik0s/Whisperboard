@@ -113,6 +113,12 @@ struct ModelSectionView: View {
         ModelSelectorView(store: modelSelectorStore)
       }
       .onAppear { viewStore.send(.modelSelector(.reloadSelectedModel)) }
+
+      SettingsToggleButton(
+        icon: .system(name: "mic.fill", background: .systemRed),
+        title: "Auto Transcription",
+        isOn: viewStore.$settings.isAutoTranscriptionEnabled
+      )
     } header: {
       Text("Transcription")
     } footer: {
@@ -146,11 +152,6 @@ struct SpeechSectionView: View {
         icon: .system(name: "waveform.path.ecg", background: .systemPurple),
         title: "Mix with Other Audio",
         isOn: viewStore.$settings.shouldMixWithOtherAudio
-      )
-      SettingsToggleButton(
-        icon: .system(name: "mic.fill", background: .systemRed),
-        title: "Auto Transcription",
-        isOn: viewStore.$settings.isAutoTranscriptionEnabled
       )
     }
     .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)

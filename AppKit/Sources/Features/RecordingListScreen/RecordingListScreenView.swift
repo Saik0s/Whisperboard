@@ -16,17 +16,21 @@ struct RecordingListScreen: ReducerProtocol {
     @BindingState var isImportingFiles = false
     @PresentationState var alert: AlertState<Action.Alert>?
 
+    private var _details: RecordingDetails.State? = nil
     var selection: PresentationState<RecordingDetails.State> {
       get {
         guard let id = selectedId, let card = recordingCards[id: id]
         else { return PresentationState(wrappedValue: nil) }
-        return PresentationState(wrappedValue: RecordingDetails.State(recordingCard: card))
+        var details = _details ?? RecordingDetails.State(recordingCard: card)
+        details.recordingCard = card
+        return PresentationState(wrappedValue: details)
       }
       set {
         selectedId = newValue.wrappedValue?.recordingCard.id
         if let card = newValue.wrappedValue?.recordingCard {
           recordingCards[id: card.id] = card
         }
+        _details = newValue.wrappedValue
       }
     }
   }
