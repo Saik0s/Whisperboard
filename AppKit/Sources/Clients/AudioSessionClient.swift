@@ -39,8 +39,8 @@ extension AudioSessionClient: DependencyKey {
       @Dependency(\.settings) var settings: SettingsClient
       let shouldMixWithOthers = settings.getSettings().shouldMixWithOtherAudio
       let options: AVAudioSession.CategoryOptions = shouldMixWithOthers
-        ? [.allowBluetooth, .defaultToSpeaker, .mixWithOthers, .duckOthers]
-        : [.allowBluetooth, .defaultToSpeaker]
+        ? [.allowBluetooth, .mixWithOthers, .duckOthers]
+        : [.allowBluetooth]
       return options
     }
 

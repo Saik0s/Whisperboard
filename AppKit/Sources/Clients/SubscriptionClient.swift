@@ -5,7 +5,7 @@ import IdentifiedCollections
 #if APPSTORE && canImport(RevenueCat)
   import RevenueCat
 #else
-enum PackageType: Hashable { case monthly }
+  enum PackageType: Hashable { case monthly }
 #endif
 
 // MARK: - SubscriptionPackage

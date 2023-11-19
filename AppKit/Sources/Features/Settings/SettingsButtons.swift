@@ -93,11 +93,14 @@ struct SettingsSheetButton<Content: View>: View {
         Text(title)
           .textStyle(.label)
           .fixedSize(horizontal: false, vertical: true)
-          .frame(maxWidth: .infinity, alignment: .leading)
+
+        Spacer()
 
         if let trailingText {
           Text(trailingText)
             .textStyle(.sublabel)
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
         }
 
         Image(systemName: "chevron.forward")

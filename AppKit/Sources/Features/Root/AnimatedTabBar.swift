@@ -48,7 +48,7 @@ struct AnimatedTabBar: View {
 struct TabBarBackground: View {
   var selectedIndex: Int = 0
   var animation: Namespace.ID
-  @State var animationStage: AnimationStage = .base
+  @State var animationStage: AnimationStage = .up
   let baseColor = Color.DS.Background.secondary
   let circleColor = Color.DS.Background.accent
   let yOffset: CGFloat = -115
@@ -70,25 +70,27 @@ struct TabBarBackground: View {
     }
     .frame(height: 70)
     .onChange(of: selectedIndex) { selectedIndex in
-      if selectedIndex == 1 {
-        animationStage = .base
+      triggerAnimation(selectedIndex)
+    }
+  }
 
-        withAnimation(.easeOut(duration: 0.2)) {
-          animationStage = .toCircle
-        }
-        withAnimation(.easeIn(duration: 0.2).delay(0.2)) {
-          animationStage = .up
-        }
-      } else if animationStage == .up {
-        withAnimation(.easeOut(duration: 0.2)) {
-          animationStage = .toCircle
-        }
-        withAnimation(.easeIn(duration: 0.2).delay(0.2)) {
-          animationStage = .base
-        }
-      } else {
+  private func triggerAnimation(_ selectedIndex: Int) {
+    if selectedIndex == 1 && animationStage == .base {
+      withAnimation(.easeOut(duration: 0.2)) {
+        animationStage = .toCircle
+      }
+      withAnimation(.easeIn(duration: 0.2).delay(0.2)) {
+        animationStage = .up
+      }
+    } else if animationStage == .up {
+      withAnimation(.easeOut(duration: 0.2)) {
+        animationStage = .toCircle
+      }
+      withAnimation(.easeIn(duration: 0.2).delay(0.2)) {
         animationStage = .base
       }
+    } else {
+      animationStage = .base
     }
   }
 }
