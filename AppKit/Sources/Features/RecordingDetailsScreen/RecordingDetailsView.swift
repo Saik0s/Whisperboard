@@ -7,8 +7,27 @@ import VariableBlurView
 // MARK: - RecordingDetails
 
 struct RecordingDetails: ReducerProtocol {
+  enum DisplayMode: Equatable {
+    case text, timeline
+  }
+
+  struct TimelineItem: Equatable, Identifiable {
+    var id: Duration { startTime }
+    var text: String
+    var startTime: Duration
+    var endTime: Duration
+  }
+
   struct State: Equatable {
     var recordingCard: RecordingCard.State
+    var displayMode: DisplayMode = .text
+
+    var text: String { recordingCard.isTranscribing ? recordingCard.transcribingProgressText : recordingCard.transcription }
+    var timeline: [TimelineItem] {
+      recordingCard.recording.lastTranscription?.segments.map {
+        TimelineItem(text: $0.text, startTime: Duration.milliseconds($0.startTime), endTime: Duration.milliseconds($0.endTime))
+      } ?? []
+    }
 
     var shareAudioFileURL: URL { recordingCard.recording.fileURL }
   }
@@ -16,6 +35,7 @@ struct RecordingDetails: ReducerProtocol {
   enum Action: Equatable {
     case recordingCard(action: RecordingCard.Action)
     case delete
+    case displayModeChanged(DisplayMode)
   }
 
   var body: some ReducerProtocol<State, Action> {
@@ -23,12 +43,16 @@ struct RecordingDetails: ReducerProtocol {
       RecordingCard()
     }
 
-    Reduce<State, Action> { _, action in
+    Reduce<State, Action> { state, action in
       switch action {
       case .recordingCard:
         return .none
 
       case .delete:
+        return .none
+
+      case let .displayModeChanged(mode):
+        state.displayMode = mode
         return .none
       }
     }
@@ -110,6 +134,21 @@ struct RecordingDetailsView: View {
               }
 
               Spacer()
+
+              Picker(
+                "",
+                selection: viewStore.binding(
+                  get: { $0.displayMode },
+                  send: RecordingDetails.Action.displayModeChanged
+                )
+              ) {
+                Image(systemName: "text.alignleft")
+                  .tag(RecordingDetails.DisplayMode.text)
+                Image(systemName: "list.bullet")
+                  .tag(RecordingDetails.DisplayMode.timeline)
+              }
+              .pickerStyle(.segmented)
+              .colorMultiply(.DS.Text.accent)
             }.iconButtonStyle()
           }
 
@@ -130,15 +169,38 @@ struct RecordingDetailsView: View {
           }
 
           ScrollView {
-            Text(viewStore.recordingCard.isTranscribing
-              ? viewStore.recordingCard.transcribingProgressText
-              : viewStore.recordingCard.transcription)
-              .foregroundColor(viewStore.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
-              .textStyle(.body)
-              .lineLimit(nil)
-              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-              .padding(.vertical, .grid(2))
+            switch viewStore.displayMode {
+            case .text:
+              Text(viewStore.recordingCard.isTranscribing
+                ? viewStore.recordingCard.transcribingProgressText
+                : viewStore.recordingCard.transcription)
+                .foregroundColor(viewStore.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
+                .textStyle(.body)
+                .lineLimit(nil)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .padding(.vertical, .grid(2))
+
+            case .timeline:
+              LazyVStack {
+                ForEach(viewStore.timeline) { item in
+                  VStack(alignment: .leading, spacing: .grid(1)) {
+                    Text("[\(item.startTime.formatted(.time(pattern: .hourMinuteSecond(padHourToLength: 2, fractionalSecondsLength: 2)))) - \(item.endTime.formatted(.time(pattern: .hourMinuteSecond(padHourToLength: 2, fractionalSecondsLength: 2))))]")
+                      .foregroundColor(.DS.Text.subdued)
+                      .textStyle(.caption)
+
+                    Text(item.text)
+                      .foregroundColor(.DS.Text.base)
+                      .textStyle(.body)
+                      .lineLimit(nil)
+                      .frame(maxWidth: .infinity, alignment: .topLeading)
+                  }
+                  .multilineTextAlignment(.leading)
+                  .padding(.vertical, .grid(2))
+                }
+              }
+            }
           }
+          .textSelection(.enabled)
           .mask {
             LinearGradient(
               stops: [

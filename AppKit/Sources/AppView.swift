@@ -24,7 +24,7 @@ public struct AppView: View {
             }
           }
         }
-//        ._printChanges(.swiftLog())
+        ._printChanges(.swiftLog())
       #endif
     })
   }
