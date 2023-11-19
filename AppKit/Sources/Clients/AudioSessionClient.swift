@@ -49,22 +49,15 @@ extension AudioSessionClient: DependencyKey {
         switch type {
         case .playback:
           isPlaybackActive.setValue(true)
-          if AVAudioSession.sharedInstance().category != .playAndRecord {
-            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: mode, options: options)
-          }
         case .record:
           isRecordActive.setValue(true)
-          if isPlaybackActive.value {
-            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: mode, options: options)
-          } else {
-            try AVAudioSession.sharedInstance().setCategory(.record, mode: mode, options: options)
-          }
         case .playAndRecord:
           isPlaybackActive.setValue(true)
           isRecordActive.setValue(true)
-          if AVAudioSession.sharedInstance().category != .playAndRecord {
-            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: mode, options: options)
-          }
+        }
+
+        if AVAudioSession.sharedInstance().category != .playAndRecord {
+          try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: mode, options: options)
         }
 
         if updateActivation {
@@ -75,9 +68,6 @@ extension AudioSessionClient: DependencyKey {
         switch type {
         case .playback:
           isPlaybackActive.setValue(false)
-          if AVAudioSession.sharedInstance().category == .playAndRecord {
-            try AVAudioSession.sharedInstance().setCategory(.record, mode: mode, options: options)
-          }
         case .record:
           isRecordActive.setValue(false)
         case .playAndRecord:
