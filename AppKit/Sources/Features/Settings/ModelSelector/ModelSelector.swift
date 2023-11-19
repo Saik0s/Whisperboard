@@ -1,6 +1,6 @@
-
 import ComposableArchitecture
 import Foundation
+import Inject
 import SwiftUI
 
 // MARK: - ModelSelector
@@ -71,4 +71,28 @@ struct ModelSelector: ReducerProtocol {
       ModelRow.State(model: model, isSelected: model.modelType == selected)
     }.identifiedArray
   }
+}
+
+// MARK: - ModelSelectorView
+
+struct ModelSelectorView: View {
+  let store: Store<ModelSelector.State, ModelSelector.Action>
+
+  var body: some View {
+    WithViewStore(store, observe: { $0 }) { viewStore in
+      Form {
+        Section {
+          ForEachStore(store.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
+            ModelRowView(store: modelRowStore)
+          }
+          .listRowBackground(Color.DS.Background.secondary)
+        }
+      }
+      .onAppear { viewStore.send(.reloadSelectedModel) }
+      .alert(store: store.scope(state: \.$alert, action: { .alert($0) }))
+    }
+    .enableInjection()
+  }
+
+  @ObserveInjection var inject
 }

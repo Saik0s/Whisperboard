@@ -208,15 +208,6 @@
       }
     },
     {
-      "identity" : "whisper.spm",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ggerganov/whisper.spm.git",
-      "state" : {
-        "branch" : "master",
-        "revision" : "f5e5cf24caa589f7c8c0196031d1cbb6f6c231ec"
-      }
-    },
-    {
       "identity" : "xctest-dynamic-overlay",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",

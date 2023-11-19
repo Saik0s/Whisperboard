@@ -53,7 +53,7 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
   }
 
   static func createFrom(modelPath: String) async throws -> WhisperContextProtocol {
-    let params = whisper_context_params(use_gpu: true)
+    let params = whisper_context_params(use_gpu: false)
     guard let context = whisper_init_from_file_with_params(modelPath, params) else {
       log.error("Couldn't load model at \(modelPath)")
       throw WhisperError.cantLoadModel

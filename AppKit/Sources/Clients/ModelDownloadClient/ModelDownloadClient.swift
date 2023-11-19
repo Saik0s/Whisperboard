@@ -23,37 +23,25 @@ extension ModelDownloadClient: DependencyKey {
 
     return ModelDownloadClient(
       getModels: {
-        VoiceModelType.allCases.map {
-          let filePath = $0.localURL.path
-          let fileExists = FileManager.default.fileExists(atPath: filePath)
-          let fileSize = (try? FileManager.default.attributesOfItem(atPath: filePath)[.size] as? NSNumber)?.intValue ?? 0
-          let isDownloaded = fileExists && fileSize > 10 * 1024 * 1024
-          if fileExists && !isDownloaded {
-            try? FileManager.default.removeItem(atPath: filePath)
+        VoiceModelType.allCases
+          .map {
+            let filePath = $0.localURL.path
+            let fileExists = FileManager.default.fileExists(atPath: filePath)
+            let fileSize = (try? FileManager.default.attributesOfItem(atPath: filePath)[.size] as? NSNumber)?.intValue ?? 0
+            let isDownloaded = fileExists && fileSize > 10 * 1024 * 1024
+            if fileExists && !isDownloaded {
+              try? FileManager.default.removeItem(atPath: filePath)
+            }
+            return VoiceModel(
+              modelType: $0,
+              downloadProgress: isDownloaded ? 1 : 0
+            )
           }
-          return VoiceModel(
-            modelType: $0,
-            downloadProgress: isDownloaded ? 1 : 0
-          )
-        }
       },
 
       downloadModel: { modelType in
         AsyncStream<DownloadState>(bufferingPolicy: .bufferingNewest(1)) { continuation in
           Task {
-            // ------------------------------------------------------------------
-            // TODO: remove after some time, it is just to clean up old models folder
-            if UserDefaults.standard.bool(forKey: "didCleanUpOldModelsFolder") == false {
-              let oldModelsFolder = try? FileManager.default
-                .url(for: .documentationDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-                .appending(path: "Models")
-              if let oldModelsFolder, FileManager.default.fileExists(atPath: oldModelsFolder.path) {
-                try? FileManager.default.removeItem(at: oldModelsFolder)
-              }
-              UserDefaults.standard.set(true, forKey: "didCleanUpOldModelsFolder")
-            }
-            // ------------------------------------------------------------------
-
             try FileManager.default.createDirectory(at: VoiceModelType.localFolderURL, withIntermediateDirectories: true)
             let destination = modelType.localURL
 
