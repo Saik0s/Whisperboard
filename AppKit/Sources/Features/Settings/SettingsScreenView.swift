@@ -113,12 +113,6 @@ struct ModelSectionView: View {
         ModelSelectorView(store: modelSelectorStore)
       }
       .onAppear { viewStore.send(.modelSelector(.reloadSelectedModel)) }
-
-      SettingsToggleButton(
-        icon: .system(name: "mic.fill", background: .systemRed),
-        title: "Auto Transcription",
-        isOn: viewStore.$settings.isAutoTranscriptionEnabled
-      )
     } header: {
       Text("Transcription")
     } footer: {
@@ -127,6 +121,19 @@ struct ModelSectionView: View {
       The 'medium' model specializes in high-quality slow transcriptions. Larger models consume significant resources \
       and might not perform well on older iOS devices.
       """)
+    }
+    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+
+    Section {
+      SettingsToggleButton(
+        icon: .system(name: "mic.fill", background: .systemRed),
+        title: "Auto-Transcribe Recordings",
+        isOn: viewStore.$settings.isAutoTranscriptionEnabled
+      )
+    } footer: {
+      Text(
+        "Enable this option to automatically transcribe audio recordings as soon as you stop recording. When disabled, you'll need to manually initiate the transcription process for each recording."
+      )
     }
     .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
   }
@@ -148,10 +155,18 @@ struct SpeechSectionView: View {
           set: { viewStore.$settings.voiceLanguage.wrappedValue = viewStore.availableLanguages[$0] }
         )
       )
+    }
+    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+
+    Section {
       SettingsToggleButton(
         icon: .system(name: "waveform.path.ecg", background: .systemPurple),
-        title: "Mix with Other Audio",
+        title: "Allow Background Audio",
         isOn: viewStore.$settings.shouldMixWithOtherAudio
+      )
+    } footer: {
+      Text(
+        "Turn this on to allow background audio from other apps to continue playing while you record. This app will lower the volume of other audio sources (ducking) during recording. Turn off to ensure other apps are paused and only your recording is captured."
       )
     }
     .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)

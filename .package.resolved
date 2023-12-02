@@ -1,57 +1,12 @@
 {
   "pins" : [
     {
-      "identity" : "hotreloading",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/johnno1962/HotReloading.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "72c6a366bc4550076e4677a7f62fffdb4699a41a"
-      }
-    },
-    {
-      "identity" : "remote",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/johnno1962/Remote",
-      "state" : {
-        "revision" : "2a03313297a15f31b354dbf2b40c62ca9630b0a1",
-        "version" : "2.3.5"
-      }
-    },
-    {
-      "identity" : "swiftregex5",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/johnno1962/SwiftRegex5",
-      "state" : {
-        "revision" : "8ecb4a8570757b7f8bce72f82242742e13891f99",
-        "version" : "5.2.3"
-      }
-    },
-    {
-      "identity" : "swifttrace",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/johnno1962/SwiftTrace",
-      "state" : {
-        "revision" : "e9e20db9780a90d0cd22be0cff43de54934e9ad7",
-        "version" : "8.4.6"
-      }
-    },
-    {
       "identity" : "whisper.cpp",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ggerganov/whisper.cpp.git",
       "state" : {
         "branch" : "master",
         "revision" : "e2f0eba2d4dbe4ded5625cbd8a9c17e13f2482f6"
-      }
-    },
-    {
-      "identity" : "xprobeplugin",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/johnno1962/XprobePlugin",
-      "state" : {
-        "revision" : "0b1a95a24433c4f679e126d917dcf3e3e52f4814",
-        "version" : "2.9.4"
       }
     }
   ],
