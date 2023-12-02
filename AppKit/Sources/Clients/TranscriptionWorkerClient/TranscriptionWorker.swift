@@ -103,7 +103,8 @@ final class TranscriptionWorkerImpl: TranscriptionWorker {
 
   func registerForProcessingTask() {
     BGTaskScheduler.shared.register(forTaskWithIdentifier: processingTaskIdentifier, using: nil) { task in
-      self.handleBGProcessingTask(bgTask: task as! BGProcessingTask)
+      guard let task = task as? BGProcessingTask else { return }
+      self.handleBGProcessingTask(bgTask: task)
     }
   }
 

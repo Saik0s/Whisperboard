@@ -221,11 +221,11 @@ extension Transcription.Status {
     case .loading:
       return "Loading model..."
     case let .uploading(progress):
-      return "Uploading... \(Int(progress * 100))%"
+      return "Uploading... \(String(format: "%.0f", progress * 100))%"
     case let .error(message: message):
       return message
     case let .progress(progress):
-      return "Transcribing... \(Int(progress * 100))%"
+      return "Transcribing... \(String(format: "%.0f", progress * 100))%"
     case .done:
       return "Done"
     case .canceled:
