@@ -8,9 +8,7 @@ import SwiftUI
 // MARK: - AppView
 
 public struct AppView: View {
-  public init() {
-    appSetup()
-  }
+  public init() {}
 
   public var body: some View {
     RootView(store: Store(initialState: Root.State()) {
@@ -30,7 +28,7 @@ public struct AppView: View {
   }
 }
 
-func appSetup() {
+public func appSetup() {
   @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
   transcriptionWorker.registerForProcessingTask()
 
