@@ -50,7 +50,7 @@ extension AudioRecorderClient: DependencyKey {
       removeCurrentRecording: { await audioRecorder.removeCurrentRecording() },
       availableMicrophones: { try await audioRecorder.availableMicrophones() },
       setMicrophone: { microphone in try await audioRecorder.setMicrophone(microphone) },
-      currentMicrophone: { try await audioRecorder.currentMicrophone() }
+      currentMicrophone: { await audioRecorder.currentMicrophone() }
     )
   }
 }
@@ -74,22 +74,7 @@ private actor AudioRecorder {
   var recorder: AVAudioRecorder?
   let recordingStateSubject = ReplaySubject<RecordingState, Never>(1)
   var task: Task<Void, Error>?
-
-  var microphones: [Microphone] {
-    AVAudioSession.sharedInstance().availableInputs?.map(Microphone.init) ?? []
-  }
-
-  var selectedMicrophone: Microphone? {
-    get {
-      guard let id = UserDefaults.standard.string(forKey: #function), let mic = microphones.first(where: { $0.id == id }) else {
-        return AVAudioSession.sharedInstance().currentRoute.inputs.first.map(Microphone.init) ?? microphones.first
-      }
-      return mic
-    }
-    set {
-      UserDefaults.standard.set(newValue?.id, forKey: #function)
-    }
-  }
+  var isInterrupted = false
 
   @Dependency(\.audioSession) var audioSession: AudioSessionClient
 
@@ -103,6 +88,12 @@ private actor AudioRecorder {
       log.info("encodeErrorDidOccur: \(error?.localizedDescription ?? "nil")")
       try? audioSession.disable(.record, true)
       recordingStateSubject.send(.error(error?.equatable ?? AudioRecorderError.somethingWrong.equatable))
+    },
+    interruptionOccurred: { [weak self, audioSession, recordingStateSubject] type, userInfo in
+      log.info("interruptionOccurred: \(type)")
+      Task { [weak self] in
+        await self?.processInterruption(type: type, userInfo: userInfo)
+      }
     }
   )
 
@@ -111,11 +102,7 @@ private actor AudioRecorder {
   }
 
   func requestPermission() async -> Bool {
-    await withUnsafeContinuation { continuation in
-      AVAudioSession.sharedInstance().requestRecordPermission { granted in
-        continuation.resume(returning: granted)
-      }
-    }
+    await audioSession.requestRecordPermission()
   }
 
   func stop() {
@@ -135,7 +122,6 @@ private actor AudioRecorder {
 
     do {
       try audioSession.enable(.record, true)
-      try AVAudioSession.sharedInstance().setPreferredInput(selectedMicrophone?.port)
       let recorder = try AVAudioRecorder(url: url, settings: AudioRecorderSettings.whisper)
       self.recorder = recorder
       recorder.delegate = delegate
@@ -157,6 +143,7 @@ private actor AudioRecorder {
   func pause() {
     log.info("pause")
     recorder?.pause()
+    recordingStateSubject.send(.paused)
   }
 
   func `continue`() {
@@ -172,36 +159,17 @@ private actor AudioRecorder {
     recorder = nil
   }
 
-  func availableMicrophones() async throws -> AsyncStream<[Microphone]> {
-    let updateStream = AsyncStream<[Microphone]>(
-      NotificationCenter.default
-        .notifications(named: AVAudioSession.routeChangeNotification)
-        .map { _ -> [Microphone] in
-          AVAudioSession.sharedInstance().availableInputs?.map(Microphone.init) ?? []
-        }
-    )
-
-    try audioSession.enable(.record, false)
-
-    return AsyncStream([Microphone].self) { continuation in
-      continuation.yield(microphones)
-
-      Task {
-        for await microphones in updateStream {
-          continuation.yield(microphones)
-        }
-      }
-    }
+  func availableMicrophones() throws -> AsyncStream<[Microphone]> {
+    try audioSession.availableMicrophones()
   }
 
-  func setMicrophone(_ microphone: Microphone) async throws {
+  func setMicrophone(_ microphone: Microphone) throws {
     log.info("microphone: \(microphone)")
-    selectedMicrophone = microphone
-    try AVAudioSession.sharedInstance().setPreferredInput(microphone.port)
+    try audioSession.selectMicrophone(microphone)
   }
 
-  func currentMicrophone() async throws -> Microphone? {
-    AVAudioSession.sharedInstance().currentRoute.inputs.first.map(Microphone.init) ?? selectedMicrophone
+  func currentMicrophone() -> Microphone? {
+    audioSession.currentMicrophone()
   }
 
   private func updateMeters() async {
@@ -218,6 +186,22 @@ private actor AudioRecorder {
       power: recorder.averagePower(forChannel: 0)
     ))
   }
+
+  private func processInterruption(type: AVAudioSession.InterruptionType, userInfo: [AnyHashable: Any]) {
+    if type == .began {
+      if recorder?.isRecording == true {
+        pause()
+        isInterrupted = true
+      }
+    } else if type == .ended {
+      guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
+      let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+      if options.contains(.shouldResume), isInterrupted {
+        `continue`()
+      }
+      isInterrupted = false
+    }
+  }
 }
 
 // MARK: - Delegate
@@ -225,13 +209,18 @@ private actor AudioRecorder {
 private final class Delegate: NSObject, AVAudioRecorderDelegate, Sendable {
   let didFinishRecording: @Sendable (_ successfully: Bool) -> Void
   let encodeErrorDidOccur: @Sendable (Error?) -> Void
+  let interruptionOccurred: @Sendable (AVAudioSession.InterruptionType, [AnyHashable: Any]) -> Void
 
   init(
     didFinishRecording: @escaping @Sendable (Bool) -> Void,
-    encodeErrorDidOccur: @escaping @Sendable (Error?) -> Void
+    encodeErrorDidOccur: @escaping @Sendable (Error?) -> Void,
+    interruptionOccurred: @escaping @Sendable (AVAudioSession.InterruptionType, [AnyHashable: Any]) -> Void
   ) {
     self.didFinishRecording = didFinishRecording
     self.encodeErrorDidOccur = encodeErrorDidOccur
+    self.interruptionOccurred = interruptionOccurred
+    super.init()
+    NotificationCenter.default.addObserver(self, selector: #selector(handleInterruption), name: AVAudioSession.interruptionNotification, object: nil)
   }
 
   func audioRecorderDidFinishRecording(_: AVAudioRecorder, successfully flag: Bool) {
@@ -240,5 +229,16 @@ private final class Delegate: NSObject, AVAudioRecorderDelegate, Sendable {
 
   func audioRecorderEncodeErrorDidOccur(_: AVAudioRecorder, error: Error?) {
     encodeErrorDidOccur(error)
+  }
+
+  @objc
+  private func handleInterruption(notification: Notification) {
+    guard let info = notification.userInfo,
+          let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+          let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+      return
+    }
+
+    interruptionOccurred(type, info)
   }
 }

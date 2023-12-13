@@ -16,6 +16,10 @@ enum AudioSessionType {
 struct AudioSessionClient {
   var enable: @Sendable (_ type: AudioSessionType, _ updateActivation: Bool) throws -> Void
   var disable: @Sendable (_ type: AudioSessionType, _ updateActivation: Bool) throws -> Void
+  var requestRecordPermission: @Sendable () async -> Bool
+  var availableMicrophones: @Sendable () throws -> AsyncStream<[Microphone]>
+  var currentMicrophone: @Sendable () -> Microphone?
+  var selectMicrophone: @Sendable (Microphone) throws -> Void
 }
 
 extension DependencyValues {
@@ -32,15 +36,35 @@ extension AudioSessionClient: DependencyKey {
     let isPlaybackActive = LockIsolated(false)
     let isRecordActive = LockIsolated(false)
 
-    var mode: AVAudioSession.Mode {
-      .voiceChat
+    var session: AVAudioSession { AVAudioSession.sharedInstance() }
+
+    var microphones: [Microphone] {
+      session.availableInputs?.map(Microphone.init) ?? []
     }
+
+    @Sendable
+    func getSelectedMicrophone() -> Microphone? {
+      guard let id = UserDefaults.standard.selectedMicrophoneId else {
+        return session.currentRoute.inputs.first.map(Microphone.init) ?? microphones.first
+      }
+      return microphones.first(where: { $0.id == id })
+    }
+
+    @Sendable
+    func setSelectedMicrophone(_ microphone: Microphone) {
+      UserDefaults.standard.selectedMicrophoneId = microphone.id
+    }
+
+    var mode: AVAudioSession.Mode {
+      .default
+    }
+
     var options: AVAudioSession.CategoryOptions {
       @Dependency(\.settings) var settings: SettingsClient
       let shouldMixWithOthers = settings.getSettings().shouldMixWithOtherAudio
       let options: AVAudioSession.CategoryOptions = shouldMixWithOthers
-        ? [.allowBluetooth, .mixWithOthers, .duckOthers]
-        : [.allowBluetooth]
+        ? [.allowBluetooth, .mixWithOthers, .duckOthers, .defaultToSpeaker]
+        : [.allowBluetooth, .defaultToSpeaker]
       return options
     }
 
@@ -56,14 +80,23 @@ extension AudioSessionClient: DependencyKey {
           isRecordActive.setValue(true)
         }
 
-        if AVAudioSession.sharedInstance().category != .playAndRecord
-          || AVAudioSession.sharedInstance().mode != mode
-          || AVAudioSession.sharedInstance().categoryOptions != options {
-          try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: mode, options: options)
+        if session.category != .playAndRecord
+          || session.mode != mode
+          || session.categoryOptions != options {
+          try session.setCategory(.playAndRecord, mode: mode, options: options)
         }
 
         if updateActivation {
-          try AVAudioSession.sharedInstance().setActive(true)
+          let mic = getSelectedMicrophone()
+          if mic?.isBuiltIn ?? false {
+            var modifiedOptions = options
+            modifiedOptions.remove(.allowBluetooth)
+            modifiedOptions.insert(.allowBluetoothA2DP)
+            try session.setCategory(.playAndRecord, mode: mode, options: modifiedOptions)
+          }
+
+          try session.setActive(true)
+          try session.setPreferredInput(mic?.port)
         }
       },
       disable: { type, updateActivation in
@@ -72,15 +105,64 @@ extension AudioSessionClient: DependencyKey {
           isPlaybackActive.setValue(false)
         case .record:
           isRecordActive.setValue(false)
+          if session.category != .playAndRecord
+            || session.mode != mode
+            || session.categoryOptions != options {
+            try session.setCategory(.playAndRecord, mode: mode, options: options)
+          }
         case .playAndRecord:
           isPlaybackActive.setValue(false)
           isRecordActive.setValue(false)
         }
 
         if updateActivation && (!isPlaybackActive.value && !isRecordActive.value) {
-          try AVAudioSession.sharedInstance().setActive(false)
+          try session.setActive(false)
+        }
+      },
+      requestRecordPermission: {
+        await withUnsafeContinuation { continuation in
+          session.requestRecordPermission { granted in
+            continuation.resume(returning: granted)
+          }
+        }
+      },
+      availableMicrophones: {
+        let updateStream = AsyncStream<[Microphone]>(
+          NotificationCenter.default
+            .notifications(named: AVAudioSession.routeChangeNotification)
+            .map { _ -> [Microphone] in
+              AVAudioSession.sharedInstance().availableInputs?.map(Microphone.init) ?? []
+            }
+        )
+
+        try session.setCategory(.playAndRecord, mode: mode, options: options)
+
+        return AsyncStream([Microphone].self) { continuation in
+          continuation.yield(microphones)
+
+          Task {
+            for await microphones in updateStream {
+              continuation.yield(microphones)
+            }
+          }
+        }
+      },
+      currentMicrophone: {
+        AVAudioSession.sharedInstance().currentRoute.inputs.first.map(Microphone.init) ?? getSelectedMicrophone()
+      },
+      selectMicrophone: { microphone in
+        setSelectedMicrophone(microphone)
+        if isRecordActive.value {
+          try AVAudioSession.sharedInstance().setPreferredInput(microphone.port)
         }
       }
     )
   }()
+}
+
+private extension UserDefaults {
+  var selectedMicrophoneId: String? {
+    get { string(forKey: #function) }
+    set { set(newValue, forKey: #function) }
+  }
 }
