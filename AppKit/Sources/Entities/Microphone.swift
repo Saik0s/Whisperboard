@@ -6,6 +6,10 @@ struct Microphone: Hashable, Identifiable {
   var id: String { port.uid }
 
   var port: AVAudioSessionPortDescription
+
+  var isBuiltIn: Bool {
+    port.portType == .builtInMic
+  }
 }
 
 extension Microphone {
