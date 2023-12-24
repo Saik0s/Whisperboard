@@ -3,6 +3,7 @@ import Combine
 import ComposableArchitecture
 import Dependencies
 import DynamicColor
+import RollbarNotifier
 import SwiftUI
 
 // MARK: - AppView
@@ -29,6 +30,11 @@ public struct AppView: View {
 }
 
 public func appSetup() {
+  #if APPSTORE
+    let config = RollbarConfig.mutableConfig(withAccessToken: Secrets.ROLLBAR_ACCESS_TOKEN)
+    Rollbar.initWithConfiguration(config)
+  #endif
+
   @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
   transcriptionWorker.registerForProcessingTask()
 

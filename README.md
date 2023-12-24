@@ -37,7 +37,7 @@
 ## Future Plans
 
 - [ ] Optimize the transcription process by eliminating silent portions of audio, which can reduce the processing time and improve overall efficiency.
-- [ ] Implement resumable transcription so that users can continue transcribing after the app has been terminated during the transcription process.
+- [x] Implement resumable transcription so that users can continue transcribing after the app has been terminated during the transcription process.
 - [ ] Provide an estimated time remaining for the transcription to complete, helping users plan accordingly.
 - [ ] Implement real-time transcription using smaller, more efficient models, offering users faster results.
 

@@ -54,6 +54,7 @@ func appKitTarget() -> Target {
       .external(name: "Lottie"),
 
       .package(product: "whisper"),
+      .package(product: "RollbarNotifier"),
     ],
     settings: .settings(
       base: projectSettings,
@@ -91,6 +92,7 @@ let project = Project(
   ),
   packages: [
     .remote(url: "https://github.com/ggerganov/whisper.cpp.git", requirement: .branch("master")),
+    .package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0"),
   ],
   targets: [
     appKitTarget(),
