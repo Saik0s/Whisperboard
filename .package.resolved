@@ -1,6 +1,33 @@
 {
   "pins" : [
     {
+      "identity" : "cocoalumberjack",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/CocoaLumberjack/CocoaLumberjack.git",
+      "state" : {
+        "revision" : "363ed23d19a931809ea834a7d722da830353806a",
+        "version" : "3.8.2"
+      }
+    },
+    {
+      "identity" : "rollbar-apple",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/rollbar/rollbar-apple",
+      "state" : {
+        "revision" : "c2b6a51b90694953734882146e0d566bbca25c09",
+        "version" : "3.2.0"
+      }
+    },
+    {
+      "identity" : "swift-log",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-log.git",
+      "state" : {
+        "revision" : "532d8b529501fb73a2455b179e0bbb6d49b652ed",
+        "version" : "1.5.3"
+      }
+    },
+    {
       "identity" : "whisper.cpp",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ggerganov/whisper.cpp.git",
