@@ -11,9 +11,18 @@ import whisper
 
 // MARK: - WhisperError
 
-enum WhisperError: Error {
+enum WhisperError: Error, LocalizedError {
   case cantLoadModel
   case noSamples
+
+  var errorDescription: String? {
+    switch self {
+    case .cantLoadModel:
+      return "Can't load model"
+    case .noSamples:
+      return "No samples"
+    }
+  }
 }
 
 // MARK: - WhisperAction
@@ -51,8 +60,9 @@ actor WhisperContext: Identifiable, WhisperContextProtocol {
     whisper_free(context)
   }
 
-  static func createFrom(modelPath: String) async throws -> WhisperContextProtocol {
+  static func createFrom(modelPath: String, useGPU: Bool) async throws -> WhisperContextProtocol {
     var params = whisper_context_default_params()
+    params.use_gpu = useGPU
     #if targetEnvironment(simulator)
       params.use_gpu = false
       print("Running on the simulator, using CPU")
