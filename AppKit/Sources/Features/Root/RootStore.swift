@@ -96,18 +96,18 @@ struct Root: ReducerProtocol {
       Reduce { _, action in
         switch action {
         case let .recordingListScreen(.details(action: .presented(.recordingCard(.delegate(.didTapTranscribe(recording)))))),
-          let .recordingListScreen(.recordingCard(
-            _,
-            .delegate(.didTapTranscribe(recording))
-          )):
+             let .recordingListScreen(.recordingCard(
+               _,
+               .delegate(.didTapTranscribe(recording))
+             )):
           enqueueTranscriptionTask(recording: recording)
           return .none
 
         case let .recordingListScreen(.details(action: .presented(.recordingCard(.delegate(.didTapResume(recording)))))),
-          let .recordingListScreen(.recordingCard(
-            _,
-            .delegate(.didTapResume(recording))
-          )):
+             let .recordingListScreen(.recordingCard(
+               _,
+               .delegate(.didTapResume(recording))
+             )):
           if let transcription = recording.lastTranscription, case let .paused(task) = transcription.status {
             resumeTranscriptionTask(task: task)
           }

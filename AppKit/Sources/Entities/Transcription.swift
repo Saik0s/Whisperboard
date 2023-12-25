@@ -179,113 +179,113 @@ extension Transcription.Status {
 }
 
 #if DEBUG
-extension Transcription {
-  static let mock1 = Transcription(
-    id: UUID(),
-    fileName: "test1",
-    startDate: Date(),
-    segments: [
-      Segment(
-        startTime: 0,
-        endTime: 0,
-        text: "This is a random sentence.",
-        tokens: [
-          Token(
-            id: 0,
-            index: 0,
-            text: "This is a random sentence.",
-            data: TokenData(
+  extension Transcription {
+    static let mock1 = Transcription(
+      id: UUID(),
+      fileName: "test1",
+      startDate: Date(),
+      segments: [
+        Segment(
+          startTime: 0,
+          endTime: 0,
+          text: "This is a random sentence.",
+          tokens: [
+            Token(
               id: 0,
-              tid: 0,
-              probability: 0,
-              logProbability: 0,
-              timestampProbability: 0,
-              sumTimestampProbabilities: 0,
-              startTime: 0,
-              endTime: 0,
-              voiceLength: 0
+              index: 0,
+              text: "This is a random sentence.",
+              data: TokenData(
+                id: 0,
+                tid: 0,
+                probability: 0,
+                logProbability: 0,
+                timestampProbability: 0,
+                sumTimestampProbabilities: 0,
+                startTime: 0,
+                endTime: 0,
+                voiceLength: 0
+              ),
+              speaker: nil
             ),
-            speaker: nil
-          ),
-        ],
-        speaker: nil
-      ),
-    ],
-    parameters: TranscriptionParameters(),
-    model: .tiny,
-    status: .done(Date())
-  )
+          ],
+          speaker: nil
+        ),
+      ],
+      parameters: TranscriptionParameters(),
+      model: .tiny,
+      status: .done(Date())
+    )
 
-  static let mock2 = Transcription(
-    id: UUID(),
-    fileName: "test2",
-    startDate: Date(),
-    segments: [
-      Segment(
-        startTime: 0,
-        endTime: 0,
-        text: "This is another random sentence. Here is a second sentence.",
-        tokens: [
-          Token(
-            id: 0,
-            index: 0,
-            text: "This is another random sentence. Here is a second sentence.",
-            data: TokenData(
+    static let mock2 = Transcription(
+      id: UUID(),
+      fileName: "test2",
+      startDate: Date(),
+      segments: [
+        Segment(
+          startTime: 0,
+          endTime: 0,
+          text: "This is another random sentence. Here is a second sentence.",
+          tokens: [
+            Token(
               id: 0,
-              tid: 0,
-              probability: 0,
-              logProbability: 0,
-              timestampProbability: 0,
-              sumTimestampProbabilities: 0,
-              startTime: 0,
-              endTime: 0,
-              voiceLength: 0
+              index: 0,
+              text: "This is another random sentence. Here is a second sentence.",
+              data: TokenData(
+                id: 0,
+                tid: 0,
+                probability: 0,
+                logProbability: 0,
+                timestampProbability: 0,
+                sumTimestampProbabilities: 0,
+                startTime: 0,
+                endTime: 0,
+                voiceLength: 0
+              ),
+              speaker: nil
             ),
-            speaker: nil
-          ),
-        ],
-        speaker: nil
-      ),
-    ],
-    parameters: TranscriptionParameters(),
-    model: .tiny,
-    status: .done(Date())
-  )
+          ],
+          speaker: nil
+        ),
+      ],
+      parameters: TranscriptionParameters(),
+      model: .tiny,
+      status: .done(Date())
+    )
 
-  static let mock3 = Transcription(
-    id: UUID(),
-    fileName: "test3",
-    startDate: Date(),
-    segments: [
-      Segment(
-        startTime: 0,
-        endTime: 0,
-        text: "Here is a random sentence. This is a second sentence. And a third one.",
-        tokens: [
-          Token(
-            id: 0,
-            index: 0,
-            text: "Here is a random sentence. This is a second sentence. And a third one.",
-            data: TokenData(
+    static let mock3 = Transcription(
+      id: UUID(),
+      fileName: "test3",
+      startDate: Date(),
+      segments: [
+        Segment(
+          startTime: 0,
+          endTime: 0,
+          text: "Here is a random sentence. This is a second sentence. And a third one.",
+          tokens: [
+            Token(
               id: 0,
-              tid: 0,
-              probability: 0,
-              logProbability: 0,
-              timestampProbability: 0,
-              sumTimestampProbabilities: 0,
-              startTime: 0,
-              endTime: 0,
-              voiceLength: 0
+              index: 0,
+              text: "Here is a random sentence. This is a second sentence. And a third one.",
+              data: TokenData(
+                id: 0,
+                tid: 0,
+                probability: 0,
+                logProbability: 0,
+                timestampProbability: 0,
+                sumTimestampProbabilities: 0,
+                startTime: 0,
+                endTime: 0,
+                voiceLength: 0
+              ),
+              speaker: nil
             ),
-            speaker: nil
-          ),
-        ],
-        speaker: nil
-      ),
-    ],
-    parameters: TranscriptionParameters(),
-    model: .tiny,
-    status: .done(Date())
-  )
-}
+          ],
+          speaker: nil
+        ),
+      ],
+      parameters: TranscriptionParameters(),
+      model: .tiny,
+      status: .done(Date())
+    )
+  }
 #endif
