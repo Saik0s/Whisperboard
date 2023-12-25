@@ -117,6 +117,22 @@ struct RecordingCardView: View {
                 }.tertiaryButtonStyle()
               }
               .padding(.grid(2))
+            } else if viewStore.recording.isPaused {
+              VStack(spacing: .grid(1)) {
+                Text(viewStore.recording.lastTranscription?.status.message ?? "")
+                  .textStyle(.body)
+
+                HStack {
+                  Button("Resume") {
+                    viewStore.send(.resumeTapped)
+                  }.tertiaryButtonStyle()
+
+                  Button("Start Over") {
+                    viewStore.send(.transcribeTapped)
+                  }.tertiaryButtonStyle()
+                }
+              }
+              .padding(.grid(2))
             } else if !viewStore.recording.isTranscribed {
               VStack(spacing: .grid(1)) {
                 if let error = viewStore.recording.lastTranscriptionErrorMessage {

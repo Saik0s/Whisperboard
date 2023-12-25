@@ -66,7 +66,7 @@ struct TranscriptionParameters: Hashable, Codable {
     suppressNonSpeechTokens: Bool = false,
     temperature: Float = 0.0,
     temperatureIncrease: Float = 0.4,
-    threadCount: Int = min(4, Int(ProcessInfo.processInfo.activeProcessorCount)),
+    threadCount: Int = max(1, min(8, ProcessInfo.processInfo.activeProcessorCount - 2)),
     timestampTokenProbabilityThreshold: Float = 0.01,
     timestampTokenSumProbabilityThreshold: Float = 0.01
   ) {

@@ -19,6 +19,7 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
   var lastTranscription: Transcription? { transcriptionHistory.last }
   var isTranscribed: Bool { lastTranscription?.status.isDone == true }
   var isTranscribing: Bool { lastTranscription?.status.isLoadingOrProgress == true }
+  var isPaused: Bool { lastTranscription?.status.isPaused == true }
   var lastTranscriptionErrorMessage: String? { lastTranscription?.status.errorMessage }
 
   // FIXME: This is a hack

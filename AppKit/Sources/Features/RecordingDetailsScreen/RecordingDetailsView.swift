@@ -98,7 +98,8 @@ struct RecordingDetailsView: View {
           .frame(maxWidth: .infinity, alignment: .leading)
 
         if viewStore.recordingCard.recording.isTranscribed == false
-          && !viewStore.recordingCard.recording.isTranscribing {
+          && !viewStore.recordingCard.recording.isTranscribing 
+          && !viewStore.recordingCard.recording.isPaused {
           if let error = viewStore.recordingCard.recording.lastTranscriptionErrorMessage {
             Text("Last transcription failed")
               .textStyle(.error)
@@ -166,6 +167,21 @@ struct RecordingDetailsView: View {
                 viewStore.send(.recordingCard(action: .cancelTranscriptionTapped))
               }.tertiaryButtonStyle()
             }
+          } else if viewStore.recordingCard.recording.isPaused {
+              VStack(spacing: .grid(1)) {
+                Text(viewStore.recordingCard.recording.lastTranscription?.status.message ?? "")
+                  .textStyle(.body)
+
+                HStack {
+                  Button("Resume") {
+                    viewStore.send(.recordingCard(action: .resumeTapped))
+                  }.tertiaryButtonStyle()
+
+                  Button("Start Over") {
+                    viewStore.send(.recordingCard(action: .transcribeTapped))
+                  }.tertiaryButtonStyle()
+                }
+              }
           }
 
           ScrollView {
@@ -184,9 +200,11 @@ struct RecordingDetailsView: View {
               LazyVStack {
                 ForEach(viewStore.timeline) { item in
                   VStack(alignment: .leading, spacing: .grid(1)) {
-                    Text("[\(item.startTime.formatted(.time(pattern: .hourMinuteSecond(padHourToLength: 2, fractionalSecondsLength: 2)))) - \(item.endTime.formatted(.time(pattern: .hourMinuteSecond(padHourToLength: 2, fractionalSecondsLength: 2))))]")
-                      .foregroundColor(.DS.Text.subdued)
-                      .textStyle(.caption)
+                    Text(
+                      "[\(item.startTime.formatted(.time(pattern: .hourMinuteSecond(padHourToLength: 2, fractionalSecondsLength: 2)))) - \(item.endTime.formatted(.time(pattern: .hourMinuteSecond(padHourToLength: 2, fractionalSecondsLength: 2))))]"
+                    )
+                    .foregroundColor(.DS.Text.subdued)
+                    .textStyle(.caption)
 
                     Text(item.text)
                       .foregroundColor(.DS.Text.base)

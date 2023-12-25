@@ -118,4 +118,11 @@ extension ContextDataStore.Container {
       actionChannel.finish()
     }
   }
+
+  func failed(_ error: Error) {
+    Task {
+      await actionChannel.send(.error(error))
+      actionChannel.finish()
+    }
+  }
 }

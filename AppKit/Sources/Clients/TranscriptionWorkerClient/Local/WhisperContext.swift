@@ -29,17 +29,16 @@ enum WhisperAction {
 // MARK: - WhisperContextProtocol
 
 protocol WhisperContextProtocol {
-  func fullTranscribe(samples: [Float], params: TranscriptionParameters) async throws -> AsyncChannel<WhisperAction>
-  func cancel() -> Void
+  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) async throws -> AsyncChannel<WhisperAction>
+  func cancel() async -> Void
 }
 
 // MARK: - WhisperContext
 
-final class WhisperContext: Identifiable, WhisperContextProtocol {
+actor WhisperContext: Identifiable, WhisperContextProtocol {
   static let referenceStore = ContextDataStore()
 
   let id: Int = .random(in: 0 ..< Int.max)
-  private(set) var inProgress = false
 
   private var context: OpaquePointer
 
@@ -53,7 +52,11 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
   }
 
   static func createFrom(modelPath: String) async throws -> WhisperContextProtocol {
-    let params = whisper_context_params(use_gpu: false)
+    var params = whisper_context_default_params()
+    #if targetEnvironment(simulator)
+      params.use_gpu = false
+      print("Running on the simulator, using CPU")
+    #endif
     guard let context = whisper_init_from_file_with_params(modelPath, params) else {
       log.error("Couldn't load model at \(modelPath)")
       throw WhisperError.cantLoadModel
@@ -62,12 +65,7 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
     return WhisperContext(context: context)
   }
 
-  func fullTranscribe(samples: [Float], params: TranscriptionParameters) async throws -> AsyncChannel<WhisperAction> {
-    guard !samples.isEmpty else {
-      throw WhisperError.noSamples
-    }
-    inProgress = true
-
+  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) async throws -> AsyncChannel<WhisperAction> {
     let container = WhisperContext.referenceStore.createContainerWith(id: id)
 
     var fullParams = toWhisperParams(params)
@@ -96,22 +94,50 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
       return !container.isCancelled
     }
 
-    Task.detached(priority: .userInitiated) { [weak self, fullParams] in
-      guard let self else { return }
-      defer { self.inProgress = false }
+    Task.detached(priority: .userInitiated) { [container, context, fullParams] in
+      do {
+        let samples = try decodeWaveFile(audioFileURL)
 
-      whisper_full(context, fullParams, samples, Int32(samples.count))
+        let freeMemory = freeMemoryAmount()
+        log.info("Free system memory available: \(freeMemory) bytes")
 
-      let container = WhisperContext.referenceStore[id]
-      let segments = extractSegments(context: context)
+        // Calculate the size of samples in bytes
+        let sampleSize = UInt64(MemoryLayout<Float>.size * samples.count)
+        log.info("Size of samples: \(sampleSize) bytes")
 
-      // Not the best solution, but it works
-      try? await Task.sleep(for: .seconds(0.3))
+        // Calculate the memory that can be used for processing
+        let usableMemory = freeMemory > sampleSize ? freeMemory - sampleSize : 0
+        log.info("Usable memory for processing: \(usableMemory) bytes")
 
-      if container?.isCancelled == true {
-        container?.doneCancelling()
-      } else {
-        container?.finish(segments)
+        // Calculate the number of threads based on usable memory and sample size
+        let numberOfThreads = usableMemory > 0 ? Int32(usableMemory / sampleSize) + 1 : 1
+        log.info("Calculated number of threads: \(numberOfThreads)")
+
+        // Update parameters with the calculated number of threads if it is less than the current number of threads
+        var fullParams = fullParams
+        if numberOfThreads < fullParams.n_threads {
+          log.info("Adjusting number of threads from \(fullParams.n_threads) to \(numberOfThreads)")
+          fullParams.n_threads = numberOfThreads
+        }
+
+        let code = samples.withUnsafeBufferPointer { [context] samples in
+          whisper_full(context, fullParams, samples.baseAddress, Int32(samples.count))
+        }
+
+        print("Whisper result code: \(code)")
+
+        let segments = extractSegments(context: context)
+
+        // Not the best solution, but it works
+        try? await Task.sleep(for: .seconds(0.3))
+
+        if container.isCancelled == true {
+          container.doneCancelling()
+        } else {
+          container.finish(segments)
+        }
+      } catch {
+        container.failed(error)
       }
     }
 
@@ -137,4 +163,15 @@ private extension Int {
     pointer.pointee = self
     return UnsafeMutableRawPointer(pointer)
   }
+}
+
+private func decodeWaveFile(_ url: URL) throws -> [Float] {
+  let data = try Data(contentsOf: url)
+  let floats = stride(from: 44, to: data.count, by: 2).map {
+    data[$0 ..< $0 + 2].withUnsafeBytes {
+      let short = Int16(littleEndian: $0.load(as: Int16.self))
+      return max(-1.0, min(Float(short) / 32767.0, 1.0))
+    }
+  }
+  return floats
 }

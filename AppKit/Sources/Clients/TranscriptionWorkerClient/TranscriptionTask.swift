@@ -3,7 +3,7 @@ import Foundation
 
 // MARK: - TranscriptionTask
 
-struct TranscriptionTask: Identifiable, Codable, Equatable, Then {
+struct TranscriptionTask: Identifiable, Codable, Hashable, Then {
   var id = UUID()
   var fileName: String
   var duration: Int64
