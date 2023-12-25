@@ -3,10 +3,10 @@
     <img src="App/Resources/Assets.xcassets/AppIcon.appiconset/ios-marketing.png" width="80">
   </a>
 
-  <h3 align="center">Whisperboard</h3>
+  <h3 align="center">WhisperBoard</h3>
 
   <p align="center">
-    An iOS app for recording and transcribing audio on the go, based on OpenAI's Whisper model.
+Welcome to WhisperBoard, the open-source iOS app that's making quality voice transcription more accessible on mobile devices. Built with the power of OpenAI's Whisper model, WhisperBoard is your go-to tool for capturing thoughts, meetings, and conversations with unparalleled accuracy.
   </p>
 </div>
 <hr />
@@ -26,20 +26,18 @@
     <img src="https://img.shields.io/badge/Powered%20by-Tuist-blue" alt="Powered by Tuist">
 </p>
 
-## Features
+## 🎙️ Features That Speak Volumes
 
-- Easy-to-use voice recording and playback
-- Transcription of recorded audio using Whisper from OpenAI
-- Import and export audio files
-- Select microphone for recording
-- Model selection screen with the ability to download any Whisper model
+- **Simplicity at Your Fingertips**: Start recording with a single tap and play back your audio with ease.
+- **Transcription Magic**: Powered by OpenAI's Whisper, your audio is transcribed with cutting-edge technology.
+- **Audio File Mastery**: Import your existing audio files or export new ones for seamless sharing and editing.
+- **Mic Check**: Choose your preferred microphone to ensure the best sound quality for your recordings.
+- **Model Flexibility**: Browse and download any Whisper model directly from the app to tailor your transcription experience.
 
-## Future Plans
+## 🚀 On the Horizon
 
-- [ ] Optimize the transcription process by eliminating silent portions of audio, which can reduce the processing time and improve overall efficiency.
-- [x] Implement resumable transcription so that users can continue transcribing after the app has been terminated during the transcription process.
-- [ ] Provide an estimated time remaining for the transcription to complete, helping users plan accordingly.
-- [ ] Implement real-time transcription using smaller, more efficient models, offering users faster results.
+- [x] **Continue where left**: With resumable transcription, you can pick up right where you left off, even if the app closes.
+- [ ] **Instant text**: Real-time transcription is on our roadmap, aiming to give you immediate results with smaller, faster models.
 
 ## Installation
 
