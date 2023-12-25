@@ -3,18 +3,26 @@ import Foundation
 
 // MARK: - LocalTranscriptionError
 
-enum LocalTranscriptionError: Error {
+enum LocalTranscriptionError: Error, LocalizedError {
   case notEnoughMemory(available: UInt64, required: UInt64)
+
+  var errorDescription: String? {
+    switch self {
+    case let .notEnoughMemory(available, required):
+      return "Not enough memory to transcribe file. Available: \(bytesToReadableString(bytes: available)), required: \(bytesToReadableString(bytes: required))"
+    }
+  }
 }
 
 // MARK: - LocalTranscriptionWorkExecutor
 
 final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
-  var currentWhisperContext: (context: WhisperContextProtocol, modelType: VoiceModelType)? = nil
+  var currentWhisperContext: (context: WhisperContextProtocol, modelType: VoiceModelType, useGPU: Bool)? = nil
 
   private let updateTranscription: (_ transcription: Transcription) -> Void
 
   @Dependency(\.storage) var storage
+  @Dependency(\.settings) var settings
 
   init(updateTranscription: @escaping (_ transcription: Transcription) -> Void) {
     self.updateTranscription = updateTranscription
@@ -43,7 +51,8 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
     do {
       transcription.status = .loading
 
-      let context: WhisperContextProtocol = try await resolveContextFor(task: task) { task = $0 }
+      let useGPU = settings.getSettings().isUsingGPU
+      let context: WhisperContextProtocol = try await resolveContextFor(useGPU: useGPU, task: task) { task = $0 }
 
       transcription.status = .progress(task.progress)
 
@@ -77,8 +86,9 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
     }
   }
 
-  private func resolveContextFor(task: TranscriptionTask, updateTask: (TranscriptionTask) -> Void) async throws -> WhisperContextProtocol {
-    if let currentContext = currentWhisperContext, currentContext.modelType == task.modelType {
+  private func resolveContextFor(useGPU: Bool, task: TranscriptionTask,
+                                 updateTask: (TranscriptionTask) -> Void) async throws -> WhisperContextProtocol {
+    if let currentContext = currentWhisperContext, currentContext.modelType == task.modelType, currentContext.useGPU == useGPU {
       return currentContext.context
     } else {
       let selectedModel = FileManager.default.fileExists(atPath: task.modelType.localURL.path) ? task.modelType : .default
@@ -93,8 +103,8 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
         throw LocalTranscriptionError.notEnoughMemory(available: memory, required: selectedModel.memoryRequired)
       }
 
-      let context = try await WhisperContext.createFrom(modelPath: selectedModel.localURL.path)
-      currentWhisperContext = (context, selectedModel)
+      let context = try await WhisperContext.createFrom(modelPath: selectedModel.localURL.path, useGPU: useGPU)
+      currentWhisperContext = (context, selectedModel, useGPU)
       return context
     }
   }

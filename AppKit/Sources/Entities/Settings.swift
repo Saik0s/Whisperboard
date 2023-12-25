@@ -10,6 +10,7 @@ struct Settings: Hashable, Then {
   var isICloudSyncEnabled: Bool = false
   var shouldMixWithOtherAudio: Bool = false
   var isAutoTranscriptionEnabled: Bool = false
+  var isUsingGPU: Bool = false
 
   var voiceLanguage: VoiceLanguage {
     get { parameters.language }
@@ -28,6 +29,7 @@ extension Settings: Codable {
     case isICloudSyncEnabled
     case shouldMixWithOtherAudio
     case isAutoTranscriptionEnabled
+    case isUsingGPU
   }
 
   init(from decoder: Decoder) throws {
@@ -39,5 +41,6 @@ extension Settings: Codable {
     isICloudSyncEnabled = (try? container.decode(Bool.self, forKey: .isICloudSyncEnabled)) ?? false
     shouldMixWithOtherAudio = (try? container.decode(Bool.self, forKey: .shouldMixWithOtherAudio)) ?? false
     isAutoTranscriptionEnabled = (try? container.decode(Bool.self, forKey: .isAutoTranscriptionEnabled)) ?? false
+    isUsingGPU = (try? container.decode(Bool.self, forKey: .isUsingGPU)) ?? false
   }
 }

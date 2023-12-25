@@ -136,6 +136,19 @@ struct ModelSectionView: View {
       )
     }
     .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+
+    Section {
+      SettingsToggleButton(
+        icon: .system(name: "cpu", background: .systemGreen),
+        title: "Use GPU (Experimental)",
+        isOn: viewStore.$settings.isUsingGPU
+      )
+    } footer: {
+      Text(
+        "Enable this option to use the GPU for transcription. This option is experimental and might not work on all devices."
+      )
+    }
+    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
   }
 }
 

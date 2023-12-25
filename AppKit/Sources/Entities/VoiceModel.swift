@@ -86,7 +86,9 @@ enum VoiceModelType: CaseIterable, Codable, Equatable {
     case .largeV1: return "Large V1"
     case .largeV2: return "Large V2"
     case .largeV3: return "Large V3"
-    case .baseENQuantized, .baseQuantized:
+    case .baseENQuantized:
+      return "Base (English) Quantized"
+    case .baseQuantized:
       return "Base Quantized"
     case .largeV2Quantized:
       return "Large V2 Quantized"
