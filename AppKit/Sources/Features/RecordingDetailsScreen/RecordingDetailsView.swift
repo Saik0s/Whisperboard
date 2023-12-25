@@ -98,7 +98,7 @@ struct RecordingDetailsView: View {
           .frame(maxWidth: .infinity, alignment: .leading)
 
         if viewStore.recordingCard.recording.isTranscribed == false
-          && !viewStore.recordingCard.recording.isTranscribing 
+          && !viewStore.recordingCard.recording.isTranscribing
           && !viewStore.recordingCard.recording.isPaused {
           if let error = viewStore.recordingCard.recording.lastTranscriptionErrorMessage {
             Text("Last transcription failed")
@@ -168,20 +168,20 @@ struct RecordingDetailsView: View {
               }.tertiaryButtonStyle()
             }
           } else if viewStore.recordingCard.recording.isPaused {
-              VStack(spacing: .grid(1)) {
-                Text(viewStore.recordingCard.recording.lastTranscription?.status.message ?? "")
-                  .textStyle(.body)
+            VStack(spacing: .grid(1)) {
+              Text(viewStore.recordingCard.recording.lastTranscription?.status.message ?? "")
+                .textStyle(.body)
 
-                HStack {
-                  Button("Resume") {
-                    viewStore.send(.recordingCard(action: .resumeTapped))
-                  }.tertiaryButtonStyle()
+              HStack {
+                Button("Resume") {
+                  viewStore.send(.recordingCard(action: .resumeTapped))
+                }.tertiaryButtonStyle()
 
-                  Button("Start Over") {
-                    viewStore.send(.recordingCard(action: .transcribeTapped))
-                  }.tertiaryButtonStyle()
-                }
+                Button("Start Over") {
+                  viewStore.send(.recordingCard(action: .transcribeTapped))
+                }.tertiaryButtonStyle()
               }
+            }
           }
 
           ScrollView {
