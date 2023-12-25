@@ -96,11 +96,21 @@ struct Root: ReducerProtocol {
       Reduce { _, action in
         switch action {
         case let .recordingListScreen(.details(action: .presented(.recordingCard(.delegate(.didTapTranscribe(recording)))))),
-             let .recordingListScreen(.recordingCard(
-               _,
-               .delegate(.didTapTranscribe(recording))
-             )):
+          let .recordingListScreen(.recordingCard(
+            _,
+            .delegate(.didTapTranscribe(recording))
+          )):
           enqueueTranscriptionTask(recording: recording)
+          return .none
+
+        case let .recordingListScreen(.details(action: .presented(.recordingCard(.delegate(.didTapResume(recording)))))),
+          let .recordingListScreen(.recordingCard(
+            _,
+            .delegate(.didTapResume(recording))
+          )):
+          if let transcription = recording.lastTranscription, case let .paused(task) = transcription.status {
+            resumeTranscriptionTask(task: task)
+          }
           return .none
 
         case let .recordScreen(.newRecordingCreated(recordingInfo)):
@@ -129,16 +139,21 @@ struct Root: ReducerProtocol {
             // If there are any recordings that are in progress, but not in the queue, mark them as failed
             let queue = transcriptionWorker.getTasks()
             let recordings = storage.read().map { recording in
-              if let transcription = recording.lastTranscription, transcription.status.isLoadingOrProgress,
-                 !queue.contains(where: { $0.id == transcription.id }) {
-                log.debug("Marking \(recording.fileName) last transcription as failed")
+              if let transcription = recording.lastTranscription, transcription.status.isLoadingOrProgress {
                 var recording = recording
-                recording.transcriptionHistory[id: transcription.id]?.status = .error(message: "Transcription failed")
+                if let task = queue.first(where: { $0.id == transcription.id }) {
+                  log.debug("Marking \(recording.fileName) last transcription as paused")
+                  recording.transcriptionHistory[id: transcription.id]?.status = .paused(task)
+                } else {
+                  log.debug("Marking \(recording.fileName) last transcription as failed")
+                  recording.transcriptionHistory[id: transcription.id]?.status = .error(message: "Transcription failed")
+                }
                 return recording
               }
               return recording
             }.identifiedArray
             storage.write(recordings)
+            await transcriptionWorker.cancelAllTasks()
 
             await send(.recordingListScreen(.task))
             for await transcription in transcriptionWorker.transcriptionStream() {
@@ -198,5 +213,9 @@ struct Root: ReducerProtocol {
   private func enqueueTranscriptionTask(recording: RecordingInfo) {
     let settings = settings.getSettings()
     transcriptionWorker.enqueueTaskForRecording(recording, settings)
+  }
+
+  private func resumeTranscriptionTask(task: TranscriptionTask) {
+    transcriptionWorker.resumeTask(task)
   }
 }

@@ -33,7 +33,7 @@
       "location" : "https://github.com/ggerganov/whisper.cpp.git",
       "state" : {
         "branch" : "master",
-        "revision" : "e2f0eba2d4dbe4ded5625cbd8a9c17e13f2482f6"
+        "revision" : "37a709f6558c6d9783199e2b8cbb136e1c41d346"
       }
     }
   ],

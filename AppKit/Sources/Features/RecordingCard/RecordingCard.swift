@@ -58,6 +58,7 @@ struct RecordingCard: ReducerProtocol {
     case cancelTranscriptionTapped
     case titleChanged(String)
     case recordingSelected
+    case resumeTapped
     case alert(PresentationAction<Alert>)
     case delegate(Delegate)
 
@@ -65,6 +66,7 @@ struct RecordingCard: ReducerProtocol {
 
     enum Delegate: Equatable {
       case didTapTranscribe(RecordingInfo)
+      case didTapResume(RecordingInfo)
     }
   }
 
@@ -151,6 +153,9 @@ struct RecordingCard: ReducerProtocol {
       case .recordingSelected:
         return .none
 
+      case .resumeTapped:
+        return .send(.delegate(.didTapResume(state.recording)))
+
       case .alert:
         return .none
 
@@ -230,6 +235,8 @@ extension Transcription.Status {
       return "Done"
     case .canceled:
       return "Canceled"
+    case let .paused(task):
+      return "Paused (\(String(format: "%.0f", task.progress * 100))%)"
     }
   }
 }

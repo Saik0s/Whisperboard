@@ -18,6 +18,7 @@ struct TranscriptionWorkerClient {
   var getAvailableLanguages: @Sendable () -> [VoiceLanguage]
   var tasksStream: @Sendable () -> AsyncStream<IdentifiedArrayOf<TranscriptionTask>>
   var getTasks: @Sendable () -> IdentifiedArrayOf<TranscriptionTask>
+  var resumeTask: @Sendable (_ task: TranscriptionTask) -> Void
 }
 
 // MARK: DependencyKey
@@ -74,6 +75,9 @@ extension TranscriptionWorkerClient: DependencyKey {
       },
       getTasks: {
         worker.getAllTasks()
+      },
+      resumeTask: { task in
+        worker.enqueueTask(task)
       }
     )
   }()
@@ -121,7 +125,8 @@ extension TranscriptionWorkerClient {
         [.auto] + WhisperContext.getAvailableLanguages()
       },
       tasksStream: { tasksChannel.eraseToStream() },
-      getTasks: { [] }
+      getTasks: { [] },
+      resumeTask: { _ in }
     )
   }()
 }

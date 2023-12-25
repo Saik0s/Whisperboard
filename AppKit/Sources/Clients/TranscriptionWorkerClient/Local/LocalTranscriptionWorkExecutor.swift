@@ -44,11 +44,10 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
       transcription.status = .loading
 
       let context: WhisperContextProtocol = try await resolveContextFor(task: task) { task = $0 }
-      let samples = try decodeWaveFile(fileURL)
 
       transcription.status = .progress(task.progress)
 
-      for await action in try await context.fullTranscribe(samples: samples, params: task.parameters) {
+      for await action in try await context.fullTranscribe(audioFileURL: fileURL, params: task.parameters) {
         log.debug(action)
         var _transcription = transcription
         switch action {
@@ -73,7 +72,9 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
   }
 
   func cancel(task _: TranscriptionTask) {
-    currentWhisperContext?.context.cancel()
+    Task {
+      await currentWhisperContext?.context.cancel()
+    }
   }
 
   private func resolveContextFor(task: TranscriptionTask, updateTask: (TranscriptionTask) -> Void) async throws -> WhisperContextProtocol {
@@ -97,15 +98,4 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
       return context
     }
   }
-}
-
-private func decodeWaveFile(_ url: URL) throws -> [Float] {
-  let data = try Data(contentsOf: url)
-  let floats = stride(from: 44, to: data.count, by: 2).map {
-    data[$0 ..< $0 + 2].withUnsafeBytes {
-      let short = Int16(littleEndian: $0.load(as: Int16.self))
-      return max(-1.0, min(Float(short) / 32767.0, 1.0))
-    }
-  }
-  return floats
 }
