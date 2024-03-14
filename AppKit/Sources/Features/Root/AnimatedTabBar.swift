@@ -8,13 +8,15 @@ struct AnimatedTabBar: View {
   var animation: Namespace.ID
 
   var body: some View {
-    HStack(spacing: 50) {
+    HStack(spacing: 0) {
       TabBarButton(
         image: Image(systemName: "list.bullet"),
         isSelected: selectedIndex == 0
       ) {
         selectedIndex = 0
       }
+
+      Spacer().frame(maxWidth: 50)
 
       TabBarButton(
         image: Image(systemName: "mic"),
@@ -23,6 +25,8 @@ struct AnimatedTabBar: View {
         selectedIndex = 1
       }.opacity(selectedIndex == 1 ? 0 : 1)
 
+      Spacer().frame(maxWidth: 50)
+
       TabBarButton(
         image: Image(systemName: "gear"),
         isSelected: selectedIndex == 2
@@ -30,7 +34,7 @@ struct AnimatedTabBar: View {
         selectedIndex = 2
       }
     }
-    .padding(.horizontal, 50)
+    .padding(.horizontal)
     .background(TabBarBackground(selectedIndex: selectedIndex, animation: animation))
     .padding()
     .frame(maxWidth: .infinity)

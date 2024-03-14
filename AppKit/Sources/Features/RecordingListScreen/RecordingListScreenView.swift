@@ -263,9 +263,8 @@ struct RecordingListScreenView: View {
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
       .background {
-        if viewStore.isRecordingCardsEmpty {
-          EmptyStateView()
-        }
+        EmptyStateView()
+          .hidden(!viewStore.isRecordingCardsEmpty)
       }
       .applyTabBarContentInset()
       .navigationTitle("Recordings")
@@ -277,11 +276,11 @@ struct RecordingListScreenView: View {
         } label: {
           Image(systemName: "doc.badge.plus")
         }
-        .secondaryIconButtonStyle()
+          .secondaryIconButtonStyle()
       )
       .environment(
         \.editMode,
-        viewStore.$editMode
+         viewStore.$editMode
       )
       .removeNavigationBackground()
       .sheet(
@@ -328,9 +327,10 @@ struct EmptyStateView: View {
         .font(.system(size: 100))
         .foregroundColor(.DS.Text.accent)
         .shadow(color: .DS.Text.accent.opacity(isAnimating ? 1 : 0), radius: isAnimating ? 20 : 0, x: 0, y: 0)
-        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
         .onAppear {
-          isAnimating = true
+          withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+            isAnimating.toggle()
+          }
         }
       VStack(spacing: .grid(1)) {
         Text("No recordings yet")

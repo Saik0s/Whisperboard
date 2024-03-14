@@ -33,15 +33,18 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
       ZStack(alignment: .top) {
         screen1
           .opacity(selectedIndex == 0 ? 1 : 0)
+          .frame(width: screenWidth)
           .offset(x: selectedIndex == 0 ? 0 : -screenWidth, y: 0)
 
         if selectedIndex == 1 {
           screen2
+            .frame(width: screenWidth)
             .padding(.bottom, tabBarViewModel.tabBarHeight)
         }
 
         screen3
           .opacity(selectedIndex == 2 ? 1 : 0)
+          .frame(width: screenWidth)
           .offset(x: selectedIndex == 2 ? 0 : screenWidth, y: 0)
       }
       .environmentObject(tabBarViewModel)
@@ -49,6 +52,7 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
 
       if tabBarViewModel.isVisible {
         AnimatedTabBar(selectedIndex: $selectedIndex, animation: animation)
+          .frame(width: screenWidth)
           .readSize { tabBarViewModel.tabBarHeight = $0.height }
           .frame(maxHeight: .infinity, alignment: .bottom)
           .transition(.move(edge: .bottom))
