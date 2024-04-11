@@ -1,15 +1,15 @@
 import Foundation
 import ProjectDescription
-
-let version = "1.11.9"
+import ProjectDescriptionHelpers
 
 let projectSettings: SettingsDictionary = [
   "GCC_TREAT_WARNINGS_AS_ERRORS": "YES",
   "SWIFT_TREAT_WARNINGS_AS_ERRORS": "YES",
   "CODE_SIGN_STYLE": "Automatic",
-  "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
+  "IPHONEOS_DEPLOYMENT_TARGET": SettingValue(stringLiteral: deploymentTargetString),
   "MARKETING_VERSION": SettingValue(stringLiteral: version),
   "ENABLE_BITCODE": "NO",
+  "ENABLE_USER_SCRIPT_SANDBOXING": "NO",
 ]
 
 let debugSettings: SettingsDictionary = [
@@ -22,14 +22,14 @@ let releaseSettings: SettingsDictionary = [
 ]
 
 func appTarget() -> Target {
-  Target(
+  Target.target(
     name: "WhisperBoard",
-    platform: .iOS,
+    destinations: appDestinations,
     product: .app,
     bundleId: "me.igortarasenko.Whisperboard",
-    deploymentTarget: .iOS(targetVersion: "16.0", devices: [.iphone, .ipad]),
+    deploymentTargets: appDeploymentTargets,
     infoPlist: .extendingDefault(with: [
-      "CFBundleShortVersionString": InfoPlist.Value.string(version),
+      "CFBundleShortVersionString": Plist.Value(stringLiteral: version),
       "CFBundleURLTypes": [
         [
           "CFBundleTypeRole": "Editor",
@@ -87,23 +87,19 @@ func appTarget() -> Target {
     dependencies: [
       .target(name: "ShareExtension"),
       .project(target: "WhisperBoardKit", path: "../AppKit"),
-    ] + (Environment.isHotReloadingEnabled.getBoolean(default: false) ? [.package(product: "HotReloading")] : []),
-    environmentVariables: [
-      // root of the whole project
-      "INJECTION_DIRECTORIES": .init(stringLiteral: "\(URL(filePath: #file).deletingLastPathComponent().deletingLastPathComponent().path)"),
     ]
   )
 }
 
 func shareExtensionTarget() -> Target {
-  Target(
+  Target.target(
     name: "ShareExtension",
-    platform: .iOS,
+    destinations: appDestinations,
     product: .appExtension,
     bundleId: "me.igortarasenko.Whisperboard.ShareExtension",
     infoPlist: .extendingDefault(with: [
       "CFBundleDisplayName": "$(PRODUCT_NAME)",
-      "CFBundleShortVersionString": InfoPlist.Value.string(version),
+      "CFBundleShortVersionString": Plist.Value(stringLiteral: version),
       "NSExtension": [
         "NSExtensionPointIdentifier": "com.apple.share-services",
         "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).ShareViewController",
@@ -141,16 +137,12 @@ func shareExtensionTarget() -> Target {
 let project = Project(
   name: "WhisperBoard",
   options: .options(
-    automaticSchemesOptions: .disabled,
     disableShowEnvironmentVarsInScriptPhases: true,
     textSettings: .textSettings(
       indentWidth: 2,
       tabWidth: 2
     )
   ),
-  packages: Environment.isHotReloadingEnabled.getBoolean(default: false)
-    ? [.remote(url: "https://github.com/johnno1962/HotReloading.git", requirement: .branch("main"))]
-    : [],
   settings: .settings(
     base: projectSettings,
     debug: debugSettings,
@@ -160,22 +152,23 @@ let project = Project(
   targets: [
     appTarget(),
     shareExtensionTarget(),
-  ],
-  schemes: [
-    Scheme(
-      name: "WhisperBoard",
-      shared: true,
-      buildAction: .buildAction(targets: ["WhisperBoard"]),
-      runAction: .runAction(
-        executable: "WhisperBoard",
-        arguments: .init(environment: [
-          "INJECTION_DIRECTORIES": "$(SRCROOT)/..",
-        ]),
-        options: .options(storeKitConfigurationPath: "Support/Whisperboard.storekit")
-      )
-    ),
-  ],
-  additionalFiles: [
-    "Support/Whisperboard.storekit",
+    // ],
+    // schemes: [
+    //   Scheme(
+    //     name: "WhisperBoard",
+    //     shared: true,
+    //     buildAction: .buildAction(targets: ["WhisperBoard"]),
+    //     runAction: .runAction(
+    //       executable: "WhisperBoard",
+    //       options: .options(
+    //         storeKitConfigurationPath: "Support/Whisperboard.storekit",
+    //         enableGPUFrameCaptureMode: .metal
+    //       ),
+    //       diagnosticsOptions: .options(mainThreadCheckerEnabled: true)
+    //     )
+    //   ),
+    // ],
+    // additionalFiles: [
+    //   "Support/Whisperboard.storekit",
   ]
 )

@@ -18,6 +18,7 @@ enum LocalTranscriptionError: Error, LocalizedError {
 
 final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
   var currentWhisperContext: (context: WhisperContextProtocol, modelType: VoiceModelType, useGPU: Bool)? = nil
+  var currentTaslId: UUID?
 
   private let updateTranscription: (_ transcription: Transcription) -> Void
 
@@ -29,6 +30,9 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
   }
 
   func processTask(_ task: TranscriptionTask, updateTask: @escaping (TranscriptionTask) -> Void) async {
+    currentTaslId = task.id
+    defer { currentTaslId = nil }
+
     let initialSegments = task.segments
     var task: TranscriptionTask = task {
       didSet { updateTask(task) }
@@ -56,7 +60,7 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
 
       transcription.status = .progress(task.progress)
 
-      for await action in try await context.fullTranscribe(audioFileURL: fileURL, params: task.parameters) {
+      for try await action in try context.fullTranscribe(audioFileURL: fileURL, params: task.parameters) {
         log.debug(action)
         var _transcription = transcription
         switch action {
@@ -80,9 +84,9 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
     }
   }
 
-  func cancel(task _: TranscriptionTask) {
-    Task {
-      await currentWhisperContext?.context.cancel()
+  func cancel(task: TranscriptionTask) {
+    if task.id == currentTaslId {
+      currentWhisperContext?.context.cancel()
     }
   }
 
@@ -91,6 +95,7 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
     if let currentContext = currentWhisperContext, currentContext.modelType == task.modelType, currentContext.useGPU == useGPU {
       return currentContext.context
     } else {
+      currentWhisperContext = nil
       let selectedModel = FileManager.default.fileExists(atPath: task.modelType.localURL.path) ? task.modelType : .default
       // Update model type in case it of fallback to default
       updateTask(task.with(\.modelType, setTo: selectedModel))
@@ -103,7 +108,7 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
         throw LocalTranscriptionError.notEnoughMemory(available: memory, required: selectedModel.memoryRequired)
       }
 
-      let context = try await WhisperContext.createFrom(modelPath: selectedModel.localURL.path, useGPU: useGPU)
+      let context = try WhisperContext(modelPath: selectedModel.localURL.path, useGPU: useGPU)
       currentWhisperContext = (context, selectedModel, useGPU)
       return context
     }

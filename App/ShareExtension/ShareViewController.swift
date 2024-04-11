@@ -5,6 +5,7 @@ import Social
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
+import Foundation
 
 // MARK: - ShareError
 
@@ -234,12 +235,17 @@ class ShareViewModel: ObservableObject {
         .flatMap { $0 }
 
       for itemProvider in itemsAttachments where itemProvider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
-        let data = try await itemProvider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil)
-        if let data = data as? URL {
-          try await handleLoadedData(data)
-        } else {
-          throw ShareError.somethingWentWrong
+        let url: URL = try await withCheckedThrowingContinuation { continuation in
+          itemProvider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { url, error in
+            guard error == nil, let url = url as? URL else {
+              continuation.resume(throwing: error ?? ShareError.somethingWentWrong)
+              return
+            }
+            continuation.resume(returning: url)
+          }
         }
+
+        try await handleLoadedData(url)
       }
       state = .success
     } catch {
@@ -380,5 +386,18 @@ struct PrimaryButtonStyle: ButtonStyle {
 extension View {
   func primaryButtonStyle() -> some View {
     buttonStyle(PrimaryButtonStyle())
+  }
+}
+
+enum NSItemProviderError: Swift.Error {
+  case dataIsNotExtractable(UTType)
+}
+
+extension NSItemProvider {
+  func loadData<T>(for type: UTType, _ returnType: T.Type = T.self) async throws -> T {
+    guard let data = try await loadItem(forTypeIdentifier: type.identifier, options: nil) as? T else {
+      throw NSItemProviderError.dataIsNotExtractable(type)
+    }
+    return data
   }
 }

@@ -1,12 +1,14 @@
 import Foundation
 import ProjectDescription
+import ProjectDescriptionHelpers
 
 let projectSettings: SettingsDictionary = [
   "GCC_TREAT_WARNINGS_AS_ERRORS": "YES",
   "SWIFT_TREAT_WARNINGS_AS_ERRORS": "YES",
   "CODE_SIGN_STYLE": "Automatic",
-  "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
+  "IPHONEOS_DEPLOYMENT_TARGET": SettingValue(stringLiteral: deploymentTargetString),
   "ENABLE_BITCODE": "NO",
+  "ENABLE_USER_SCRIPT_SANDBOXING": "NO",
 ]
 
 let debugSettings: SettingsDictionary = [
@@ -22,12 +24,12 @@ let releaseSettings: SettingsDictionary = [
 ]
 
 func appKitTarget() -> Target {
-  Target(
+  Target.target(
     name: "WhisperBoardKit",
-    platform: .iOS,
+    destinations: appDestinations,
     product: .framework,
     bundleId: "me.igortarasenko.WhisperboardKit",
-    deploymentTarget: .iOS(targetVersion: "16.0", devices: [.iphone, .ipad]),
+    deploymentTargets: appDeploymentTargets,
     infoPlist: .extendingDefault(with: [:]),
     sources: .paths([.relativeToManifest("Sources/**")]),
     resources: [
@@ -66,9 +68,9 @@ func appKitTarget() -> Target {
 }
 
 func appKitTestTarget() -> Target {
-  Target(
+  Target.target(
     name: "WhisperBoardKitTests",
-    platform: .iOS,
+    destinations: appDestinations,
     product: .unitTests,
     bundleId: "me.igortarasenko.WhisperboardKitTests",
     infoPlist: .default,
@@ -97,14 +99,6 @@ let project = Project(
   targets: [
     appKitTarget(),
     appKitTestTarget(),
-  ],
-  schemes: [
-    Scheme(
-      name: "WhisperBoardKit",
-      shared: true,
-      buildAction: .buildAction(targets: ["WhisperBoardKit"]),
-      testAction: .targets(["WhisperBoardKitTests"])
-    ),
   ],
   resourceSynthesizers: [
     .files(extensions: ["bin"]),

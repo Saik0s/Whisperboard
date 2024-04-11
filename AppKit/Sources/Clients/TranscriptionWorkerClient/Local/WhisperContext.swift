@@ -18,9 +18,9 @@ enum WhisperError: Error, LocalizedError {
   var errorDescription: String? {
     switch self {
     case .cantLoadModel:
-      return "Can't load model"
+      "Can't load model"
     case .noSamples:
-      return "No samples"
+      "No samples"
     }
   }
 }
@@ -38,46 +38,42 @@ enum WhisperAction {
 // MARK: - WhisperContextProtocol
 
 protocol WhisperContextProtocol {
-  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) async throws -> AsyncChannel<WhisperAction>
-  func cancel() async -> Void
+  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) throws -> AsyncThrowingStream<WhisperAction, Error>
+  func cancel() -> Void
 }
 
 // MARK: - WhisperContext
 
-actor WhisperContext: Identifiable, WhisperContextProtocol {
-  static let referenceStore = ContextDataStore()
+final class WhisperContext: Identifiable, WhisperContextProtocol {
+  private static var references: LockIsolated<IdentifiedArrayOf<WhisperContext>> = LockIsolated([])
 
-  let id: Int = .random(in: 0 ..< Int.max)
+  let id: Int
+  private var isCancelled = false
+  private let context: OpaquePointer
+  private var continuation: LockIsolated<AsyncThrowingStream<WhisperAction, Error>.Continuation?> = .init(nil)
 
-  private var context: OpaquePointer
-
-  init(context: OpaquePointer) {
-    self.context = context
-  }
-
-  deinit {
-    WhisperContext.referenceStore.removeReference(id: id)
-    whisper_free(context)
-  }
-
-  static func createFrom(modelPath: String, useGPU: Bool) async throws -> WhisperContextProtocol {
+  init(id: Int = .random(in: Int.min ..< Int.max), modelPath: String, useGPU: Bool) throws {
+    self.id = id
     var params = whisper_context_default_params()
     params.use_gpu = useGPU
-    #if targetEnvironment(simulator)
-      params.use_gpu = false
-      print("Running on the simulator, using CPU")
-    #endif
+#if targetEnvironment(simulator)
+    params.use_gpu = false
+    print("Running on the simulator, using CPU")
+#endif
     guard let context = whisper_init_from_file_with_params(modelPath, params) else {
       log.error("Couldn't load model at \(modelPath)")
       throw WhisperError.cantLoadModel
     }
-
-    return WhisperContext(context: context)
+    self.context = context
+    WhisperContext.addReference(self)
   }
 
-  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) async throws -> AsyncChannel<WhisperAction> {
-    let container = WhisperContext.referenceStore.createContainerWith(id: id)
+  deinit {
+    WhisperContext.removeReference(self)
+    whisper_free(context)
+  }
 
+  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) throws -> AsyncThrowingStream<WhisperAction, Error> {
     var fullParams = toWhisperParams(params)
     let idPointer = id.toPointer()
     fullParams.new_segment_callback_user_data = idPointer
@@ -85,7 +81,10 @@ actor WhisperContext: Identifiable, WhisperContextProtocol {
     fullParams.encoder_begin_callback_user_data = idPointer
 
     fullParams.new_segment_callback = { (ctx: OpaquePointer?, _: OpaquePointer?, newSegmentsCount: Int32, userData: UnsafeMutableRawPointer?) in
-      guard let container = WhisperContext.referenceStore.getContainerFromIDPointer(userData) else { return }
+      guard let container = WhisperContext.getContainerFromIDPointer(userData) else {
+        log.error("Can't get container from ID pointer")
+        return
+      }
 
       let segmentCount = whisper_full_n_segments(ctx)
       let startIndex = segmentCount - newSegmentsCount
@@ -96,15 +95,27 @@ actor WhisperContext: Identifiable, WhisperContextProtocol {
       }
     }
     fullParams.progress_callback = { (_: OpaquePointer?, _: OpaquePointer?, progress: Int32, userData: UnsafeMutableRawPointer?) in
-      guard let container = WhisperContext.referenceStore.getContainerFromIDPointer(userData) else { return }
+      guard let container = WhisperContext.getContainerFromIDPointer(userData) else {
+        log.error("Can't get container from ID pointer")
+        return
+      }
+
       container.progress(Double(progress) / 100)
     }
     fullParams.encoder_begin_callback = { (_: OpaquePointer?, _: OpaquePointer?, userData: UnsafeMutableRawPointer?) in
-      guard let container = WhisperContext.referenceStore.getContainerFromIDPointer(userData) else { return true }
+      guard let container = WhisperContext.getContainerFromIDPointer(userData) else {
+        log.error("Can't get container from ID pointer")
+        return true
+      }
+
       return !container.isCancelled
     }
 
-    Task.detached(priority: .userInitiated) { [container, context, fullParams] in
+    let (stream, continuation) = AsyncThrowingStream.makeStream(of: WhisperAction.self)
+    self.continuation.value?.finish()
+    self.continuation.setValue(continuation)
+
+    DispatchQueue.global(qos: .background).async { [self] in
       do {
         let samples = try decodeWaveFile(audioFileURL)
 
@@ -124,7 +135,6 @@ actor WhisperContext: Identifiable, WhisperContextProtocol {
         log.info("Calculated number of threads: \(numberOfThreads)")
 
         // Update parameters with the calculated number of threads if it is less than the current number of threads
-        var fullParams = fullParams
         if numberOfThreads < fullParams.n_threads {
           log.info("Adjusting number of threads from \(fullParams.n_threads) to \(numberOfThreads)")
           fullParams.n_threads = numberOfThreads
@@ -134,29 +144,71 @@ actor WhisperContext: Identifiable, WhisperContextProtocol {
           whisper_full(context, fullParams, samples.baseAddress, Int32(samples.count))
         }
 
-        print("Whisper result code: \(code)")
+        log.info("Whisper result code: \(code)")
 
-        let segments = extractSegments(context: context)
-
-        // Not the best solution, but it works
-        try? await Task.sleep(for: .seconds(0.3))
-
-        if container.isCancelled == true {
-          container.doneCancelling()
+        if isCancelled {
+          doneCancelling()
         } else {
-          container.finish(segments)
+          let segments = extractSegments(context: context)
+          finish(segments)
         }
       } catch {
-        container.failed(error)
+        failed(error)
       }
     }
 
-    return container.actionChannel
+    continuation.onTermination = { [weak self] termination in
+      switch termination {
+      case .cancelled:
+        self?.cancel()
+
+      default:
+        break
+      }
+    }
+
+    return stream
   }
 
   func cancel() {
-    WhisperContext.referenceStore[id]?.isCancelled = true
+    WhisperContext.references.value[id: id]?.isCancelled = true
   }
+
+  // MARK: - Private
+
+  func doneCancelling() {
+    continuation.withValue { cont in
+      cont?.yield(.canceled)
+      cont?.finish()
+    }
+  }
+
+  func newSegment(_ segment: Segment) {
+    _ = continuation.withValue { cont in
+      cont?.yield(.newSegment(segment))
+    }
+  }
+
+  func progress(_ progress: Double) {
+    _ = continuation.withValue { cont in
+      cont?.yield(.progress(progress))
+    }
+  }
+
+  func finish(_ segments: [Segment]) {
+    continuation.withValue { cont in
+      cont?.yield(.finished(segments))
+      cont?.finish()
+    }
+  }
+
+  func failed(_ error: Error) {
+    continuation.withValue { cont in
+      cont?.finish(throwing: error)
+    }
+  }
+
+  // MARK: - Private Static
 
   static func getAvailableLanguages() -> [VoiceLanguage] {
     let maxLangID = whisper_lang_max_id()
@@ -164,6 +216,20 @@ actor WhisperContext: Identifiable, WhisperContextProtocol {
       let name = String(cString: whisper_lang_str(id))
       return VoiceLanguage(id: id, code: name)
     }
+  }
+
+  static func addReference(_ context: WhisperContext) {
+    _ = references.withValue { $0.append(context) }
+  }
+
+  static func removeReference(_ context: WhisperContext) {
+    _ = references.withValue { $0.remove(id: context.id) }
+  }
+
+  static func getContainerFromIDPointer(_ pointer: UnsafeMutableRawPointer?) -> WhisperContext? {
+    guard let pointer else { return nil }
+    let id = pointer.load(as: Int.self)
+    return references.value[id: id]
   }
 }
 
