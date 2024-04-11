@@ -1,0 +1,237 @@
+excluded:
+  - ".build"
+  - "Package.swift"
+  - "App/.build"
+  - "Tuist"
+  - "build"
+  - "Project.swift"
+
+disabled_rules:
+  - todo
+  - redundant_optional_initialization
+  - trailing_comma
+  - identifier_name
+  - type_name
+  - block_based_kvo
+
+opt_in_rules:
+  - anyobject_protocol
+  - array_init
+  - closure_end_indentation
+  - closure_spacing
+  - collection_alignment
+  - colon
+  - conditional_returns_on_newline
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - convenience_type
+  - discarded_notification_center_observer
+  - discouraged_assert
+  - discouraged_none_name
+  - discouraged_object_literal
+  # - discouraged_optional_boolean
+  # - discouraged_optional_collection
+  - empty_collection_literal
+  - empty_count
+  - empty_string
+  - enum_case_associated_values_count
+  - expiring_todo
+  - explicit_init
+  - extension_access_modifier
+  - fallthrough
+  - fatal_error_message
+  - file_name_no_space
+  - first_where
+  - flatmap_over_map_reduce
+  - force_unwrapping
+  # - function_default_parameter_at_end
+  - identical_operands
+  - implicitly_unwrapped_optional
+  - joined_default_parameter
+  - last_where
+  - legacy_multiple
+  - legacy_objc_type
+  - legacy_random
+  - let_var_whitespace
+  - literal_expression_end_indentation
+  - lower_acl_than_parent
+  - modifier_order
+  # - multiline_arguments
+  # - multiline_arguments_brackets
+  - multiline_function_chains
+  - multiline_literal_brackets
+  # - multiline_parameters
+  # - multiline_parameters_brackets
+  - notification_center_detachment
+  - operator_usage_whitespace
+  - optional_enum_case_matching
+  - orphaned_doc_comment
+  - overridden_super_call
+  - pattern_matching_keywords
+  - prefer_self_in_static_references
+  - prefer_self_type_over_type_of_self
+  - prefer_zero_over_explicit_init
+  - private_subject
+  - prohibited_interface_builder
+  - reduce_into
+  - redundant_type_annotation
+  - return_value_from_void_function
+  - sorted_first_last
+  - sorted_imports
+  - static_operator
+  - strict_fileprivate
+  # - switch_case_on_newline
+  - test_case_accessibility
+  - toggle_bool
+  # - type_contents_order
+  - unavailable_function
+  - unneeded_parentheses_in_closure_argument
+  - unowned_variable_capture
+  - unused_capture_list
+  - vertical_whitespace_between_cases
+  - vertical_whitespace_closing_braces
+  - vertical_whitespace_opening_braces
+  - xct_specific_matcher
+  - yoda_condition
+
+analyzer_rules:
+  - unused_declaration
+  - unused_import
+  # - capture_variable
+  - typesafe_array_init
+
+force_cast: warning
+
+force_try: warning
+
+function_body_length:
+  warning: 60
+
+type_body_length:
+  warning: 300
+
+file_length:
+  warning: 500
+
+#type_name:
+#  max_length: 50
+
+function_parameter_count:
+  warning: 7
+
+legacy_hashing: error
+
+identifier_name:
+  excluded:
+    - i
+    - id
+    - x
+    - y
+    - z
+    - to
+    - iO
+    - vc
+    - by
+  allowedSymbols: [_]
+
+#indentation_width:
+#  indentation_width: 2
+#  include_comments: false
+
+line_length:
+  warning: 150
+  ignores_urls: true
+  ignores_function_declarations: true
+  ignores_comments: true
+
+#multiline_arguments:
+#  first_argument_location: same_line
+#  only_enforce_after_first_closure_on_first_line: true
+
+modifier_order:
+  preferred_modifier_order:
+    [
+      override,
+      acl,
+      setterACL,
+      dynamic,
+      mutators,
+      lazy,
+      final,
+      required,
+      convenience,
+      typeMethods,
+      owned,
+    ]
+
+private_over_fileprivate:
+  validate_extensions: true
+
+trailing_whitespace:
+  ignores_empty_lines: false
+  ignores_comments: true
+
+vertical_whitespace:
+  max_empty_lines: 1
+
+nesting:
+  type_level: 2
+
+cyclomatic_complexity:
+  warning: 30
+  error: 40
+
+large_tuple:
+  warning: 3
+  error: 4
+
+#type_contents_order:
+#  order:
+#    [
+#      [case],
+#      [type_alias, associated_type],
+#      [subtype],
+#      [type_property],
+#      [instance_property],
+#      [ib_inspectable],
+#      [ib_outlet],
+#      [initializer],
+#      [type_method],
+#      [view_life_cycle_method],
+#      [ib_action],
+#      [other_method],
+#      [subscript],
+#      [deinitializer],
+#    ]
+
+custom_rules:
+  #   tca_feature_actions:
+  #     name: "Boundries"
+  #     regex: '\._internal\(\s*((\w+\.)*|\.)\w+\(\s*((\w+\.)*|\.)(view|_internal).*?' # matching pattern
+  #     capture_group: 5
+  #     match_kinds:
+  #       - identifier
+  #     message: "Only access Delegate actions of directly embeeded features."
+  #     severity: error
+  tca_explicit_generics_reducer:
+    included: ".*\\.swift"
+    name: "Explicit Generics for Reducer"
+    regex: 'Reduce\s+\{'
+    message: "Use explicit generics in ReducerBuilder (Reduce<State, Action>) for successful autocompletion."
+    # severity: error
+    severity: warning
+
+  tca_scope_unused_closure_parameter:
+    name: "TCA Scope Unused Closure Parameter"
+    regex: '\.scope\(\s*state\s*:\s*\{\s*\_'
+    message: "Explicitly use closure parameter when scoping store (ensures the right state is being mutated)"
+    # severity: error
+    severity: warning
+
+  xctassertnodifference_preferred:
+    name: "XCTAssertNoDifference Preferred"
+    regex: 'XCTAssertEqual\('
+    message: "Use PointFree's XCTAssertNoDifference from CustomDump library when possible"
+    severity: warning

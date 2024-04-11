@@ -1,7 +1,7 @@
 # file options
 
---exclude .build,.tuist-bin,build
---swiftversion 5.8
+--exclude .build,build,Tuist
+--swiftversion 5.10
 
 # format options
 

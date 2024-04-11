@@ -1,27 +1,23 @@
 
-TUIST=PATH="${PWD}/.tuist-bin:${PATH}" tuist
+TUIST=mise x tuist -- tuist
 
-all: project_file
+all: bootstrap project_file
+
+bootstrap:
+	command -v mise >/dev/null 2>&1 || curl https://mise.jdx.dev/install.sh | sh
+	mise install # Installs the version from .mise.toml
 
 project_file: secrets
-	$(TUIST) fetch
+	$(TUIST) install
 	$(TUIST) generate --no-open
 
 update: secrets
-	$(TUIST) fetch --update
+	$(TUIST) install --update
 	$(TUIST) generate --no-open
 
-hot: secrets
-	TUIST_IS_HOT_RELOADING_ENABLED=1 $(TUIST) fetch
-	TUIST_IS_HOT_RELOADING_ENABLED=1 $(TUIST) generate --no-open
-
 appstore: secrets
-	TUIST_IS_APP_STORE=1 $(TUIST) fetch
+	TUIST_IS_APP_STORE=1 $(TUIST) install
 	TUIST_IS_APP_STORE=1 $(TUIST) generate --no-open
-
-hot_appstore: secrets
-	TUIST_IS_APP_STORE=1 TUIST_IS_HOT_RELOADING_ENABLED=1 $(TUIST) fetch
-	TUIST_IS_APP_STORE=1 TUIST_IS_HOT_RELOADING_ENABLED=1 $(TUIST) generate --no-open
 
 build_debug:
 	$(TUIST) build --generate --configuration Debug --build-output-path .build/
@@ -30,7 +26,8 @@ build_release:
 	$(TUIST) build --generate --configuration Release --build-output-path .build/
 
 format:
-	swiftformat . --config .swiftformat
+	mise x swiftlint -- swiftlint lint --force-exclude --fix .
+	mise x swiftformat -- swiftformat . --config .swiftformat
 
 secrets:
 	sh ./ci_scripts/secrets.sh

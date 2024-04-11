@@ -9,22 +9,6 @@ import os.log
 import SwiftUI
 import whisper
 
-// MARK: - ContextDataStore
-
-final class ContextDataStore {
-  final class Container: Identifiable {
-    let id: Int
-    var isCancelled = false
-    let actionChannel = AsyncChannel<WhisperAction>()
-
-    init(id: Int) { self.id = id }
-  }
-
-  private var references: LockIsolated<IdentifiedArrayOf<Container>> = .init(.init())
-
-  init() {}
-}
-
 func extractSegments(context: OpaquePointer?) -> [Segment] {
   let nSegments = whisper_full_n_segments(context)
   var segments: [Segment] = []
@@ -69,60 +53,7 @@ func getSegmentAt(context: OpaquePointer?, index: Int32) -> Segment {
   return Segment(startTime: segmentT0, endTime: segmentT1, text: segmentText, tokens: tokens, speaker: nil)
 }
 
-extension ContextDataStore {
-  func createContainerWith(id: Int) -> Container {
-    removeReference(id: id)
-    let container = Container(id: id)
-    _ = references.withValue { $0.append(container) }
-    return container
-  }
+// MARK: - WhisperContext + references
 
-  subscript(id: Int) -> Container? {
-    references.value[id: id]
-  }
-
-  func removeReference(id: Int) {
-    _ = references.withValue { $0.remove(id: id) }
-  }
-
-  func getContainerFromIDPointer(_ pointer: UnsafeMutableRawPointer?) -> Container? {
-    guard let pointer else { return nil }
-    let id = pointer.load(as: Int.self)
-    return self[id]
-  }
-}
-
-extension ContextDataStore.Container {
-  func doneCancelling() {
-    Task {
-      await actionChannel.send(.canceled)
-      actionChannel.finish()
-    }
-  }
-
-  func newSegment(_ segment: Segment) {
-    Task {
-      await actionChannel.send(.newSegment(segment))
-    }
-  }
-
-  func progress(_ progress: Double) {
-    Task {
-      await actionChannel.send(.progress(progress))
-    }
-  }
-
-  func finish(_ segments: [Segment]) {
-    Task {
-      await actionChannel.send(.finished(segments))
-      actionChannel.finish()
-    }
-  }
-
-  func failed(_ error: Error) {
-    Task {
-      await actionChannel.send(.error(error))
-      actionChannel.finish()
-    }
-  }
+extension WhisperContext {
 }
