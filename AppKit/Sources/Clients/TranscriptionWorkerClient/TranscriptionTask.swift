@@ -1,4 +1,3 @@
-
 import Foundation
 
 // MARK: - TranscriptionTask
@@ -10,7 +9,7 @@ struct TranscriptionTask: Identifiable, Codable, Hashable, Then {
   var parameters: TranscriptionParameters
   var modelType: VoiceModelType
   var remoteID: String? = nil
-  var isRemote: Bool = false
+  var isRemote = false
   var segments: [Segment] = [] {
     didSet { parameters.offsetMilliseconds = Int(offset) }
   }

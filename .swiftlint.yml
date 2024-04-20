@@ -13,6 +13,7 @@ disabled_rules:
   - identifier_name
   - type_name
   - block_based_kvo
+  - prefer_self_in_static_references
 
 opt_in_rules:
   - anyobject_protocol

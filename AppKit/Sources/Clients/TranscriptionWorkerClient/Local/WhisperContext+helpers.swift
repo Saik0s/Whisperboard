@@ -1,4 +1,3 @@
-
 import AsyncAlgorithms
 import Combine
 import ComposableArchitecture
@@ -55,5 +54,4 @@ func getSegmentAt(context: OpaquePointer?, index: Int32) -> Segment {
 
 // MARK: - WhisperContext + references
 
-extension WhisperContext {
-}
+extension WhisperContext {}

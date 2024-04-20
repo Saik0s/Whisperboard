@@ -9,7 +9,7 @@ enum LocalTranscriptionError: Error, LocalizedError {
   var errorDescription: String? {
     switch self {
     case let .notEnoughMemory(available, required):
-      return "Not enough memory to transcribe file. Available: \(bytesToReadableString(bytes: available)), required: \(bytesToReadableString(bytes: required))"
+      "Not enough memory to transcribe file. Available: \(bytesToReadableString(bytes: available)), required: \(bytesToReadableString(bytes: required))"
     }
   }
 }
@@ -67,12 +67,16 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
         case let .newSegment(segment):
           _transcription.segments.append(segment)
           _transcription.status = .progress(task.progress)
+
         case let .progress(progress):
           log.debug("Progress: \(progress)")
+
         case let .error(error):
           _transcription.status = .error(message: error.localizedDescription)
+
         case .canceled:
           _transcription.status = .canceled
+
         case let .finished(segments):
           _transcription.segments = initialSegments + segments
           _transcription.status = .done(Date())

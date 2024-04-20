@@ -1,4 +1,3 @@
-
 import Dependencies
 import Foundation
 import IdentifiedCollections
@@ -68,6 +67,7 @@ extension ModelDownloadClient: DependencyKey {
                   continuation.yield(.failure(error))
                   log.error(error)
                 }
+
               case let .failure(error):
                 continuation.yield(.failure(error))
                 log.error(error)

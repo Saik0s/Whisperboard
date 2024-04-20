@@ -65,7 +65,6 @@ extension AudioPlayerClient: DependencyKey {
               context.audioPlayer?.player.stop()
               timerTask.cancel()
             }
-
           } catch {
             continuation.yield(.error(error))
             continuation.finish()

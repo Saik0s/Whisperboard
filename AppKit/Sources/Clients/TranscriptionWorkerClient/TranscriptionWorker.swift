@@ -1,4 +1,3 @@
-
 import BackgroundTasks
 import Combine
 import ComposableArchitecture
@@ -27,7 +26,7 @@ final class TranscriptionWorkerImpl: TranscriptionWorker {
 
   private let processingTaskIdentifier = "me.igortarasenko.Whisperboard"
   private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
-  @Published private var isProcessing: Bool = false
+  @Published private var isProcessing = false
   @Published private var taskQueue: IdentifiedArrayOf<TranscriptionTask> = []
   private var cancellables: Set<AnyCancellable> = []
 

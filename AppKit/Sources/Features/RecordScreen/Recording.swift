@@ -1,10 +1,11 @@
-
 import ComposableArchitecture
 import SwiftUI
 
 // MARK: - Recording
 
-struct Recording: ReducerProtocol {
+@Reducer
+struct Recording {
+  @ObservableState
   struct State: Equatable {
     var date: Date
 
@@ -44,7 +45,7 @@ struct Recording: ReducerProtocol {
 
   @Dependency(\.audioRecorder) var audioRecorder
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+  func reduce(into state: inout State, action: Action) -> Effect<Action> {
     switch action {
     case .task:
       state.mode = .recording

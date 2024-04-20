@@ -5,11 +5,13 @@ import SwiftUI
 
 // MARK: - ModelSelector
 
-struct ModelSelector: ReducerProtocol {
+@Reducer
+struct ModelSelector {
+  @ObservableState
   struct State: Equatable {
     var modelRows: IdentifiedArrayOf<ModelRow.State> = []
 
-    @PresentationState var alert: AlertState<Action.Alert>?
+    @Presents var alert: AlertState<Action.Alert>?
 
     var selectedModel: VoiceModelType {
       modelRows.first(where: \.isSelected)?.model.modelType ?? .default
@@ -28,7 +30,7 @@ struct ModelSelector: ReducerProtocol {
   @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
   @Dependency(\.settings) var settings: SettingsClient
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     BindingReducer()
 
     Reduce<State, Action> { state, action in
@@ -76,20 +78,20 @@ struct ModelSelector: ReducerProtocol {
 // MARK: - ModelSelectorView
 
 struct ModelSelectorView: View {
-  let store: Store<ModelSelector.State, ModelSelector.Action>
+  @Perception.Bindable var store: Store<ModelSelector.State, ModelSelector.Action>
 
   var body: some View {
-    WithViewStore(store, observe: { $0 }) { viewStore in
+    WithPerceptionTracking {
       Form {
         Section {
-          ForEachStore(store.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
+          ForEachStore(store.scope(state: \.modelRows, action: \.modelRow)) { modelRowStore in
             ModelRowView(store: modelRowStore)
           }
           .listRowBackground(Color.DS.Background.secondary)
         }
       }
-      .onAppear { viewStore.send(.reloadSelectedModel) }
-      .alert(store: store.scope(state: \.$alert, action: { .alert($0) }))
+      .onAppear { store.send(.reloadSelectedModel) }
+      .alert($store.scope(state: \.alert, action: \.alert))
     }
     .enableInjection()
   }

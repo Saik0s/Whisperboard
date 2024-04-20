@@ -83,7 +83,7 @@ extension View {
 // MARK: - IconButtonStyle
 
 struct IconButtonStyle: ButtonStyle {
-  var isPrimary: Bool = true
+  var isPrimary = true
   @State var feedbackGenerator = UISelectionFeedbackGenerator()
 
   func makeBody(configuration: Self.Configuration) -> some View {

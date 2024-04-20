@@ -8,31 +8,18 @@ import SwiftUIIntrospect
 
 // MARK: - RecordingListScreen
 
-struct RecordingListScreen: ReducerProtocol {
+@Reducer
+struct RecordingListScreen {
+  @ObservableState
   struct State: Equatable {
     var recordingCards: IdentifiedArrayOf<RecordingCard.State> = []
-    var selectedId: RecordingInfo.ID? = nil
-    @BindingState var editMode: EditMode = .inactive
-    @BindingState var isImportingFiles = false
-    @PresentationState var alert: AlertState<Action.Alert>?
+    var editMode: EditMode = .inactive
+    var isImportingFiles = false
 
-    private var _details: RecordingDetails.State? = nil
-    var selection: PresentationState<RecordingDetails.State> {
-      get {
-        guard let id = selectedId, let card = recordingCards[id: id]
-        else { return PresentationState(wrappedValue: nil) }
-        var details = _details ?? RecordingDetails.State(recordingCard: card)
-        details.recordingCard = card
-        return PresentationState(wrappedValue: details)
-      }
-      set {
-        selectedId = newValue.wrappedValue?.recordingCard.id
-        if let card = newValue.wrappedValue?.recordingCard {
-          recordingCards[id: card.id] = card
-        }
-        _details = newValue.wrappedValue
-      }
-    }
+    @Presents var alert: AlertState<Action.Alert>?
+    @Presents var selection: RecordingDetails.State?
+
+    var isRecordingCardsEmpty: Bool { recordingCards.isEmpty }
   }
 
   enum Action: BindableAction, Equatable {
@@ -43,7 +30,7 @@ struct RecordingListScreen: ReducerProtocol {
     case delete(id: RecordingInfo.ID)
     case addFileRecordings(urls: [URL])
     case failedToAddRecordings(error: EquatableError)
-    case details(action: PresentationAction<RecordingDetails.Action>)
+    case details(PresentationAction<RecordingDetails.Action>)
     case alert(PresentationAction<Alert>)
     case didFinishImportingFiles
 
@@ -60,7 +47,7 @@ struct RecordingListScreen: ReducerProtocol {
 
   struct StreamID: Hashable {}
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     CombineReducers {
       BindingReducer()
 
@@ -68,15 +55,22 @@ struct RecordingListScreen: ReducerProtocol {
 
       deleteReducer()
     }
-    .ifLet(\.selection, action: /Action.details) {
+    .ifLet(\.$selection, action: \.details) {
       RecordingDetails()
     }
     .forEach(\.recordingCards, action: /Action.recordingCard(id:action:)) {
       RecordingCard()
     }
+    .onChange(of: \.selection?.recordingCard) { oldValue, newValue in
+      Reduce { state, action in
+        guard let newValue else { return .none }
+        state.recordingCards[id: newValue.id] = newValue
+        return .none
+      }
+    }
   }
 
-  private func mainReducer() -> some ReducerProtocol<State, Action> {
+  private func mainReducer() -> some Reducer<State, Action> {
     Reduce<State, Action> { state, action in
       switch action {
       case .task:
@@ -108,20 +102,20 @@ struct RecordingListScreen: ReducerProtocol {
         }
         .identifiedArray
 
-        let detailsState = state.selection.wrappedValue.flatMap { selection -> RecordingDetails.State? in
+        let detailsState = state.selection.flatMap { selection -> RecordingDetails.State? in
           guard let card = state.recordingCards.first(where: { $0.id == selection.recordingCard.id }) else {
             return nil
           }
           return RecordingDetails.State(recordingCard: card)
         }
 
-        state.selection = PresentationState(wrappedValue: detailsState)
+        state.selection = detailsState
 
         return .none
 
       case let .addFileRecordings(urls):
         return .run { send in
-          await send(.binding(.set(\.$isImportingFiles, true)))
+          await send(.binding(.set(\.isImportingFiles, true)))
 
           for url in urls {
             let newURL = storage.createNewWhisperURL()
@@ -136,10 +130,10 @@ struct RecordingListScreen: ReducerProtocol {
             try storage.addRecordingInfo(recordingEnvelop)
           }
 
-          await send(.binding(.set(\.$isImportingFiles, false)))
+          await send(.binding(.set(\.isImportingFiles, false)))
           await send(.didFinishImportingFiles)
         } catch: { error, send in
-          await send(.binding(.set(\.$isImportingFiles, false)))
+          await send(.binding(.set(\.isImportingFiles, false)))
           await send(.failedToAddRecordings(error: error.equatable))
         }
         .animation(.gentleBounce())
@@ -150,7 +144,7 @@ struct RecordingListScreen: ReducerProtocol {
         return .none
 
       case .recordingCard(let id, action: .recordingSelected):
-        state.selectedId = id
+        state.selection = state.recordingCards[id: id].map { RecordingDetails.State(recordingCard: $0) }
         return .none
 
       case .details:
@@ -168,7 +162,7 @@ struct RecordingListScreen: ReducerProtocol {
     }
   }
 
-  private func deleteReducer() -> some ReducerProtocol<State, Action> {
+  private func deleteReducer() -> some Reducer<State, Action> {
     Reduce<State, Action> { state, action in
       switch action {
       case let .delete(id):
@@ -176,15 +170,15 @@ struct RecordingListScreen: ReducerProtocol {
         return .none
 
       case .details(action: .presented(.delete)):
-        guard let id = state.selection.wrappedValue?.recordingCard.id else {
+        guard let id = state.selection?.recordingCard.id else {
           return .none
         }
         createDeleteConfirmationDialog(id: id, state: &state)
         return .none
 
       case let .alert(.presented(.deleteDialogConfirmed(id))):
-        if state.selection.wrappedValue?.recordingCard.id == id {
-          state.selection = PresentationState(wrappedValue: nil)
+        if state.selection?.recordingCard.id == id {
+          state.selection = nil
         }
 
         do {
@@ -221,96 +215,78 @@ struct RecordingListScreen: ReducerProtocol {
 // MARK: - RecordingListScreenView
 
 struct RecordingListScreenView: View {
-  struct ViewState: Equatable {
-    var isRecordingCardsEmpty: Bool
-    var isImportingFiles: Bool
-    @BindingViewState var editMode: EditMode
-  }
-
   @ObserveInjection var inject
 
-  let store: StoreOf<RecordingListScreen>
-
-  @ObservedObject var viewStore: ViewStore<ViewState, RecordingListScreen.Action>
-
-  init(store: StoreOf<RecordingListScreen>) {
-    self.store = store
-    viewStore = ViewStore(store) { state in
-      ViewState(
-        isRecordingCardsEmpty: state.recordingCards.isEmpty,
-        isImportingFiles: state.isImportingFiles,
-        editMode: state.$editMode
-      )
-    }
-  }
+  @Perception.Bindable var store: StoreOf<RecordingListScreen>
 
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        VStack(spacing: .grid(4)) {
-          ForEachStore(
-            store.scope(
-              state: \.recordingCards,
-              action: RecordingListScreen.Action.recordingCard(id:action:)
-            ),
-            content: { store in
-              makeRecordingCard(store: store, id: ViewStore(store) { $0 }.state.id)
-            }
-          )
+    WithPerceptionTracking {
+      NavigationStack {
+        ScrollView {
+          VStack(spacing: .grid(4)) {
+            ForEachStore(
+              store.scope(
+                state: \.recordingCards,
+                action: \.recordingCard
+              ),
+              content: { store in
+                makeRecordingCard(store: store, id: store.id)
+              }
+            )
+          }
+          .padding(.grid(4))
+          .removeClipToBounds()
         }
-        .padding(.grid(4))
-        .removeClipToBounds()
-      }
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      .background {
-        EmptyStateView()
-          .hidden(!viewStore.isRecordingCardsEmpty)
-      }
-      .applyTabBarContentInset()
-      .navigationTitle("Recordings")
-      .navigationBarTitleDisplayMode(.inline)
-      .navigationBarItems(
-        leading: EditButton(),
-        trailing: FilePicker(types: [.wav, .mp3, .mpeg4Audio], allowMultiple: true) { urls in
-          viewStore.send(.addFileRecordings(urls: urls))
-        } label: {
-          Image(systemName: "doc.badge.plus")
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background {
+          EmptyStateView()
+            .hidden(!store.isRecordingCardsEmpty)
         }
+        .applyTabBarContentInset()
+        .navigationTitle("Recordings")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarItems(
+          leading: EditButton(),
+          trailing: FilePicker(types: [.wav, .mp3, .mpeg4Audio], allowMultiple: true) { urls in
+            store.send(.addFileRecordings(urls: urls))
+          } label: {
+            Image(systemName: "doc.badge.plus")
+          }
           .secondaryIconButtonStyle()
-      )
-      .environment(
-        \.editMode,
-         viewStore.$editMode
-      )
-      .removeNavigationBackground()
-      .sheet(
-        store: store.scope(state: \.selection, action: RecordingListScreen.Action.details),
-        content: RecordingDetailsView.init(store:)
-      )
-    }
-    .overlay {
-      if viewStore.isImportingFiles {
-        Color.black.opacity(0.5).overlay(ProgressView())
+        )
+        .environment(
+          \.editMode,
+          $store.editMode
+        )
+        .removeNavigationBackground()
+        .sheet(item: $store.scope(state: \.selection, action: \.details)) { store in
+          RecordingDetailsView(store: store)
+        }
       }
+      .overlay {
+        if store.isImportingFiles {
+          Color.black.opacity(0.5).overlay(ProgressView())
+        }
+      }
+      .messagePopup(store: store.scope(state: \.$alert, action: \.alert))
     }
-    .messagePopup(store: store.scope(state: \.$alert, action: { .alert($0) }))
     .enableInjection()
   }
 }
 
 extension RecordingListScreenView {
-  private func makeRecordingCard(store: StoreOf<RecordingCard>, id: RecordingCard.State.ID) -> some View {
+  private func makeRecordingCard(store cardStore: StoreOf<RecordingCard>, id: RecordingCard.State.ID) -> some View {
     HStack(spacing: .grid(4)) {
-      if viewStore.editMode.isEditing {
-        Button { viewStore.send(.delete(id: id)) } label: {
+      if store.editMode.isEditing {
+        Button { store.send(.delete(id: id)) } label: {
           Image(systemName: "multiply.circle.fill")
         }
         .iconButtonStyle()
       }
 
-      RecordingCardView(store: store)
+      RecordingCardView(store: cardStore)
     }
-    .animation(.gentleBounce(), value: viewStore.editMode.isEditing)
+    .animation(.gentleBounce(), value: store.editMode.isEditing)
   }
 }
 

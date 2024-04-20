@@ -1,4 +1,3 @@
-
 import ComposableArchitecture
 import Inject
 import SwiftUI
@@ -8,49 +7,45 @@ import SwiftUI
 struct RecordingCardView: View {
   @ObserveInjection var inject
 
-  let store: StoreOf<RecordingCard>
+  @Perception.Bindable var store: StoreOf<RecordingCard>
 
-  @ObservedObject var viewStore: ViewStoreOf<RecordingCard>
   @State var showItem = false
 
-  init(store: StoreOf<RecordingCard>) {
-    self.store = store
-    viewStore = ViewStore(store) { $0 }
-  }
-
   var body: some View {
-    Button { viewStore.send(.recordingSelected) } label: {
-      cardView
+    WithPerceptionTracking {
+      Button { store.send(.recordingSelected) } label: {
+        cardView
+      }
+      .cardButtonStyle()
     }
-    .cardButtonStyle()
   }
 
   var cardView: some View {
     VStack(spacing: .grid(2)) {
       HStack(spacing: .grid(2)) {
-        PlayButton(isPlaying: viewStore.mode.isPlaying) {
-          viewStore.send(.playButtonTapped, animation: .easeIn(duration: 0.3))
+        PlayButton(isPlaying: store.mode.isPlaying) {
+          store.send(.playButtonTapped, animation: .easeIn(duration: 0.3))
         }
 
         VStack(alignment: .leading, spacing: .grid(1)) {
-          if viewStore.recording.title.isEmpty {
+          if store.recording.title.isEmpty {
             Text("Untitled")
               .textStyle(.bodyBold)
               .opacity(0.5)
           } else {
-            Text(viewStore.recording.title)
+            Text(store.recording.title)
               .textStyle(.bodyBold)
               .lineLimit(1)
           }
 
-          Text(viewStore.dateString)
+          Text(store.dateString)
             .textStyle(.footnote)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
 
-        Text(viewStore.currentTimeString)
+        Text(store.currentTimeString)
           .foregroundColor(
-            viewStore.mode.isPlaying
+            store.mode.isPlaying
               ? Color.DS.Text.accent
               : Color.DS.Text.base
           )
@@ -59,11 +54,11 @@ struct RecordingCardView: View {
       }
       .padding([.horizontal, .top], .grid(2))
 
-      if viewStore.mode.isPlaying {
+      if store.mode.isPlaying {
         WaveformProgressView(
           store: store.scope(
-            state: { $0.waveform },
-            action: { .waveform($0) }
+            state: \.waveform,
+            action: \.waveform
           )
         )
         .transition(.scale.combined(with: .opacity))
@@ -72,18 +67,18 @@ struct RecordingCardView: View {
 
       ZStack(alignment: .top) {
         VStack(alignment: .leading, spacing: .grid(2)) {
-          Text(viewStore.transcription)
+          Text(store.transcription)
             .textStyle(.body)
             .lineLimit(3)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-          if viewStore.recording.isTranscribed && !viewStore.isTranscribing {
+          if store.recording.isTranscribed && !store.isTranscribing {
             HStack(spacing: .grid(2)) {
-              CopyButton(viewStore.transcription) {
+              CopyButton(store.transcription) {
                 Image(systemName: "doc.on.clipboard")
               }
 
-              ShareLink(item: viewStore.transcription) {
+              ShareLink(item: store.transcription) {
                 Image(systemName: "paperplane")
               }
             }.iconButtonStyle()
@@ -91,57 +86,57 @@ struct RecordingCardView: View {
         }
         .padding([.horizontal, .bottom], .grid(2))
 
-        if viewStore.isTranscribing || viewStore.queuePosition != nil || !viewStore.recording.isTranscribed {
+        if store.isTranscribing || store.queuePosition != nil || !store.recording.isTranscribed {
           ZStack {
             Rectangle()
               .fill(.ultraThinMaterial)
               .continuousCornerRadius(.grid(2))
 
-            if viewStore.isTranscribing || viewStore.queuePosition != nil {
+            if store.isTranscribing || store.queuePosition != nil {
               VStack(spacing: .grid(2)) {
-                if viewStore.isTranscribing {
+                if store.isTranscribing {
                   HStack(spacing: .grid(2)) {
                     ProgressView()
                       .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
 
-                    Text(viewStore.recording.lastTranscription?.status.message ?? "")
+                    Text(store.recording.lastTranscription?.status.message ?? "")
                       .textStyle(.subheadline)
                   }
-                } else if let queuePosition = viewStore.queuePosition, let queueTotal = viewStore.queueTotal {
+                } else if let queuePosition = store.queuePosition, let queueTotal = store.queueTotal {
                   Text("In queue: \(queuePosition) of \(queueTotal)")
                     .textStyle(.body)
                 }
 
                 Button("Cancel") {
-                  viewStore.send(.cancelTranscriptionTapped)
+                  store.send(.cancelTranscriptionTapped)
                 }.tertiaryButtonStyle()
               }
               .padding(.grid(2))
-            } else if viewStore.recording.isPaused {
+            } else if store.recording.isPaused {
               VStack(spacing: .grid(1)) {
-                Text(viewStore.recording.lastTranscription?.status.message ?? "")
+                Text(store.recording.lastTranscription?.status.message ?? "")
                   .textStyle(.body)
 
                 HStack {
                   Button("Resume") {
-                    viewStore.send(.resumeTapped)
+                    store.send(.resumeTapped)
                   }.tertiaryButtonStyle()
 
                   Button("Start Over") {
-                    viewStore.send(.transcribeTapped)
+                    store.send(.transcribeTapped)
                   }.tertiaryButtonStyle()
                 }
               }
               .padding(.grid(2))
-            } else if !viewStore.recording.isTranscribed {
+            } else if !store.recording.isTranscribed {
               VStack(spacing: .grid(1)) {
-                if let error = viewStore.recording.lastTranscriptionErrorMessage {
+                if let error = store.recording.lastTranscriptionErrorMessage {
                   Text(error)
                     .textStyle(.error)
                 }
 
                 Button("Transcribe") {
-                  viewStore.send(.transcribeTapped)
+                  store.send(.transcribeTapped)
                 }
                 .tertiaryButtonStyle()
               }
@@ -152,20 +147,18 @@ struct RecordingCardView: View {
         }
       }
     }
-    .animation(.easeInOut(duration: 0.3), value: viewStore.state)
+    .animation(.easeInOut(duration: 0.3), value: store.state)
     .multilineTextAlignment(.leading)
     .padding(.grid(2))
-    .cardStyle(isPrimary: viewStore.mode.isPlaying)
+    .cardStyle(isPrimary: store.mode.isPlaying)
     .offset(y: showItem ? 0 : 200)
     .opacity(showItem ? 1 : 0)
     .animation(
       .spring(response: 0.6, dampingFraction: 0.75)
-        .delay(Double(viewStore.index) * 0.15),
+        .delay(Double(store.index) * 0.15),
       value: showItem
     )
-    .alert(
-      store: store.scope(state: \.$alert, action: { .alert($0) })
-    )
+    .alert($store.scope(state: \.alert, action: \.alert))
     .onAppear { showItem = true }
     .enableInjection()
   }

@@ -179,7 +179,7 @@ class ChunkedUploader: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
     request.addValue("\(chunk.totalChunks)", forHTTPHeaderField: CustomHeaderFields.totalChunks.rawValue)
 
     // Add any additional headers provided.
-    additionalHeaders.forEach { key, value in
+    for (key, value) in additionalHeaders {
       request.addValue(value, forHTTPHeaderField: key)
     }
 

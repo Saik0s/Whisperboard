@@ -1,4 +1,3 @@
-
 import AVFoundation
 import ComposableArchitecture
 import Inject
@@ -6,13 +5,15 @@ import SwiftUI
 
 // MARK: - MicSelector
 
-struct MicSelector: ReducerProtocol {
+@Reducer
+struct MicSelector {
+  @ObservableState
   struct State: Equatable {
     var mics: IdentifiedArrayOf<Microphone> = []
 
     var currentMic: Microphone?
 
-    @PresentationState var alert: AlertState<Action.Alert>?
+    @Presents var alert: AlertState<Action.Alert>?
   }
 
   enum Action: Equatable, BindableAction {
@@ -30,7 +31,7 @@ struct MicSelector: ReducerProtocol {
 
   @Dependency(\.audioRecorder) var audioRecorder: AudioRecorderClient
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     BindingReducer()
 
     Reduce<State, Action> { state, action in
@@ -83,7 +84,7 @@ struct MicSelector: ReducerProtocol {
         return .none
       }
     }
-    .ifLet(\.$alert, action: /Action.alert)
+    .ifLet(\.$alert, action: \.alert)
   }
 }
 
@@ -92,42 +93,38 @@ struct MicSelector: ReducerProtocol {
 struct MicSelectorView: View {
   @ObserveInjection var inject
 
-  let store: StoreOf<MicSelector>
-  @ObservedObject var viewStore: ViewStore<MicSelector.State, MicSelector.Action>
-
-  init(store: StoreOf<MicSelector>) {
-    self.store = store
-    viewStore = ViewStore(store) { $0 }
-  }
+  @Perception.Bindable var store: StoreOf<MicSelector>
 
   var body: some View {
-    VStack(spacing: 0) {
-      ForEach(viewStore.mics.elements) { (mic: Microphone) in
-        Button(action: { viewStore.send(.micSelected(mic)) }) {
-          HStack(spacing: .grid(2)) {
-            let isSelected = mic.id == viewStore.currentMic?.id
-            Image(systemName: "checkmark")
-              .textStyle(.body)
-              .hidden(!isSelected)
-
-            VStack(alignment: .leading, spacing: 0) {
-              Text(mic.port.portName)
-                .textStyle(.body)
+    WithPerceptionTracking {
+      VStack(spacing: 0) {
+        ForEach(store.mics.elements) { (mic: Microphone) in
+          WithPerceptionTracking {
+            Button(action: { store.send(.micSelected(mic)) }) {
+              HStack(spacing: .grid(2)) {
+                let isSelected = mic.id == store.currentMic?.id
+                Image(systemName: "checkmark")
+                  .textStyle(.body)
+                  .hidden(!isSelected)
+                
+                VStack(alignment: .leading, spacing: 0) {
+                  Text(mic.port.portName)
+                    .textStyle(.body)
+                }
+              }
+              .padding(.grid(2))
+            }
+            
+            if mic.id != store.mics.last?.id {
+              Divider()
             }
           }
-          .padding(.grid(2))
-        }
-
-        if mic.id != viewStore.mics.last?.id {
-          Divider()
         }
       }
+      .fixedSize(horizontal: true, vertical: false)
+      .alert($store.scope(state: \.alert, action: \.alert))
+      .task { store.send(.task) }
     }
-    .fixedSize(horizontal: true, vertical: false)
-    .alert(
-      store: store.scope(state: \.$alert, action: { .alert($0) })
-    )
-    .task { viewStore.send(.task) }
     .enableInjection()
   }
 }

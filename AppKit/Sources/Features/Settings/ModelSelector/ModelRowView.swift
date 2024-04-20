@@ -1,4 +1,3 @@
-
 import AsyncAlgorithms
 import ComposableArchitecture
 import Inject
@@ -6,13 +5,15 @@ import SwiftUI
 
 // MARK: - ModelRow
 
-struct ModelRow: ReducerProtocol {
+@Reducer
+struct ModelRow {
+  @ObservableState
   struct State: Equatable, Identifiable {
     var model: VoiceModel
 
     var isSelected: Bool
 
-    var isRemovingModel: Bool = false
+    var isRemovingModel = false
 
     var id: VoiceModel.ID { model.id }
   }
@@ -32,7 +33,7 @@ struct ModelRow: ReducerProtocol {
 
   struct CancelDownloadID: Hashable {}
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     Reduce<State, Action> { state, action in
       switch action {
       case .downloadModelTapped:
@@ -49,9 +50,11 @@ struct ModelRow: ReducerProtocol {
                 lastProgressUpdate = now
                 await send(.modelUpdated(VoiceModel(modelType: modelType, downloadProgress: progress, isDownloading: true)))
               }
+
             case .success:
               await send(.modelUpdated(VoiceModel(modelType: modelType, downloadProgress: 1, isDownloading: false)))
               await send(.selectModelTapped)
+
             case let .failure(error):
               await send(.loadError(error.localizedDescription))
             }
@@ -102,61 +105,56 @@ struct ModelRow: ReducerProtocol {
 struct ModelRowView: View {
   @ObserveInjection var inject
 
-  let store: StoreOf<ModelRow>
-
-  @ObservedObject var viewStore: ViewStoreOf<ModelRow>
-
-  init(store: StoreOf<ModelRow>) {
-    self.store = store
-    viewStore = ViewStore(store) { $0 }
-  }
+  @Perception.Bindable var store: StoreOf<ModelRow>
 
   var body: some View {
-    VStack(spacing: .grid(2)) {
-      HStack(spacing: .grid(2)) {
-        VStack(alignment: .leading, spacing: .grid(1)) {
-          VStack(alignment: .leading, spacing: 0) {
-            Text(viewStore.model.modelType.readableName)
-              .textStyle(.headline)
+    WithPerceptionTracking {
+      VStack(spacing: .grid(2)) {
+        HStack(spacing: .grid(2)) {
+          VStack(alignment: .leading, spacing: .grid(1)) {
+            VStack(alignment: .leading, spacing: 0) {
+              Text(store.model.modelType.readableName)
+                .textStyle(.headline)
 
-            Text(viewStore.model.modelType.sizeLabel)
-              .textStyle(.subheadline)
+              Text(store.model.modelType.sizeLabel)
+                .textStyle(.subheadline)
+            }
+
+            Text(store.model.modelType.modelDescription)
+              .textStyle(.captionBase)
           }
+          .frame(maxWidth: .infinity, alignment: .leading)
 
-          Text(viewStore.model.modelType.modelDescription)
-            .textStyle(.captionBase)
+          if store.isRemovingModel {
+            ProgressView()
+          } else if store.model.isDownloading {
+            Button("Cancel") { store.send(.cancelDownloadTapped) }
+              .tertiaryButtonStyle()
+          } else if store.model.isDownloaded == false {
+            Button("Download") { store.send(.downloadModelTapped) }
+              .secondaryButtonStyle()
+          } else {
+            Button("Active") { store.send(.selectModelTapped) }
+              .activeButtonStyle(isActive: store.isSelected)
+          }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
 
-        if viewStore.isRemovingModel {
-          ProgressView()
-        } else if viewStore.model.isDownloading {
-          Button("Cancel") { viewStore.send(.cancelDownloadTapped) }
-            .tertiaryButtonStyle()
-        } else if viewStore.model.isDownloaded == false {
-          Button("Download") { viewStore.send(.downloadModelTapped) }
-            .secondaryButtonStyle()
-        } else {
-          Button("Active") { viewStore.send(.selectModelTapped) }
-            .activeButtonStyle(isActive: viewStore.isSelected)
+        if store.model.isDownloading {
+          ProgressView(value: store.model.downloadProgress)
         }
       }
-
-      if viewStore.model.isDownloading {
-        ProgressView(value: viewStore.model.downloadProgress)
-      }
+      .foregroundColor(store.isSelected ? Color.DS.Text.success : Color.DS.Text.base)
+      .contentShape(Rectangle())
+      .onTapGesture { store.send(.selectModelTapped) }
+      .contextMenu(store.model.isDownloaded && store.model.modelType != .tiny ? contextMenuBuilder() : nil)
     }
-    .foregroundColor(viewStore.isSelected ? Color.DS.Text.success : Color.DS.Text.base)
-    .contentShape(Rectangle())
-    .onTapGesture { viewStore.send(.selectModelTapped) }
-    .contextMenu(viewStore.model.isDownloaded && viewStore.model.modelType != .tiny ? contextMenuBuilder() : nil)
     .enableInjection()
   }
 
   func contextMenuBuilder() -> ContextMenu<TupleView<(Button<Text>, Button<Text>)>> {
     ContextMenu {
-      Button(action: { viewStore.send(.selectModelTapped) }) { Text("Select") }
-      Button(action: { viewStore.send(.deleteModelTapped) }) { Text("Delete") }
+      Button(action: { store.send(.selectModelTapped) }) { Text("Select") }
+      Button(action: { store.send(.deleteModelTapped) }) { Text("Delete") }
     }
   }
 }
@@ -171,7 +169,6 @@ struct ActiveButtonStyle: ButtonStyle {
       .padding(.horizontal, .grid(4))
       .padding(.vertical, .grid(2))
       .textStyle(.secondaryButton)
-
       .background {
         LinearGradient.easedGradient(colors: [
           Color.DS.Background.success.lighten(by: 0.03),

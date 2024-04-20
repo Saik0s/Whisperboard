@@ -1,13 +1,14 @@
-
 import ComposableArchitecture
 import Inject
 import SwiftUI
 
 // MARK: - RecordScreen
 
-struct RecordScreen: ReducerProtocol {
+@Reducer
+struct RecordScreen {
+  @ObservableState
   struct State: Equatable {
-    @PresentationState var alert: AlertState<Action.Alert>?
+    @Presents var alert: AlertState<Action.Alert>?
     var micSelector = MicSelector.State()
     var recordingControls = RecordingControls.State()
   }
@@ -28,7 +29,7 @@ struct RecordScreen: ReducerProtocol {
   @Dependency(\.storage) var storage: StorageClient
   @Dependency(\.settings) var settings: SettingsClient
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     BindingReducer()
 
     Scope(state: \.micSelector, action: /Action.micSelector) {
@@ -57,7 +58,7 @@ struct RecordScreen: ReducerProtocol {
 
         return .run { send in
           await send(.newRecordingCreated(recordingInfo))
-          await send(.recordingControls(.binding(.set(\.$isGotToDetailsPopupPresented, true))))
+          await send(.recordingControls(.binding(.set(\.isGotToDetailsPopupPresented, true))))
         }
 
       case let .recordingControls(.recording(.delegate(.didFinish(.failure(error))))):
@@ -100,26 +101,20 @@ struct RecordScreen: ReducerProtocol {
 struct RecordScreenView: View {
   @ObserveInjection var inject
 
-  let store: StoreOf<RecordScreen>
-
-  init(store: StoreOf<RecordScreen>) {
-    self.store = store
-  }
+  @Perception.Bindable var store: StoreOf<RecordScreen>
 
   var body: some View {
-    WithViewStore(store, observe: { $0 }) { _ in
+    WithPerceptionTracking {
       VStack(spacing: 0) {
-        MicSelectorView(store: store.scope(state: \.micSelector, action: { .micSelector($0) }))
+        MicSelectorView(store: store.scope(state: \.micSelector, action: \.micSelector))
         Spacer()
-        RecordingControlsView(store: store.scope(state: \.recordingControls, action: { .recordingControls($0) }))
+        RecordingControlsView(store: store.scope(state: \.recordingControls, action: \.recordingControls))
       }
       .padding(.top, .grid(4))
       .padding(.horizontal, .grid(4))
       .padding(.bottom, .grid(8))
       .ignoresSafeArea(edges: .bottom)
-      .alert(
-        store: store.scope(state: \.$alert, action: { .alert($0) })
-      )
+      .alert($store.scope(state: \.alert, action: \.alert))
     }
     .enableInjection()
   }

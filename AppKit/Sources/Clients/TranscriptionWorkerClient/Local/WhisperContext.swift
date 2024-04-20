@@ -1,4 +1,3 @@
-
 import AsyncAlgorithms
 import Combine
 import ComposableArchitecture
@@ -39,7 +38,7 @@ enum WhisperAction {
 
 protocol WhisperContextProtocol {
   func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) throws -> AsyncThrowingStream<WhisperAction, Error>
-  func cancel() -> Void
+  func cancel()
 }
 
 // MARK: - WhisperContext
@@ -56,20 +55,20 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
     self.id = id
     var params = whisper_context_default_params()
     params.use_gpu = useGPU
-#if targetEnvironment(simulator)
-    params.use_gpu = false
-    print("Running on the simulator, using CPU")
-#endif
+    #if targetEnvironment(simulator)
+      params.use_gpu = false
+      print("Running on the simulator, using CPU")
+    #endif
     guard let context = whisper_init_from_file_with_params(modelPath, params) else {
       log.error("Couldn't load model at \(modelPath)")
       throw WhisperError.cantLoadModel
     }
     self.context = context
-    WhisperContext.addReference(self)
+    Self.addReference(self)
   }
 
   deinit {
-    WhisperContext.removeReference(self)
+    Self.removeReference(self)
     whisper_free(context)
   }
 
@@ -171,7 +170,7 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
   }
 
   func cancel() {
-    WhisperContext.references.value[id: id]?.isCancelled = true
+    Self.references.value[id: id]?.isCancelled = true
   }
 
   // MARK: - Private

@@ -1,4 +1,3 @@
-
 import ComposableArchitecture
 import DSWaveformImage
 import DSWaveformImageViews
@@ -9,7 +8,9 @@ import SwiftUI
 
 // MARK: - RecordingControls
 
-struct RecordingControls: ReducerProtocol {
+@Reducer
+struct RecordingControls {
+  @ObservableState
   struct State: Equatable {
     enum RecorderPermission {
       case allowed
@@ -17,8 +18,8 @@ struct RecordingControls: ReducerProtocol {
       case undetermined
     }
 
-    @BindingState var alert: AlertState<Action>?
-    @BindingState var isGotToDetailsPopupPresented: Bool = false
+    var alert: AlertState<Action>?
+    var isGotToDetailsPopupPresented = false
 
     var recording: Recording.State?
 
@@ -44,7 +45,7 @@ struct RecordingControls: ReducerProtocol {
   @Dependency(\.storage) var storage
   @Dependency(\.continuousClock) var clock
 
-  var body: some ReducerProtocolOf<Self> {
+  var body: some ReducerOf<Self> {
     BindingReducer()
 
     Reduce<State, Action> { state, action in
@@ -99,10 +100,10 @@ struct RecordingControls: ReducerProtocol {
           await openSettings()
         }
 
-      case .binding(.set(\.$isGotToDetailsPopupPresented, true)):
+      case .binding(.set(\.isGotToDetailsPopupPresented, true)):
         return .run { send in
           try await clock.sleep(for: .seconds(5))
-          await send(.binding(.set(\.$isGotToDetailsPopupPresented, false)))
+          await send(.binding(.set(\.isGotToDetailsPopupPresented, false)))
         }
 
       case .goToDetailsButtonTapped:
@@ -138,115 +139,110 @@ struct RecordingControls: ReducerProtocol {
 struct RecordingControlsView: View {
   @ObserveInjection var inject
 
-  let store: StoreOf<RecordingControls>
-
-  @ObservedObject var viewStore: ViewStoreOf<RecordingControls>
+  @Perception.Bindable var store: StoreOf<RecordingControls>
 
   var currentTime: String {
-    (viewStore.recording?.duration).flatMap {
+    (store.recording?.duration).flatMap {
       dateComponentsFormatter.string(from: $0)
     } ?? ""
   }
 
-  init(store: StoreOf<RecordingControls>) {
-    self.store = store
-    viewStore = ViewStore(store) { $0 }
-  }
-
   var body: some View {
-    VStack(spacing: .grid(3)) {
-      WaveformLiveCanvas(samples: viewStore.recording?.samples ?? [], configuration: Waveform.Configuration(
-        backgroundColor: .clear,
-        style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
-        damping: .init(percentage: 0.125, sides: .both),
-        scale: DSScreen.scale,
-        verticalScalingFactor: 0.95,
-        shouldAntialias: true
-      ))
-      .frame(maxWidth: .infinity)
+    WithPerceptionTracking {
+      VStack(spacing: .grid(3)) {
+        WaveformLiveCanvas(samples: store.recording?.samples ?? [], configuration: Waveform.Configuration(
+          backgroundColor: .clear,
+          style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
+          damping: .init(percentage: 0.125, sides: .both),
+          scale: DSScreen.scale,
+          verticalScalingFactor: 0.95,
+          shouldAntialias: true
+        ))
+        .frame(maxWidth: .infinity)
 
-      Text(currentTime)
-        .foregroundColor(.DS.Text.accent)
-        .textStyle(.navigationTitle)
-        .monospaced()
+        Text(currentTime)
+          .foregroundColor(.DS.Text.accent)
+          .textStyle(.navigationTitle)
+          .monospaced()
 
-      HStack(spacing: .grid(8)) {
-        if viewStore.recording?.mode == .paused {
-          Button { viewStore.send(.recording(.deleteButtonTapped), animation: .default) }
-            label: {
-              Image(systemName: "multiply")
-                .textStyle(.navigationTitle)
-                .frame(width: 50, height: 50)
-                .containerShape(Rectangle())
-            }
-            .transition(.move(edge: .trailing).combined(with: .opacity))
-        }
+        HStack(spacing: .grid(8)) {
+          if store.recording?.mode == .paused {
+            Button { store.send(.recording(.deleteButtonTapped), animation: .default) }
+              label: {
+                Image(systemName: "multiply")
+                  .textStyle(.navigationTitle)
+                  .frame(width: 50, height: 50)
+                  .containerShape(Rectangle())
+              }
+              .transition(.move(edge: .trailing).combined(with: .opacity))
+          }
 
-        ZStack {
-          if viewStore.recording?.mode == .recording {
-            Button { viewStore.send(.recording(.pauseButtonTapped), animation: .default) } label: {
-              Circle()
-                .fill(RadialGradient.accent)
-                .shadow(color: .DS.Background.accent.opacity(0.5), radius: 20)
-                .overlay(Image(systemName: "pause.fill").textStyle(.headline))
-            }
-            .recordButtonStyle()
-          } else if viewStore.recording?.mode == .paused {
-            Button { viewStore.send(.recording(.continueButtonTapped), animation: .default) } label: {
-              Circle()
-                .fill(RadialGradient.accent)
-                .overlay(Image(systemName: "mic").textStyle(.headline))
-            }
-            .recordButtonStyle()
-          } else {
-            RecordButton(permission: viewStore.audioRecorderPermission) {
-              viewStore.send(.recordButtonTapped, animation: .default)
-            } settingsAction: {
-              viewStore.send(.openSettingsButtonTapped)
+          ZStack {
+            if store.recording?.mode == .recording {
+              Button { store.send(.recording(.pauseButtonTapped), animation: .default) } label: {
+                Circle()
+                  .fill(RadialGradient.accent)
+                  .shadow(color: .DS.Background.accent.opacity(0.5), radius: 20)
+                  .overlay(Image(systemName: "pause.fill").textStyle(.headline))
+              }
+              .recordButtonStyle()
+            } else if store.recording?.mode == .paused {
+              Button { store.send(.recording(.continueButtonTapped), animation: .default) } label: {
+                Circle()
+                  .fill(RadialGradient.accent)
+                  .overlay(Image(systemName: "mic").textStyle(.headline))
+              }
+              .recordButtonStyle()
+            } else {
+              RecordButton(permission: store.audioRecorderPermission) {
+                store.send(.recordButtonTapped, animation: .default)
+              } settingsAction: {
+                store.send(.openSettingsButtonTapped)
+              }
             }
           }
-        }
-        .frame(width: 70, height: 70)
+          .frame(width: 70, height: 70)
 
-        if viewStore.recording?.mode == .paused {
-          Button { viewStore.send(.recording(.saveButtonTapped), animation: .default) }
-            label: {
-              Image(systemName: "checkmark")
-                .textStyle(.navigationTitle)
-                .frame(width: 50, height: 50)
-                .containerShape(Rectangle())
-            }
-            .transition(.move(edge: .leading).combined(with: .opacity))
+          if store.recording?.mode == .paused {
+            Button { store.send(.recording(.saveButtonTapped), animation: .default) }
+              label: {
+                Image(systemName: "checkmark")
+                  .textStyle(.navigationTitle)
+                  .frame(width: 50, height: 50)
+                  .containerShape(Rectangle())
+              }
+              .transition(.move(edge: .leading).combined(with: .opacity))
+          }
         }
-      }
-      .padding(.horizontal, .grid(3))
-      .popover(
-        present: viewStore.$isGotToDetailsPopupPresented,
-        attributes: {
-          $0.position = .absolute(
-            originAnchor: .top,
-            popoverAnchor: .bottom
-          )
-          $0.presentation = .init(animation: .gentleBounce(), transition: .move(edge: .bottom))
-          $0.dismissal = .init(
-            animation: .gentleBounce(),
-            transition: .move(edge: .bottom),
-            mode: .dragDown
-          )
-        }
-      ) {
-        VStack {
-          Text("Go to new recording?")
-            .textStyle(.headline)
-            .foregroundColor(.DS.Text.base)
+        .padding(.horizontal, .grid(3))
+        .popover(
+          present: $store.isGotToDetailsPopupPresented,
+          attributes: {
+            $0.position = .absolute(
+              originAnchor: .top,
+              popoverAnchor: .bottom
+            )
+            $0.presentation = .init(animation: .gentleBounce(), transition: .move(edge: .bottom))
+            $0.dismissal = .init(
+              animation: .gentleBounce(),
+              transition: .move(edge: .bottom),
+              mode: .dragDown
+            )
+          }
+        ) {
+          VStack {
+            Text("Go to new recording?")
+              .textStyle(.headline)
+              .foregroundColor(.DS.Text.base)
 
-          Button("Open Recording") {
-            viewStore.send(.goToDetailsButtonTapped)
-          }.secondaryButtonStyle()
+            Button("Open Recording") {
+              store.send(.goToDetailsButtonTapped)
+            }.secondaryButtonStyle()
+          }
+          .padding(.grid(2))
+          .cardStyle()
+          .padding(.grid(2))
         }
-        .padding(.grid(2))
-        .cardStyle()
-        .padding(.grid(2))
       }
     }
     .enableInjection()

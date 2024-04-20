@@ -12,7 +12,9 @@ enum WaveformProgressError: Error {
 
 // MARK: - WaveformProgress
 
-struct WaveformProgress: ReducerProtocol {
+@Reducer
+struct WaveformProgress {
+  @ObservableState
   struct State: Equatable, Then {
     var fileName = ""
     var progress = 0.0
@@ -39,7 +41,7 @@ struct WaveformProgress: ReducerProtocol {
     shouldAntialias: true
   )
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     Reduce<State, Action> { state, action in
       switch action {
       case .didAppear:
@@ -89,51 +91,47 @@ struct WaveformProgress: ReducerProtocol {
 struct WaveformProgressView: View {
   @ObserveInjection var inject
 
-  let store: StoreOf<WaveformProgress>
-  @ObservedObject var viewStore: ViewStoreOf<WaveformProgress>
-
-  init(store: StoreOf<WaveformProgress>) {
-    self.store = store
-    viewStore = ViewStore(store) { $0 }
-  }
+  @Perception.Bindable var store: StoreOf<WaveformProgress>
 
   var body: some View {
-    Rectangle()
-      .fill(Color.clear)
-      .background {
-        waveImageView()
-      }
-      .frame(height: 50)
-      .frame(maxWidth: .infinity)
-      .padding(.horizontal, .grid(1))
-      .animation(.linear(duration: 0.1), value: viewStore.progress)
-      .onTouchLocationPercent { horizontal, _ in
-        viewStore.send(.didTouchAtHorizontalLocation(horizontal))
-      }
-      .onAppear {
-        viewStore.send(.didAppear)
-      }
-      .enableInjection()
+    WithPerceptionTracking {
+      Rectangle()
+        .fill(Color.clear)
+        .background {
+          waveImageView()
+        }
+        .frame(height: 50)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, .grid(1))
+        .animation(.linear(duration: 0.1), value: store.progress)
+        .onTouchLocationPercent { horizontal, _ in
+          store.send(.didTouchAtHorizontalLocation(horizontal))
+        }
+        .onAppear {
+          store.send(.didAppear)
+        }
+    }
+    .enableInjection()
   }
 
   @ViewBuilder
   private func waveImageView() -> some View {
     ZStack {
-      AsyncImage(url: viewStore.waveFormImageURL) { image in
+      AsyncImage(url: store.waveFormImageURL) { image in
         image
           .resizable()
           .renderingMode(.template)
           .foregroundColor(.DS.Text.subdued)
       } placeholder: {
         ProgressView()
-      }.id(viewStore.waveFormImageURL)
-      AsyncImage(url: viewStore.waveFormImageURL) { image in
+      }.id(store.waveFormImageURL)
+      AsyncImage(url: store.waveFormImageURL) { image in
         image
           .resizable()
           .mask(alignment: .leading) {
             GeometryReader { geometry in
-              if viewStore.isPlaying {
-                Rectangle().frame(width: geometry.size.width * viewStore.progress)
+              if store.isPlaying {
+                Rectangle().frame(width: geometry.size.width * store.progress)
               } else {
                 Rectangle()
               }
@@ -141,7 +139,7 @@ struct WaveformProgressView: View {
           }
       } placeholder: {
         ProgressView()
-      }.id(viewStore.waveFormImageURL)
+      }.id(store.waveFormImageURL)
     }
   }
 }

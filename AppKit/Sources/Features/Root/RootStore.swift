@@ -1,20 +1,21 @@
-
 import Combine
 import ComposableArchitecture
 import SwiftUI
 
 // MARK: - Root
 
-struct Root: ReducerProtocol {
+@Reducer
+struct Root {
   enum Tab: Int { case list, record, settings }
 
+  @ObservableState
   struct State: Equatable {
     var recordingListScreen = RecordingListScreen.State()
     var recordScreen = RecordScreen.State()
     var settingsScreen = SettingsScreen.State()
 
-    @BindingState var selectedTab: Tab = .record
-    @PresentationState var alert: AlertState<Action.Alert>?
+    var selectedTab: Tab = .record
+    @Presents var alert: AlertState<Action.Alert>?
 
     var isRecording: Bool {
       recordScreen.recordingControls.recording != nil
@@ -48,9 +49,10 @@ struct Root: ReducerProtocol {
   @Dependency(\.settings) var settings: SettingsClient
   @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
+    BindingReducer()
+
     CombineReducers {
-      BindingReducer()
 
       Scope(state: \.recordingListScreen, action: /Action.recordingListScreen) {
         RecordingListScreen()
@@ -69,20 +71,20 @@ struct Root: ReducerProtocol {
         case .recordScreen(.goToNewRecordingTapped):
           if let recordingCard = state.recordingListScreen.recordingCards.first {
             state.selectedTab = .list
-            state.recordingListScreen.selectedId = recordingCard.id
+            state.recordingListScreen.selection = .init(recordingCard: recordingCard)
           }
           return .none
 
         case .settingsScreen(.alert(.presented(.deleteDialogConfirmed))):
-          state.recordingListScreen.selectedId = nil
+          state.recordingListScreen.selection = nil
           return .none
 
         case .recordingListScreen(.didFinishImportingFiles), .recordScreen(.newRecordingCreated):
           return .run { send in
             if settings.getSettings().isICloudSyncEnabled {
-              await send(.settingsScreen(.set(\.$isICloudSyncInProgress, true)))
+              await send(.settingsScreen(.set(\.isICloudSyncInProgress, true)))
               try await storage.uploadRecordingsToICloud(false)
-              await send(.settingsScreen(.set(\.$isICloudSyncInProgress, false)))
+              await send(.settingsScreen(.set(\.isICloudSyncInProgress, false)))
             }
           } catch: { error, send in
             await send(.failedICloudSync(error.equatable))
@@ -119,9 +121,9 @@ struct Root: ReducerProtocol {
           }
           return .run { send in
             if settings.getSettings().isICloudSyncEnabled {
-              await send(.settingsScreen(.set(\.$isICloudSyncInProgress, true)))
+              await send(.settingsScreen(.set(\.isICloudSyncInProgress, true)))
               try await storage.uploadRecordingsToICloud(false)
-              await send(.settingsScreen(.set(\.$isICloudSyncInProgress, false)))
+              await send(.settingsScreen(.set(\.isICloudSyncInProgress, false)))
             }
           } catch: { error, send in
             await send(.failedICloudSync(error.equatable))
@@ -201,7 +203,7 @@ struct Root: ReducerProtocol {
         }
       }
     }
-    .ifLet(\.$alert, action: /Action.alert)
+    .ifLet(\.$alert, action: \.alert)
     .onChange(of: \.shouldDisableIdleTimer) { _, shouldDisableIdleTimer in
       Reduce { _, _ in
         UIApplication.shared.isIdleTimerDisabled = shouldDisableIdleTimer

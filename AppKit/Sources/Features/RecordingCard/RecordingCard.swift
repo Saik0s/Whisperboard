@@ -3,11 +3,23 @@ import Foundation
 
 // MARK: - RecordingCard
 
-struct RecordingCard: ReducerProtocol {
+@Reducer
+struct RecordingCard {
+  @ObservableState
   struct State: Equatable, Identifiable, Then {
     enum Mode: Equatable, Codable {
       case notPlaying
       case playing(progress: Double)
+
+      var isPlaying: Bool {
+        if case .playing = self { return true }
+        return false
+      }
+
+      var progress: Double? {
+        if case let .playing(progress) = self { return progress }
+        return nil
+      }
     }
 
     var id: String { recording.id }
@@ -23,7 +35,7 @@ struct RecordingCard: ReducerProtocol {
     var transcribingProgressText: String { recording.lastTranscription?.text ?? "" }
     var isInQueue: Bool { queuePosition != nil && queueTotal != nil }
 
-    @PresentationState var alert: AlertState<Action.Alert>?
+    @Presents var alert: AlertState<Action.Alert>?
 
     var waveform: WaveformProgress.State {
       get {
@@ -40,6 +52,19 @@ struct RecordingCard: ReducerProtocol {
           mode = .playing(progress: newValue.progress)
         }
       }
+    }
+
+    var dateString: String {
+      recording.date.formatted(date: .abbreviated, time: .shortened)
+    }
+
+    var currentTimeString: String {
+      let currentTime = mode.progress.map { $0 * recording.duration } ?? recording.duration
+      return dateComponentsFormatter.string(from: currentTime) ?? ""
+    }
+
+    var transcription: String {
+      recording.text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     init(recording: RecordingInfo, index: Int) {
@@ -77,7 +102,7 @@ struct RecordingCard: ReducerProtocol {
 
   private struct PlayID: Hashable {}
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     BindingReducer()
 
     Scope(state: \.waveform, action: /Action.waveform) {
@@ -166,7 +191,7 @@ struct RecordingCard: ReducerProtocol {
     .ifLet(\.$alert, action: /Action.alert)
   }
 
-  private func play(state: inout State) -> EffectPublisher<Action, Never> {
+  private func play(state: inout State) -> Effect<Action> {
     state.mode = .playing(progress: 0)
 
     return .run { [fileName = state.recording.fileName] send in
@@ -175,13 +200,17 @@ struct RecordingCard: ReducerProtocol {
         switch playback {
         case let .playing(position):
           await send(.progressUpdated(position.progress))
+
         case let .pause(position):
           await send(.progressUpdated(position.progress))
+
         case .stop:
           break
+
         case let .error(error):
           log.error(error as Any)
           await send(.audioPlayerFinished(.failure(error ?? NSError())), animation: .default)
+
         case let .finish(successful):
           await send(.audioPlayerFinished(.success(successful)), animation: .default)
         }
@@ -191,52 +220,26 @@ struct RecordingCard: ReducerProtocol {
   }
 }
 
-extension RecordingCard.State {
-  var dateString: String {
-    recording.date.formatted(date: .abbreviated, time: .shortened)
-  }
-
-  var currentTimeString: String {
-    let currentTime = mode.progress.map { $0 * recording.duration } ?? recording.duration
-    return dateComponentsFormatter.string(from: currentTime) ?? ""
-  }
-
-  var transcription: String {
-    recording.text.trimmingCharacters(in: .whitespacesAndNewlines)
-  }
-}
-
-extension RecordingCard.State.Mode {
-  var isPlaying: Bool {
-    if case .playing = self { return true }
-    return false
-  }
-
-  var progress: Double? {
-    if case let .playing(progress) = self { return progress }
-    return nil
-  }
-}
-
 extension Transcription.Status {
   var message: String {
     switch self {
     case .notStarted:
-      return "Waiting to start..."
+      "Waiting to start..."
     case .loading:
-      return "Loading model..."
+      "Loading model..."
     case let .uploading(progress):
-      return "Uploading... \(String(format: "%.0f", progress * 100))%"
+      "Uploading... \(String(format: "%.0f", progress * 100))%"
     case let .error(message: message):
-      return message
+      message
+
     case let .progress(progress):
-      return "Transcribing... \(String(format: "%.0f", progress * 100))%"
+      "Transcribing... \(String(format: "%.0f", progress * 100))%"
     case .done:
-      return "Done"
+      "Done"
     case .canceled:
-      return "Canceled"
+      "Canceled"
     case let .paused(task):
-      return "Paused (\(String(format: "%.0f", task.progress * 100))%)"
+      "Paused (\(String(format: "%.0f", task.progress * 100))%)"
     }
   }
 }

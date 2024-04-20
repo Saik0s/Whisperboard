@@ -1,4 +1,4 @@
-import ComposableArchitecture
+@_spi(Presentation) import ComposableArchitecture
 import Inject
 import Lottie
 import Popovers
@@ -7,9 +7,11 @@ import VariableBlurView
 
 // MARK: - SubscriptionSection
 
-struct SubscriptionSection: ReducerProtocol {
+@Reducer
+struct SubscriptionSection {
+  @ObservableState
   struct State: Equatable {
-    @PresentationState var details: SubscriptionDetails.State?
+    @Presents var details: SubscriptionDetails.State?
   }
 
   enum Action: Equatable {
@@ -17,7 +19,7 @@ struct SubscriptionSection: ReducerProtocol {
     case sectionTapped
   }
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     Reduce<State, Action> { state, action in
       switch action {
       case .details:
@@ -40,104 +42,102 @@ struct SubscriptionSection: ReducerProtocol {
 struct SubscriptionSectionView: View {
   @ObserveInjection var inject
 
-  let store: StoreOf<SubscriptionSection>
+  @Perception.Bindable var store: StoreOf<SubscriptionSection>
 
   @State var sectionSize: CGSize = .zero
   @State var playbackMode = LottiePlaybackMode.paused(at: .progress(0))
 
-  init(store: StoreOf<SubscriptionSection>) {
-    self.store = store
-  }
-
   var body: some View {
-    Button {
-      store.send(.sectionTapped)
-    } label: {
-      VStack(alignment: .leading, spacing: .grid(2)) {
-        #if APPSTORE
-          LottieView(animation: AnimationAsset.wiredGradient407CrownKingLord.animation)
-            .resizable()
-            .playbackMode(playbackMode)
-            .animationDidFinish { _ in
-              playbackMode = .paused(at: .progress(0))
-            }
-            .frame(width: 30, height: 30)
-            .padding(.grid(1))
-            .background {
-              Circle().fill(Color.DS.neutral07100)
-            }
-        #endif
-
-        VStack(alignment: .leading, spacing: .grid(1)) {
-          HStack(spacing: .grid(1)) {
-            Text("WhisperBoard")
-              .font(.DS.titleSmall)
-
-            Text("PRO")
-              .font(.DS.badge)
-              .padding(.horizontal, 3)
-              .padding(.vertical, 1)
-              .background {
-                RoundedRectangle(cornerRadius: .grid(1))
-                  .fill(Color.DS.Text.accent)
-              }
-          }
-          .accessibilityElement(children: .combine)
-
-          Text("Get 3 days free.\nContribute to ongoing development.")
-            .textStyle(.captionBase)
-            .lineLimit(2)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-
-        HStack(spacing: .grid(2)) {
-          Text("Try Now")
-            .font(.DS.body)
-            .padding(.bottom, .grid(1))
-            .background(alignment: .bottom) {
-              Rectangle().fill(Color.DS.Text.base).frame(height: 1)
-            }
-
+    WithPerceptionTracking {
+      Button {
+        store.send(.sectionTapped)
+      } label: {
+        VStack(alignment: .leading, spacing: .grid(2)) {
           #if APPSTORE
-            LottieView(animation: AnimationAsset.wiredOutline225Arrow14.animation)
+            LottieView(animation: AnimationAsset.wiredGradient407CrownKingLord.animation)
               .resizable()
               .playbackMode(playbackMode)
+              .animationDidFinish { _ in
+                playbackMode = .paused(at: .progress(0))
+              }
               .frame(width: 30, height: 30)
+              .padding(.grid(1))
+              .background {
+                Circle().fill(Color.DS.neutral07100)
+              }
           #endif
+
+          VStack(alignment: .leading, spacing: .grid(1)) {
+            HStack(spacing: .grid(1)) {
+              Text("WhisperBoard")
+                .font(.DS.titleSmall)
+
+              Text("PRO")
+                .font(.DS.badge)
+                .padding(.horizontal, 3)
+                .padding(.vertical, 1)
+                .background {
+                  RoundedRectangle(cornerRadius: .grid(1))
+                    .fill(Color.DS.Text.accent)
+                }
+            }
+            .accessibilityElement(children: .combine)
+
+            Text("Get 3 days free.\nContribute to ongoing development.")
+              .textStyle(.captionBase)
+              .lineLimit(2)
+              .fixedSize(horizontal: false, vertical: true)
+          }
+
+          HStack(spacing: .grid(2)) {
+            Text("Try Now")
+              .font(.DS.body)
+              .padding(.bottom, .grid(1))
+              .background(alignment: .bottom) {
+                Rectangle().fill(Color.DS.Text.base).frame(height: 1)
+              }
+
+            #if APPSTORE
+              LottieView(animation: AnimationAsset.wiredOutline225Arrow14.animation)
+                .resizable()
+                .playbackMode(playbackMode)
+                .frame(width: 30, height: 30)
+            #endif
+          }
+          .padding(.vertical, .grid(1))
         }
-        .padding(.vertical, .grid(1))
-      }
-      .foregroundColor(.DS.Text.base)
-      .background {
-        Color.DS.Background.tertiary.darken(by: 0.1)
-          .blur(radius: 10)
-          .opacity(0.8)
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .multilineTextAlignment(.leading)
-      .padding(.grid(4))
-      .background(sectionBackground())
-      .readSize { sectionSize = $0 }
-      .continuousCornerRadius(.grid(4))
-    }
-    .trySubscriptionButtonStyle(playbackMode: $playbackMode)
-    .sheet(store: store.scope(state: \.$details, action: SubscriptionSection.Action.details)) { store in
-      SubscriptionDetailsView(store: store)
-    }
-    .onAppear {
-      playbackMode = .playing(.fromProgress(0, toProgress: 1, loopMode: .playOnce))
-    }
-    .task {
-      try? await Task {
-        while !Task.isCancelled {
-          try await Task.sleep(seconds: 5)
-          playbackMode = .playing(.fromProgress(0, toProgress: 1, loopMode: .playOnce))
+        .foregroundColor(.DS.Text.base)
+        .background {
+          Color.DS.Background.tertiary.darken(by: 0.1)
+            .blur(radius: 10)
+            .opacity(0.8)
         }
-      }.value
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .multilineTextAlignment(.leading)
+        .padding(.grid(4))
+        .background(sectionBackground())
+        .readSize { sectionSize = $0 }
+        .continuousCornerRadius(.grid(4))
+      }
+      .trySubscriptionButtonStyle(playbackMode: $playbackMode)
+      .sheet(item: $store.scope(state: \.details, action: \.details)) { store in
+        SubscriptionDetailsView(store: store)
+      }
+      .onAppear {
+        playbackMode = .playing(.fromProgress(0, toProgress: 1, loopMode: .playOnce))
+      }
+      .task {
+        try? await Task {
+          while !Task.isCancelled {
+            try await Task.sleep(seconds: 5)
+            playbackMode = .playing(.fromProgress(0, toProgress: 1, loopMode: .playOnce))
+          }
+        }.value
+      }
+      .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+      .listRowBackground(Color.clear)
+      .listRowSeparator(.hidden)
     }
-    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-    .listRowBackground(Color.clear)
-    .listRowSeparator(.hidden)
     .enableInjection()
   }
 
@@ -176,8 +176,6 @@ struct SubscriptionSectionView: View {
     .clipped()
   }
 }
-
-@_spi(Presentation) import ComposableArchitecture
 
 public extension View {
   func popover<State, Action>(

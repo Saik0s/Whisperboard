@@ -1,4 +1,3 @@
-
 import Combine
 import ComposableArchitecture
 import Inject
@@ -9,26 +8,21 @@ import SwiftUI
 struct RootView: View {
   @ObserveInjection var inject
 
-  let store: StoreOf<Root>
-
-  @ObservedObject var viewStore: ViewStore<Root.Tab, Root.Action>
+  @Perception.Bindable var store: StoreOf<Root>
 
   @Namespace var animation
 
-  init(store: StoreOf<Root>) {
-    self.store = store
-    viewStore = ViewStore(store) { $0.selectedTab }
-  }
-
   var body: some View {
-    TabBarContainerView(
-      selectedIndex: viewStore.binding(get: \.rawValue, send: Root.Action.selectTab),
-      screen1: RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: Root.Action.recordingListScreen)),
-      screen2: RecordScreenView(store: store.scope(state: \.recordScreen, action: Root.Action.recordScreen)),
-      screen3: SettingsScreenView(store: store.scope(state: \.settingsScreen, action: Root.Action.settingsScreen))
-    )
-    .accentColor(.white)
-    .task { viewStore.send(.task) }
+    WithPerceptionTracking {
+      TabBarContainerView(
+        selectedIndex: $store.selectedTab.rawValue.sending(\.selectTab),
+        screen1: RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: \.recordingListScreen)),
+        screen2: RecordScreenView(store: store.scope(state: \.recordScreen, action: \.recordScreen)),
+        screen3: SettingsScreenView(store: store.scope(state: \.settingsScreen, action: \.settingsScreen))
+      )
+      .accentColor(.white)
+      .task { store.send(.task) }
+    }
     .enableInjection()
   }
 }

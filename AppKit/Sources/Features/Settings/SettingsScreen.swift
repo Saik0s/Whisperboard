@@ -1,4 +1,3 @@
-
 import ComposableArchitecture
 import Inject
 import Popovers
@@ -7,9 +6,11 @@ import SwiftUIIntrospect
 
 // MARK: - SettingsScreen
 
-struct SettingsScreen: ReducerProtocol {
+@Reducer
+struct SettingsScreen {
+  @ObservableState
   struct State: Equatable {
-    @BindingState var settings: Settings = .init()
+    var settings: Settings = .init()
     var modelSelector = ModelSelector.State()
     var subscriptionSection: SubscriptionSection.State = .init()
 
@@ -19,13 +20,15 @@ struct SettingsScreen: ReducerProtocol {
     var freeSpace: String = ""
     var takenSpace: String = ""
     var takenSpacePercentage: Double = 0
-    var isSubscribed: Bool = false
+    var isSubscribed = false
 
-    @BindingState var isICloudSyncInProgress = false
-    @BindingState var isDebugLogPresented = false
-    @BindingState var isModelSelectorPresented = false
+    var isICloudSyncInProgress = false
+    var isDebugLogPresented = false
+    var isModelSelectorPresented = false
 
-    @PresentationState var alert: AlertState<Action.Alert>?
+    @Presents var alert: AlertState<Action.Alert>?
+
+    var selectedModelReadableName: String { modelSelector.selectedModel.readableName }
   }
 
   enum Action: BindableAction, Equatable {
@@ -58,25 +61,23 @@ struct SettingsScreen: ReducerProtocol {
   @Dependency(\.storage) var storage: StorageClient
   @Dependency(\.subscriptionClient) var subscriptionClient: SubscriptionClient
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     BindingReducer()
       .onChange(of: \.settings.isICloudSyncEnabled) { oldValue, newValue in
-        Reduce<State, Action> { _, _ in
-          if oldValue != newValue, newValue {
-            return .run { send in
+        Reduce { _, _ in
+          .run { send in
+            if oldValue != newValue, newValue {
               if settingsClient.getSettings().isICloudSyncEnabled != newValue {
-                await send(.set(\.$isICloudSyncInProgress, true))
+                await send(.set(\.isICloudSyncInProgress, true))
                 try await storage.uploadRecordingsToICloud(true)
-                await send(.set(\.$isICloudSyncInProgress, false))
+                await send(.set(\.isICloudSyncInProgress, false))
               }
               try await settingsClient.updateSettings(settingsClient.getSettings().with(\.isICloudSyncEnabled, setTo: newValue))
-            } catch: { error, send in
-              await send(.set(\.$isICloudSyncInProgress, false))
-              await send(.set(\.$settings, settingsClient.getSettings()))
-              await send(.showError(error.equatable))
             }
-          } else {
-            return .none
+          } catch: { error, send in
+            await send(.set(\.isICloudSyncInProgress, false))
+            await send(.set(\.settings, settingsClient.getSettings()))
+            await send(.showError(error.equatable))
           }
         }
       }
@@ -100,7 +101,7 @@ struct SettingsScreen: ReducerProtocol {
         return .run { [settings = state.settings] _ in
           try await settingsClient.updateSettings(settings)
         } catch: { error, send in
-          await send(.set(\.$settings, settingsClient.getSettings()))
+          await send(.set(\.settings, settingsClient.getSettings()))
           await send(.showError(error.equatable))
         }
 
@@ -114,7 +115,7 @@ struct SettingsScreen: ReducerProtocol {
         updateInfo(state: &state)
         return .run { send in
           for try await settings in settingsClient.settingsPublisher().values {
-            await send(.set(\.$settings, settings))
+            await send(.set(\.settings, settings))
           }
         } catch: { error, send in
           await send(.showError(error.equatable))

@@ -10,9 +10,9 @@ enum RemoteTranscriptionError: Error, LocalizedError {
   var errorDescription: String? {
     switch self {
     case .uploadFailed:
-      return "Failed to upload recording"
+      "Failed to upload recording"
     case .resultFailed:
-      return "Failed to get transcription result"
+      "Failed to get transcription result"
     }
   }
 }
@@ -51,6 +51,7 @@ final class RemoteTranscriptionWorkExecutor: TranscriptionWorkExecutor {
           switch uploadProgress {
           case let .uploading(progress):
             transcription.status = .uploading(progress)
+
           case let .done(response):
             log.debug("Uploaded:", response)
             task.remoteID = response.id

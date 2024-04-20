@@ -73,8 +73,10 @@ extension AudioSessionClient: DependencyKey {
         switch type {
         case .playback:
           isPlaybackActive.setValue(true)
+
         case .record:
           isRecordActive.setValue(true)
+
         case .playAndRecord:
           isPlaybackActive.setValue(true)
           isRecordActive.setValue(true)
@@ -103,6 +105,7 @@ extension AudioSessionClient: DependencyKey {
         switch type {
         case .playback:
           isPlaybackActive.setValue(false)
+
         case .record:
           isRecordActive.setValue(false)
           if session.category != .playAndRecord
@@ -110,6 +113,7 @@ extension AudioSessionClient: DependencyKey {
             || session.categoryOptions != options {
             try session.setCategory(.playAndRecord, mode: mode, options: options)
           }
+
         case .playAndRecord:
           isPlaybackActive.setValue(false)
           isRecordActive.setValue(false)

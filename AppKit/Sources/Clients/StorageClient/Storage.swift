@@ -1,4 +1,3 @@
-
 import Combine
 import Dependencies
 import Foundation
@@ -130,7 +129,7 @@ final class Storage {
   }
 
   private func createInfo(fileName: String) throws -> RecordingInfo {
-    let docURL = Storage.documentsURL
+    let docURL = Self.documentsURL
     let fileURL = docURL.appending(component: fileName)
     let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
     let date = attributes[.creationDate] as? Date ?? Date()

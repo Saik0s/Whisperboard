@@ -27,7 +27,7 @@ enum LoggerWrapper {
     static var osLogFormat: String = "%C%F:%l %m%c"
     static var timeFormatter: DateFormatter = .withDateFormat("HH:mm:ss.SSS")
     static var dateFormatter: DateFormatter = .withDateFormat("yyyy-MM-dd")
-    static var emojisInsteadOfColors: Bool = true
+    static var emojisInsteadOfColors = true
   }
 
   struct Message {
@@ -53,15 +53,19 @@ enum LoggerWrapper {
     var color: Color {
       switch self {
       case .verbose:
-        return .blue
+        .blue
+
       case .debug:
-        return .green
+        .green
+
       case .info:
-        return .cyan
+        .cyan
+
       case .warning:
-        return .yellow
+        .yellow
+
       case .error:
-        return .red
+        .red
       }
     }
   }
@@ -79,21 +83,21 @@ enum LoggerWrapper {
     var emoji: String {
       switch self {
       case .red:
-        return "❤️"
+        "❤️"
       case .green:
-        return "💚"
+        "💚"
       case .yellow:
-        return "💛️"
+        "💛️"
       case .blue:
-        return "💙️"
+        "💙️"
       case .magenta:
-        return "💜"
+        "💜"
       case .cyan:
-        return "🐳️"
+        "🐳️"
       case .white:
-        return "🤍"
+        "🤍"
       case .reset:
-        return ""
+        ""
       }
     }
 
@@ -146,21 +150,26 @@ enum LoggerWrapper {
     for destination in Settings.destinations {
       switch destination {
       case .print:
-        let formatted = LoggerWrapper.format(message, format: Settings.osLogFormat)
+        let formatted = Self.format(message, format: Settings.osLogFormat)
         switch message.level {
         case .error:
           osLogger.error("\(formatted)")
+
         case .warning:
           osLogger.warning("\(formatted)")
+
         case .info:
           osLogger.info("\(formatted)")
+
         case .debug:
           osLogger.debug("\(formatted)")
+
         case .verbose:
           osLogger.log("\(formatted)")
         }
+
       case let .custom(format, handler):
-        let formatted = LoggerWrapper.format(message, format: format)
+        let formatted = Self.format(message, format: format)
         handler(message, formatted)
       }
     }

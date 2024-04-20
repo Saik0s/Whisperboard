@@ -1,4 +1,3 @@
-
 import Dependencies
 import Foundation
 
@@ -118,8 +117,8 @@ struct SettingsMigration: Migration {
   func migrate() throws {
     struct OldSettings: Codable, Hashable {
       var voiceLanguage: VoiceLanguage = .auto
-      var isParallelEnabled: Bool = false
-      var isRemoteTranscriptionEnabled: Bool = false
+      var isParallelEnabled = false
+      var isRemoteTranscriptionEnabled = false
     }
 
     let settingsURL = try FileManager.default
