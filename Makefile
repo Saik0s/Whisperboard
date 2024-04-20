@@ -1,11 +1,12 @@
 
-TUIST=mise x tuist -- tuist
+MISE=$(HOME)/.local/bin/mise
+TUIST=$(MISE) x tuist -- tuist
 
 all: bootstrap project_file
 
 bootstrap:
-	command -v mise >/dev/null 2>&1 || curl https://mise.jdx.dev/install.sh | sh
-	mise install # Installs the version from .mise.toml
+	command -v $(MISE) >/dev/null 2>&1 || curl https://mise.jdx.dev/install.sh | sh
+	$(MISE) install
 
 project_file: secrets
 	$(TUIST) install
@@ -26,8 +27,8 @@ build_release:
 	$(TUIST) build --generate --configuration Release --build-output-path .build/
 
 format:
-	mise x swiftlint -- swiftlint lint --force-exclude --fix .
-	mise x swiftformat -- swiftformat . --config .swiftformat
+	$(MISE) x swiftlint -- swiftlint lint --force-exclude --fix .
+	$(MISE) x swiftformat -- swiftformat . --config .swiftformat
 
 secrets:
 	sh ./ci_scripts/secrets.sh
