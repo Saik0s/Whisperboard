@@ -40,10 +40,10 @@ analyze:
 	swiftlint analyze --compiler-log-path xcodebuild.log > swiftlint_analyze.log && echo "Swiftlint done"
 
 clear_analyze:
-	rm periphery.log
-	rm xcodebuild.log
-	rm swiftlint_analyze.log
-	rm cpd-output.xml
+	rm -f periphery.log
+	rm -f xcodebuild.log
+	rm -f swiftlint_analyze.log
+	rm -f cpd-output.xml
 	
 clean: clear_analyze
 	rm -rf build

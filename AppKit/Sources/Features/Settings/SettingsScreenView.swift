@@ -61,17 +61,15 @@ struct ModelSectionView: View {
   var modelSelectorStore: StoreOf<ModelSelector>
 
   var body: some View {
-
     Section {
       WithPerceptionTracking {
-
-#if APPSTORE && DEBUG
-        SettingsToggleButton(
-          icon: .system(name: "wand.and.stars", background: .DS.Background.accent),
-          title: "Cloud Transcription",
-          isOn: $store.settings.isRemoteTranscriptionEnabled
-        )
-#endif
+        #if APPSTORE && DEBUG
+          SettingsToggleButton(
+            icon: .system(name: "wand.and.stars", background: .DS.Background.accent),
+            title: "Cloud Transcription",
+            isOn: $store.settings.isRemoteTranscriptionEnabled
+          )
+        #endif
 
         SettingsSheetButton(
           icon: .system(name: "square.and.arrow.down", background: .systemBlue.lighten(by: 0.1)),
@@ -95,7 +93,6 @@ struct ModelSectionView: View {
 
     Section {
       WithPerceptionTracking {
-
         SettingsToggleButton(
           icon: .system(name: "mic.fill", background: .systemRed),
           title: "Auto-Transcribe Recordings",
@@ -111,7 +108,6 @@ struct ModelSectionView: View {
 
     Section {
       WithPerceptionTracking {
-
         SettingsToggleButton(
           icon: .system(name: "cpu", background: .systemGreen),
           title: "Use GPU (Experimental)",
@@ -133,37 +129,35 @@ struct SpeechSectionView: View {
   @Perception.Bindable var store: StoreOf<SettingsScreen>
 
   var body: some View {
-
-      Section("Speech") {
-        WithPerceptionTracking {
-          SettingsInlinePickerButton(
-            icon: .system(name: "globe", background: .systemGreen.darken(by: 0.1)),
-            title: "Language",
-            choices: store.availableLanguages.map(\.name.titleCased),
-            selectedIndex: Binding(
-              get: { store.availableLanguages.firstIndex(of: store.settings.voiceLanguage) ?? 0 },
-              set: { $store.settings.voiceLanguage.wrappedValue = store.availableLanguages[$0] }
-            )
+    Section("Speech") {
+      WithPerceptionTracking {
+        SettingsInlinePickerButton(
+          icon: .system(name: "globe", background: .systemGreen.darken(by: 0.1)),
+          title: "Language",
+          choices: store.availableLanguages.map(\.name.titleCased),
+          selectedIndex: Binding(
+            get: { store.availableLanguages.firstIndex(of: store.settings.voiceLanguage) ?? 0 },
+            set: { $store.settings.voiceLanguage.wrappedValue = store.availableLanguages[$0] }
           )
-        }
-      }
-      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
-
-      Section {
-        WithPerceptionTracking {
-
-          SettingsToggleButton(
-            icon: .system(name: "waveform.path.ecg", background: .systemPurple),
-            title: "Allow Background Audio",
-            isOn: $store.settings.shouldMixWithOtherAudio
-          )
-        }
-      } footer: {
-        Text(
-          "Turn this on to allow background audio from other apps to continue playing while you record. This app will lower the volume of other audio sources (ducking) during recording. Turn off to ensure other apps are paused and only your recording is captured."
         )
       }
-      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+    }
+    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+
+    Section {
+      WithPerceptionTracking {
+        SettingsToggleButton(
+          icon: .system(name: "waveform.path.ecg", background: .systemPurple),
+          title: "Allow Background Audio",
+          isOn: $store.settings.shouldMixWithOtherAudio
+        )
+      }
+    } footer: {
+      Text(
+        "Turn this on to allow background audio from other apps to continue playing while you record. This app will lower the volume of other audio sources (ducking) during recording. Turn off to ensure other apps are paused and only your recording is captured."
+      )
+    }
+    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
   }
 }
 
@@ -177,31 +171,30 @@ struct SpeechSectionView: View {
 
     var body: some View {
       WithPerceptionTracking {
+        Section {
+          SettingsToggleButton(
+            icon: .system(name: "wand.and.stars", background: .systemTeal),
+            title: "Enable Fixtures",
+            isOn: $store.settings.useMockedClients
+          )
 
-      Section {
-        SettingsToggleButton(
-          icon: .system(name: "wand.and.stars", background: .systemTeal),
-          title: "Enable Fixtures",
-          isOn: $store.settings.useMockedClients
-        )
-
-        SettingsSheetButton(icon: .system(name: "ladybug", background: .systemGreen), title: "Show logs") {
-          ScrollView {
-            LazyVStack(alignment: .leading, spacing: .grid(1)) {
-              ForEach(logs.enumerated().reversed(), id: \.offset) { index, log in
-                Text("\(index + 1). \(log)").font(.footnote).monospaced()
+          SettingsSheetButton(icon: .system(name: "ladybug", background: .systemGreen), title: "Show logs") {
+            ScrollView {
+              LazyVStack(alignment: .leading, spacing: .grid(1)) {
+                ForEach(logs.enumerated().reversed(), id: \.offset) { index, log in
+                  Text("\(index + 1). \(log)").font(.footnote).monospaced()
+                }
               }
             }
+            .onAppear {
+              logs = (try? String(contentsOfFile: Configs.logFileURL.path()).split(separator: "\n").map(String.init)) ?? ["No logs..."]
+            }
           }
-          .onAppear {
-            logs = (try? String(contentsOfFile: Configs.logFileURL.path()).split(separator: "\n").map(String.init)) ?? ["No logs..."]
-          }
+        } header: {
+          Text("Debug")
         }
-      } header: {
-        Text("Debug")
+        .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
       }
-      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
-    }
     }
   }
 #endif
@@ -213,48 +206,47 @@ struct StorageSectionView: View {
 
   var body: some View {
     WithPerceptionTracking {
-
-    Section {
-      Group {
-        VStack(alignment: .leading, spacing: .grid(1)) {
-          HStack(spacing: 0) {
-            Text("Taken: \(store.takenSpace)").textStyle(.body)
-
-            Spacer()
-
-            Text("Available: \(store.freeSpace)").textStyle(.body)
-          }
-
-          GeometryReader { geometry in
+      Section {
+        Group {
+          VStack(alignment: .leading, spacing: .grid(1)) {
             HStack(spacing: 0) {
-              LinearGradient.easedGradient(colors: [.systemPurple, .systemOrange], startPoint: .bottomLeading, endPoint: .topTrailing)
-                .frame(width: geometry.size.width * store.takenSpacePercentage)
+              Text("Taken: \(store.takenSpace)").textStyle(.body)
 
-              Color.DS.Background.tertiary
+              Spacer()
+
+              Text("Available: \(store.freeSpace)").textStyle(.body)
             }
+
+            GeometryReader { geometry in
+              HStack(spacing: 0) {
+                LinearGradient.easedGradient(colors: [.systemPurple, .systemOrange], startPoint: .bottomLeading, endPoint: .topTrailing)
+                  .frame(width: geometry.size.width * store.takenSpacePercentage)
+
+                Color.DS.Background.tertiary
+              }
+            }
+            .frame(height: .grid(4)).continuousCornerRadius(.grid(1))
           }
-          .frame(height: .grid(4)).continuousCornerRadius(.grid(1))
         }
-      }
 
-      SettingsToggleButton(
-        icon: .system(name: "icloud.and.arrow.up", background: .systemBlue),
-        title: "iCloud Backup",
-        isOn: $store.settings.isICloudSyncEnabled
-      )
-      .disabled(store.isICloudSyncInProgress)
-      .blur(radius: store.isICloudSyncInProgress ? 3 : 0)
-      .overlay(store.isICloudSyncInProgress ? ProgressView().progressViewStyle(.circular) : nil)
-      .animation(.easeInOut, value: store.isICloudSyncInProgress)
+        SettingsToggleButton(
+          icon: .system(name: "icloud.and.arrow.up", background: .systemBlue),
+          title: "iCloud Backup",
+          isOn: $store.settings.isICloudSyncEnabled
+        )
+        .disabled(store.isICloudSyncInProgress)
+        .blur(radius: store.isICloudSyncInProgress ? 3 : 0)
+        .overlay(store.isICloudSyncInProgress ? ProgressView().progressViewStyle(.circular) : nil)
+        .animation(.easeInOut, value: store.isICloudSyncInProgress)
 
-      SettingsButton(icon: .system(name: "trash", background: .systemYellow.darken(by: 0.1)), title: "Delete Storage") {
-        store.send(.deleteStorageTapped)
+        SettingsButton(icon: .system(name: "trash", background: .systemYellow.darken(by: 0.1)), title: "Delete Storage") {
+          store.send(.deleteStorageTapped)
+        }
+      } header: {
+        Text("Storage")
       }
-    } header: {
-      Text("Storage")
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
     }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
-  }
   }
 }
 
@@ -265,22 +257,21 @@ struct FeedbackSectionView: View {
 
   var body: some View {
     WithPerceptionTracking {
+      Section {
+        SettingsButton(icon: .system(name: "star.fill", background: .systemYellow.darken(by: 0.05)), title: "Rate the App") {
+          store.send(.rateAppTapped)
+        }
 
-    Section {
-      SettingsButton(icon: .system(name: "star.fill", background: .systemYellow.darken(by: 0.05)), title: "Rate the App") {
-        store.send(.rateAppTapped)
-      }
+        SettingsButton(icon: .system(name: "exclamationmark.triangle", background: .systemRed), title: "Report a Bug") {
+          store.send(.reportBugTapped)
+        }
 
-      SettingsButton(icon: .system(name: "exclamationmark.triangle", background: .systemRed), title: "Report a Bug") {
-        store.send(.reportBugTapped)
+        SettingsButton(icon: .system(name: "sparkles", background: .systemPurple.darken(by: 0.1)), title: "Suggest New Feature") {
+          store.send(.suggestFeatureTapped)
+        }
       }
-
-      SettingsButton(icon: .system(name: "sparkles", background: .systemPurple.darken(by: 0.1)), title: "Suggest New Feature") {
-        store.send(.suggestFeatureTapped)
-      }
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
     }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
-  }
   }
 }
 
@@ -291,7 +282,6 @@ struct FooterSectionView: View {
 
   var body: some View {
     WithPerceptionTracking {
-
       Section {
         VStack(spacing: .grid(1)) {
           Text("v\(store.appVersion) (\(store.buildNumber))").textStyle(.caption)
@@ -309,7 +299,7 @@ struct FooterSectionView: View {
           .frame(maxWidth: .infinity)
       }
       .listRowBackground(Color.clear).listRowSeparator(.hidden)
-      }
+    }
   }
 }
 

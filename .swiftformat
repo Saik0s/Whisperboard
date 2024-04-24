@@ -1,6 +1,13 @@
 # file options
 
---exclude .build,build,Tuist
+--exclude scripts,Templates,.build,ApolloCodegen,.devxp,build,.tuist-bin
+--exclude **/Derived/**.swift
+--exclude **/Generated/**.swift
+--exclude **/SwifterSwift/**.swift
+--exclude **/Apollo/**.swift
+--exclude **/build/**.swift
+--exclude **/.build/**.swift
+
 --swiftversion 5.10
 
 # format options
@@ -20,19 +27,19 @@
 
 # rules
 
---disable \
- andOperator, \
- wrapMultilineStatementBraces, \
- wrapSwitchCases, \
- organizeDeclarations, \
- wrapEnumCases, \
- redundantNilInit
+--disable                               \
+    andOperator,                        \
+    wrapMultilineStatementBraces,       \
+    wrapSwitchCases,                    \
+    organizeDeclarations,               \
+    wrapEnumCases,                      \
+    redundantNilInit
 
---enable \
- blankLinesBetweenImports, \
- blankLineAfterImports, \
- markTypes, \
- blockComments, \
- sortSwitchCases, \
- docComments, \
- isEmpty
+--enable                                \
+    blankLinesBetweenImports,           \
+    blankLineAfterImports,              \
+    markTypes,                          \
+    blockComments,                      \
+    sortSwitchCases,                    \
+    docComments,                        \
+    isEmpty

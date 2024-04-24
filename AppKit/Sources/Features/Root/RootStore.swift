@@ -53,7 +53,6 @@ struct Root {
     BindingReducer()
 
     CombineReducers {
-
       Scope(state: \.recordingListScreen, action: /Action.recordingListScreen) {
         RecordingListScreen()
       }

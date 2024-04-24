@@ -106,7 +106,7 @@ struct MicSelectorView: View {
                 Image(systemName: "checkmark")
                   .textStyle(.body)
                   .hidden(!isSelected)
-                
+
                 VStack(alignment: .leading, spacing: 0) {
                   Text(mic.port.portName)
                     .textStyle(.body)
@@ -114,7 +114,7 @@ struct MicSelectorView: View {
               }
               .padding(.grid(2))
             }
-            
+
             if mic.id != store.mics.last?.id {
               Divider()
             }

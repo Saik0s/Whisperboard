@@ -1,10 +1,18 @@
 excluded:
+  - "**/*.generated.swift"
+  - "Templates"
+  - "scripts"
+  - ".devxp"
   - ".build"
   - "Package.swift"
   - "App/.build"
-  - "Tuist"
   - "build"
   - "Project.swift"
+  - ".tuist-bin"
+  - "**/Generated"
+  - "**/SwifterSwift"
+  - "**/Derived"
+  - "**/.build"
 
 disabled_rules:
   - todo

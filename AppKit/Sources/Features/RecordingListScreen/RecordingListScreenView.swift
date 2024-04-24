@@ -61,8 +61,8 @@ struct RecordingListScreen {
     .forEach(\.recordingCards, action: /Action.recordingCard(id:action:)) {
       RecordingCard()
     }
-    .onChange(of: \.selection?.recordingCard) { oldValue, newValue in
-      Reduce { state, action in
+    .onChange(of: \.selection?.recordingCard) { _, newValue in
+      Reduce { state, _ in
         guard let newValue else { return .none }
         state.recordingCards[id: newValue.id] = newValue
         return .none
