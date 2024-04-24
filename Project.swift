@@ -1,29 +1,16 @@
 import Foundation
 import ProjectDescription
-import ProjectDescriptionHelpers
 
-let projectSettings: SettingsDictionary = [
-  "GCC_TREAT_WARNINGS_AS_ERRORS": "YES",
-  "SWIFT_TREAT_WARNINGS_AS_ERRORS": "YES",
-  "CODE_SIGN_STYLE": "Automatic",
-  "DEVELOPMENT_TEAM": SettingValue(stringLiteral: devTeam),
-  "IPHONEOS_DEPLOYMENT_TARGET": SettingValue(stringLiteral: deploymentTargetString),
-  "MARKETING_VERSION": SettingValue(stringLiteral: version),
-  "ENABLE_BITCODE": "NO",
-  "ENABLE_USER_SCRIPT_SANDBOXING": "NO",
-]
+public let version = "1.11.9"
 
-let debugSettings: SettingsDictionary = [
-  "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -enable-actor-data-race-checks",
-  "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
-]
-
-let releaseSettings: SettingsDictionary = [
-  :
-]
+public let deploymentTargetString = "16.0"
+public let appDeploymentTargets: DeploymentTargets = .iOS(deploymentTargetString)
+public let appDestinations: Destinations = [.iPhone, .iPad]
+public let devTeam = "8A76N862C8"
 
 let project = Project(
   name: "WhisperBoard",
+
   options: .options(
     disableShowEnvironmentVarsInScriptPhases: true,
     textSettings: .textSettings(
@@ -31,12 +18,29 @@ let project = Project(
       tabWidth: 2
     )
   ),
+
+  packages: [
+    .package(url: "https://github.com/ggerganov/whisper.cpp.git", .branch("master")),
+    .package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0"),
+  ],
+
   settings: .settings(
-    base: projectSettings,
-    debug: debugSettings,
-    release: releaseSettings,
-    defaultSettings: .recommended
+    base: [
+      "GCC_TREAT_WARNINGS_AS_ERRORS": "YES",
+      "SWIFT_TREAT_WARNINGS_AS_ERRORS": "YES",
+      "IPHONEOS_DEPLOYMENT_TARGET": SettingValue(stringLiteral: deploymentTargetString),
+      "ENABLE_BITCODE": "NO",
+      "ENABLE_USER_SCRIPT_SANDBOXING": "NO",
+      "CODE_SIGN_IDENTITY": "",
+      "CODE_SIGNING_REQUIRED": "NO",
+      "DEVELOPMENT_TEAM": SettingValue(stringLiteral: devTeam),
+    ],
+    debug: [
+      "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -enable-actor-data-race-checks",
+      "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
+    ]
   ),
+
   targets: [
     // MARK: - App
 
@@ -59,8 +63,7 @@ let project = Project(
         ],
         "UIApplicationSceneManifest": [
           "UIApplicationSupportsMultipleScenes": false,
-          "UISceneConfigurations": [
-          ],
+          "UISceneConfigurations": [],
         ],
         "ITSAppUsesNonExemptEncryption": false,
         "UILaunchScreen": [
@@ -92,9 +95,9 @@ let project = Project(
           ],
         ],
       ]),
-      sources: "Sources/**",
+      sources: "App/Sources/**",
       resources: .resources(
-        ["Resources/**"],
+        ["App/Resources/**"],
         privacyManifest: .privacyManifest(
           tracking: false,
           trackingDomains: [],
@@ -118,12 +121,12 @@ let project = Project(
           ]
         )
       ),
-      entitlements: "Support/app.entitlements",
+      entitlements: "App/Support/app.entitlements",
       scripts: Environment.isAppStore.getBoolean(default: false)
         ? []
         : [
           .post(
-            path: "../ci_scripts/post_build_checks.sh",
+            path: "ci_scripts/post_build_checks.sh",
             name: "Additional Checks",
             basedOnDependencyAnalysis: false
           ),
@@ -137,14 +140,24 @@ let project = Project(
             basedOnDependencyAnalysis: false
           ),
         ],
+
       dependencies: [
         .target(name: "ShareExtension"),
-        .project(target: "WhisperBoardKit", path: "../AppKit"),
+        .target(name: "WhisperBoardKit"),
       ] + (Environment.isAppStore.getBoolean(default: false)
         ? []
         : [
           .xcframework(path: "//App/Support/Reveal/RevealServer.xcframework"),
-        ])
+        ]),
+
+      settings: .settings(
+        base: [
+          "CODE_SIGN_STYLE": "Automatic",
+          "MARKETING_VERSION": SettingValue(stringLiteral: version),
+          "CODE_SIGN_IDENTITY": "iPhone Developer",
+          "CODE_SIGNING_REQUIRED": "YES",
+        ]
+      )
     ),
 
     // MARK: - ShareExtension
@@ -183,30 +196,83 @@ let project = Project(
           ],
         ],
       ]),
-      sources: "ShareExtension/ShareViewController.swift",
-      entitlements: "Support/ShareExtension.entitlements",
+      sources: "App/ShareExtension/ShareViewController.swift",
+      entitlements: "App/Support/ShareExtension.entitlements",
       dependencies: [
         .external(name: "AudioKit"),
       ]
     ),
-  ]
 
-  // ],
-  // schemes: [
-  //   Scheme(
-  //     name: "WhisperBoard",
-  //     shared: true,
-  //     buildAction: .buildAction(targets: ["WhisperBoard"]),
-  //     runAction: .runAction(
-  //       executable: "WhisperBoard",
-  //       options: .options(
-  //         storeKitConfigurationPath: "Support/Whisperboard.storekit",
-  //         enableGPUFrameCaptureMode: .metal
-  //       ),
-  //       diagnosticsOptions: .options(mainThreadCheckerEnabled: true)
-  //     )
-  //   ),
-  // ],
-  // additionalFiles: [
-  //   "Support/Whisperboard.storekit",
+    // MARK: - AppKit
+
+    .target(
+      name: "WhisperBoardKit",
+      destinations: appDestinations,
+      product: .framework,
+      bundleId: "me.igortarasenko.WhisperboardKit",
+      deploymentTargets: appDeploymentTargets,
+      infoPlist: .extendingDefault(with: [:]),
+      sources: "AppKit/Sources/**",
+      resources: "AppKit/Resources/**",
+      dependencies: [
+        .sdk(name: "c++", type: .library, status: .required),
+        .sdk(name: "CloudKit", type: .framework, status: .optional),
+        // .sdk(name: "StoreKit", type: .framework, status: .optional),
+
+        .external(name: "AsyncAlgorithms"),
+        .external(name: "AudioKit"),
+        .external(name: "ComposableArchitecture"),
+        .external(name: "DSWaveformImage"),
+        .external(name: "DSWaveformImageViews"),
+        .external(name: "DependenciesAdditions"),
+        .external(name: "DynamicColor"),
+        .external(name: "Inject"),
+        .external(name: "KeychainAccess"),
+        .external(name: "Popovers"),
+        // .external(name: "RevenueCat"),
+        .external(name: "SwiftUIIntrospect"),
+        .external(name: "VariableBlurView"),
+        .external(name: "Lottie"),
+
+        // .external(name: "whisper"),
+        .package(product: "whisper"),
+        .package(product: "RollbarNotifier"),
+      ],
+      settings: .settings(
+        base: [
+          "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/AppKit/Support/Bridging.h",
+        ],
+        debug: [
+          "SWIFT_ACTIVE_COMPILATION_CONDITIONS": Environment.isAppStore.getBoolean(default: false) ? "APPSTORE DEBUG" : "DEBUG",
+        ],
+        release: [
+          "SWIFT_ACTIVE_COMPILATION_CONDITIONS": Environment.isAppStore.getBoolean(default: false) ? "APPSTORE" : "",
+        ]
+      )
+    ),
+    .target(
+      name: "WhisperBoardKitTests",
+      destinations: appDestinations,
+      product: .unitTests,
+      bundleId: "me.igortarasenko.WhisperboardKitTests",
+      infoPlist: .default,
+      sources: "AppKit/Tests/**",
+      dependencies: [
+        .target(name: "WhisperBoardKit"),
+        .external(name: "SnapshotTesting"),
+      ]
+    ),
+  ],
+
+  resourceSynthesizers: [
+    .files(extensions: ["bin"]),
+    .assets(),
+    .fonts(),
+    .strings(),
+    .custom(
+      name: "Lottie",
+      parser: .json,
+      extensions: ["lottie"]
+    ),
+  ]
 )
