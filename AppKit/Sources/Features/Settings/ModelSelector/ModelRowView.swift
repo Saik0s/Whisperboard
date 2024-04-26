@@ -88,7 +88,7 @@ struct ModelRow {
         return .none
 
       case let .loadError(error):
-        log.error(error)
+        logs.error("Failed to download model: \(error)")
         state.model.isDownloading = false
         return .none
 

@@ -48,7 +48,7 @@ final class Storage {
         do {
           recording.duration = try getFileDuration(url: Self.documentsURL.appending(path: recording.fileName))
         } catch {
-          log.error(error)
+          logs.error("Error getting duration of recording \(recording.fileName): \(error)")
         }
       }
       return recording
@@ -73,7 +73,7 @@ final class Storage {
         return recording
       }
 
-      log.warning("Recording \(file) not found in database, creating new info for it")
+      logs.warning("Recording \(file) not found in database, creating new info for it")
       return try createInfo(fileName: file)
     }
 
@@ -81,7 +81,7 @@ final class Storage {
   }
 
   func write(_ newRecordings: [RecordingInfo]) {
-    log.verbose("Writing \(newRecordings.count) recordings to database file")
+    logs.info("Writing \(newRecordings.count) recordings to database file")
 
     // If the currently recording file is in the new recordings, set it to nil as it is not in progress anymore
     if newRecordings.contains(where: { $0.fileName == currentlyRecordingURL?.lastPathComponent }) {
@@ -93,7 +93,7 @@ final class Storage {
     do {
       try recordings.saveToFile(at: Self.dbURL)
     } catch {
-      log.error(error)
+      logs.error("Error saving recordings to file: \(error)")
     }
   }
 
@@ -118,11 +118,11 @@ final class Storage {
             duration: duration
           )
           recordings.append(recording)
-          log.info("successfully moved file \(file) to \(destinationURL.path)")
-          log.info(recording)
+          logs.info("successfully moved file \(file) to \(destinationURL.path)")
+          logs.info("recording: \(recording)")
         }
       } catch {
-        log.error(error)
+        logs.error("Error moving files from shared container: \(error)")
       }
     }
     return recordings
@@ -148,7 +148,7 @@ final class Storage {
     do {
       try read()
     } catch {
-      log.error("Error reading recordings: \(error)")
+      logs.error("Error reading recordings: \(error)")
     }
   }
 }

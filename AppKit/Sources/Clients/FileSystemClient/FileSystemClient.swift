@@ -27,7 +27,7 @@ extension FileSystemClient: DependencyKey {
     do {
       docURL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
     } catch {
-      log.error("Could not get documents directory", error)
+      logs.error("Could not get documents directory, error: \(error)")
       docURL = URL(fileURLWithPath: "~/Documents")
     }
     let settingsURL = docURL.appendingPathComponent("settings.json")

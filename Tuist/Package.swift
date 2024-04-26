@@ -3,7 +3,6 @@ import PackageDescription
 
 #if TUIST
   import ProjectDescription
-  import ProjectDescriptionHelpers
 
   let packageSettings = PackageSettings(
     baseSettings: .settings(base: [
@@ -31,5 +30,6 @@ let package = Package(
     .package(url: "https://github.com/siteline/SwiftUI-Introspect.git", from: "0.6.1"),
     .package(url: "https://github.com/tgrapperon/swift-dependencies-additions", from: "1.0.1"),
     .package(url: "https://github.com/yannickl/DynamicColor.git", from: "5.0.1"),
+    .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
   ]
 )

@@ -143,10 +143,10 @@ struct Root {
               if let transcription = recording.lastTranscription, transcription.status.isLoadingOrProgress {
                 var recording = recording
                 if let task = queue.first(where: { $0.id == transcription.id }) {
-                  log.debug("Marking \(recording.fileName) last transcription as paused")
+                  logs.debug("Marking \(recording.fileName) last transcription as paused")
                   recording.transcriptionHistory[id: transcription.id]?.status = .paused(task)
                 } else {
-                  log.debug("Marking \(recording.fileName) last transcription as failed")
+                  logs.debug("Marking \(recording.fileName) last transcription as failed")
                   recording.transcriptionHistory[id: transcription.id]?.status = .error(message: "Transcription failed")
                 }
                 return recording
@@ -158,7 +158,7 @@ struct Root {
 
             await send(.recordingListScreen(.task))
             for await transcription in transcriptionWorker.transcriptionStream() {
-              log.debug(transcription.status)
+              logs.debug("\(transcription.status)")
               await send(.updateTranscription(transcription))
             }
           }
@@ -180,7 +180,7 @@ struct Root {
           return .none
 
         case let .failedToUpdateRecording(fileName, error):
-          log.error("Failed to update transcription for \(fileName): \(error)")
+          logs.error("Failed to update transcription for \(fileName): \(error)")
           state.alert = .init(
             title: .init("Failed to update recording"),
             message: .init(error.localizedDescription),
@@ -189,7 +189,7 @@ struct Root {
           return .none
 
         case let .failedICloudSync(error):
-          log.error("Failed to sync with iCloud: \(error)")
+          logs.error("Failed to sync with iCloud: \(error)")
           state.alert = .init(
             title: .init("Failed to sync with iCloud"),
             message: .init(error.localizedDescription),

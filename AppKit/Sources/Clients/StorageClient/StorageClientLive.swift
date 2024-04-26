@@ -82,11 +82,11 @@ extension StorageClient: DependencyKey {
       takenSpace: { takenSpace() },
       deleteStorage: { try await deleteStorage(storage) },
       uploadRecordingsToICloud: { reset in
-        log.verbose("iCloud Sync started")
+        logs.info("iCloud Sync started")
 
         guard let iCloudURL = FileManager.default.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("Documents") else {
-          log.error("Unable to access iCloud Account")
-          log.error("Make sure you are signed in to iCloud and try again")
+          logs.error("Unable to access iCloud Account")
+          logs.error("Make sure you are signed in to iCloud and try again")
           throw StorageError.iCloudNotAvailable
         }
 
@@ -107,7 +107,7 @@ extension StorageClient: DependencyKey {
           for recording in storage.currentRecordings {
             let fileName = recording.fileName
             let readableFileName = recording.title.isEmpty ? recording.id : (recording.title + "_" + recording.id)
-            log.verbose("Uploading file: \(fileName), readable name: \(readableFileName)")
+            logs.info("Uploading file: \(fileName), readable name: \(readableFileName)")
 
             let source = documentsURL.appending(path: fileName)
             let destination = iCloudURL.appending(path: readableFileName)
@@ -116,17 +116,17 @@ extension StorageClient: DependencyKey {
               do {
                 try fileManager.copyItem(at: source, to: destination)
               } catch {
-                log.error(error)
+                logs.error("Error while copying file to iCloud: \(error)")
               }
 
               uploadedFiles.append(fileName)
             } else {
-              log.verbose("File already uploaded: \(fileName)")
+              logs.info("File already uploaded: \(fileName)")
             }
           }
         }.value
 
-        log.verbose("Finish updating ubiquity container")
+        logs.info("Finish updating ubiquity container")
       }
     )
   }()
@@ -138,7 +138,7 @@ extension StorageClient: DependencyKey {
       let capacity = values.volumeAvailableCapacityForImportantUsage
       return UInt64(capacity ?? 0)
     } catch {
-      log.error("Error while getting total disk space: \(error)")
+      logs.error("Error while getting total disk space: \(error)")
       return 0
     }
   }
@@ -150,7 +150,7 @@ extension StorageClient: DependencyKey {
       let capacity = values.volumeAvailableCapacityForImportantUsage
       return UInt64(capacity ?? 0)
     } catch {
-      log.error("Error while getting free disk space: \(error)")
+      logs.error("Error while getting free disk space: \(error)")
       return 0
     }
   }
@@ -161,7 +161,7 @@ extension StorageClient: DependencyKey {
       let capacity = try fileURL.directoryTotalAllocatedSize(includingSubfolders: true)
       return UInt64(capacity ?? 0)
     } catch {
-      log.error("Error while getting taken disk space: \(error)")
+      logs.error("Error while getting taken disk space: \(error)")
       return 0
     }
   }

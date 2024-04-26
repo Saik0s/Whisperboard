@@ -79,17 +79,17 @@ private actor AudioRecorder {
 
   lazy var delegate: Delegate = .init(
     didFinishRecording: { [audioSession, recordingStateSubject] successfully in
-      log.info("didFinishRecording: \(successfully)")
+      logs.info("didFinishRecording: \(successfully)")
       try? audioSession.disable(.record, true)
       recordingStateSubject.send(.finished(successfully))
     },
     encodeErrorDidOccur: { [audioSession, recordingStateSubject] error in
-      log.info("encodeErrorDidOccur: \(error?.localizedDescription ?? "nil")")
+      logs.info("encodeErrorDidOccur: \(error?.localizedDescription ?? "nil")")
       try? audioSession.disable(.record, true)
       recordingStateSubject.send(.error(error?.equatable ?? AudioRecorderError.somethingWrong.equatable))
     },
     interruptionOccurred: { [weak self, audioSession, recordingStateSubject] type, userInfo in
-      log.info("interruptionOccurred: \(type)")
+      logs.info("interruptionOccurred: \(type)")
       Task { [weak self] in
         await self?.processInterruption(type: type, userInfo: userInfo)
       }
@@ -105,14 +105,14 @@ private actor AudioRecorder {
   }
 
   func stop() {
-    log.info("")
+    logs.info("")
     task?.cancel()
     recorder?.stop()
     recorder = nil
   }
 
   func start(url: URL) {
-    log.info("")
+    logs.info("")
     if recorder?.isRecording == true {
       removeCurrentRecording()
     }
@@ -134,24 +134,24 @@ private actor AudioRecorder {
         }
       }
     } catch {
-      log.error(error)
+      logs.error("start error: \(error)")
       recordingStateSubject.send(.error(error.equatable))
     }
   }
 
   func pause() {
-    log.info("pause")
+    logs.info("pause")
     recorder?.pause()
     recordingStateSubject.send(.paused)
   }
 
   func `continue`() {
-    log.info("continue")
+    logs.info("continue")
     recorder?.record()
   }
 
   func removeCurrentRecording() {
-    log.info("")
+    logs.info("")
     task?.cancel()
     recorder?.stop()
     recorder?.deleteRecording()
@@ -163,7 +163,7 @@ private actor AudioRecorder {
   }
 
   func setMicrophone(_ microphone: Microphone) throws {
-    log.info("microphone: \(microphone)")
+    logs.info("microphone: \(microphone)")
     try audioSession.selectMicrophone(microphone)
   }
 

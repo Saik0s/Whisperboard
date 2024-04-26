@@ -100,8 +100,8 @@ extension APIClient: DependencyKey {
                   continuation.yield(.uploading(progress: progress))
 
                 case let .done(response, data):
-                  log.verbose(response)
-                  log.verbose(String(data: data, encoding: .utf8) ?? "No data")
+                  logs.info("\(response)")
+                  logs.info("\(String(data: data, encoding: .utf8) ?? "No data")")
                   guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
                     continuation.finish(throwing: APIClientError.uploadFailed)
                     return
@@ -125,7 +125,7 @@ extension APIClient: DependencyKey {
         }
 
         #if DEBUG
-          log.verbose(request.cURL(pretty: true))
+          logs.info("\(request.cURL(pretty: true))")
         #endif
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -134,8 +134,8 @@ extension APIClient: DependencyKey {
           throw APIClientError.resultFailed
         }
 
-        log.verbose(httpResponse)
-        log.verbose(String(data: data, encoding: .utf8) ?? "No data")
+        logs.info("\(httpResponse)")
+        logs.info("\(String(data: data, encoding: .utf8) ?? "No data")")
 
         switch httpResponse.statusCode {
         case 200:

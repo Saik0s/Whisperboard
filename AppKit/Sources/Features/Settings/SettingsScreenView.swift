@@ -167,7 +167,7 @@ struct SpeechSectionView: View {
   struct DebugSectionView: View {
     @Perception.Bindable var store: StoreOf<SettingsScreen>
 
-    @State private var logs: [String] = []
+    @State private var logs: [(Int, String)] = []
 
     var body: some View {
       WithPerceptionTracking {
@@ -187,7 +187,7 @@ struct SpeechSectionView: View {
               }
             }
             .onAppear {
-              logs = (try? String(contentsOfFile: Configs.logFileURL.path()).split(separator: "\n").map(String.init)) ?? ["No logs..."]
+              logs = Array(ExtraLogHandler.sessionLogs.enumerated())
             }
           }
         } header: {

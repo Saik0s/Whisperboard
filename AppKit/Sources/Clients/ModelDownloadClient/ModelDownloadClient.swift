@@ -65,15 +65,15 @@ extension ModelDownloadClient: DependencyKey {
                   continuation.yield(.success(fileURL: url))
                 } catch {
                   continuation.yield(.failure(error))
-                  log.error(error)
+                  logs.error("Error while downloading model \(modelType): \(error)")
                 }
 
               case let .failure(error):
                 continuation.yield(.failure(error))
-                log.error(error)
+                logs.error("Error while downloading model \(modelType): \(error)")
               }
               continuation.finish()
-              log.verbose("Download finished")
+              logs.info("Download finished")
             }
 
             continuation.yield(.inProgress(0))
@@ -82,7 +82,7 @@ extension ModelDownloadClient: DependencyKey {
             continuation.onTermination = { termination in
               if termination == .cancelled {
                 task.cancel()
-                log.debug("Download cancelled")
+                logs.debug("Download cancelled")
               }
             }
           }
@@ -90,9 +90,9 @@ extension ModelDownloadClient: DependencyKey {
       },
 
       deleteModel: { modelType in
-        log.verbose("Deleting model \(modelType)...")
+        logs.info("Deleting model \(modelType)...")
         try? FileManager.default.removeItem(at: modelType.localURL)
-        log.verbose("Deleted model \(modelType)")
+        logs.info("Deleted model \(modelType)")
       }
     )
   }()

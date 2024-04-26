@@ -61,7 +61,7 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
       transcription.status = .progress(task.progress)
 
       for try await action in try context.fullTranscribe(audioFileURL: fileURL, params: task.parameters) {
-        log.debug(action)
+        logs.debug("Action: \(action)")
         var _transcription = transcription
         switch action {
         case let .newSegment(segment):
@@ -69,7 +69,7 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
           _transcription.status = .progress(task.progress)
 
         case let .progress(progress):
-          log.debug("Progress: \(progress)")
+          logs.debug("Progress: \(progress)")
 
         case let .error(error):
           _transcription.status = .error(message: error.localizedDescription)
@@ -105,8 +105,8 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
       updateTask(task.with(\.modelType, setTo: selectedModel))
 
       let memory = freeMemoryAmount()
-      log.info("Available memory: \(bytesToReadableString(bytes: availableMemory()))")
-      log.info("Free memory: \(bytesToReadableString(bytes: memory))")
+      logs.info("Available memory: \(bytesToReadableString(bytes: availableMemory()))")
+      logs.info("Free memory: \(bytesToReadableString(bytes: memory))")
 
       guard memory > selectedModel.memoryRequired else {
         throw LocalTranscriptionError.notEnoughMemory(available: memory, required: selectedModel.memoryRequired)

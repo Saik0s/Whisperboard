@@ -148,7 +148,7 @@ struct RecordingCard {
         return .none
 
       case .transcribeTapped:
-        log.debug("Transcribe tapped for recording \(state.recording.id)")
+        logs.debug("Transcribe tapped for recording \(state.recording.id)")
         // Handled in RootStore
         return .send(.delegate(.didTapTranscribe(state.recording)))
 
@@ -163,14 +163,14 @@ struct RecordingCard {
             }
           }
         } catch: { error, _ in
-          log.error(error)
+          logs.error("Failed to cancel transcription: \(error)")
         }
 
       case let .titleChanged(title):
         do {
           try storage.update(state.recording.id) { $0.title = title }
         } catch {
-          log.error(error)
+          logs.error("Failed to update title: \(error)")
           state.alert = .error(message: "Failed to update title")
         }
         return .none
@@ -208,7 +208,7 @@ struct RecordingCard {
           break
 
         case let .error(error):
-          log.error(error as Any)
+          logs.error("Failed to play audio: \(error as Any)")
           await send(.audioPlayerFinished(.failure(error ?? NSError())), animation: .default)
 
         case let .finish(successful):

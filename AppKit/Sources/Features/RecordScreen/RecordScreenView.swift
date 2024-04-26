@@ -49,7 +49,7 @@ struct RecordScreen {
           duration: recording.duration
         )
 
-        log.verbose("Adding recording info: \(recordingInfo)")
+        logs.info("Adding recording info: \(recordingInfo)")
         do {
           try storage.addRecordingInfo(recordingInfo)
         } catch {

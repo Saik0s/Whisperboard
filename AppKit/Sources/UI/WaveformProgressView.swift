@@ -56,7 +56,7 @@ struct WaveformProgress {
 
           let audioURL = storage.audioFileURLWithName(state.fileName)
           guard FileManager.default.fileExists(atPath: audioURL.path) else {
-            log.error("Can't find audio file at \(audioURL.path)")
+            logs.error("Can't find audio file at \(audioURL.path)")
             await send(.waveFormImageCreated(.failure(WaveformProgressError.audioFileNotFound)))
             return
           }
@@ -74,7 +74,7 @@ struct WaveformProgress {
         return .none
 
       case let .waveFormImageCreated(.failure(error)):
-        log.error(error)
+        logs.error("Failed to create waveform image: \(error)")
         return .none
 
       case let .didTouchAtHorizontalLocation(horizontal):

@@ -1,5 +1,5 @@
 {
-  "originHash" : "9932cdb652f7eeb9886f40ea83fd1f4e11958196befc16210f382d65b24da71d",
+  "originHash" : "634a0cda57031d486bd38fb6851cae2c90f3b0cd5a3c91f6538b193d4c7a2016",
   "pins" : [
     {
       "identity" : "audiokit",
@@ -161,6 +161,15 @@
       "state" : {
         "revision" : "d1e45f3e1eee2c9193f5369fa9d70a6ddad635e8",
         "version" : "1.0.0"
+      }
+    },
+    {
+      "identity" : "swift-log",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-log.git",
+      "state" : {
+        "revision" : "e97a6fcb1ab07462881ac165fdbb37f067e205d5",
+        "version" : "1.5.4"
       }
     },
     {

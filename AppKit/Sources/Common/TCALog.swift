@@ -1,5 +1,4 @@
 import ComposableArchitecture
-import DependenciesAdditions
 import Foundation
 import os
 
@@ -12,8 +11,7 @@ extension _ReducerPrinter {
       if withStateChanges {
         message.write(diff(oldState, newState).map { "\($0)\n" } ?? "  (No state changes)\n")
       }
-      @Dependency(\.logger) var logger: os.Logger
-      logger.debug("\(message)")
+      logs.debug("\(message)")
     }
   }
 }

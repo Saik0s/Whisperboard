@@ -35,7 +35,7 @@ final class TranscriptionWorkerImpl: TranscriptionWorker {
   init(executor: TranscriptionWorkExecutor) {
     self.executor = executor
     taskQueue = loadTasks()
-    log.debug("Restored:", taskQueue.elements.map(\.id))
+    logs.debug("Restored: \(taskQueue.elements.map(\.id))")
 
     let notificationCenter = NotificationCenter.default
 
@@ -127,7 +127,7 @@ final class TranscriptionWorkerImpl: TranscriptionWorker {
     do {
       try BGTaskScheduler.shared.submit(request)
     } catch {
-      log.error("Could not schedule background task: \(error)")
+      logs.error("Could not schedule background task: \(error)")
     }
   }
 

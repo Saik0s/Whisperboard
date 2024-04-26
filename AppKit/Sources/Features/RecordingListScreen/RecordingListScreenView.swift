@@ -119,14 +119,14 @@ struct RecordingListScreen {
 
           for url in urls {
             let newURL = storage.createNewWhisperURL()
-            log.verbose("Importing file from \(url) to \(newURL)")
+            logs.info("Importing file from \(url) to \(newURL)")
             try await fileImport.importFile(url, newURL)
 
             let newFileName = newURL.lastPathComponent
             let oldFileName = url.lastPathComponent
             let duration = try getFileDuration(url: newURL)
             let recordingEnvelop = RecordingInfo(fileName: newFileName, title: oldFileName, date: Date(), duration: duration)
-            log.verbose("Adding recording info: \(recordingEnvelop)")
+            logs.info("Adding recording info: \(recordingEnvelop)")
             try storage.addRecordingInfo(recordingEnvelop)
           }
 
@@ -139,7 +139,7 @@ struct RecordingListScreen {
         .animation(.gentleBounce())
 
       case let .failedToAddRecordings(error):
-        log.error(error)
+        logs.error("Failed to add recordings error: \(error)")
         state.alert = .error(error)
         return .none
 
@@ -184,7 +184,7 @@ struct RecordingListScreen {
         do {
           try storage.delete(id)
         } catch {
-          log.error(error)
+          logs.error("Failed to delete recording \(id) error: \(error)")
           state.alert = .error(error)
         }
         return .none

@@ -39,11 +39,11 @@ struct MicSelector {
       case .task:
         return .run { send in
           for await mics in try await audioRecorder.availableMicrophones() {
-            log.debug(mics)
+            logs.debug("Available microphones: \(mics)")
             await send(.micsUpdated(mics))
           }
         } catch: { error, send in
-          log.error(error)
+          logs.error("Error while fetching available microphones: \(error)")
           await send(.errorWhileSettingMic(error.equatable))
         }
 
@@ -56,7 +56,7 @@ struct MicSelector {
           let mic = try await audioRecorder.currentMicrophone()
           await send(.setCurrentMic(mic))
         } catch: { error, send in
-          log.error(error)
+          logs.error("Error while fetching current microphone: \(error)")
           await send(.errorWhileSettingMic(error.equatable))
         }
 
@@ -69,7 +69,7 @@ struct MicSelector {
           try await audioRecorder.setMicrophone(mic)
           await send(.setCurrentMic(mic))
         } catch: { error, send in
-          log.error(error)
+          logs.error("Error while setting microphone: \(error)")
           await send(.errorWhileSettingMic(error.equatable))
         }
 

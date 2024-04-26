@@ -53,28 +53,28 @@ final class RemoteTranscriptionWorkExecutor: TranscriptionWorkExecutor {
             transcription.status = .uploading(progress)
 
           case let .done(response):
-            log.debug("Uploaded:", response)
+            logs.debug("Upload response: \(response)")
             task.remoteID = response.id
             transcription.status = .progress(0.0)
           }
         }
 
         guard let remoteID = task.remoteID else {
-          log.error("Failed to upload recording")
+          logs.error("Failed to upload recording")
           transcription.status = .error(message: "Failed to upload recording")
           return
         }
 
         for try await _ in clock.timer(interval: .seconds(1)) {
-          log.debug("Checking transcription status")
+          logs.debug("Checking transcription status")
           let resultResponse = try await apiClient.getTranscriptionResultFor(remoteID)
-          log.debug("Result:", resultResponse)
+          logs.debug("Transcription response: \(resultResponse)")
           guard resultResponse.isDone else {
-            log.debug("Transcription is not done yet")
+            logs.debug("Transcription is not done yet")
             continue
           }
 
-          log.debug(resultResponse.transcription as Any)
+          logs.debug("Remote transcription: \(resultResponse.transcription as Any)")
           transcription.segments = resultResponse.transcription?.segments.map { segment in
             Segment(
               startTime: Int64(segment.start * 1000),
@@ -88,7 +88,7 @@ final class RemoteTranscriptionWorkExecutor: TranscriptionWorkExecutor {
           return
         }
       } catch {
-        log.error(error)
+        logs.error("Error: \(error)")
         transcription.status = .error(message: error.localizedDescription)
       }
     }

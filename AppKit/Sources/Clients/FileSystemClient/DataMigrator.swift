@@ -25,11 +25,11 @@ class DataMigrator {
     let currentVersion = migrationVersion
 
     for migration in migrations where migration.version > currentVersion {
-      log.info("Migrating to version \(migration.version) using \(type(of: migration))")
+      logs.info("Migrating to version \(migration.version) using \(type(of: migration))")
       do {
         try migration.migrate()
       } catch {
-        log.error(error)
+        logs.error("Migration failed: \(error)")
       }
       migrationVersion = migration.version
     }
