@@ -20,7 +20,10 @@ struct Transcription: Codable, Hashable, Identifiable {
 
 extension Transcription {
   enum Status: Codable, Hashable {
-    case notStarted, loading, uploading(Double), error(message: String), progress(Double), done(Date), canceled, paused(TranscriptionTask)
+    case notStarted, loading, uploading(Double), error(message: String), progress(Double), done(Date), canceled, paused(
+      TranscriptionTask,
+      progress: Double
+    )
   }
 }
 

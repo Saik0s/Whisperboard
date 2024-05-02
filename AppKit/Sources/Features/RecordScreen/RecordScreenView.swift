@@ -26,8 +26,7 @@ struct RecordScreen {
     enum Alert: Equatable {}
   }
 
-  @Dependency(\.storage) var storage: StorageClient
-  @Dependency(\.settings) var settings: SettingsClient
+  @Dependency(StorageClient.self) var storage: StorageClient
 
   var body: some Reducer<State, Action> {
     BindingReducer()
@@ -43,21 +42,9 @@ struct RecordScreen {
     Reduce<State, Action> { state, action in
       switch action {
       case let .recordingControls(.recording(.delegate(.didFinish(.success(recording))))):
-        let recordingInfo = RecordingInfo(
-          fileName: recording.url.lastPathComponent,
-          date: recording.date,
-          duration: recording.duration
-        )
-
-        logs.info("Adding recording info: \(recordingInfo)")
-        do {
-          try storage.addRecordingInfo(recordingInfo)
-        } catch {
-          state.alert = .error(error)
-        }
 
         return .run { send in
-          await send(.newRecordingCreated(recordingInfo))
+          await send(.newRecordingCreated(recording.recordingInfo))
           await send(.recordingControls(.binding(.set(\.isGotToDetailsPopupPresented, true))))
         }
 
@@ -119,21 +106,3 @@ struct RecordScreenView: View {
     .enableInjection()
   }
 }
-
-#if DEBUG
-
-  struct RecordScreenView_Previews: PreviewProvider {
-    static var previews: some View {
-      NavigationView {
-        RecordScreenView(
-          store: Store(
-            initialState: RecordScreen.State(
-              recordingControls: .init(recording: .init(date: Date(), url: URL(fileURLWithPath: "test")))
-            ),
-            reducer: { RecordScreen() }
-          )
-        )
-      }
-    }
-  }
-#endif

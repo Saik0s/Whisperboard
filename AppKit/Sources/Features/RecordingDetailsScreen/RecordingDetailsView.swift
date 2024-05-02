@@ -23,9 +23,11 @@ struct RecordingDetails {
     var recordingCard: RecordingCard.State
     var displayMode: DisplayMode = .text
 
+    @Presents var alert: AlertState<Action.Alert>?
+
     var text: String { recordingCard.isTranscribing ? recordingCard.transcribingProgressText : recordingCard.transcription }
     var timeline: [TimelineItem] {
-      recordingCard.recording.lastTranscription?.segments.map {
+      recordingCard.recording.transcription?.segments.map {
         TimelineItem(text: $0.text, startTime: Duration.milliseconds($0.startTime), endTime: Duration.milliseconds($0.endTime))
       } ?? []
     }
@@ -34,9 +36,19 @@ struct RecordingDetails {
   }
 
   enum Action: Equatable {
-    case recordingCard(action: RecordingCard.Action)
+    case recordingCard(RecordingCard.Action)
     case delete
     case displayModeChanged(DisplayMode)
+    case alert(PresentationAction<Alert>)
+    case delegate(Delegate)
+
+    enum Alert: Hashable {
+      case deleteDialogConfirmed
+    }
+
+    enum Delegate: Hashable {
+      case deleteDialogConfirmed
+    }
   }
 
   var body: some Reducer<State, Action> {
@@ -50,13 +62,32 @@ struct RecordingDetails {
         return .none
 
       case .delete:
+        state.alert = AlertState {
+          TextState("Confirmation")
+        } actions: {
+          ButtonState(role: .destructive, action: .deleteDialogConfirmed) {
+            TextState("Delete")
+          }
+        } message: {
+          TextState("Are you sure you want to delete this recording?")
+        }
         return .none
+
+      case .alert(.presented(.deleteDialogConfirmed)):
+        return .send(.delegate(.deleteDialogConfirmed))
 
       case let .displayModeChanged(mode):
         state.displayMode = mode
         return .none
+
+      case .alert:
+        return .none
+
+      case .delegate:
+        return .none
       }
     }
+    .ifLet(\.$alert, action: /Action.alert)
   }
 }
 
@@ -90,138 +121,60 @@ struct RecordingDetailsView: View {
             .textStyle(.caption)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-          if store.recordingCard.recording.isTranscribed == false
+          HStack(spacing: .grid(2)) {
+            CopyButton(store.recordingCard.recording.text) {
+              Image(systemName: "doc.on.clipboard")
+            }
+
+            ShareLink(item: store.recordingCard.recording.text) {
+              Image(systemName: "paperplane")
+            }
+
+            Button { store.send(.recordingCard(.transcribeTapped)) } label: {
+              Image(systemName: "arrow.clockwise")
+            }
+
+            ShareLink(item: store.shareAudioFileURL) {
+              Image(systemName: "square.and.arrow.up")
+            }
+
+            Button { store.send(.delete) } label: {
+              Image(systemName: "trash")
+            }
+
+            Spacer()
+
+            Picker(
+              "",
+              selection: $store.displayMode.sending(\.displayModeChanged)
+            ) {
+              Image(systemName: "text.alignleft")
+                .tag(RecordingDetails.DisplayMode.text)
+              Image(systemName: "list.bullet")
+                .tag(RecordingDetails.DisplayMode.timeline)
+            }
+            .pickerStyle(.segmented)
+            .colorMultiply(.DS.Text.accent)
+          }.iconButtonStyle()
+
+          if !store.recordingCard.recording.isTranscribed
             && !store.recordingCard.recording.isTranscribing
             && !store.recordingCard.recording.isPaused {
-            if let error = store.recordingCard.recording.lastTranscriptionErrorMessage {
+            if let error = store.recordingCard.recording.transcriptionErrorMessage {
               Text("Last transcription failed")
                 .textStyle(.error)
               Text(error)
                 .textStyle(.error)
             }
             Button("Transcribe") {
-              store.send(.recordingCard(action: .transcribeTapped))
+              store.send(.recordingCard(.transcribeTapped))
             }
             .tertiaryButtonStyle()
             .padding(.grid(4))
           } else {
-            if !store.recordingCard.isTranscribing {
-              HStack(spacing: .grid(2)) {
-                CopyButton(store.recordingCard.recording.text) {
-                  Image(systemName: "doc.on.clipboard")
-                }
+            transcriptionControls()
 
-                ShareLink(item: store.recordingCard.recording.text) {
-                  Image(systemName: "paperplane")
-                }
-
-                Button { store.send(.recordingCard(action: .transcribeTapped)) } label: {
-                  Image(systemName: "arrow.clockwise")
-                }
-
-                ShareLink(item: store.shareAudioFileURL) {
-                  Image(systemName: "square.and.arrow.up")
-                }
-
-                Button { store.send(.delete) } label: {
-                  Image(systemName: "trash")
-                }
-
-                Spacer()
-
-                Picker(
-                  "",
-                  selection: $store.displayMode.sending(\.displayModeChanged)
-                ) {
-                  Image(systemName: "text.alignleft")
-                    .tag(RecordingDetails.DisplayMode.text)
-                  Image(systemName: "list.bullet")
-                    .tag(RecordingDetails.DisplayMode.timeline)
-                }
-                .pickerStyle(.segmented)
-                .colorMultiply(.DS.Text.accent)
-              }.iconButtonStyle()
-            }
-
-            if store.recordingCard.isTranscribing || store.recordingCard.isInQueue {
-              VStack(spacing: .grid(2)) {
-                ProgressView()
-                  .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
-
-                Text(store.recordingCard.isTranscribing
-                  ? store.recordingCard.recording.lastTranscription?.status.message ?? ""
-                  : "In queue: \(store.recordingCard.queuePosition ?? 0) of \(store.recordingCard.queueTotal ?? 0)")
-                  .textStyle(.body)
-
-                Button("Cancel") {
-                  store.send(.recordingCard(action: .cancelTranscriptionTapped))
-                }.tertiaryButtonStyle()
-              }
-            } else if store.recordingCard.recording.isPaused {
-              VStack(spacing: .grid(1)) {
-                Text(store.recordingCard.recording.lastTranscription?.status.message ?? "")
-                  .textStyle(.body)
-
-                HStack {
-                  Button("Resume") {
-                    store.send(.recordingCard(action: .resumeTapped))
-                  }.tertiaryButtonStyle()
-
-                  Button("Start Over") {
-                    store.send(.recordingCard(action: .transcribeTapped))
-                  }.tertiaryButtonStyle()
-                }
-              }
-            }
-
-            ScrollView {
-              switch store.displayMode {
-              case .text:
-                Text(store.recordingCard.isTranscribing
-                  ? store.recordingCard.transcribingProgressText
-                  : store.recordingCard.transcription)
-                  .foregroundColor(store.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
-                  .textStyle(.body)
-                  .lineLimit(nil)
-                  .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                  .padding(.vertical, .grid(2))
-
-              case .timeline:
-                LazyVStack {
-                  ForEach(store.timeline) { item in
-                    VStack(alignment: .leading, spacing: .grid(1)) {
-                      Text(
-                        "[\(item.startTime.formatted(.time(pattern: .hourMinuteSecond(padHourToLength: 2, fractionalSecondsLength: 2)))) - \(item.endTime.formatted(.time(pattern: .hourMinuteSecond(padHourToLength: 2, fractionalSecondsLength: 2))))]"
-                      )
-                      .foregroundColor(.DS.Text.subdued)
-                      .textStyle(.caption)
-
-                      Text(item.text)
-                        .foregroundColor(.DS.Text.base)
-                        .textStyle(.body)
-                        .lineLimit(nil)
-                        .frame(maxWidth: .infinity, alignment: .topLeading)
-                    }
-                    .multilineTextAlignment(.leading)
-                    .padding(.vertical, .grid(2))
-                  }
-                }
-              }
-            }
-            .textSelection(.enabled)
-            .mask {
-              LinearGradient(
-                stops: [
-                  .init(color: .clear, location: 0),
-                  .init(color: .black, location: 0.02),
-                  .init(color: .black, location: 0.98),
-                  .init(color: .clear, location: 1),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-              )
-            }
-            .offset(x: 0, y: -8)
+            transcriptionView
 
             // TextField("No transcription", text: store.binding(\.$recordingCard.recordingEnvelop.text), axis: .vertical)
             //   .focused($focusedField, equals: .text)
@@ -237,13 +190,13 @@ struct RecordingDetailsView: View {
 
         WaveformProgressView(
           store: store.scope(
-            state: \.recordingCard.waveform,
-            action: \.recordingCard.waveform
+            state: \.recordingCard.playerControls.waveform,
+            action: \.recordingCard.playerControls.view.waveform
           )
         )
 
-        PlayButton(isPlaying: store.recordingCard.mode.isPlaying) {
-          store.send(.recordingCard(action: .playButtonTapped), animation: .spring())
+        PlayButton(isPlaying: store.recordingCard.playerControls.isPlaying) {
+          store.send(.recordingCard(.playerControls(.view(.playButtonTapped))), animation: .spring())
         }
       }
       .padding(.grid(4))
@@ -255,23 +208,93 @@ struct RecordingDetailsView: View {
           .frame(maxWidth: .infinity, alignment: .trailing)
         }
       }
+      .alert($store.scope(state: \.alert, action: \.alert))
     }
     .enableInjection()
   }
-}
 
-#if DEBUG
+  var transcriptionView: some View {
+    ScrollView {
+      switch store.displayMode {
+      case .text:
+        Text(store.recordingCard.isTranscribing
+          ? store.recordingCard.transcribingProgressText
+          : store.recordingCard.transcription)
+          .foregroundColor(store.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
+          .textStyle(.body)
+          .lineLimit(nil)
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+          .padding(.vertical, .grid(2))
 
-  struct RecordingDetailsView_Previews: PreviewProvider {
-    static var previews: some View {
-      NavigationView {
-        RecordingDetailsView(
-          store: Store(
-            initialState: RecordingDetails.State(recordingCard: .init(recording: .mock, index: 0)),
-            reducer: { RecordingDetails() }
-          )
-        )
+      case .timeline:
+        LazyVStack {
+          ForEach(store.timeline) { item in
+            VStack(alignment: .leading, spacing: .grid(1)) {
+              Text(
+                "[\(item.startTime.formatted(.time(pattern: .hourMinuteSecond(padHourToLength: 2, fractionalSecondsLength: 2)))) - \(item.endTime.formatted(.time(pattern: .hourMinuteSecond(padHourToLength: 2, fractionalSecondsLength: 2))))]"
+              )
+              .foregroundColor(.DS.Text.subdued)
+              .textStyle(.caption)
+
+              Text(item.text)
+                .foregroundColor(.DS.Text.base)
+                .textStyle(.body)
+                .lineLimit(nil)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
+            .multilineTextAlignment(.leading)
+            .padding(.vertical, .grid(2))
+          }
+        }
+      }
+    }
+    .textSelection(.enabled)
+    .mask {
+      LinearGradient(
+        stops: [
+          .init(color: .clear, location: 0),
+          .init(color: .black, location: 0.02),
+          .init(color: .black, location: 0.98),
+          .init(color: .clear, location: 1),
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+      )
+    }
+    .offset(x: 0, y: -8)
+  }
+
+  @ViewBuilder
+  func transcriptionControls() -> some View {
+    if store.recordingCard.isTranscribing || store.recordingCard.isInQueue {
+      VStack(spacing: .grid(2)) {
+        ProgressView()
+          .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
+
+        Text(store.recordingCard.isTranscribing
+          ? store.recordingCard.recording.transcription?.status.message ?? ""
+          : "In queue: \(store.recordingCard.queuePosition ?? 0) of \(store.recordingCard.queueTotal ?? 0)")
+          .textStyle(.body)
+
+        Button("Cancel") {
+          store.send(.recordingCard(.cancelTranscriptionTapped))
+        }.tertiaryButtonStyle()
+      }
+    } else if store.recordingCard.recording.isPaused {
+      VStack(spacing: .grid(1)) {
+        Text(store.recordingCard.recording.transcription?.status.message ?? "")
+          .textStyle(.body)
+
+        HStack {
+          Button("Resume") {
+            store.send(.recordingCard(.didTapResumeTranscription))
+          }.tertiaryButtonStyle()
+
+          Button("Start Over") {
+            store.send(.recordingCard(.transcribeTapped))
+          }.tertiaryButtonStyle()
+        }
       }
     }
   }
-#endif
+}

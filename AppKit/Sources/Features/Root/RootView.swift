@@ -2,6 +2,7 @@ import Combine
 import ComposableArchitecture
 import Inject
 import SwiftUI
+import NavigationTransitions
 
 // MARK: - RootView
 
@@ -10,18 +11,27 @@ struct RootView: View {
 
   @Perception.Bindable var store: StoreOf<Root>
 
-  @Namespace var animation
-
   var body: some View {
     WithPerceptionTracking {
       TabBarContainerView(
         selectedIndex: $store.selectedTab.rawValue.sending(\.selectTab),
-        screen1: RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: \.recordingListScreen)),
+        screen1: NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+          RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: \.recordingListScreen))
+        } destination: { store in
+          switch store.case {
+          case let .details(store):
+            RecordingDetailsView(store: store)
+          }
+        }
+          .navigationTransition(.slide)
+          .applyTabBarContentInset(),
         screen2: RecordScreenView(store: store.scope(state: \.recordScreen, action: \.recordScreen)),
-        screen3: SettingsScreenView(store: store.scope(state: \.settingsScreen, action: \.settingsScreen))
+        screen3: NavigationStack {
+          SettingsScreenView(store: store.scope(state: \.settingsScreen, action: \.settingsScreen))
+        }
       )
       .accentColor(.white)
-      .task { store.send(.task) }
+      .task { await store.send(.task).finish() }
     }
     .enableInjection()
   }

@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - PlaybackPosition
 
-struct PlaybackPosition {
+struct PlaybackPosition: Equatable {
   let currentTime: TimeInterval
   let duration: TimeInterval
 
@@ -11,10 +11,10 @@ struct PlaybackPosition {
 
 // MARK: - PlaybackState
 
-enum PlaybackState {
+enum PlaybackState: Equatable {
   case playing(PlaybackPosition)
   case pause(PlaybackPosition)
   case stop
-  case error(Error?)
+  case error(EquatableError?)
   case finish(successful: Bool)
 }

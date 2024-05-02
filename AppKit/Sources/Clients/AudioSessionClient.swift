@@ -35,6 +35,7 @@ extension AudioSessionClient: DependencyKey {
   static var liveValue: AudioSessionClient = {
     let isPlaybackActive = LockIsolated(false)
     let isRecordActive = LockIsolated(false)
+    @Shared(.settings) var settings: Settings = .init()
 
     var session: AVAudioSession { AVAudioSession.sharedInstance() }
 
@@ -60,8 +61,7 @@ extension AudioSessionClient: DependencyKey {
     }
 
     var options: AVAudioSession.CategoryOptions {
-      @Dependency(\.settings) var settings: SettingsClient
-      let shouldMixWithOthers = settings.getSettings().shouldMixWithOtherAudio
+      let shouldMixWithOthers = settings.shouldMixWithOtherAudio
       let options: AVAudioSession.CategoryOptions = shouldMixWithOthers
         ? [.allowBluetooth, .mixWithOthers, .duckOthers, .defaultToSpeaker]
         : [.allowBluetooth, .defaultToSpeaker]

@@ -11,44 +11,37 @@ struct SettingsScreenView: View {
 
   @ObserveInjection var inject
 
-  var modelSelectorStore: StoreOf<ModelSelector> { store.scope(state: \.modelSelector, action: \.modelSelector) }
-
   var body: some View {
     WithPerceptionTracking {
-      NavigationStack {
-        List {
-          #if APPSTORE && DEBUG
-            if !store.isSubscribed {
-              SubscriptionSectionView(store: store.scope(state: \.subscriptionSection, action: SettingsScreen.Action.subscriptionSection))
-                .introspect(.listCell, on: .iOS(.v16, .v17)) {
-                  $0.clipsToBounds = false
-                }
-            }
-          #endif
+      List {
+        #if APPSTORE && DEBUG
+          if !store.isSubscribed {
+            SubscriptionSectionView(store: store.scope(state: \.subscriptionSection, action: SettingsScreen.Action.subscriptionSection))
+              .introspect(.listCell, on: .iOS(.v16, .v17)) {
+                $0.clipsToBounds = false
+              }
+          }
+        #endif
 
-          ModelSectionView(store: store, modelSelectorStore: modelSelectorStore)
-          SpeechSectionView(store: store)
+        ModelSectionView(store: store)
+        SpeechSectionView(store: store)
 
-          #if DEBUG
-            DebugSectionView(store: store)
-          #endif
+        #if DEBUG
+          DebugSectionView(store: store)
+        #endif
 
-          StorageSectionView(store: store)
-          FeedbackSectionView(store: store)
-          FooterSectionView(store: store)
-        }
-        .scrollContentBackground(.hidden)
-        .removeNavigationBackground()
-        .navigationBarTitle("Settings")
-        .navigationBarTitleDisplayMode(.inline)
-        .applyTabBarContentInset()
+        StorageSectionView(store: store)
+        FeedbackSectionView(store: store)
+        FooterSectionView(store: store)
       }
+      .scrollContentBackground(.hidden)
+      .removeNavigationBackground()
+      .navigationBarTitle("Settings")
+      .navigationBarTitleDisplayMode(.inline)
+      .applyTabBarContentInset()
       .alert($store.scope(state: \.alert, action: \.alert))
-      .task { store.send(.task) }
-      .onAppear {
-        store.send(.modelSelector(.reloadSelectedModel))
-        store.send(.updateInfo)
-      }
+      .task { await store.send(.task).finish() }
+      .onAppear { store.send(.updateInfo) }
     }
     .enableInjection()
   }
@@ -58,11 +51,10 @@ struct SettingsScreenView: View {
 
 struct ModelSectionView: View {
   @Perception.Bindable var store: StoreOf<SettingsScreen>
-  var modelSelectorStore: StoreOf<ModelSelector>
 
   var body: some View {
-    Section {
-      WithPerceptionTracking {
+    WithPerceptionTracking {
+      Section {
         #if APPSTORE && DEBUG
           SettingsToggleButton(
             icon: .system(name: "wand.and.stars", background: .DS.Background.accent),
@@ -76,50 +68,45 @@ struct ModelSectionView: View {
           title: "Model",
           trailingText: store.selectedModelReadableName
         ) {
-          ModelSelectorView(store: modelSelectorStore)
+          ModelSelectorView(store: store.scope(state: \.modelSelector, action: \.modelSelector))
         }
-        .onAppear { store.send(.modelSelector(.reloadSelectedModel)) }
+      } header: {
+        Text("Transcription")
+      } footer: {
+        Text("Whisper Model").bold() + Text("""
+         - OpenAI's Automatic Speech Recognition tool. The 'tiny' model is optimal for long transcriptions due to its speed. \
+        The 'medium' model specializes in high-quality slow transcriptions. Larger models consume significant resources \
+        and might not perform well on older iOS devices.
+        """)
       }
-    } header: {
-      Text("Transcription")
-    } footer: {
-      Text("Whisper Model").bold() + Text("""
-       - OpenAI's Automatic Speech Recognition tool. The 'tiny' model is optimal for long transcriptions due to its speed. \
-      The 'medium' model specializes in high-quality slow transcriptions. Larger models consume significant resources \
-      and might not perform well on older iOS devices.
-      """)
-    }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
 
-    Section {
-      WithPerceptionTracking {
+      Section {
         SettingsToggleButton(
           icon: .system(name: "mic.fill", background: .systemRed),
           title: "Auto-Transcribe Recordings",
           isOn: $store.settings.isAutoTranscriptionEnabled
         )
+      } footer: {
+        Text(
+          "Enable this option to automatically transcribe audio recordings as soon as you stop recording. When disabled, you'll need to manually initiate the transcription process for each recording."
+        )
       }
-    } footer: {
-      Text(
-        "Enable this option to automatically transcribe audio recordings as soon as you stop recording. When disabled, you'll need to manually initiate the transcription process for each recording."
-      )
-    }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
 
-    Section {
-      WithPerceptionTracking {
+      Section {
         SettingsToggleButton(
           icon: .system(name: "cpu", background: .systemGreen),
           title: "Use GPU (Experimental)",
           isOn: $store.settings.isUsingGPU
         )
+      } footer: {
+        Text(
+          "Enable this option to use the GPU for transcription. This option is experimental and might not work on all devices."
+        )
       }
-    } footer: {
-      Text(
-        "Enable this option to use the GPU for transcription. This option is experimental and might not work on all devices."
-      )
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
     }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
   }
 }
 
@@ -129,35 +116,30 @@ struct SpeechSectionView: View {
   @Perception.Bindable var store: StoreOf<SettingsScreen>
 
   var body: some View {
-    Section("Speech") {
-      WithPerceptionTracking {
+    WithPerceptionTracking {
+      Section("Speech") {
         SettingsInlinePickerButton(
           icon: .system(name: "globe", background: .systemGreen.darken(by: 0.1)),
           title: "Language",
           choices: store.availableLanguages.map(\.name.titleCased),
-          selectedIndex: Binding(
-            get: { store.availableLanguages.firstIndex(of: store.settings.voiceLanguage) ?? 0 },
-            set: { $store.settings.voiceLanguage.wrappedValue = store.availableLanguages[$0] }
-          )
+          selectedIndex: $store.selectedLanguageIndex
         )
       }
-    }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
 
-    Section {
-      WithPerceptionTracking {
+      Section {
         SettingsToggleButton(
           icon: .system(name: "waveform.path.ecg", background: .systemPurple),
           title: "Allow Background Audio",
           isOn: $store.settings.shouldMixWithOtherAudio
         )
+      } footer: {
+        Text(
+          "Turn this on to allow background audio from other apps to continue playing while you record. This app will lower the volume of other audio sources (ducking) during recording. Turn off to ensure other apps are paused and only your recording is captured."
+        )
       }
-    } footer: {
-      Text(
-        "Turn this on to allow background audio from other apps to continue playing while you record. This app will lower the volume of other audio sources (ducking) during recording. Turn off to ensure other apps are paused and only your recording is captured."
-      )
+      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
     }
-    .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
   }
 }
 

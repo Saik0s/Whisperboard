@@ -3,6 +3,7 @@ import Popovers
 import SwiftUI
 import SwiftUIIntrospect
 import VariableBlurView
+import FluidGradient
 
 // MARK: - TabBarViewModel
 
@@ -29,6 +30,11 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
   var body: some View {
     ZStack {
       RootBackgroundView()
+      FluidGradient(blobs: [.black, .blue, .purple],
+              highlights: [.yellow, .orange, .purple],
+              speed: 1.0,
+              blur: 0.75)
+  .background(Color.DS.Background.primary)
 
       ZStack(alignment: .top) {
         screen1
@@ -47,7 +53,6 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
           .frame(width: screenWidth)
           .offset(x: selectedIndex == 2 ? 0 : screenWidth, y: 0)
       }
-      .environmentObject(tabBarViewModel)
       .animation(.spring(response: 0.5, dampingFraction: 0.8), value: selectedIndex)
 
       if tabBarViewModel.isVisible {
@@ -58,12 +63,13 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
           .transition(.move(edge: .bottom))
       }
     }
-    .readSize { screenWidth = $0.width }
+    // .readSize { screenWidth = $0.width }
     .onAppear {
-      withAnimation {
+      withAnimation(.interpolatingSpring(stiffness: 100, damping: 10)) {
         tabBarViewModel.isVisible = true
       }
     }
+      .environmentObject(tabBarViewModel)
     .enableInjection()
   }
 }

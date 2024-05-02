@@ -9,13 +9,9 @@ import SwiftUI
 struct ModelRow {
   @ObservableState
   struct State: Equatable, Identifiable {
-    var model: VoiceModel
-
-    var isSelected: Bool
-
-    var isRemovingModel = false
-
     var id: VoiceModel.ID { model.id }
+    var model: VoiceModel
+    var isRemovingModel = false
   }
 
   enum Action: Equatable {
@@ -29,7 +25,6 @@ struct ModelRow {
   }
 
   @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
-  @Dependency(\.settings) var settings: SettingsClient
 
   struct CancelDownloadID: Hashable {}
 
@@ -64,11 +59,7 @@ struct ModelRow {
         }.cancellable(id: CancelDownloadID(), cancelInFlight: true)
 
       case .selectModelTapped:
-        guard state.isSelected == false else { return .none }
-        state.isSelected = true
-        return .run { [state] _ in
-          try await settings.setValue(state.model.modelType, forKey: \.selectedModel)
-        }
+        return .none
 
       case let .modelUpdated(model):
         state.model = model
@@ -107,6 +98,8 @@ struct ModelRowView: View {
 
   @Perception.Bindable var store: StoreOf<ModelRow>
 
+  var isSelected: Bool
+
   var body: some View {
     WithPerceptionTracking {
       VStack(spacing: .grid(2)) {
@@ -135,7 +128,7 @@ struct ModelRowView: View {
               .secondaryButtonStyle()
           } else {
             Button("Active") { store.send(.selectModelTapped) }
-              .activeButtonStyle(isActive: store.isSelected)
+              .activeButtonStyle(isActive: isSelected)
           }
         }
 
@@ -143,7 +136,7 @@ struct ModelRowView: View {
           ProgressView(value: store.model.downloadProgress)
         }
       }
-      .foregroundColor(store.isSelected ? Color.DS.Text.success : Color.DS.Text.base)
+      .foregroundColor(isSelected ? Color.DS.Text.success : Color.DS.Text.base)
       .contentShape(Rectangle())
       .onTapGesture { store.send(.selectModelTapped) }
       .contextMenu(store.model.isDownloaded && store.model.modelType != .tiny ? contextMenuBuilder() : nil)
@@ -199,12 +192,10 @@ extension View {
     static var previews: some View {
       ModelRowView(
         store: Store(
-          initialState: ModelRow.State(
-            model: .fixture,
-            isSelected: true
-          ),
+          initialState: ModelRow.State(model: .fixture),
           reducer: { ModelRow() }
-        )
+        ),
+        isSelected: false
       )
     }
   }

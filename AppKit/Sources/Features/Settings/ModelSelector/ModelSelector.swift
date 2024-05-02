@@ -13,42 +13,46 @@ struct ModelSelector {
 
     @Presents var alert: AlertState<Action.Alert>?
 
-    var selectedModel: VoiceModelType {
-      modelRows.first(where: \.isSelected)?.model.modelType ?? .default
+    @Shared var selectedModel: VoiceModelType
+
+    init(selectedModel: Shared<VoiceModelType>) {
+      _selectedModel = selectedModel
     }
   }
 
   enum Action: Equatable, BindableAction {
     case binding(BindingAction<State>)
-    case reloadSelectedModel
-    case modelRow(id: VoiceModel.ID, action: ModelRow.Action)
+    case modelRow(IdentifiedActionOf<ModelRow>)
     case alert(PresentationAction<Alert>)
+
+    case reloadModels
 
     enum Alert: Equatable {}
   }
 
   @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
-  @Dependency(\.settings) var settings: SettingsClient
 
   var body: some Reducer<State, Action> {
     BindingReducer()
 
     Reduce<State, Action> { state, action in
       switch action {
-      case .reloadSelectedModel:
-        reloadSelectedModel(state: &state)
+      case .reloadModels:
+        reloadModels(state: &state)
         return .none
 
-      case let .modelRow(_, action: .loadError(message)):
+      case let .modelRow(.element(_, action: .loadError(message))):
         state.alert = .error(message: message)
         return .none
 
-      case .modelRow(_, action: .didRemoveModel):
-        reloadSelectedModel(state: &state)
+      case .modelRow(.element(_, action: .didRemoveModel)):
+        reloadModels(state: &state)
         return .none
 
-      case .modelRow(_, action: .selectModelTapped):
-        reloadSelectedModel(state: &state)
+      case let .modelRow(.element(id, action: .selectModelTapped)):
+        guard let modelRow = state.modelRows[id: id] else { return .none }
+        state.selectedModel = modelRow.model.modelType
+        reloadModels(state: &state)
         return .none
 
       case .modelRow:
@@ -61,17 +65,14 @@ struct ModelSelector {
         return .none
       }
     }
-    .forEach(\.modelRows, action: /Action.modelRow) {
+    .forEach(\.modelRows, action: \.modelRow) {
       ModelRow()
     }
-    .ifLet(\.$alert, action: /Action.alert)
+    .ifLet(\.$alert, action: \.alert)
   }
 
-  private func reloadSelectedModel(state: inout State) {
-    let selected = settings.getSettings().selectedModel
-    state.modelRows = modelDownload.getModels().map { model in
-      ModelRow.State(model: model, isSelected: model.modelType == selected)
-    }.identifiedArray
+  private func reloadModels(state: inout State) {
+    state.modelRows = modelDownload.getModels().map { ModelRow.State(model: $0) }.identifiedArray
   }
 }
 
@@ -84,13 +85,15 @@ struct ModelSelectorView: View {
     WithPerceptionTracking {
       Form {
         Section {
-          ForEachStore(store.scope(state: \.modelRows, action: \.modelRow)) { modelRowStore in
-            ModelRowView(store: modelRowStore)
+          ForEach(store.scope(state: \.modelRows, action: \.modelRow)) { modelRowStore in
+            WithPerceptionTracking {
+              ModelRowView(store: modelRowStore, isSelected: store.selectedModel == modelRowStore.model.modelType)
+            }
           }
           .listRowBackground(Color.DS.Background.secondary)
         }
       }
-      .onAppear { store.send(.reloadSelectedModel) }
+      .onAppear { store.send(.reloadModels) }
       .alert($store.scope(state: \.alert, action: \.alert))
     }
     .enableInjection()

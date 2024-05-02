@@ -8,75 +8,56 @@ import UIKit
 
 // MARK: - TranscriptionWorkerClient
 
+@DependencyClient
 struct TranscriptionWorkerClient {
-  var enqueueTaskForRecording: @Sendable (RecordingInfo, Settings) -> Void
-  var cancelTaskForFile: @Sendable (_ fileName: String) async -> Void
+  var enqueueTaskForRecordingID: @Sendable (_ id: RecordingInfo.ID, _ settings: Settings) async -> Void
+  var cancelTaskForRecordingID: @Sendable (_ id: RecordingInfo.ID) async -> Void
   var cancelAllTasks: @Sendable () async -> Void
-  var registerForProcessingTask: @Sendable () -> Void
-  var transcriptionStream: @Sendable () -> AsyncStream<Transcription>
-  var getAvailableLanguages: @Sendable () -> [VoiceLanguage]
-  var tasksStream: @Sendable () -> AsyncStream<IdentifiedArrayOf<TranscriptionTask>>
-  var getTasks: @Sendable () -> IdentifiedArrayOf<TranscriptionTask>
-  var resumeTask: @Sendable (_ task: TranscriptionTask) -> Void
+  var handleBGProcessingTask: @Sendable (_ bgTask: BGProcessingTask) -> Void
+  var getAvailableLanguages: @Sendable () -> [VoiceLanguage] = { [] }
+  var resumeTask: @Sendable (_ task: TranscriptionTask) async -> Void
 }
 
 // MARK: DependencyKey
 
 extension TranscriptionWorkerClient: DependencyKey {
   static let liveValue: TranscriptionWorkerClient = {
-    let transcriptionChannel = AsyncChannel<Transcription>()
-    let updateTranscription: (_ transcription: Transcription) -> Void = { transcription in
-      Task { @MainActor in
-        await transcriptionChannel.send(transcription)
-      }
-    }
-    let combinedWorkExecutor = CombinedTranscriptionWorkExecutor(updateTranscription: updateTranscription)
-
-    let worker: TranscriptionWorker = TranscriptionWorkerImpl(executor: combinedWorkExecutor)
+    let localWorkExecutor = LocalTranscriptionWorkExecutor()
+    let worker = TranscriptionWorker(executor: localWorkExecutor)
 
     return TranscriptionWorkerClient(
-      enqueueTaskForRecording: { recording, settings in
-        let task = TranscriptionTask(
-          fileName: recording.fileName,
-          duration: Int64(recording.duration * 1000),
-          parameters: settings.parameters,
-          modelType: settings.selectedModel,
-          isRemote: settings.isRemoteTranscriptionEnabled
-        )
-        worker.enqueueTask(task)
+      enqueueTaskForRecordingID: { [worker] id, settings in
+        let task = TranscriptionTask(recordingInfoID: id, settings: settings)
+        worker.$taskQueue.wrappedValue.append(task)
+        await worker.processTasks()
       },
-      cancelTaskForFile: { fileName in
-        if let task = worker.getAllTasks().first(where: { $0.fileName == fileName }) {
-          if worker.currentTaskID == task.id {
-            combinedWorkExecutor.cancel(task: task)
-          }
-          worker.removeTask(with: task.id)
+      cancelTaskForRecordingID: { [worker] id in
+        if let task = await worker.currentTask, task.recordingInfoID == id {
+          localWorkExecutor.cancelTask(id: task.id)
+        }
+        worker.$taskQueue.wrappedValue.removeAll { task in
+          task.recordingInfoID == id
         }
       },
-      cancelAllTasks: {
-        worker.getAllTasks().forEach(combinedWorkExecutor.cancel(task:))
-        worker.removeAllTasks()
-      },
-      registerForProcessingTask: {
-        worker.registerForProcessingTask()
-      },
-      transcriptionStream: {
-        defer {
-          Task.detached { await worker.processTasks() }
+      cancelAllTasks: { [worker] in
+        if let task = await worker.currentTask {
+          localWorkExecutor.cancelTask(id: task.id)
         }
-        return transcriptionChannel.eraseToStream()
+        worker.$taskQueue.wrappedValue.removeAll()
+      },
+      handleBGProcessingTask: { task in
+        worker.handleBGProcessingTask(bgTask: task)
       },
       getAvailableLanguages: {
         [.auto] + WhisperContext.getAvailableLanguages()
       },
-      tasksStream: {
-        worker.tasksStream()
-      },
-      getTasks: {
-        worker.getAllTasks()
-      },
-      resumeTask: { task in
-        worker.enqueueTask(task)
+      resumeTask: { [worker] task in
+        if let index = worker.$taskQueue.wrappedValue.firstIndex(where: { $0.id == task.id }) {
+          worker.$taskQueue.wrappedValue[index] = task
+        } else {
+          worker.$taskQueue.wrappedValue.insert(task, at: 0)
+        }
+        await worker.processTasks(ignorePaused: false)
       }
     )
   }()
@@ -89,43 +70,99 @@ extension DependencyValues {
   }
 }
 
-extension TranscriptionWorkerClient {
-  static let testValue: TranscriptionWorkerClient = {
-    let transcriptionChannel = AsyncChannel<Transcription>()
-    let tasksChannel = AsyncChannel<IdentifiedArrayOf<TranscriptionTask>>()
+// MARK: - TranscriptionWorker
 
-    return TranscriptionWorkerClient(
-      enqueueTaskForRecording: { recording, settings in
-        Task {
-          let task = TranscriptionTask(
-            fileName: recording.fileName,
-            duration: Int64(recording.duration * 1000),
-            parameters: settings.parameters,
-            modelType: settings.selectedModel,
-            isRemote: settings.isRemoteTranscriptionEnabled
-          )
-          await tasksChannel.send([task])
-          await transcriptionChannel.send(Transcription(
-            id: task.id,
-            fileName: task.fileName,
-            startDate: Date(),
-            segments: [],
-            parameters: task.parameters,
-            model: task.modelType,
-            status: .progress(0.1)
-          ))
+class TranscriptionWorker {
+  static let processingTaskIdentifier = "me.igortarasenko.Whisperboard"
+
+  @MainActor @Shared(.isProcessing) var isProcessing: Bool
+  @MainActor @Shared(.transcriptionTasks) var taskQueue: [TranscriptionTask]
+  @MainActor @Shared(.recordings) var recordings: [RecordingInfo]
+
+  private let executor: TranscriptionWorkExecutor
+
+  @MainActor var currentTask: TranscriptionTask? { isProcessing ? taskQueue.first : nil }
+
+  private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+  private var cancellables: Set<AnyCancellable> = []
+  private var task: Task<Void, Never>?
+
+  init(executor: TranscriptionWorkExecutor) {
+    self.executor = executor
+
+    NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification).sink { [weak self] _ in
+      guard let self else { return }
+      Task { @MainActor in
+        guard self.isProcessing else { return }
+        self.beginBackgroundTask()
+        self.scheduleBackgroundProcessingTask()
+      }
+    }.store(in: &cancellables)
+
+    NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification).sink { [weak self] _ in
+      guard let self else { return }
+      endBackgroundTask()
+      cancelScheduledBackgroundProcessingTask()
+    }.store(in: &cancellables)
+  }
+
+  @MainActor
+  func processTasks(ignorePaused: Bool = true) {
+    guard !isProcessing, !taskQueue.isEmpty else { return }
+
+    isProcessing = true
+
+    task = Task(priority: .background) { [weak self] in
+      guard let self else { return }
+      defer { isProcessing = false }
+
+      while let task = $taskQueue.elements.filter({ ignorePaused ? !$0.isPaused.wrappedValue : true }).first {
+        if let recording = $recordings.elements.first(where: { $0.id == task.recordingInfoID }) {
+          let envelope = TranscriptionTaskEnvelope(task: task, recording: recording)
+          await executor.process(task: envelope)
+        } else {
+          logs.error("Recording not found for task \(task.id), recordingId \(task.recordingInfoID)")
         }
-      },
-      cancelTaskForFile: { _ in },
-      cancelAllTasks: {},
-      registerForProcessingTask: {},
-      transcriptionStream: { transcriptionChannel.eraseToStream() },
-      getAvailableLanguages: {
-        [.auto] + WhisperContext.getAvailableLanguages()
-      },
-      tasksStream: { tasksChannel.eraseToStream() },
-      getTasks: { [] },
-      resumeTask: { _ in }
-    )
-  }()
+        taskQueue.removeAll { $0.id == task.id }
+      }
+    }
+  }
+
+  func handleBGProcessingTask(bgTask: BGProcessingTask) {
+    Task { @MainActor in
+      processTasks(ignorePaused: false)
+    }
+
+    bgTask.expirationHandler = { [weak self] in
+      self?.task?.cancel()
+    }
+  }
+
+  private func beginBackgroundTask() {
+    backgroundTask = UIApplication.shared.beginBackgroundTask {
+      self.endBackgroundTask()
+    }
+  }
+
+  private func endBackgroundTask() {
+    UIApplication.shared.endBackgroundTask(backgroundTask)
+    backgroundTask = .invalid
+  }
+
+  private func scheduleBackgroundProcessingTask() {
+    let request = BGProcessingTaskRequest(identifier: TranscriptionWorker.processingTaskIdentifier)
+    request.requiresNetworkConnectivity = false
+    request.requiresExternalPower = false
+    request.earliestBeginDate = Date(timeIntervalSinceNow: 1)
+
+    do {
+      try BGTaskScheduler.shared.submit(request)
+    } catch {
+      logs.error("Could not schedule background task: \(error)")
+    }
+  }
+
+  private func cancelScheduledBackgroundProcessingTask() {
+    BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: TranscriptionWorker.processingTaskIdentifier)
+  }
 }

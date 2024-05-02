@@ -147,7 +147,7 @@ let project = Project(
       ] + (Environment.isAppStore.getBoolean(default: false)
         ? []
         : [
-          .xcframework(path: "//App/Support/Reveal/RevealServer.xcframework"),
+          .xcframework(path: "//App/Support/Reveal/RevealServer.xcframework", status: .optional),
         ]),
 
       settings: .settings(
@@ -208,15 +208,15 @@ let project = Project(
     .target(
       name: "WhisperBoardKit",
       destinations: appDestinations,
-      product: .framework,
+      product: .staticFramework,
       bundleId: "me.igortarasenko.WhisperboardKit",
       deploymentTargets: appDeploymentTargets,
       infoPlist: .extendingDefault(with: [:]),
       sources: "AppKit/Sources/**",
       resources: "AppKit/Resources/**",
       dependencies: [
-        .sdk(name: "c++", type: .library, status: .required),
-        .sdk(name: "CloudKit", type: .framework, status: .optional),
+        // .sdk(name: "c++", type: .library, status: .required),
+        // .sdk(name: "CloudKit", type: .framework, status: .optional),
         // .sdk(name: "StoreKit", type: .framework, status: .optional),
 
         .external(name: "AsyncAlgorithms"),
@@ -233,6 +233,7 @@ let project = Project(
         .external(name: "Popovers"),
         .external(name: "SwiftUIIntrospect"),
         .external(name: "VariableBlurView"),
+        .external(name: "NavigationTransitions"),
         // .external(name: "RevenueCat"),
 
         // .external(name: "whisper"),

@@ -82,26 +82,25 @@ struct RecordingInfoMigration: Migration {
         date: $0.date,
         duration: $0.duration,
         editedText: nil,
-        transcriptionHistory: !$0.text.isEmpty
-          ? [
-            Transcription(
-              id: UUID(),
-              fileName: $0.fileName,
-              segments: [
-                .init(
-                  startTime: 0,
-                  endTime: Int64($0.duration * 1000),
-                  text: $0.text,
-                  tokens: [],
-                  speaker: nil
-                ),
-              ],
-              parameters: TranscriptionParameters(),
-              model: .default,
-              status: .done(Date())
-            ),
-          ].identifiedArray
-          : []
+        transcription: !$0.text.isEmpty
+          ?
+          Transcription(
+            id: UUID(),
+            fileName: $0.fileName,
+            segments: [
+              .init(
+                startTime: 0,
+                endTime: Int64($0.duration * 1000),
+                text: $0.text,
+                tokens: [],
+                speaker: nil
+              ),
+            ],
+            parameters: TranscriptionParameters(),
+            model: .default,
+            status: .done(Date())
+          )
+          : nil
       )
     }
 

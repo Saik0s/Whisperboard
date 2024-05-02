@@ -22,48 +22,7 @@ struct RecordingCardView: View {
 
   var cardView: some View {
     VStack(spacing: .grid(2)) {
-      HStack(spacing: .grid(2)) {
-        PlayButton(isPlaying: store.mode.isPlaying) {
-          store.send(.playButtonTapped, animation: .easeIn(duration: 0.3))
-        }
-
-        VStack(alignment: .leading, spacing: .grid(1)) {
-          if store.recording.title.isEmpty {
-            Text("Untitled")
-              .textStyle(.bodyBold)
-              .opacity(0.5)
-          } else {
-            Text(store.recording.title)
-              .textStyle(.bodyBold)
-              .lineLimit(1)
-          }
-
-          Text(store.dateString)
-            .textStyle(.footnote)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-
-        Text(store.currentTimeString)
-          .foregroundColor(
-            store.mode.isPlaying
-              ? Color.DS.Text.accent
-              : Color.DS.Text.base
-          )
-          .textStyle(.caption)
-          .monospaced()
-      }
-      .padding([.horizontal, .top], .grid(2))
-
-      if store.mode.isPlaying {
-        WaveformProgressView(
-          store: store.scope(
-            state: \.waveform,
-            action: \.waveform
-          )
-        )
-        .transition(.scale.combined(with: .opacity))
-        .padding(.horizontal, .grid(2))
-      }
+      PlayerControlsView(store: store.scope(state: \.playerControls, action: \.playerControls))
 
       ZStack(alignment: .top) {
         VStack(alignment: .leading, spacing: .grid(2)) {
@@ -99,7 +58,7 @@ struct RecordingCardView: View {
                     ProgressView()
                       .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
 
-                    Text(store.recording.lastTranscription?.status.message ?? "")
+                    Text(store.recording.transcription?.status.message ?? "")
                       .textStyle(.subheadline)
                   }
                 } else if let queuePosition = store.queuePosition, let queueTotal = store.queueTotal {
@@ -114,12 +73,12 @@ struct RecordingCardView: View {
               .padding(.grid(2))
             } else if store.recording.isPaused {
               VStack(spacing: .grid(1)) {
-                Text(store.recording.lastTranscription?.status.message ?? "")
+                Text(store.recording.transcription?.status.message ?? "")
                   .textStyle(.body)
 
                 HStack {
                   Button("Resume") {
-                    store.send(.resumeTapped)
+                    store.send(.didTapResumeTranscription)
                   }.tertiaryButtonStyle()
 
                   Button("Start Over") {
@@ -130,7 +89,7 @@ struct RecordingCardView: View {
               .padding(.grid(2))
             } else if !store.recording.isTranscribed {
               VStack(spacing: .grid(1)) {
-                if let error = store.recording.lastTranscriptionErrorMessage {
+                if let error = store.recording.transcriptionErrorMessage {
                   Text(error)
                     .textStyle(.error)
                 }
@@ -150,16 +109,20 @@ struct RecordingCardView: View {
     .animation(.easeInOut(duration: 0.3), value: store.state)
     .multilineTextAlignment(.leading)
     .padding(.grid(2))
-    .cardStyle(isPrimary: store.mode.isPlaying)
+    .cardStyle(isPrimary: store.playerControls.isPlaying)
     .offset(y: showItem ? 0 : 200)
     .opacity(showItem ? 1 : 0)
-    .animation(
-      .spring(response: 0.6, dampingFraction: 0.75)
-        .delay(Double(store.index) * 0.15),
-      value: showItem
-    )
+//    .animation(
+//      .spring(response: 0.3, dampingFraction: 0.75),
+//        // .delay(Double(store.index) * 0.15),
+//      value: showItem
+//    )
     .alert($store.scope(state: \.alert, action: \.alert))
-    .onAppear { showItem = true }
+    .onAppear {
+      withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+        showItem = true
+      }
+    }
     .enableInjection()
   }
 }

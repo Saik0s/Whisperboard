@@ -4,7 +4,7 @@ import IdentifiedCollections
 
 // MARK: - RecordingInfo
 
-struct RecordingInfo: Identifiable, Hashable, Then, Codable {
+struct RecordingInfo: Identifiable, Hashable, Then {
   var id: String { fileName }
 
   var fileName: String
@@ -12,19 +12,77 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
   var date: Date
   var duration: TimeInterval
   var editedText: String?
-  var transcriptionHistory: IdentifiedArrayOf<Transcription> = []
+  var transcription: Transcription?
 
-  var text: String { editedText ?? lastTranscription?.text ?? "" }
-  var lastTranscription: Transcription? { transcriptionHistory.last }
-  var isTranscribed: Bool { lastTranscription?.status.isDone == true }
-  var isTranscribing: Bool { lastTranscription?.status.isLoadingOrProgress == true }
-  var isPaused: Bool { lastTranscription?.status.isPaused == true }
-  var lastTranscriptionErrorMessage: String? { lastTranscription?.status.errorMessage }
+  var text: String { editedText ?? transcription?.text ?? "" }
+  var isTranscribed: Bool { transcription?.status.isDone == true }
+  var isTranscribing: Bool { transcription?.status.isLoadingOrProgress == true }
+  var isPaused: Bool { transcription?.status.isPaused == true }
+  var transcriptionErrorMessage: String? { transcription?.status.errorMessage }
 
-  // FIXME: This is a hack
+  var segments: [Segment] { transcription.map { $0.fileName == fileName ? $0.segments : [] } ?? [] }
+  var offset: Int64 { segments.last?.endTime ?? 0 }
+  var progress: Double { Double(offset) / Double(Int64(duration * 1000)) }
+}
+
+// MARK: Codable
+
+extension RecordingInfo: Codable {
+  enum CodingKeys: String, CodingKey {
+    case fileName, title, date, duration, editedText, transcription
+    case transcriptionHistory // this for migration
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    fileName = try container.decode(String.self, forKey: .fileName)
+    title = try container.decode(String.self, forKey: .title)
+    date = try container.decode(Date.self, forKey: .date)
+    duration = try container.decode(TimeInterval.self, forKey: .duration)
+    editedText = try container.decodeIfPresent(String.self, forKey: .editedText)
+
+    // Migration logic
+    if let transcriptionHistory = try container.decodeIfPresent([Transcription].self, forKey: .transcriptionHistory) {
+      transcription = transcriptionHistory.last
+    } else {
+      transcription = try container.decodeIfPresent(Transcription.self, forKey: .transcription)
+    }
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(fileName, forKey: .fileName)
+    try container.encode(title, forKey: .title)
+    try container.encode(date, forKey: .date)
+    try container.encode(duration, forKey: .duration)
+    try container.encodeIfPresent(editedText, forKey: .editedText)
+    try container.encodeIfPresent(transcription, forKey: .transcription)
+  }
+}
+
+extension RecordingInfo {
   var fileURL: URL {
-    @Dependency(\.storage) var storage
-    return storage.audioFileURLWithName(fileName)
+    Storage.recordingsDirectoryURL.appending(path: fileName)
+  }
+
+  var waveformImageURL: URL {
+    Storage.recordingsDirectoryURL.appending(path: fileName + ".waveform.png")
+  }
+}
+
+extension RecordingInfo {
+  init(id: String, title: String, date: Date, duration: TimeInterval) {
+    fileName = "\(id).wav"
+    self.title = title
+    self.date = date
+    self.duration = duration
+  }
+
+  init(fileName: String, title: String, date: Date, duration: TimeInterval) {
+    self.fileName = fileName
+    self.title = title
+    self.date = date
+    self.duration = duration
   }
 }
 
@@ -37,7 +95,7 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
       date: Date(),
       duration: 10,
       editedText: "Mock text",
-      transcriptionHistory: [.mock1]
+      transcription: .mock1
     )
 
     static let fixtures: [RecordingInfo] = [
@@ -47,14 +105,14 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
         date: Date(),
         duration: 15,
         editedText: "Milk, eggs, bread, tomatoes, onions, cereal, chicken, ground beef, pasta, apples, and orange juice.",
-        transcriptionHistory: [.mock1]
+        transcription: .mock1
       ),
       RecordingInfo(
         fileName: "notTranscribed.wav",
         title: "Not Transcribed",
         date: Date(),
         duration: 120,
-        transcriptionHistory: []
+        transcription: nil
       ),
       RecordingInfo(
         fileName: "meetingRecap.wav",
@@ -62,7 +120,7 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
         date: Date(),
         duration: 25,
         editedText: "Discussed new marketing strategy, assigned tasks to team members, follow-up meeting scheduled for next week. Bob to send updated report by Wednesday.",
-        transcriptionHistory: [.mock1]
+        transcription: .mock1
       ),
       RecordingInfo(
         fileName: "weekendPlans.wav",
@@ -70,7 +128,7 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
         date: Date(),
         duration: 20,
         editedText: "Saturday morning, 10 AM - Yoga class. Afternoon - Lunch with Sarah at that new Italian place. Evening - Movie night at home. Sunday - Finish reading that book and start planning for the next road trip.",
-        transcriptionHistory: [.mock1]
+        transcription: .mock1
       ),
       RecordingInfo(
         fileName: "birthdayPartyIdeas.wav",
@@ -78,7 +136,7 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
         date: Date(),
         duration: 18,
         editedText: "Theme: Superheroes. Decorations: balloons, banners, and confetti. Food: pizza, chips, and ice cream. Activities: face painting, games, and a piñata.",
-        transcriptionHistory: [.mock1]
+        transcription: .mock1
       ),
       RecordingInfo(
         fileName: "gymWorkoutRoutine.wav",
@@ -86,7 +144,7 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
         date: Date(),
         duration: 22,
         editedText: "Warm-up: 5 minutes on the treadmill. Strength training: 3 sets of 10 squats, lunges, and push-ups. Cardio: 20 minutes on the elliptical. Cool down: stretching and deep breathing exercises.",
-        transcriptionHistory: [.mock1]
+        transcription: .mock1
       ),
       RecordingInfo(
         fileName: "bookRecommendations.wav",
@@ -94,7 +152,7 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
         date: Date(),
         duration: 17,
         editedText: "Educated by Tara Westover, Atomic Habits by James Clear, Sapiens by Yuval Noah Harari, and The Nightingale by Kristin Hannah.",
-        transcriptionHistory: [.mock1]
+        transcription: .mock1
       ),
       RecordingInfo(
         fileName: "websiteIdeas.wav",
@@ -102,7 +160,7 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
         date: Date(),
         duration: 19,
         editedText: "Online art gallery showcasing local artists, subscription-based meal planning service, educational platform for creative writing, and a marketplace for handmade crafts.",
-        transcriptionHistory: [.mock1]
+        transcription: .mock1
       ),
       RecordingInfo(
         fileName: "carMaintenanceReminders.wav",
@@ -110,7 +168,7 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
         date: Date(),
         duration: 14,
         editedText: "Check oil levels and tire pressure, schedule appointment for oil change, replace wiper blades, and inspect brake pads.",
-        transcriptionHistory: [.mock1]
+        transcription: .mock1
       ),
       RecordingInfo(
         fileName: "newRecipeIdeas.wav",
@@ -118,7 +176,7 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
         date: Date(),
         duration: 16,
         editedText: "Vegetarian stir-fry with tofu, spaghetti carbonara, Moroccan-style chicken with couscous, and homemade sushi rolls.",
-        transcriptionHistory: [.mock1]
+        transcription: .mock1
       ),
       RecordingInfo(
         fileName: "podcastEpisodeList.wav",
@@ -126,7 +184,7 @@ struct RecordingInfo: Identifiable, Hashable, Then, Codable {
         date: Date(),
         duration: 21,
         editedText: "1. How to Build a Successful Startup, 2. Exploring the Depths of Space, 3. The History of Coffee, 4. Mindfulness and Meditation Techniques, and 5. The Future of Renewable Energy.",
-        transcriptionHistory: [.mock1]
+        transcription: .mock1
       ),
     ]
   }

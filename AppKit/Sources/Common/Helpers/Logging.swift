@@ -38,7 +38,7 @@ public let logFileURL: URL? = {
 // MARK: - ExtraLogHandler
 
 public enum ExtraLogHandler {
-  public static var isLoggingAllowed: Bool = true
+  public static var isLoggingAllowed = true
 
   public static var sessionLogs: [String] = []
 

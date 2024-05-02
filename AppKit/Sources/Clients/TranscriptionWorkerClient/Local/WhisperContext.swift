@@ -37,7 +37,7 @@ enum WhisperAction {
 // MARK: - WhisperContextProtocol
 
 protocol WhisperContextProtocol {
-  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) throws -> AsyncThrowingStream<WhisperAction, Error>
+  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) -> AsyncThrowingStream<WhisperAction, Error>
   func cancel()
 }
 
@@ -72,7 +72,7 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
     whisper_free(context)
   }
 
-  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) throws -> AsyncThrowingStream<WhisperAction, Error> {
+  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) -> AsyncThrowingStream<WhisperAction, Error> {
     var fullParams = toWhisperParams(params)
     let idPointer = id.toPointer()
     fullParams.new_segment_callback_user_data = idPointer

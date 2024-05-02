@@ -192,9 +192,7 @@ enum VoiceModelType: CaseIterable, Codable, Equatable {
   }
 
   static var localFolderURL: URL {
-    try! FileManager.default
-      .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-      .appending(path: "Models")
+    URL.documentsDirectory.appending(path: "Models")
   }
 
   static var `default`: Self { .tiny }

@@ -94,7 +94,7 @@ class ChunkedUploader: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
         guard let self else { return }
 
         do {
-          await self.progressContainer.setContinuation(fileName: fileURL.lastPathComponent, continuation: continuation)
+          await progressContainer.setContinuation(fileName: fileURL.lastPathComponent, continuation: continuation)
           logs.info("Continuation for \(fileURL.lastPathComponent) set")
           logs.info("Calculating hash for file at \(fileURL)")
           let hash = try hashFile(at: fileURL)
@@ -127,8 +127,8 @@ class ChunkedUploader: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
           logs.error("Error occurred during file upload: \(error)")
           continuation.finish(throwing: error)
         }
-        await self.progressContainer.resetProgress(fileName: fileURL.lastPathComponent)
-        await self.progressContainer.setContinuation(fileName: fileURL.lastPathComponent, continuation: nil)
+        await progressContainer.resetProgress(fileName: fileURL.lastPathComponent)
+        await progressContainer.setContinuation(fileName: fileURL.lastPathComponent, continuation: nil)
       }
     }
   }

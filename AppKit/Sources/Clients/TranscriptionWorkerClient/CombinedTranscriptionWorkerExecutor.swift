@@ -1,29 +1,22 @@
-import Foundation
+// final class CombinedTranscriptionWorkExecutor: TranscriptionWorkExecutor {
+//   private lazy var localWorkExecutor = LocalTranscriptionWorkExecutor()
+//   private lazy var remoteWorkExecutor = RemoteTranscriptionWorkExecutor()
 
-final class CombinedTranscriptionWorkExecutor: TranscriptionWorkExecutor {
-  private let updateTranscription: (_ transcription: Transcription) -> Void
-  private lazy var localWorkExecutor = LocalTranscriptionWorkExecutor(updateTranscription: updateTranscription)
-  private lazy var remoteWorkExecutor = RemoteTranscriptionWorkExecutor(updateTranscription: updateTranscription)
+//   init() {}
 
-  init(updateTranscription: @escaping (_ transcription: Transcription) -> Void) {
-    self.updateTranscription = updateTranscription
-  }
+//   func process(task: TranscriptionTaskEnvelope) async {
+//     if task.isRemote {
+//       await remoteWorkExecutor.process(task: task)
+//     } else {
+//       await localWorkExecutor.process(task: task)
+//     }
+//   }
 
-  // TODO: Check for existing transcription for the same task that is about to start
-  //  and provide starting transcription when needed and update task accordingly
-  func processTask(_ task: TranscriptionTask, updateTask: @escaping (TranscriptionTask) -> Void) async {
-    if task.isRemote {
-      await remoteWorkExecutor.processTask(task, updateTask: updateTask)
-    } else {
-      await localWorkExecutor.processTask(task, updateTask: updateTask)
-    }
-  }
-
-  func cancel(task: TranscriptionTask) {
-    if task.isRemote {
-      remoteWorkExecutor.cancel(task: task)
-    } else {
-      localWorkExecutor.cancel(task: task)
-    }
-  }
-}
+//   func cancel(task: TranscriptionTaskEnvelope) {
+//     if task.isRemote {
+//       remoteWorkExecutor.cancel(task: task)
+//     } else {
+//       localWorkExecutor.cancel(task: task)
+//     }
+//   }
+// }

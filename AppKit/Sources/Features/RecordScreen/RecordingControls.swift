@@ -42,8 +42,9 @@ struct RecordingControls {
   @Dependency(\.audioRecorder.requestRecordPermission) var requestRecordPermission
   @Dependency(\.openSettings) var openSettings
   @Dependency(\.date) var date
-  @Dependency(\.storage) var storage
+  @Dependency(StorageClient.self) var storage
   @Dependency(\.continuousClock) var clock
+  @Dependency(\.uuid) var uuid
 
   var body: some ReducerOf<Self> {
     BindingReducer()
@@ -62,10 +63,7 @@ struct RecordingControls {
           return .none
 
         case .allowed:
-          state.recording = createNewRecording()
-          return .run { send in
-            await send(.recording(.task))
-          }
+          return startRecording(&state)
         }
 
       case .recording(.delegate(.didCancel)):
@@ -86,10 +84,7 @@ struct RecordingControls {
       case let .recordPermissionResponse(permission):
         state.audioRecorderPermission = permission ? .allowed : .denied
         if permission {
-          state.recording = createNewRecording()
-          return .run { send in
-            await send(.recording(.task))
-          }
+          return startRecording(&state)
         } else {
           state.alert = micPermissionAlert
           return .none
@@ -117,11 +112,11 @@ struct RecordingControls {
     .ifLet(\.recording, action: /Action.recording) { Recording() }
   }
 
-  private func createNewRecording() -> Recording.State {
-    Recording.State(
-      date: date.now,
-      url: storage.createNewWhisperURL()
-    )
+  private func startRecording(_ state: inout State) -> Effect<Action> {
+    state.recording = Recording.State(recordingInfo: RecordingInfo(id: uuid().uuidString, title: "New Recording", date: date.now, duration: 0))
+    return .run { send in
+      await send(.recording(.task))
+    }
   }
 
   private var micPermissionAlert: AlertState<Action> {

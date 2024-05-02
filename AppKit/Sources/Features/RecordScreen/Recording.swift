@@ -7,22 +7,17 @@ import SwiftUI
 struct Recording {
   @ObservableState
   struct State: Equatable {
-    var date: Date
+    enum Mode {
+      case recording, encoding, paused, removing
+    }
 
-    var duration: TimeInterval = 0
-
+    var recordingInfo: RecordingInfo
     var mode: Mode = .recording
-
-    var url: URL
-
     var samples: [Float] = []
 
-    enum Mode {
-      case recording
-      case encoding
-      case paused
-      case removing
-    }
+    var url: URL { recordingInfo.fileURL }
+    var duration: TimeInterval { recordingInfo.duration }
+    var date: Date { recordingInfo.date }
   }
 
   enum Action: Equatable {
@@ -63,7 +58,7 @@ struct Recording {
       return .none
 
     case let .finalRecordingTime(duration):
-      state.duration = duration
+      state.recordingInfo.duration = duration
       return .none
 
     case .saveButtonTapped:
@@ -100,7 +95,7 @@ struct Recording {
       }
 
     case let .recordingStateUpdated(.recording(duration, power)):
-      state.duration = duration
+      state.recordingInfo.duration = duration
       let linear = 1 - pow(10, power / 20)
       state.samples.append(contentsOf: [linear, linear, linear])
       return .none
