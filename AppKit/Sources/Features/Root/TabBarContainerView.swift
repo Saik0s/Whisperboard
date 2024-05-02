@@ -1,9 +1,9 @@
+import FluidGradient
 import Inject
 import Popovers
 import SwiftUI
 import SwiftUIIntrospect
 import VariableBlurView
-import FluidGradient
 
 // MARK: - TabBarViewModel
 
@@ -29,12 +29,16 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
 
   var body: some View {
     ZStack {
-      RootBackgroundView()
-      FluidGradient(blobs: [.black, .blue, .purple],
-              highlights: [.yellow, .orange, .purple],
-              speed: 1.0,
-              blur: 0.75)
-  .background(Color.DS.Background.primary)
+//      RootBackgroundView()
+
+      FluidGradient(
+        blobs: [Color(hexString: "#000029"), Color(hexString: "#140029"), Color(hexString: "#000000")],
+        highlights: [Color(hexString: "#00003D"), Color(hexString: "#000552"), Color(hexString: "#000552")],
+        speed: 0.2,
+        blur: 0.75
+      )
+      .background(Color.DS.Background.primary)
+      .ignoresSafeArea()
 
       ZStack(alignment: .top) {
         screen1
@@ -69,7 +73,7 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
         tabBarViewModel.isVisible = true
       }
     }
-      .environmentObject(tabBarViewModel)
+    .environmentObject(tabBarViewModel)
     .enableInjection()
   }
 }

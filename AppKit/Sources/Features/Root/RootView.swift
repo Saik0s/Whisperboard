@@ -17,14 +17,16 @@ struct RootView: View {
         selectedIndex: $store.selectedTab.rawValue.sending(\.selectTab),
         screen1: NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
           RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: \.recordingListScreen))
+            .applyTabBarContentInset()
         } destination: { store in
           switch store.case {
           case let .details(store):
             RecordingDetailsView(store: store)
+              .background(Color.DS.Background.primary)
+              .applyTabBarContentInset()
           }
         }
-          .navigationTransition(.slide)
-          .applyTabBarContentInset(),
+          .navigationTransition(.slide),
         screen2: RecordScreenView(store: store.scope(state: \.recordScreen, action: \.recordScreen)),
         screen3: NavigationStack {
           SettingsScreenView(store: store.scope(state: \.settingsScreen, action: \.settingsScreen))

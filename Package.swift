@@ -5,6 +5,31 @@ import PackageDescription
   import ProjectDescription
 
   let packageSettings = PackageSettings(
+    productTypes: [
+      "AsyncAlgorithms": .framework,
+      "AudioKit": .framework,
+      "ComposableArchitecture": .framework,
+      "DependenciesAdditions": .framework,
+      "DSWaveformImage": .framework,
+      "DSWaveformImageViews": .framework,
+      "DynamicColor": .framework,
+      "Inject": .framework,
+      "KeychainAccess": .framework,
+      "Logging": .framework,
+      "Lottie": .framework,
+      "Popovers": .framework,
+      "SwiftUIIntrospect": .framework,
+      "VariableBlurView": .framework,
+      "FluidGradient": .framework,
+      "NavigationTransitions": .framework,
+      "CombineSchedulers": .framework,
+      "Clocks": .framework,
+      "OrderedCollections": .framework,
+      "Dependencies": .framework,
+      "XCTestDynamicOverlay": .framework,
+      "ConcurrencyExtras": .framework,
+      "_CollectionsUtilities": .framework,
+    ],
     baseSettings: .settings(base: [
       "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
     ])
@@ -31,7 +56,7 @@ let package = Package(
     .package(url: "https://github.com/tgrapperon/swift-dependencies-additions", from: "1.0.1"),
     .package(url: "https://github.com/yannickl/DynamicColor.git", from: "5.0.1"),
     .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
-    .package(url: "https://github.com/davdroman/swiftui-navigation-transitions.git", from: "0.13.3"),
     .package(url: "https://github.com/Cindori/FluidGradient.git", from: "1.0.0"),
+    .package(url: "https://github.com/davdroman/swiftui-navigation-transitions.git", from: "0.13.3"),
   ]
 )

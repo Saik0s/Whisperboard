@@ -149,6 +149,7 @@ struct RecordingListScreenView: View {
         ForEach(store.scope(state: \.recordingCards, action: \.recordingCard)) { store in
             makeRecordingCard(store: store)
             .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
         }
         .removeClipToBounds()
       }
