@@ -1,7 +1,7 @@
+import BackgroundTasks
 import ComposableArchitecture
 import RollbarNotifier
 import SwiftUI
-import BackgroundTasks
 
 // MARK: - AppView
 

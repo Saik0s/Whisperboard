@@ -297,4 +297,3 @@ struct SmallButtonStyle: ButtonStyle {
       .scaleEffect(configuration.isPressed ? 0.95 : 1)
   }
 }
-

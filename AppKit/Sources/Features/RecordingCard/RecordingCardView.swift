@@ -13,11 +13,9 @@ struct RecordingCardView: View {
 
   var body: some View {
     WithPerceptionTracking {
-      NavigationLink(
-        state: Root.Path.State.details(RecordingDetails.State(recordingCard: store.state))
-      ) {
+      NavigationLink(state: Root.Path.State.details(RecordingDetails.State(recordingCard: store.state))) {
         cardView
-      }
+      }.buttonStyle(PlainButtonStyle())
     }
   }
 
@@ -107,7 +105,7 @@ struct RecordingCardView: View {
         }
       }
     }
-    .animation(.easeInOut(duration: 0.3), value: store.state)
+//    .animation(.easeInOut(duration: 0.3), value: store.state)
     .multilineTextAlignment(.leading)
     .padding(.grid(2))
     .cardStyle(isPrimary: store.playerControls.isPlaying)

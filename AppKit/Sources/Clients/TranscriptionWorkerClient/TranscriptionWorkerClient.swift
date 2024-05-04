@@ -38,7 +38,7 @@ extension TranscriptionWorkerClient: DependencyKey {
         await MainActor.run { worker.taskQueue.removeAll { $0.recordingInfoID == id } }
       },
       cancelAllTasks: { [worker] in
-          localWorkExecutor.cancelCurrentTask()
+        localWorkExecutor.cancelCurrentTask()
         await MainActor.run { worker.taskQueue.removeAll() }
       },
       handleBGProcessingTask: { task in
@@ -126,9 +126,9 @@ class TranscriptionWorker {
 
   @MainActor
   private func getNextTask() async -> TranscriptionTaskEnvelope? {
-      taskQueue = taskQueue.filter { task in
-        recordings.contains { $0.id == task.recordingInfoID }
-      }
+    taskQueue = taskQueue.filter { task in
+      recordings.contains { $0.id == task.recordingInfoID }
+    }
     return $taskQueue.elements.compactMap { task in
       $recordings.elements
         .first { $0.id == task.recordingInfoID }

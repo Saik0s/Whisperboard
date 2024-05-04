@@ -1,6 +1,6 @@
+import ComposableArchitecture
 import SwiftUI
 import VariableBlurView
-import ComposableArchitecture
 
 // MARK: - AnimatedTabBar
 

@@ -29,14 +29,13 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
   @ObserveInjection private var inject
 
   init(selectedIndex: Binding<Root.Tab>, screen1: T1, screen2: T2, screen3: T3) {
-    self._selectedIndex = selectedIndex
+    _selectedIndex = selectedIndex
     self.screen1 = screen1
     self.screen2 = screen2
     self.screen3 = screen3
   }
 
   var body: some View {
-
     WithPerceptionTracking {
       ZStack(alignment: .bottom) {
         FluidGradient(

@@ -19,12 +19,15 @@ extension Array where Element: Identifiable {
     }
     set {
       switch (firstIndex(where: { $0.id == id }), newValue) {
-      case (let index?, let newValue?):
+      case let (index?, newValue?):
         self[index] = newValue
+
       case (let index?, nil):
         remove(at: index)
+
       case (nil, let newValue?):
         append(newValue)
+
       case (nil, nil):
         break
       }

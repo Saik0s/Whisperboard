@@ -43,6 +43,8 @@ struct RootView: View {
   }
 }
 
+// MARK: - NamespaceContainer
+
 @Perceptible
 class NamespaceContainer {
   var namespace: Namespace.ID

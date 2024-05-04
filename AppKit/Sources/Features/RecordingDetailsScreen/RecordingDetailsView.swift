@@ -52,7 +52,7 @@ struct RecordingDetails {
 
   var body: some Reducer<State, Action> {
     BindingReducer()
-    
+
     Scope(state: \.recordingCard, action: /Action.recordingCard) {
       RecordingCard()
     }
@@ -209,6 +209,7 @@ struct RecordingDetailsView: View {
         }
       }
       .alert($store.scope(state: \.alert, action: \.alert))
+      .alert($store.scope(state: \.recordingCard.alert, action: \.recordingCard.alert))
     }
     .enableInjection()
   }

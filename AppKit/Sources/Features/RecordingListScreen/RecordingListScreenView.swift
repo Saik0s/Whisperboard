@@ -54,15 +54,16 @@ struct RecordingListScreen {
     Reduce<State, Action> { state, action in
       switch action {
       case .task:
+        // Create initial recording cards
         createCards(&state)
         return .run { [recordings = state.$recordings] _ in
           storage.sync(recordings)
           for await _ in await didBecomeActive() {
             storage.sync(recordings)
           }
-        }.merge(with: .publisher({ [state] in
+        }.merge(with: .publisher { [state] in
           state.$recordings.publisher.map { $0.map(\.id) }.removeDuplicates().map { _ in Action.reloadCards }
-        }))
+        })
 
       case let .addFileRecordings(urls):
         return .run { send in
@@ -117,10 +118,13 @@ struct RecordingListScreen {
   }
 
   private func createCards(_ state: inout State) {
-//    @SharedReader(.transcriptionTasks) var taskQueue: [TranscriptionTask]
-//    state.recordingCards = state.$recordings.elements.enumerated().map { offset, recording in
-//      state.recordingCards[id: recording.id] ?? RecordingCard.State(recording: recording, queueInfo: $taskQueue.identifiedArray.elements[recording.id])
-//    }.identifiedArray
+    @SharedReader(.transcriptionTasks) var taskQueue: [TranscriptionTask]
+    state.recordingCards = state.$recordings.elements.enumerated().map { _, recording in
+      state.recordingCards[id: recording.id] ?? RecordingCard.State(
+        recording: recording,
+        queueInfo: $taskQueue.identifiedArray.elements[recording.id]
+      )
+    }.identifiedArray
   }
 
   private func createDeleteConfirmationDialog(id: RecordingInfo.ID, state: inout State) {
@@ -202,7 +206,7 @@ extension RecordingListScreenView {
 
         RecordingCardView(store: cardStore)
       }
-      .animation(.gentleBounce(), value: store.editMode.isEditing)
+      .animation(.hardShowHide(), value: store.editMode.isEditing)
     }
   }
 }
@@ -239,6 +243,6 @@ struct EmptyStateView: View {
 
 private extension RandomAccessCollection where Element == TranscriptionTask, Index == Int {
   subscript(recordingInfoID: RecordingInfo.ID) -> RecordingCard.QueueInfo? {
-    self.firstIndex(where: { $0.recordingInfoID == recordingInfoID }).map { RecordingCard.QueueInfo(position: $0, total: self.count) }
+    firstIndex(where: { $0.recordingInfoID == recordingInfoID }).map { RecordingCard.QueueInfo(position: $0, total: self.count) }
   }
 }

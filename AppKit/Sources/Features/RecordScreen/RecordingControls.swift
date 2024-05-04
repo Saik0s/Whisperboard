@@ -206,12 +206,17 @@ struct RecordingControlsView: View {
           }
         }
         .padding(.horizontal, .grid(3))
+        .animation(.easeIn(duration: 0.1), value: store.recording)
         .popover(
           present: $store.isGoToNewRecordingPopupPresented,
           attributes: {
             $0.position = .absolute(originAnchor: .top, popoverAnchor: .bottom)
-            $0.presentation = .init(animation: .hardShowHide(), transition: .move(edge: .bottom))
-            $0.dismissal = .init(animation: .hardShowHide(), transition: .move(edge: .bottom), mode: .dragDown)
+            $0.presentation = .init(animation: .hardShowHide(), transition: .move(edge: .bottom).combined(with: .opacity))
+            $0.dismissal = .init(
+              animation: .hardShowHide(),
+              transition: .move(edge: .bottom).combined(with: .opacity),
+              mode: [.dragDown, .tapOutside]
+            )
           }
         ) {
           VStack(spacing: .grid(4)) {

@@ -130,7 +130,7 @@ struct Root {
         )
         return .none
 
-      case .registerForBGProcessingTasks(let task):
+      case let .registerForBGProcessingTasks(task):
         transcriptionWorker.handleBGProcessingTask(bgTask: task)
         return .none
 

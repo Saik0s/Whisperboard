@@ -7,6 +7,7 @@ import SwiftUI
 struct PlayerControls {
   @ObservableState
   struct State: Equatable {
+    @CasePathable
     enum Mode: Equatable {
       case idle
       case playing(progress: Double)
@@ -18,10 +19,7 @@ struct PlayerControls {
     var waveform: WaveformProgress.State
 
     var isPlaying: Bool {
-      switch mode {
-      case .paused, .playing: true
-      default: false
-      }
+      mode.is(\.playing)
     }
 
     var progress: Double? {
@@ -81,37 +79,36 @@ struct PlayerControls {
       case .binding:
         return .none
 
-//      case let .waveform(.didTouchAtHorizontalLocation(progress)):
-//        guard state.mode.isPlaying else { return .none }
-//        return .run { _ in
-//          await audioPlayer.seekProgress(progress)
-//        }
+      case .waveform(.binding(\.progress)):
+        guard state.mode.is(\.playing) else { return .none }
+        return .run { [progress = state.waveform.progress] _ in
+          await audioPlayer.seekProgress(progress)
+        }
 
       case .waveform:
         return .none
 
       case .playButtonTapped:
-        return .none
-        //        switch state.mode {
-//        case .idle:
-//          state.mode = .playing(progress: 0)
-//          return .run { [url = state.recording.fileURL] send in
-//            for await playback in audioPlayer.play(url) {
-//              await send(.playbackUpdated(playback))
-//            }
-//          }
-//          .cancellable(id: PlayID(), cancelInFlight: true)
-//
-//        case let .playing(progress):
-//          return .run { _ in
-//            await audioPlayer.pause()
-//          }
-//
-//        case let .paused(progress):
-//          return .run { _ in
-//            await audioPlayer.resume()
-//          }
-//        }
+        switch state.mode {
+        case .idle:
+          state.mode = .playing(progress: 0)
+          return .run { [url = state.recording.fileURL] send in
+            for await playback in audioPlayer.play(url) {
+              await send(.playbackUpdated(playback))
+            }
+          }
+          .cancellable(id: PlayID(), cancelInFlight: true)
+
+        case .playing:
+          return .run { _ in
+            await audioPlayer.pause()
+          }
+
+        case .paused:
+          return .run { _ in
+            await audioPlayer.resume()
+          }
+        }
 
       case let .playbackUpdated(.playing(position)):
         state.mode = .playing(progress: position.progress)
@@ -123,12 +120,13 @@ struct PlayerControls {
 
       case .playbackUpdated(.stop):
         state.mode = .idle
-        return .none
+        return .cancel(id: PlayID())
 
       case let .playbackUpdated(.error(error)):
+        state.mode = .idle
         let message = "Failed to play audio\n\(error?.localizedDescription ?? "Unknown error")"
         logs.error("\(message)")
-        return .none
+        return .cancel(id: PlayID())
 
       case let .playbackUpdated(.finish(isSuccessful)):
         state.mode = .idle
@@ -136,6 +134,25 @@ struct PlayerControls {
           logs.error("Failed to play audio")
         }
         return .cancel(id: PlayID())
+      }
+    }
+    .onChange(of: \.mode) { _, newValue in
+      Reduce { state, _ in
+        guard !state.waveform.isSeeking else { return .none }
+        switch newValue {
+        case .idle:
+          state.waveform.progress = 0
+          state.waveform.isPlaying = false
+
+        case let .playing(progress):
+          state.waveform.progress = progress
+          state.waveform.isPlaying = true
+
+        case let .paused(progress):
+          state.waveform.progress = progress
+          state.waveform.isPlaying = true
+        }
+        return .none
       }
     }
   }
@@ -188,7 +205,7 @@ struct PlayerControlsView: View {
             .padding(.horizontal, .grid(2))
         }
       }
-      .animation(.interpolatingSpring(mass: 1, stiffness: 200, damping: 20), value: store.mode)
+      .animation(.spring(duration: 0.25, bounce: 0.5), value: store.mode)
     }
   }
 }

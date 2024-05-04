@@ -52,14 +52,20 @@ extension AudioPlayerClient: DependencyKey {
             context.audioPlayer?.player.play()
             let timerTask = Task {
               let clock = ContinuousClock()
+              let lastPosition = PlaybackPosition(currentTime: 0, duration: 0)
               for await _ in clock.timer(interval: .milliseconds(100)) {
-                guard context.audioPlayer?.player.isPlaying == true else { continue }
+                guard let audioPlayer = context.audioPlayer else { continue }
 
                 let position = PlaybackPosition(
                   currentTime: context.audioPlayer?.player.currentTime ?? 0,
                   duration: context.audioPlayer?.player.duration ?? 0
                 )
-                continuation.yield(.playing(position))
+                guard lastPosition != position else { continue }
+                if context.audioPlayer?.player.isPlaying == true {
+                  context.continuation?.yield(.playing(position))
+                } else {
+                  context.continuation?.yield(.pause(position))
+                }
               }
             }
             continuation.onTermination = { _ in

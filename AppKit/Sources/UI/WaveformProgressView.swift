@@ -91,6 +91,7 @@ struct WaveformProgressView: View {
   @Perception.Bindable var store: StoreOf<WaveformProgress>
 
   @State var imageSize = CGSize.zero
+  @State private var lastSentProgress: Double? = nil
 
   var body: some View {
     WithPerceptionTracking {
@@ -111,9 +112,12 @@ struct WaveformProgressView: View {
               DragGesture(minimumDistance: 2)
                 .onChanged { value in
                   let progress = Double(value.location.x / imageSize.width)
-                  $store.progress.wrappedValue = min(max(0, progress), 1.0)
-                  $store.isSeeking.wrappedValue = true
-                  // TODO: throttle this
+                  let clampedProgress = min(max(0, progress), 1.0)
+                  if shouldSendProgressUpdate(newProgress: clampedProgress) {
+                    $store.progress.wrappedValue = clampedProgress
+                    $store.isSeeking.wrappedValue = true
+                    lastSentProgress = clampedProgress
+                  }
                 }
                 .onEnded { _ in
                   $store.isSeeking.wrappedValue = false
@@ -125,6 +129,13 @@ struct WaveformProgressView: View {
       .task { await store.send(.onTask).finish() }
     }
     .enableInjection()
+  }
+
+  private func shouldSendProgressUpdate(newProgress: Double) -> Bool {
+    guard let lastProgress = lastSentProgress else {
+      return true
+    }
+    return abs(newProgress - lastProgress) > 0.01 // Only send updates if the change is greater than 1%
   }
 
   @ViewBuilder
