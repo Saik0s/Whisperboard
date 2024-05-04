@@ -147,7 +147,7 @@ struct RecordingListScreenView: View {
     WithPerceptionTracking {
       List {
         ForEach(store.scope(state: \.recordingCards, action: \.recordingCard)) { store in
-            makeRecordingCard(store: store)
+          makeRecordingCard(store: store)
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
         }
@@ -175,7 +175,7 @@ struct RecordingListScreenView: View {
         \.editMode,
         $store.editMode
       )
-        .removeNavigationBackground()
+      .removeNavigationBackground()
       .overlay {
         if store.isImportingFiles {
           Color.black.opacity(0.5).overlay(ProgressView())

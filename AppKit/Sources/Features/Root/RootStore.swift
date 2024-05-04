@@ -70,7 +70,7 @@ struct Root {
     Scope(state: \.settingsScreen, action: \.settingsScreen) {
       SettingsScreen()
     }
-    .onChange(of: \.settingsScreen.settings.isICloudSyncEnabled) { oldValue, newValue in
+    .onChange(of: \.settingsScreen.settings.isICloudSyncEnabled) { _, _ in
       Reduce { state, _ in
         uploadNewRecordingsToICloud(state)
       }

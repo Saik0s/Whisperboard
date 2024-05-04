@@ -1,8 +1,8 @@
 import Combine
 import ComposableArchitecture
 import Inject
-import SwiftUI
 import NavigationTransitions
+import SwiftUI
 
 // MARK: - RootView
 
@@ -26,7 +26,7 @@ struct RootView: View {
               .applyTabBarContentInset()
           }
         }
-          .navigationTransition(.slide),
+        .navigationTransition(.slide),
         screen2: RecordScreenView(store: store.scope(state: \.recordScreen, action: \.recordScreen)),
         screen3: NavigationStack {
           SettingsScreenView(store: store.scope(state: \.settingsScreen, action: \.settingsScreen))

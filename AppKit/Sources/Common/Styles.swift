@@ -111,21 +111,6 @@ extension View {
   }
 }
 
-// MARK: - CardButtonStyle
-
-struct CardButtonStyle: ButtonStyle {
-  func makeBody(configuration: Self.Configuration) -> some View {
-    configuration.label
-    // .scaleEffect(configuration.isPressed ? 0.95 : 1)
-  }
-}
-
-extension View {
-  func cardButtonStyle() -> some View {
-    buttonStyle(CardButtonStyle())
-  }
-}
-
 // MARK: - RecordButtonStyle
 
 struct RecordButtonStyle: ButtonStyle {

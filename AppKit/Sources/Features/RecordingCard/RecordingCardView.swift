@@ -16,7 +16,6 @@ struct RecordingCardView: View {
       Button { store.send(.recordingSelected) } label: {
         cardView
       }
-      .cardButtonStyle()
     }
   }
 

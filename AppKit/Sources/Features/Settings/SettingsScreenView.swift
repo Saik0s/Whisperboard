@@ -16,7 +16,7 @@ struct SettingsScreenView: View {
       List {
         #if APPSTORE && DEBUG
           if !store.isSubscribed {
-            SubscriptionSectionView(store: store.scope(state: \.subscriptionSection, action: SettingsScreen.Action.subscriptionSection))
+            SubscriptionSectionView(store: store.scope(state: \.subscriptionSection, action: \.subscriptionSection))
               .introspect(.listCell, on: .iOS(.v16, .v17)) {
                 $0.clipsToBounds = false
               }

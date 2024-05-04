@@ -29,11 +29,9 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
 
   var body: some View {
     ZStack {
-//      RootBackgroundView()
-
       FluidGradient(
         blobs: [Color(hexString: "#000029"), Color(hexString: "#140029"), Color(hexString: "#000000")],
-        highlights: [Color(hexString: "#00003D"), Color(hexString: "#000552"), Color(hexString: "#000552")],
+        highlights: [Color(hexString: "#1D004D"), Color(hexString: "#000055"), Color(hexString: "#200020")],
         speed: 0.2,
         blur: 0.75
       )
@@ -48,6 +46,8 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
 
         if selectedIndex == 1 {
           screen2
+            .opacity(selectedIndex == 1 ? 1 : 0)
+            .scaleEffect(selectedIndex == 1 ? 1 : 0.7)
             .frame(width: screenWidth)
             .padding(.bottom, tabBarViewModel.tabBarHeight)
         }
@@ -57,7 +57,7 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
           .frame(width: screenWidth)
           .offset(x: selectedIndex == 2 ? 0 : screenWidth, y: 0)
       }
-      .animation(.spring(response: 0.5, dampingFraction: 0.8), value: selectedIndex)
+      .animation(.spring(response: 0.3, dampingFraction: 0.9), value: selectedIndex)
 
       if tabBarViewModel.isVisible {
         AnimatedTabBar(selectedIndex: $selectedIndex, animation: animation)

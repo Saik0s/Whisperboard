@@ -1,11 +1,11 @@
 import AsyncAlgorithms
+import BackgroundTasks
 import Combine
 import ComposableArchitecture
 import Dependencies
 import DynamicColor
 import RollbarNotifier
 import SwiftUI
-import BackgroundTasks
 
 // MARK: - AppView
 
@@ -16,9 +16,9 @@ public struct AppView: View {
   public var body: some View {
     RootView(store: Store(initialState: Root.State()) {
       Root()
-#if DEBUG
+      #if DEBUG
         ._printChanges(.swiftLog())
-#endif
+      #endif
     })
   }
 }

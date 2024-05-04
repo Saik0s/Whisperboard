@@ -18,8 +18,8 @@ struct RecordingCard {
     var queuePosition: Int? {
       taskQueue.firstIndex(where: { $0.recordingInfoID == recording.id }).map { $0 + 1 }
     }
-    var queueTotal: Int? { taskQueue.count }
 
+    var queueTotal: Int? { taskQueue.count }
 
     var isTranscribing: Bool { recording.isTranscribing }
     var transcribingProgressText: String { recording.transcription?.text ?? "" }

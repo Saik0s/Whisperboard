@@ -8,7 +8,7 @@ struct AnimatedTabBar: View {
   var animation: Namespace.ID
 
   var body: some View {
-    HStack(spacing: 0) {
+    HStack(spacing: 50) {
       TabBarButton(
         image: Image(systemName: "list.bullet"),
         isSelected: selectedIndex == 0
@@ -16,16 +16,12 @@ struct AnimatedTabBar: View {
         selectedIndex = 0
       }
 
-      Spacer().frame(maxWidth: 50)
-
       TabBarButton(
         image: Image(systemName: "mic"),
         isSelected: selectedIndex == 1
       ) {
         selectedIndex = 1
       }.opacity(selectedIndex == 1 ? 0 : 1)
-
-      Spacer().frame(maxWidth: 50)
 
       TabBarButton(
         image: Image(systemName: "gear"),
@@ -78,19 +74,20 @@ struct TabBarBackground: View {
     }
   }
 
+  private let animationDuration = 0.15
   private func triggerAnimation(_ selectedIndex: Int) {
     if selectedIndex == 1 && animationStage == .base {
-      withAnimation(.easeOut(duration: 0.2)) {
+      withAnimation(.spring(response: animationDuration, dampingFraction: 0.9)) {
         animationStage = .toCircle
       }
-      withAnimation(.easeIn(duration: 0.2).delay(0.2)) {
+      withAnimation(.spring(response: animationDuration, dampingFraction: 0.9).delay(animationDuration)) {
         animationStage = .up
       }
     } else if animationStage == .up {
-      withAnimation(.easeOut(duration: 0.2)) {
+      withAnimation(.spring(response: animationDuration, dampingFraction: 0.9)) {
         animationStage = .toCircle
       }
-      withAnimation(.easeIn(duration: 0.2).delay(0.2)) {
+      withAnimation(.spring(response: animationDuration, dampingFraction: 0.9).delay(animationDuration)) {
         animationStage = .base
       }
     } else {
