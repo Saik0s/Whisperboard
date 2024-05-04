@@ -13,7 +13,9 @@ struct RecordingCardView: View {
 
   var body: some View {
     WithPerceptionTracking {
-      Button { store.send(.recordingSelected) } label: {
+      NavigationLink(
+        state: Root.Path.State.details(RecordingDetails.State(recordingCard: store.state))
+      ) {
         cardView
       }
     }
@@ -30,7 +32,7 @@ struct RecordingCardView: View {
             .lineLimit(3)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-          if store.recording.isTranscribed && !store.isTranscribing {
+          if store.recording.isTranscribed && !store.recording.isTranscribing {
             HStack(spacing: .grid(2)) {
               CopyButton(store.transcription) {
                 Image(systemName: "doc.on.clipboard")
@@ -44,15 +46,15 @@ struct RecordingCardView: View {
         }
         .padding([.horizontal, .bottom], .grid(2))
 
-        if store.isTranscribing || store.queuePosition != nil || !store.recording.isTranscribed {
+        if store.recording.isTranscribing || store.queueInfo != nil || !store.recording.isTranscribed {
           ZStack {
             Rectangle()
               .fill(.ultraThinMaterial)
               .continuousCornerRadius(.grid(2))
 
-            if store.isTranscribing || store.queuePosition != nil {
+            if store.recording.isTranscribing || store.queueInfo != nil {
               VStack(spacing: .grid(2)) {
-                if store.isTranscribing {
+                if store.recording.isTranscribing {
                   HStack(spacing: .grid(2)) {
                     ProgressView()
                       .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
@@ -60,13 +62,13 @@ struct RecordingCardView: View {
                     Text(store.recording.transcription?.status.message ?? "")
                       .textStyle(.subheadline)
                   }
-                } else if let queuePosition = store.queuePosition, let queueTotal = store.queueTotal {
-                  Text("In queue: \(queuePosition) of \(queueTotal)")
+                } else if let queueInfo = store.queueInfo {
+                  Text("In queue: \(queueInfo.position) of \(queueInfo.total)")
                     .textStyle(.body)
                 }
 
                 Button("Cancel") {
-                  store.send(.cancelTranscriptionTapped)
+                  store.send(.cancelTranscriptionButtonTapped)
                 }.tertiaryButtonStyle()
               }
               .padding(.grid(2))
@@ -81,7 +83,7 @@ struct RecordingCardView: View {
                   }.tertiaryButtonStyle()
 
                   Button("Start Over") {
-                    store.send(.transcribeTapped)
+                    store.send(.transcribeButtonTapped)
                   }.tertiaryButtonStyle()
                 }
               }
@@ -94,7 +96,7 @@ struct RecordingCardView: View {
                 }
 
                 Button("Transcribe") {
-                  store.send(.transcribeTapped)
+                  store.send(.transcribeButtonTapped)
                 }
                 .tertiaryButtonStyle()
               }
@@ -111,11 +113,6 @@ struct RecordingCardView: View {
     .cardStyle(isPrimary: store.playerControls.isPlaying)
     .offset(y: showItem ? 0 : 200)
     .opacity(showItem ? 1 : 0)
-//    .animation(
-//      .spring(response: 0.3, dampingFraction: 0.75),
-//        // .delay(Double(store.index) * 0.15),
-//      value: showItem
-//    )
     .alert($store.scope(state: \.alert, action: \.alert))
     .onAppear {
       withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {

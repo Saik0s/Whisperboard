@@ -14,7 +14,7 @@ struct RecordingInfo: Identifiable, Hashable, Then {
   var editedText: String?
   var transcription: Transcription?
 
-  var text: String { editedText ?? transcription?.text ?? "" }
+  var text: String { (isTranscribing ? editedText : nil) ?? transcription?.text ?? "" }
   var isTranscribed: Bool { transcription?.status.isDone == true }
   var isTranscribing: Bool { transcription?.status.isLoadingOrProgress == true }
   var isPaused: Bool { transcription?.status.isPaused == true }

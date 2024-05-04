@@ -1,3 +1,4 @@
+import BackgroundTasks
 import Combine
 import ComposableArchitecture
 import SwiftUI
@@ -6,7 +7,7 @@ import SwiftUI
 
 @Reducer
 struct Root {
-  enum Tab: Int { case list, record, settings }
+  enum Tab: Equatable { case list, record, settings }
 
   @Reducer(state: .equatable)
   public enum Path {
@@ -15,7 +16,6 @@ struct Root {
 
   @ObservableState
   struct State: Equatable {
-    @Shared(.transcriptionTasks) var taskQueue: [TranscriptionTask]
     var recordingListScreen = RecordingListScreen.State()
     var recordScreen = RecordScreen.State()
     var settingsScreen = SettingsScreen.State()
@@ -24,31 +24,23 @@ struct Root {
 
     @Presents var alert: AlertState<Action.Alert>?
 
-    var isRecording: Bool {
-      recordScreen.recordingControls.recording != nil
-    }
-
-    var isTranscribing: Bool {
-      recordingListScreen.recordings.contains { $0.isTranscribing }
-    }
-
-    var shouldDisableIdleTimer: Bool {
-      isRecording || isTranscribing
-    }
+    var isRecording: Bool { recordScreen.recordingControls.recording != nil }
+    var isTranscribing: Bool { recordingListScreen.recordings.contains { $0.isTranscribing } }
+    var shouldDisableIdleTimer: Bool { isRecording || isTranscribing }
   }
 
   enum Action: BindableAction {
+    case task
     case binding(BindingAction<State>)
     case recordingListScreen(RecordingListScreen.Action)
     case recordScreen(RecordScreen.Action)
     case settingsScreen(SettingsScreen.Action)
     case path(StackActionOf<Path>)
-    case task
-    case selectTab(Int)
     case alert(PresentationAction<Alert>)
     case failedICloudSync(EquatableError)
+    case registerForBGProcessingTasks(BGProcessingTask)
 
-    enum Alert: Hashable {}
+    enum Alert: Equatable {}
   }
 
   @Dependency(StorageClient.self) var storage: StorageClient
@@ -81,35 +73,28 @@ struct Root {
       case .task:
         subscriptionClient.configure(keychainClient.userID)
 
-        for recording in state.recordingListScreen.$recordings.elements {
-          if let transcription = recording.wrappedValue.transcription, transcription.status.isLoadingOrProgress {
-            if let taskIndex = state.taskQueue.firstIndex(where: { $0.id == transcription.id }) {
-              logs.debug("Marking \(recording.wrappedValue.fileName) last transcription as paused")
-              recording.wrappedValue.transcription?.status = .paused(state.taskQueue[taskIndex], progress: recording.wrappedValue.progress)
-              state.taskQueue[taskIndex].isPaused = true
+        @Shared(.transcriptionTasks) var taskQueue: [TranscriptionTask]
+        @Shared(.recordings) var recordings: [RecordingInfo]
+
+        // Pausing unfinished transcription on app launch
+        for recording in recordings {
+          if let transcription = recording.transcription, transcription.status.isLoadingOrProgress {
+            if let task = taskQueue[id: transcription.id] {
+              logs.debug("Marking \(recording.fileName) transcription as paused")
+              recordings[id: recording.id]?.transcription?.status = .paused(task, progress: recording.progress)
             } else {
-              logs.debug("Marking \(recording.wrappedValue.fileName) last transcription as failed")
-              recording.wrappedValue.transcription?.status = .error(message: "Transcription failed")
+              logs.debug("Marking \(recording.fileName) transcription as failed")
+              recordings[id: recording.id]?.transcription?.status = .error(message: "Transcription failed")
             }
+            taskQueue[id: transcription.id] = nil
           }
         }
         return .none
 
-      case let .path(.element(_, .details(.recordingCard(.delegate(.didTapTranscribe(recording)))))),
-           let .recordingListScreen(.recordingCard(.element(_, .delegate(.didTapTranscribe(recording))))):
-        return .run { [state] _ in
-          await transcriptionWorker.enqueueTaskForRecordingID(recording.id, state.settingsScreen.settings)
-        }
+      case .settingsScreen(.binding(.set(\.settings.isICloudSyncEnabled, true))):
+        return uploadNewRecordingsToICloud(state)
 
-      case let .path(.element(_, .details(.recordingCard(.delegate(.didTapResumeTranscription(recording)))))),
-           let .recordingListScreen(.recordingCard(.element(_, .delegate(.didTapResumeTranscription(recording))))):
-        return .run { _ in
-          if let transcription = recording.transcription, case let .paused(task, _) = transcription.status {
-            await transcriptionWorker.resumeTask(task)
-          }
-        }
-
-      case let .recordScreen(.newRecordingCreated(recordingInfo)):
+      case let .recordScreen(.delegate(.newRecordingCreated(recordingInfo))):
         state.recordingListScreen.recordings.append(recordingInfo)
         return .run { [state] _ in
           if state.settingsScreen.settings.isAutoTranscriptionEnabled {
@@ -122,7 +107,7 @@ struct Root {
         state.recordingListScreen.recordings.removeAll(where: { $0.id == id })
         return .none
 
-      case .recordScreen(.goToNewRecordingTapped):
+      case .recordScreen(.delegate(.goToNewRecordingTapped)):
         if let recordingCard = state.recordingListScreen.recordingCards.first {
           state.selectedTab = .list
           state.path.append(.details(RecordingDetails.State(recordingCard: recordingCard)))
@@ -136,15 +121,6 @@ struct Root {
       case .recordingListScreen(.didFinishImportingFiles):
         return uploadNewRecordingsToICloud(state)
 
-      case let .recordingListScreen(.recordingCard(.element(id, .recordingSelected))):
-        guard let card = state.recordingListScreen.recordingCards[id: id] else { return .none }
-        state.path.append(.details(RecordingDetails.State(recordingCard: card)))
-        return .none
-
-      case let .selectTab(tab):
-        state.selectedTab = .init(rawValue: tab) ?? .list
-        return .none
-
       case let .failedICloudSync(error):
         logs.error("Failed to sync with iCloud: \(error)")
         state.alert = .init(
@@ -152,6 +128,10 @@ struct Root {
           message: .init(error.localizedDescription),
           dismissButton: .default(.init("OK"))
         )
+        return .none
+
+      case .registerForBGProcessingTasks(let task):
+        transcriptionWorker.handleBGProcessingTask(bgTask: task)
         return .none
 
       default:

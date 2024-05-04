@@ -5,58 +5,43 @@ import Foundation
 
 @Reducer
 struct RecordingCard {
+  struct QueueInfo: Equatable {
+    let position: Int
+    let total: Int
+  }
+
   @ObservableState
   struct State: Equatable, Identifiable, Then {
     var id: String { recording.id }
 
-    var index: Int
     @Shared var recording: RecordingInfo
+    @SharedReader var queueInfo: QueueInfo?
     var playerControls: PlayerControls.State
     @Presents var alert: AlertState<Action.Alert>?
-    @Shared(.transcriptionTasks) private var taskQueue: [TranscriptionTask]
 
-    var queuePosition: Int? {
-      taskQueue.firstIndex(where: { $0.recordingInfoID == recording.id }).map { $0 + 1 }
-    }
+    var isInQueue: Bool { queueInfo != nil }
+    var transcription: String { recording.text }
 
-    var queueTotal: Int? { taskQueue.count }
-
-    var isTranscribing: Bool { recording.isTranscribing }
-    var transcribingProgressText: String { recording.transcription?.text ?? "" }
-    var isInQueue: Bool { queuePosition != nil && queueTotal != nil }
-
-    var transcription: String {
-      recording.text.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    init(index: Int, recording: Shared<RecordingInfo>) {
-      self.index = index
+    init(recording: Shared<RecordingInfo>, queueInfo: SharedReader<QueueInfo?>) {
       _recording = recording
       playerControls = .init(recording: recording)
+      _queueInfo = queueInfo
     }
   }
 
   enum Action: BindableAction, Equatable {
     case binding(BindingAction<State>)
     case playerControls(PlayerControls.Action)
-    case transcribeTapped
-    case cancelTranscriptionTapped
-    case titleChanged(String)
+    case transcribeButtonTapped
+    case cancelTranscriptionButtonTapped
     case recordingSelected
     case didTapResumeTranscription
     case alert(PresentationAction<Alert>)
-    case delegate(Delegate)
 
     enum Alert: Equatable {}
-
-    enum Delegate: Equatable {
-      case didTapTranscribe(RecordingInfo)
-      case didTapResumeTranscription(RecordingInfo)
-    }
   }
 
   @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
-  @Dependency(StorageClient.self) var storage: StorageClient
 
   var body: some Reducer<State, Action> {
     BindingReducer()
@@ -73,31 +58,30 @@ struct RecordingCard {
       case .playerControls:
         return .none
 
-      case .transcribeTapped:
+      case .transcribeButtonTapped:
         logs.debug("Transcribe tapped for recording \(state.recording.id)")
-        // Handled in RootStore
-        return .send(.delegate(.didTapTranscribe(state.recording)))
+        return .run { [state] _ in
+          @Shared(.settings) var settings
+          await transcriptionWorker.enqueueTaskForRecordingID(state.recording.id, settings)
+        }
 
-      case .cancelTranscriptionTapped:
+      case .cancelTranscriptionButtonTapped:
         state.recording.transcription?.status = .canceled
         return .run { [state] _ in
           await transcriptionWorker.cancelTaskForRecordingID(state.recording.id)
         }
 
-      case let .titleChanged(title):
-        state.recording.title = title
-        return .none
-
       case .recordingSelected:
         return .none
 
       case .didTapResumeTranscription:
-        return .send(.delegate(.didTapResumeTranscription(state.recording)))
+        return .run { [state] _ in
+          if let transcription = state.recording.transcription, case let .paused(task, _) = transcription.status {
+            await transcriptionWorker.resumeTask(task)
+          }
+        }
 
       case .alert:
-        return .none
-
-      case .delegate:
         return .none
       }
     }

@@ -19,30 +19,23 @@ struct RecordingControls {
     }
 
     var alert: AlertState<Action>?
-    var isGotToDetailsPopupPresented = false
-
     var recording: Recording.State?
-
     var audioRecorderPermission = RecorderPermission.undetermined
-
-    init(recording: Recording.State? = nil) {
-      self.recording = recording
-    }
+    var isGoToNewRecordingPopupPresented = false
   }
 
   enum Action: Equatable, BindableAction {
     case binding(BindingAction<State>)
-    case recordPermissionResponse(Bool)
-    case openSettingsButtonTapped
-    case recordButtonTapped
     case recording(Recording.Action)
-    case goToDetailsButtonTapped
+    case recordPermissionResponse(Bool)
+    case recordButtonTapped
+    case openSettingsButtonTapped
+    case goToNewRecordingButtonTapped
   }
 
   @Dependency(\.audioRecorder.requestRecordPermission) var requestRecordPermission
   @Dependency(\.openSettings) var openSettings
   @Dependency(\.date) var date
-  @Dependency(StorageClient.self) var storage
   @Dependency(\.continuousClock) var clock
   @Dependency(\.uuid) var uuid
 
@@ -95,14 +88,14 @@ struct RecordingControls {
           await openSettings()
         }
 
-      case .binding(.set(\.isGotToDetailsPopupPresented, true)):
+      case .binding(.set(\.isGoToNewRecordingPopupPresented, true)):
         return .run { send in
           try await clock.sleep(for: .seconds(5))
-          await send(.binding(.set(\.isGotToDetailsPopupPresented, false)))
+          await send(.binding(.set(\.isGoToNewRecordingPopupPresented, false)))
         }
 
-      case .goToDetailsButtonTapped:
-        state.isGotToDetailsPopupPresented = false
+      case .goToNewRecordingButtonTapped:
+        state.isGoToNewRecordingPopupPresented = false
         return .none
 
       case .binding:
@@ -135,6 +128,7 @@ struct RecordingControlsView: View {
   @ObserveInjection var inject
 
   @Perception.Bindable var store: StoreOf<RecordingControls>
+  @Environment(NamespaceContainer.self) var namespace
 
   var currentTime: String {
     (store.recording?.duration).flatMap {
@@ -162,7 +156,7 @@ struct RecordingControlsView: View {
 
         HStack(spacing: .grid(8)) {
           if store.recording?.mode == .paused {
-            Button { store.send(.recording(.deleteButtonTapped), animation: .default) }
+            Button { store.send(.recording(.deleteButtonTapped), animation: .showHide()) }
               label: {
                 Image(systemName: "multiply")
                   .textStyle(.navigationTitle)
@@ -174,23 +168,25 @@ struct RecordingControlsView: View {
 
           ZStack {
             if store.recording?.mode == .recording {
-              Button { store.send(.recording(.pauseButtonTapped), animation: .default) } label: {
+              Button { store.send(.recording(.pauseButtonTapped), animation: .showHide()) } label: {
                 Circle()
                   .fill(RadialGradient.accent)
                   .shadow(color: .DS.Background.accent.opacity(0.5), radius: 20)
                   .overlay(Image(systemName: "pause.fill").textStyle(.headline))
               }
               .recordButtonStyle()
+              .matchedGeometryEffect(id: "mic", in: namespace.namespace)
             } else if store.recording?.mode == .paused {
-              Button { store.send(.recording(.continueButtonTapped), animation: .default) } label: {
+              Button { store.send(.recording(.continueButtonTapped), animation: .showHide()) } label: {
                 Circle()
                   .fill(RadialGradient.accent)
                   .overlay(Image(systemName: "mic").textStyle(.headline))
               }
               .recordButtonStyle()
+              .matchedGeometryEffect(id: "mic", in: namespace.namespace)
             } else {
               RecordButton(permission: store.audioRecorderPermission) {
-                store.send(.recordButtonTapped, animation: .default)
+                store.send(.recordButtonTapped, animation: .showHide())
               } settingsAction: {
                 store.send(.openSettingsButtonTapped)
               }
@@ -199,7 +195,7 @@ struct RecordingControlsView: View {
           .frame(width: 70, height: 70)
 
           if store.recording?.mode == .paused {
-            Button { store.send(.recording(.saveButtonTapped), animation: .default) }
+            Button { store.send(.recording(.saveButtonTapped), animation: .showHide()) }
               label: {
                 Image(systemName: "checkmark")
                   .textStyle(.navigationTitle)
@@ -211,32 +207,25 @@ struct RecordingControlsView: View {
         }
         .padding(.horizontal, .grid(3))
         .popover(
-          present: $store.isGotToDetailsPopupPresented,
+          present: $store.isGoToNewRecordingPopupPresented,
           attributes: {
-            $0.position = .absolute(
-              originAnchor: .top,
-              popoverAnchor: .bottom
-            )
-            $0.presentation = .init(animation: .gentleBounce(), transition: .move(edge: .bottom))
-            $0.dismissal = .init(
-              animation: .gentleBounce(),
-              transition: .move(edge: .bottom),
-              mode: .dragDown
-            )
+            $0.position = .absolute(originAnchor: .top, popoverAnchor: .bottom)
+            $0.presentation = .init(animation: .hardShowHide(), transition: .move(edge: .bottom))
+            $0.dismissal = .init(animation: .hardShowHide(), transition: .move(edge: .bottom), mode: .dragDown)
           }
         ) {
-          VStack {
-            Text("Go to new recording?")
-              .textStyle(.headline)
+          VStack(spacing: .grid(4)) {
+            Text("View the new recording?")
+              .textStyle(.label)
               .foregroundColor(.DS.Text.base)
 
-            Button("Open Recording") {
-              store.send(.goToDetailsButtonTapped)
+            Button("View Recording") {
+              store.send(.goToNewRecordingButtonTapped)
             }.secondaryButtonStyle()
           }
-          .padding(.grid(2))
+          .padding(.grid(3))
           .cardStyle()
-          .padding(.grid(2))
+          .enableInjection()
         }
       }
     }

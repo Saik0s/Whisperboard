@@ -7,7 +7,7 @@ import SwiftUI
 struct SettingsScreenView: View {
   @Perception.Bindable var store: StoreOf<SettingsScreen>
 
-  @EnvironmentObject var tabBarViewModel: TabBarViewModel
+  @Environment(TabBarViewModel.self) var tabBarViewModel: TabBarViewModel
 
   @ObserveInjection var inject
 
@@ -298,12 +298,3 @@ struct SmallButtonStyle: ButtonStyle {
   }
 }
 
-// MARK: - SettingsScreen_Previews
-
-struct SettingsScreen_Previews: PreviewProvider {
-  struct ContentView: View {
-    var body: some View { SettingsScreenView(store: Store(initialState: SettingsScreen.State(), reducer: { SettingsScreen() })) }
-  }
-
-  static var previews: some View { ContentView() }
-}

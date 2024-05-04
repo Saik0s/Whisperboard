@@ -18,12 +18,14 @@ struct RecordScreen {
     case micSelector(MicSelector.Action)
     case recordingControls(RecordingControls.Action)
     case alert(PresentationAction<Alert>)
-
-    /// Delegate actions
-    case newRecordingCreated(RecordingInfo)
-    case goToNewRecordingTapped
+    case delegate(Delegate)
 
     enum Alert: Equatable {}
+
+    enum Delegate: Equatable {
+      case newRecordingCreated(RecordingInfo)
+      case goToNewRecordingTapped
+    }
   }
 
   @Dependency(StorageClient.self) var storage: StorageClient
@@ -44,8 +46,8 @@ struct RecordScreen {
       case let .recordingControls(.recording(.delegate(.didFinish(.success(recording))))):
 
         return .run { send in
-          await send(.newRecordingCreated(recording.recordingInfo))
-          await send(.recordingControls(.binding(.set(\.isGotToDetailsPopupPresented, true))))
+          await send(.delegate(.newRecordingCreated(recording.recordingInfo)))
+          await send(.recordingControls(.binding(.set(\.isGoToNewRecordingPopupPresented, true))))
         }
 
       case let .recordingControls(.recording(.delegate(.didFinish(.failure(error))))):
@@ -55,18 +57,15 @@ struct RecordScreen {
         )
         return .none
 
-      case .recordingControls(.goToDetailsButtonTapped):
+      case .recordingControls(.goToNewRecordingButtonTapped):
         return .run { send in
-          await send(.goToNewRecordingTapped)
+          await send(.delegate(.goToNewRecordingTapped))
         }
 
-      case .goToNewRecordingTapped:
+      case .delegate:
         return .none
 
       case .recordingControls:
-        return .none
-
-      case .newRecordingCreated:
         return .none
 
       case .micSelector:

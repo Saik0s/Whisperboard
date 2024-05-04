@@ -1,4 +1,5 @@
 import Foundation
+import ComposableArchitecture
 
 // MARK: - Transcription
 
@@ -19,11 +20,16 @@ struct Transcription: Codable, Hashable, Identifiable {
 // MARK: Transcription.Status
 
 extension Transcription {
+  @CasePathable
   enum Status: Codable, Hashable {
-    case notStarted, loading, uploading(Double), error(message: String), progress(Double), done(Date), canceled, paused(
-      TranscriptionTask,
-      progress: Double
-    )
+    case notStarted
+    case loading
+    case uploading(Double)
+    case error(message: String)
+    case progress(Double)
+    case done(Date)
+    case canceled
+    case paused(TranscriptionTask, progress: Double)
   }
 }
 

@@ -28,22 +28,18 @@ extension TranscriptionWorkerClient: DependencyKey {
     return TranscriptionWorkerClient(
       enqueueTaskForRecordingID: { [worker] id, settings in
         let task = TranscriptionTask(recordingInfoID: id, settings: settings)
-        worker.$taskQueue.wrappedValue.append(task)
+        await MainActor.run { worker.taskQueue.append(task) }
         await worker.processTasks()
       },
       cancelTaskForRecordingID: { [worker] id in
-        if let task = await worker.currentTask, task.recordingInfoID == id {
+        if let task = worker.currentTask, task.recordingInfoID == id {
           localWorkExecutor.cancelTask(id: task.id)
         }
-        worker.$taskQueue.wrappedValue.removeAll { task in
-          task.recordingInfoID == id
-        }
+        await MainActor.run { worker.taskQueue.removeAll { $0.recordingInfoID == id } }
       },
       cancelAllTasks: { [worker] in
-        if let task = await worker.currentTask {
-          localWorkExecutor.cancelTask(id: task.id)
-        }
-        worker.$taskQueue.wrappedValue.removeAll()
+          localWorkExecutor.cancelCurrentTask()
+        await MainActor.run { worker.taskQueue.removeAll() }
       },
       handleBGProcessingTask: { task in
         worker.handleBGProcessingTask(bgTask: task)
@@ -52,12 +48,8 @@ extension TranscriptionWorkerClient: DependencyKey {
         [.auto] + WhisperContext.getAvailableLanguages()
       },
       resumeTask: { [worker] task in
-        if let index = worker.$taskQueue.wrappedValue.firstIndex(where: { $0.id == task.id }) {
-          worker.$taskQueue.wrappedValue[index] = task
-        } else {
-          worker.$taskQueue.wrappedValue.insert(task, at: 0)
-        }
-        await worker.processTasks(ignorePaused: false)
+        await MainActor.run { worker.taskQueue.append(task) }
+        await worker.processTasks()
       }
     )
   }()
@@ -75,13 +67,13 @@ extension DependencyValues {
 class TranscriptionWorker {
   static let processingTaskIdentifier = "me.igortarasenko.Whisperboard"
 
+  var currentTask: TranscriptionTask?
+
   @MainActor @Shared(.isProcessing) var isProcessing: Bool
   @MainActor @Shared(.transcriptionTasks) var taskQueue: [TranscriptionTask]
   @MainActor @Shared(.recordings) var recordings: [RecordingInfo]
 
   private let executor: TranscriptionWorkExecutor
-
-  @MainActor var currentTask: TranscriptionTask? { isProcessing ? taskQueue.first : nil }
 
   private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
   private var cancellables: Set<AnyCancellable> = []
@@ -107,35 +99,41 @@ class TranscriptionWorker {
   }
 
   @MainActor
-  func processTasks(ignorePaused: Bool = true) {
-    guard !isProcessing, !taskQueue.isEmpty else { return }
-
-    isProcessing = true
-
+  func processTasks() {
     task = Task(priority: .background) { [weak self] in
-      guard let self else { return }
+      guard let self, !isProcessing else { return }
+      isProcessing = true
       defer { isProcessing = false }
 
-      while let task = $taskQueue.elements.filter({ ignorePaused ? !$0.isPaused.wrappedValue : true }).first {
-        if let recording = $recordings.elements.first(where: { $0.id == task.recordingInfoID }) {
-          let envelope = TranscriptionTaskEnvelope(task: task, recording: recording)
-          await executor.process(task: envelope)
-        } else {
-          logs.error("Recording not found for task \(task.id), recordingId \(task.recordingInfoID)")
-        }
-        taskQueue.removeAll { $0.id == task.id }
+      while let task = await getNextTask() {
+        currentTask = task.task
+        await executor.process(task: task)
+        currentTask = nil
+        taskQueue[id: task.task.id] = nil
       }
     }
   }
 
   func handleBGProcessingTask(bgTask: BGProcessingTask) {
     Task { @MainActor in
-      processTasks(ignorePaused: false)
+      processTasks()
     }
 
     bgTask.expirationHandler = { [weak self] in
       self?.task?.cancel()
     }
+  }
+
+  @MainActor
+  private func getNextTask() async -> TranscriptionTaskEnvelope? {
+      taskQueue = taskQueue.filter { task in
+        recordings.contains { $0.id == task.recordingInfoID }
+      }
+    return $taskQueue.elements.compactMap { task in
+      $recordings.elements
+        .first { $0.id == task.recordingInfoID }
+        .map { TranscriptionTaskEnvelope(task: task, recording: $0) }
+    }.first
   }
 
   private func beginBackgroundTask() {

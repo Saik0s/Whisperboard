@@ -7,14 +7,16 @@ import SwiftUI
 // MARK: - RootView
 
 struct RootView: View {
-  @ObserveInjection var inject
-
   @Perception.Bindable var store: StoreOf<Root>
+
+  @State private var tabBarViewModel = TabBarViewModel()
+  @State private var recordButtonModel = RecordButtonModel(isExpanded: true)
+  @Namespace private var namespace
 
   var body: some View {
     WithPerceptionTracking {
       TabBarContainerView(
-        selectedIndex: $store.selectedTab.rawValue.sending(\.selectTab),
+        selectedIndex: $store.selectedTab,
         screen1: NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
           RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: \.recordingListScreen))
             .applyTabBarContentInset()
@@ -34,26 +36,18 @@ struct RootView: View {
       )
       .accentColor(.white)
       .task { await store.send(.task).finish() }
+      .environment(tabBarViewModel)
+      .environment(recordButtonModel)
+      .environment(NamespaceContainer(namespace: namespace))
     }
-    .enableInjection()
   }
 }
 
-// MARK: - Root_Previews
+@Perceptible
+class NamespaceContainer {
+  var namespace: Namespace.ID
 
-struct Root_Previews: PreviewProvider {
-  struct ContentView: View {
-    var body: some View {
-      RootView(
-        store: Store(
-          initialState: Root.State(),
-          reducer: { Root() }
-        )
-      )
-    }
-  }
-
-  static var previews: some View {
-    ContentView()
+  init(namespace: Namespace.ID) {
+    self.namespace = namespace
   }
 }

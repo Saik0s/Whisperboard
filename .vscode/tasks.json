@@ -6,7 +6,8 @@
     {
       "label": "tuist",
       "type": "shell",
-      "command": "TUIST_IS_HOT_RELOADING_ENABLED=0 tuist generate --no-open --no-cache"
+      "command": "make build_debug",
+      "problemMatcher": ["$swiftc"]
     },
     {
       "label": "build",
@@ -27,13 +28,15 @@
         "-derivedDataPath",
         "./build",
         "-allowProvisioningUpdates",
-        "ARCHS=arm64"
+        "ARCHS=arm64",
+        "|",
+        "xcpretty"
       ],
+      "problemMatcher": ["$swiftc"],
       "group": {
         "kind": "build",
         "isDefault": true
-      },
-      "dependsOn": ["tuist"]
+      }
     }
   ]
 }

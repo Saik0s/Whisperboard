@@ -77,6 +77,10 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
     }
   }
 
+  func cancelCurrentTask() {
+    currentWhisperContext?.context.cancel()
+  }
+
   private func resolveContextFor(useGPU: Bool, task: TranscriptionTaskEnvelope) async throws -> WhisperContextProtocol {
     if let currentContext = currentWhisperContext, currentContext.modelType == task.modelType, currentContext.useGPU == useGPU {
       return currentContext.context

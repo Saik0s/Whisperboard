@@ -35,6 +35,7 @@ struct RecordingListScreen {
     case alert(PresentationAction<Alert>)
     case didFinishImportingFiles
     case addRecordingInfo(RecordingInfo)
+    case reloadCards
 
     enum Alert: Hashable {
       case deleteDialogConfirmed(id: RecordingInfo.ID)
@@ -59,7 +60,9 @@ struct RecordingListScreen {
           for await _ in await didBecomeActive() {
             storage.sync(recordings)
           }
-        }
+        }.merge(with: .publisher({ [state] in
+          state.$recordings.publisher.map { $0.map(\.id) }.removeDuplicates().map { _ in Action.reloadCards }
+        }))
 
       case let .addFileRecordings(urls):
         return .run { send in
@@ -99,13 +102,11 @@ struct RecordingListScreen {
         state.recordings.removeAll { $0.id == id }
         return .none
 
-      default:
-        return .none
-      }
-    }
-    .onChange(of: \.recordingIds) { _, _ in
-      Reduce { state, _ in
+      case .reloadCards:
         createCards(&state)
+        return .none
+
+      default:
         return .none
       }
     }
@@ -116,11 +117,10 @@ struct RecordingListScreen {
   }
 
   private func createCards(_ state: inout State) {
-    state.recordingCards = state.$recordings.elements.enumerated().map { offset, recording in
-      var card = state.recordingCards[id: recording.id] ?? RecordingCard.State(index: offset, recording: recording)
-      card.index = offset
-      return card
-    }.identifiedArray
+//    @SharedReader(.transcriptionTasks) var taskQueue: [TranscriptionTask]
+//    state.recordingCards = state.$recordings.elements.enumerated().map { offset, recording in
+//      state.recordingCards[id: recording.id] ?? RecordingCard.State(recording: recording, queueInfo: $taskQueue.identifiedArray.elements[recording.id])
+//    }.identifiedArray
   }
 
   private func createDeleteConfirmationDialog(id: RecordingInfo.ID, state: inout State) {
@@ -237,16 +237,8 @@ struct EmptyStateView: View {
   }
 }
 
-#if DEBUG
-
-  struct RecordingListScreenView_Previews: PreviewProvider {
-    static var previews: some View {
-      RecordingListScreenView(
-        store: Store(
-          initialState: RecordingListScreen.State(),
-          reducer: { RecordingListScreen() }
-        )
-      )
-    }
+private extension RandomAccessCollection where Element == TranscriptionTask, Index == Int {
+  subscript(recordingInfoID: RecordingInfo.ID) -> RecordingCard.QueueInfo? {
+    self.firstIndex(where: { $0.recordingInfoID == recordingInfoID }).map { RecordingCard.QueueInfo(position: $0, total: self.count) }
   }
-#endif
+}

@@ -25,7 +25,6 @@ struct RecordingDetails {
 
     @Presents var alert: AlertState<Action.Alert>?
 
-    var text: String { recordingCard.isTranscribing ? recordingCard.transcribingProgressText : recordingCard.transcription }
     var timeline: [TimelineItem] {
       recordingCard.recording.transcription?.segments.map {
         TimelineItem(text: $0.text, startTime: Duration.milliseconds($0.startTime), endTime: Duration.milliseconds($0.endTime))
@@ -35,10 +34,10 @@ struct RecordingDetails {
     var shareAudioFileURL: URL { recordingCard.recording.fileURL }
   }
 
-  enum Action: Equatable {
+  enum Action: Equatable, BindableAction {
+    case binding(BindingAction<State>)
     case recordingCard(RecordingCard.Action)
     case delete
-    case displayModeChanged(DisplayMode)
     case alert(PresentationAction<Alert>)
     case delegate(Delegate)
 
@@ -52,12 +51,17 @@ struct RecordingDetails {
   }
 
   var body: some Reducer<State, Action> {
+    BindingReducer()
+    
     Scope(state: \.recordingCard, action: /Action.recordingCard) {
       RecordingCard()
     }
 
     Reduce<State, Action> { state, action in
       switch action {
+      case .binding:
+        return .none
+
       case .recordingCard:
         return .none
 
@@ -75,10 +79,6 @@ struct RecordingDetails {
 
       case .alert(.presented(.deleteDialogConfirmed)):
         return .send(.delegate(.deleteDialogConfirmed))
-
-      case let .displayModeChanged(mode):
-        state.displayMode = mode
-        return .none
 
       case .alert:
         return .none
@@ -110,7 +110,7 @@ struct RecordingDetailsView: View {
         VStack(spacing: .grid(2)) {
           TextField(
             "Untitled",
-            text: $store.recordingCard.recording.title.sending(\.recordingCard.titleChanged),
+            text: $store.recordingCard.recording.title,
             axis: .vertical
           )
           .focused($focusedField, equals: .title)
@@ -122,15 +122,15 @@ struct RecordingDetailsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
           HStack(spacing: .grid(2)) {
-            CopyButton(store.recordingCard.recording.text) {
+            CopyButton(store.recordingCard.transcription) {
               Image(systemName: "doc.on.clipboard")
             }
 
-            ShareLink(item: store.recordingCard.recording.text) {
+            ShareLink(item: store.recordingCard.transcription) {
               Image(systemName: "paperplane")
             }
 
-            Button { store.send(.recordingCard(.transcribeTapped)) } label: {
+            Button { store.send(.recordingCard(.transcribeButtonTapped)) } label: {
               Image(systemName: "arrow.clockwise")
             }
 
@@ -146,7 +146,7 @@ struct RecordingDetailsView: View {
 
             Picker(
               "",
-              selection: $store.displayMode.sending(\.displayModeChanged)
+              selection: $store.displayMode
             ) {
               Image(systemName: "text.alignleft")
                 .tag(RecordingDetails.DisplayMode.text)
@@ -167,7 +167,7 @@ struct RecordingDetailsView: View {
                 .textStyle(.error)
             }
             Button("Transcribe") {
-              store.send(.recordingCard(.transcribeTapped))
+              store.send(.recordingCard(.transcribeButtonTapped))
             }
             .tertiaryButtonStyle()
             .padding(.grid(4))
@@ -217,10 +217,8 @@ struct RecordingDetailsView: View {
     ScrollView {
       switch store.displayMode {
       case .text:
-        Text(store.recordingCard.isTranscribing
-          ? store.recordingCard.transcribingProgressText
-          : store.recordingCard.transcription)
-          .foregroundColor(store.recordingCard.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
+        Text(store.recordingCard.transcription)
+          .foregroundColor(store.recordingCard.recording.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
           .textStyle(.body)
           .lineLimit(nil)
           .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -266,18 +264,18 @@ struct RecordingDetailsView: View {
 
   @ViewBuilder
   func transcriptionControls() -> some View {
-    if store.recordingCard.isTranscribing || store.recordingCard.isInQueue {
+    if store.recordingCard.recording.isTranscribing || store.recordingCard.queueInfo != nil {
       VStack(spacing: .grid(2)) {
         ProgressView()
           .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
 
-        Text(store.recordingCard.isTranscribing
+        Text(store.recordingCard.recording.isTranscribing
           ? store.recordingCard.recording.transcription?.status.message ?? ""
-          : "In queue: \(store.recordingCard.queuePosition ?? 0) of \(store.recordingCard.queueTotal ?? 0)")
+          : store.recordingCard.queueInfo.map { "In queue: \($0.position) of \($0.total)" } ?? "-")
           .textStyle(.body)
 
         Button("Cancel") {
-          store.send(.recordingCard(.cancelTranscriptionTapped))
+          store.send(.recordingCard(.cancelTranscriptionButtonTapped))
         }.tertiaryButtonStyle()
       }
     } else if store.recordingCard.recording.isPaused {
@@ -291,7 +289,7 @@ struct RecordingDetailsView: View {
           }.tertiaryButtonStyle()
 
           Button("Start Over") {
-            store.send(.recordingCard(.transcribeTapped))
+            store.send(.recordingCard(.transcribeButtonTapped))
           }.tertiaryButtonStyle()
         }
       }

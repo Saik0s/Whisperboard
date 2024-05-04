@@ -1,37 +1,39 @@
 import SwiftUI
 import VariableBlurView
+import ComposableArchitecture
 
 // MARK: - AnimatedTabBar
 
 struct AnimatedTabBar: View {
-  @Binding var selectedIndex: Int
-  var animation: Namespace.ID
+  @Binding var selectedIndex: Root.Tab
 
   var body: some View {
     HStack(spacing: 50) {
       TabBarButton(
         image: Image(systemName: "list.bullet"),
-        isSelected: selectedIndex == 0
+        isSelected: selectedIndex == .list
       ) {
-        selectedIndex = 0
+        selectedIndex = .list
       }
 
       TabBarButton(
         image: Image(systemName: "mic"),
-        isSelected: selectedIndex == 1
+        isSelected: selectedIndex == .record
       ) {
-        selectedIndex = 1
-      }.opacity(selectedIndex == 1 ? 0 : 1)
+        selectedIndex = .record
+      }
+      .opacity(selectedIndex == .record ? 0 : 1)
+      .disabled(selectedIndex == .record)
 
       TabBarButton(
         image: Image(systemName: "gear"),
-        isSelected: selectedIndex == 2
+        isSelected: selectedIndex == .settings
       ) {
-        selectedIndex = 2
+        selectedIndex = .settings
       }
     }
     .padding(.horizontal)
-    .background(TabBarBackground(selectedIndex: selectedIndex, animation: animation))
+    .background(TabBarBackground(selectedIndex: selectedIndex))
     .padding()
     .frame(maxWidth: .infinity)
     .background {
@@ -46,52 +48,57 @@ struct AnimatedTabBar: View {
 // MARK: - TabBarBackground
 
 struct TabBarBackground: View {
-  var selectedIndex: Int = 0
-  var animation: Namespace.ID
-  @State var animationStage: AnimationStage = .up
-  let baseColor = Color.DS.Background.secondary
-  let circleColor = Color.DS.Background.accent
-  let yOffset: CGFloat = -115
-  let circleWidth: CGFloat = 70
-  let scale: CGFloat = 1
-
   enum AnimationStage: Hashable {
     case base, toCircle, up
   }
 
+  var selectedIndex: Root.Tab
+
+  @State var animationStage: AnimationStage = .up
+  let baseColor = Color.DS.Background.secondary
+  let circleColor = Color.DS.Background.accent
+  let circleWidth: CGFloat = 70
+
+  @Environment(RecordButtonModel.self) var recordButtonModel: RecordButtonModel
+  @Environment(NamespaceContainer.self) var namespace
+
   var body: some View {
-    ZStack {
-      Capsule(style: .continuous)
-        .foregroundColor(animationStage == .base ? baseColor : circleColor)
-        .offset(x: 0, y: animationStage == .up ? yOffset : 0)
-        .frame(width: animationStage == .base ? nil : circleWidth)
-        .scaleEffect(animationStage == .up ? scale : (animationStage == .toCircle ? 0.1 : 1))
-        .opacity(animationStage == .up ? 0 : 1)
-    }
-    .frame(height: 70)
-    .onChange(of: selectedIndex) { selectedIndex in
-      triggerAnimation(selectedIndex)
+    WithPerceptionTracking {
+      ZStack {
+        if animationStage != .up {
+          Capsule(style: .continuous)
+            .foregroundColor(animationStage == .base ? baseColor : circleColor)
+            .frame(width: animationStage == .base ? nil : circleWidth)
+            .frame(height: 70)
+            .matchedGeometryEffect(id: "mic", in: namespace.namespace)
+        }
+      }
+      .onChange(of: selectedIndex) { selectedIndex in
+        triggerAnimation(selectedIndex)
+      }
     }
   }
 
-  private let animationDuration = 0.15
-  private func triggerAnimation(_ selectedIndex: Int) {
-    if selectedIndex == 1 && animationStage == .base {
-      withAnimation(.spring(response: animationDuration, dampingFraction: 0.9)) {
+  private func triggerAnimation(_ selectedIndex: Root.Tab) {
+    if selectedIndex == .record && animationStage == .base {
+      withAnimation(.showHide()) {
         animationStage = .toCircle
       }
-      withAnimation(.spring(response: animationDuration, dampingFraction: 0.9).delay(animationDuration)) {
+      withAnimation(.showHide().delay(0.15)) {
         animationStage = .up
+        recordButtonModel.isExpanded = true
       }
     } else if animationStage == .up {
-      withAnimation(.spring(response: animationDuration, dampingFraction: 0.9)) {
+      withAnimation(.showHide()) {
         animationStage = .toCircle
+        recordButtonModel.isExpanded = false
       }
-      withAnimation(.spring(response: animationDuration, dampingFraction: 0.9).delay(animationDuration)) {
+      withAnimation(.showHide().delay(0.15)) {
         animationStage = .base
       }
     } else {
-      animationStage = .base
+      animationStage = selectedIndex == .record ? .up : .base
+      recordButtonModel.isExpanded = selectedIndex == .record
     }
   }
 }

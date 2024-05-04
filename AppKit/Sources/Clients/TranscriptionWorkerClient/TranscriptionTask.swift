@@ -7,6 +7,5 @@ struct TranscriptionTask: Identifiable, Codable, Hashable, Then {
   var id = UUID()
   var recordingInfoID: RecordingInfo.ID
   var settings: Settings
-  var isPaused = false
   var remoteID: String? = nil
 }

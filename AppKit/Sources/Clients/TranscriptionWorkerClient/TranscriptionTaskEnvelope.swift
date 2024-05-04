@@ -8,6 +8,8 @@ struct TranscriptionTaskEnvelope: Identifiable {
   @Shared var task: TranscriptionTask
   @Shared var recording: RecordingInfo
 
+  var isPaused: Bool { recording.transcription?.status.isPaused == true }
+
   var segments: [Segment] { recording.segments }
   var duration: Int64 { Int64(recording.duration) }
   var offset: Int64 { recording.offset }

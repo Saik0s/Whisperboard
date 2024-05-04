@@ -50,7 +50,7 @@ struct Recording {
         await audioRecorder.startRecording(url)
 
         for await recState in await audioRecorder.recordingState() {
-          await send(.recordingStateUpdated(recState))
+          await send(.recordingStateUpdated(recState), animation: .spring(duration: 0.2, bounce: 0.5))
         }
       }
 
