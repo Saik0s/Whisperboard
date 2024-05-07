@@ -14,15 +14,15 @@ struct RecordingInfo: Identifiable, Hashable, Then {
   var editedText: String?
   var transcription: Transcription?
 
-  var text: String { (isTranscribing ? editedText : nil) ?? transcription?.text ?? "" }
+  var text: String { editedText ?? transcription?.text ?? "" }
   var isTranscribed: Bool { transcription?.status.isDone == true }
   var isTranscribing: Bool { transcription?.status.isLoadingOrProgress == true }
   var isPaused: Bool { transcription?.status.isPaused == true }
   var transcriptionErrorMessage: String? { transcription?.status.errorMessage }
 
-  var segments: [Segment] { transcription.map { $0.fileName == fileName ? $0.segments : [] } ?? [] }
+  var segments: [Segment] { transcription?.segments ?? [] }
   var offset: Int64 { segments.last?.endTime ?? 0 }
-  var progress: Double { Double(offset) / Double(Int64(duration * 1000)) }
+  var progress: Double { Double(offset) / Double(duration * 1000) }
 }
 
 // MARK: Codable

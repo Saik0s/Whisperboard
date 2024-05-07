@@ -63,7 +63,7 @@ final class Storage {
       recordings.append(newInfo)
     }
 
-    return recordings
+    return recordings.sorted { $0.date > $1.date }.identifiedArray
   }
 
   private func updateDurations(_ storedRecordings: [RecordingInfo]) async throws -> [RecordingInfo] {
@@ -90,7 +90,7 @@ final class Storage {
           try FileManager.default.moveItem(at: sourceURL, to: destinationURL)
           let duration = try await getFileDuration(url: destinationURL)
           let recording = RecordingInfo(
-            fileName: newFileName,
+            id: UUID().uuidString,
             title: sourceURL.deletingPathExtension().lastPathComponent,
             date: Date(),
             duration: duration
@@ -102,6 +102,8 @@ final class Storage {
       } catch {
         logs.error("Error moving files from shared container: \(error)")
       }
+    } else {
+      logs.error("No shared container found")
     }
     return recordings
   }
