@@ -5,48 +5,54 @@ import SwiftUI
 
 // MARK: - ModelSelector
 
-struct ModelSelector: ReducerProtocol {
+@Reducer
+struct ModelSelector {
+  @ObservableState
   struct State: Equatable {
     var modelRows: IdentifiedArrayOf<ModelRow.State> = []
 
-    @PresentationState var alert: AlertState<Action.Alert>?
+    @Presents var alert: AlertState<Action.Alert>?
 
-    var selectedModel: VoiceModelType {
-      modelRows.first(where: \.isSelected)?.model.modelType ?? .default
+    @Shared var selectedModel: VoiceModelType
+
+    init(selectedModel: Shared<VoiceModelType>) {
+      _selectedModel = selectedModel
     }
   }
 
   enum Action: Equatable, BindableAction {
     case binding(BindingAction<State>)
-    case reloadSelectedModel
-    case modelRow(id: VoiceModel.ID, action: ModelRow.Action)
+    case modelRow(IdentifiedActionOf<ModelRow>)
     case alert(PresentationAction<Alert>)
+
+    case reloadModels
 
     enum Alert: Equatable {}
   }
 
   @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
-  @Dependency(\.settings) var settings: SettingsClient
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     BindingReducer()
 
     Reduce<State, Action> { state, action in
       switch action {
-      case .reloadSelectedModel:
-        reloadSelectedModel(state: &state)
+      case .reloadModels:
+        reloadModels(state: &state)
         return .none
 
-      case let .modelRow(_, action: .loadError(message)):
+      case let .modelRow(.element(_, action: .loadError(message))):
         state.alert = .error(message: message)
         return .none
 
-      case .modelRow(_, action: .didRemoveModel):
-        reloadSelectedModel(state: &state)
+      case .modelRow(.element(_, action: .didRemoveModel)):
+        reloadModels(state: &state)
         return .none
 
-      case .modelRow(_, action: .selectModelTapped):
-        reloadSelectedModel(state: &state)
+      case let .modelRow(.element(id, action: .selectModelTapped)):
+        guard let modelRow = state.modelRows[id: id] else { return .none }
+        state.selectedModel = modelRow.model.modelType
+        reloadModels(state: &state)
         return .none
 
       case .modelRow:
@@ -59,37 +65,36 @@ struct ModelSelector: ReducerProtocol {
         return .none
       }
     }
-    .forEach(\.modelRows, action: /Action.modelRow) {
+    .forEach(\.modelRows, action: \.modelRow) {
       ModelRow()
     }
-    .ifLet(\.$alert, action: /Action.alert)
+    .ifLet(\.$alert, action: \.alert)
   }
 
-  private func reloadSelectedModel(state: inout State) {
-    let selected = settings.getSettings().selectedModel
-    state.modelRows = modelDownload.getModels().map { model in
-      ModelRow.State(model: model, isSelected: model.modelType == selected)
-    }.identifiedArray
+  private func reloadModels(state: inout State) {
+    state.modelRows = modelDownload.getModels().map { ModelRow.State(model: $0) }.identifiedArray
   }
 }
 
 // MARK: - ModelSelectorView
 
 struct ModelSelectorView: View {
-  let store: Store<ModelSelector.State, ModelSelector.Action>
+  @Perception.Bindable var store: Store<ModelSelector.State, ModelSelector.Action>
 
   var body: some View {
-    WithViewStore(store, observe: { $0 }) { viewStore in
+    WithPerceptionTracking {
       Form {
         Section {
-          ForEachStore(store.scope(state: \.modelRows, action: ModelSelector.Action.modelRow)) { modelRowStore in
-            ModelRowView(store: modelRowStore)
+          ForEach(store.scope(state: \.modelRows, action: \.modelRow)) { modelRowStore in
+            WithPerceptionTracking {
+              ModelRowView(store: modelRowStore, isSelected: store.selectedModel == modelRowStore.model.modelType)
+            }
           }
           .listRowBackground(Color.DS.Background.secondary)
         }
       }
-      .onAppear { viewStore.send(.reloadSelectedModel) }
-      .alert(store: store.scope(state: \.$alert, action: { .alert($0) }))
+      .onAppear { store.send(.reloadModels) }
+      .alert($store.scope(state: \.alert, action: \.alert))
     }
     .enableInjection()
   }

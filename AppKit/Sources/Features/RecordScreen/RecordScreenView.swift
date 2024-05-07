@@ -1,13 +1,14 @@
-
 import ComposableArchitecture
 import Inject
 import SwiftUI
 
 // MARK: - RecordScreen
 
-struct RecordScreen: ReducerProtocol {
+@Reducer
+struct RecordScreen {
+  @ObservableState
   struct State: Equatable {
-    @PresentationState var alert: AlertState<Action.Alert>?
+    @Presents var alert: AlertState<Action.Alert>?
     var micSelector = MicSelector.State()
     var recordingControls = RecordingControls.State()
   }
@@ -17,18 +18,19 @@ struct RecordScreen: ReducerProtocol {
     case micSelector(MicSelector.Action)
     case recordingControls(RecordingControls.Action)
     case alert(PresentationAction<Alert>)
-
-    /// Delegate actions
-    case newRecordingCreated(RecordingInfo)
-    case goToNewRecordingTapped
+    case delegate(Delegate)
 
     enum Alert: Equatable {}
+
+    enum Delegate: Equatable {
+      case newRecordingCreated(RecordingInfo)
+      case goToNewRecordingTapped
+    }
   }
 
-  @Dependency(\.storage) var storage: StorageClient
-  @Dependency(\.settings) var settings: SettingsClient
+  @Dependency(StorageClient.self) var storage: StorageClient
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     BindingReducer()
 
     Scope(state: \.micSelector, action: /Action.micSelector) {
@@ -42,22 +44,10 @@ struct RecordScreen: ReducerProtocol {
     Reduce<State, Action> { state, action in
       switch action {
       case let .recordingControls(.recording(.delegate(.didFinish(.success(recording))))):
-        let recordingInfo = RecordingInfo(
-          fileName: recording.url.lastPathComponent,
-          date: recording.date,
-          duration: recording.duration
-        )
-
-        log.verbose("Adding recording info: \(recordingInfo)")
-        do {
-          try storage.addRecordingInfo(recordingInfo)
-        } catch {
-          state.alert = .error(error)
-        }
 
         return .run { send in
-          await send(.newRecordingCreated(recordingInfo))
-          await send(.recordingControls(.binding(.set(\.$isGotToDetailsPopupPresented, true))))
+          await send(.delegate(.newRecordingCreated(recording.recordingInfo)))
+          await send(.recordingControls(.binding(.set(\.isGoToNewRecordingPopupPresented, true))))
         }
 
       case let .recordingControls(.recording(.delegate(.didFinish(.failure(error))))):
@@ -67,18 +57,15 @@ struct RecordScreen: ReducerProtocol {
         )
         return .none
 
-      case .recordingControls(.goToDetailsButtonTapped):
+      case .recordingControls(.goToNewRecordingButtonTapped):
         return .run { send in
-          await send(.goToNewRecordingTapped)
+          await send(.delegate(.goToNewRecordingTapped))
         }
 
-      case .goToNewRecordingTapped:
+      case .delegate:
         return .none
 
       case .recordingControls:
-        return .none
-
-      case .newRecordingCreated:
         return .none
 
       case .micSelector:
@@ -91,7 +78,7 @@ struct RecordScreen: ReducerProtocol {
         return .none
       }
     }
-    .ifLet(\.$alert, action: /Action.alert)
+    .ifLet(\.$alert, action: \.alert)
   }
 }
 
@@ -100,45 +87,21 @@ struct RecordScreen: ReducerProtocol {
 struct RecordScreenView: View {
   @ObserveInjection var inject
 
-  let store: StoreOf<RecordScreen>
-
-  init(store: StoreOf<RecordScreen>) {
-    self.store = store
-  }
+  @Perception.Bindable var store: StoreOf<RecordScreen>
 
   var body: some View {
-    WithViewStore(store, observe: { $0 }) { _ in
+    WithPerceptionTracking {
       VStack(spacing: 0) {
-        MicSelectorView(store: store.scope(state: \.micSelector, action: { .micSelector($0) }))
+        MicSelectorView(store: store.scope(state: \.micSelector, action: \.micSelector))
         Spacer()
-        RecordingControlsView(store: store.scope(state: \.recordingControls, action: { .recordingControls($0) }))
+        RecordingControlsView(store: store.scope(state: \.recordingControls, action: \.recordingControls))
       }
       .padding(.top, .grid(4))
       .padding(.horizontal, .grid(4))
       .padding(.bottom, .grid(8))
       .ignoresSafeArea(edges: .bottom)
-      .alert(
-        store: store.scope(state: \.$alert, action: { .alert($0) })
-      )
+      .alert($store.scope(state: \.alert, action: \.alert))
     }
     .enableInjection()
   }
 }
-
-#if DEBUG
-
-  struct RecordScreenView_Previews: PreviewProvider {
-    static var previews: some View {
-      NavigationView {
-        RecordScreenView(
-          store: Store(
-            initialState: RecordScreen.State(
-              recordingControls: .init(recording: .init(date: Date(), url: URL(fileURLWithPath: "test")))
-            ),
-            reducer: { RecordScreen() }
-          )
-        )
-      }
-    }
-  }
-#endif

@@ -1,4 +1,3 @@
-
 import AsyncAlgorithms
 import Combine
 import ComposableArchitecture
@@ -38,8 +37,8 @@ enum WhisperAction {
 // MARK: - WhisperContextProtocol
 
 protocol WhisperContextProtocol {
-  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) throws -> AsyncThrowingStream<WhisperAction, Error>
-  func cancel() -> Void
+  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) -> AsyncThrowingStream<WhisperAction, Error>
+  func cancel()
 }
 
 // MARK: - WhisperContext
@@ -56,24 +55,24 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
     self.id = id
     var params = whisper_context_default_params()
     params.use_gpu = useGPU
-#if targetEnvironment(simulator)
-    params.use_gpu = false
-    print("Running on the simulator, using CPU")
-#endif
+    #if targetEnvironment(simulator)
+      params.use_gpu = false
+      print("Running on the simulator, using CPU")
+    #endif
     guard let context = whisper_init_from_file_with_params(modelPath, params) else {
-      log.error("Couldn't load model at \(modelPath)")
+      logs.error("Couldn't load model at \(modelPath)")
       throw WhisperError.cantLoadModel
     }
     self.context = context
-    WhisperContext.addReference(self)
+    Self.addReference(self)
   }
 
   deinit {
-    WhisperContext.removeReference(self)
+    Self.removeReference(self)
     whisper_free(context)
   }
 
-  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) throws -> AsyncThrowingStream<WhisperAction, Error> {
+  func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) -> AsyncThrowingStream<WhisperAction, Error> {
     var fullParams = toWhisperParams(params)
     let idPointer = id.toPointer()
     fullParams.new_segment_callback_user_data = idPointer
@@ -82,7 +81,7 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
 
     fullParams.new_segment_callback = { (ctx: OpaquePointer?, _: OpaquePointer?, newSegmentsCount: Int32, userData: UnsafeMutableRawPointer?) in
       guard let container = WhisperContext.getContainerFromIDPointer(userData) else {
-        log.error("Can't get container from ID pointer")
+        logs.error("Can't get container from ID pointer")
         return
       }
 
@@ -96,7 +95,7 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
     }
     fullParams.progress_callback = { (_: OpaquePointer?, _: OpaquePointer?, progress: Int32, userData: UnsafeMutableRawPointer?) in
       guard let container = WhisperContext.getContainerFromIDPointer(userData) else {
-        log.error("Can't get container from ID pointer")
+        logs.error("Can't get container from ID pointer")
         return
       }
 
@@ -104,7 +103,7 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
     }
     fullParams.encoder_begin_callback = { (_: OpaquePointer?, _: OpaquePointer?, userData: UnsafeMutableRawPointer?) in
       guard let container = WhisperContext.getContainerFromIDPointer(userData) else {
-        log.error("Can't get container from ID pointer")
+        logs.error("Can't get container from ID pointer")
         return true
       }
 
@@ -120,23 +119,23 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
         let samples = try decodeWaveFile(audioFileURL)
 
         let freeMemory = freeMemoryAmount()
-        log.info("Free system memory available: \(freeMemory) bytes")
+        logs.info("Free system memory available: \(freeMemory) bytes")
 
         // Calculate the size of samples in bytes
         let sampleSize = UInt64(MemoryLayout<Float>.size * samples.count)
-        log.info("Size of samples: \(sampleSize) bytes")
+        logs.info("Size of samples: \(sampleSize) bytes")
 
         // Calculate the memory that can be used for processing
         let usableMemory = freeMemory > sampleSize ? freeMemory - sampleSize : 0
-        log.info("Usable memory for processing: \(usableMemory) bytes")
+        logs.info("Usable memory for processing: \(usableMemory) bytes")
 
         // Calculate the number of threads based on usable memory and sample size
         let numberOfThreads = usableMemory > 0 ? Int32(usableMemory / sampleSize) + 1 : 1
-        log.info("Calculated number of threads: \(numberOfThreads)")
+        logs.info("Calculated number of threads: \(numberOfThreads)")
 
         // Update parameters with the calculated number of threads if it is less than the current number of threads
         if numberOfThreads < fullParams.n_threads {
-          log.info("Adjusting number of threads from \(fullParams.n_threads) to \(numberOfThreads)")
+          logs.info("Adjusting number of threads from \(fullParams.n_threads) to \(numberOfThreads)")
           fullParams.n_threads = numberOfThreads
         }
 
@@ -144,7 +143,7 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
           whisper_full(context, fullParams, samples.baseAddress, Int32(samples.count))
         }
 
-        log.info("Whisper result code: \(code)")
+        logs.info("Whisper result code: \(code)")
 
         if isCancelled {
           doneCancelling()
@@ -171,7 +170,7 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
   }
 
   func cancel() {
-    WhisperContext.references.value[id: id]?.isCancelled = true
+    Self.references.value[id: id]?.isCancelled = true
   }
 
   // MARK: - Private

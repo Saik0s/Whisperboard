@@ -83,7 +83,7 @@ extension View {
 // MARK: - IconButtonStyle
 
 struct IconButtonStyle: ButtonStyle {
-  var isPrimary: Bool = true
+  var isPrimary = true
   @State var feedbackGenerator = UISelectionFeedbackGenerator()
 
   func makeBody(configuration: Self.Configuration) -> some View {
@@ -108,21 +108,6 @@ extension View {
 
   func secondaryIconButtonStyle() -> some View {
     buttonStyle(IconButtonStyle(isPrimary: false))
-  }
-}
-
-// MARK: - CardButtonStyle
-
-struct CardButtonStyle: ButtonStyle {
-  func makeBody(configuration: Self.Configuration) -> some View {
-    configuration.label
-    // .scaleEffect(configuration.isPressed ? 0.95 : 1)
-  }
-}
-
-extension View {
-  func cardButtonStyle() -> some View {
-    buttonStyle(CardButtonStyle())
   }
 }
 

@@ -12,38 +12,43 @@ extension DownloadState {
   var progress: Double {
     switch self {
     case let .inProgress(progress):
-      return progress
+      progress
+
     case .success:
-      return 1
+      1
+
     case .failure:
-      return 0
+      0
     }
   }
 
   var isDownloading: Bool {
     switch self {
     case .inProgress:
-      return true
+      true
+
     case .failure, .success:
-      return false
+      false
     }
   }
 
   var error: Error? {
     switch self {
     case .inProgress, .success:
-      return nil
+      nil
+
     case let .failure(error):
-      return error
+      error
     }
   }
 
   var isDownloaded: Bool {
     switch self {
     case .success:
-      return true
+      true
+
     case .failure, .inProgress:
-      return false
+      false
     }
   }
 }

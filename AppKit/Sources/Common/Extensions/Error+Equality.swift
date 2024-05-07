@@ -11,7 +11,7 @@ struct EquatableError: Error, Equatable, Hashable {
     _message = String(describing: base)
   }
 
-  static func == (lhs: EquatableError, rhs: EquatableError) -> Bool {
+  static func == (lhs: Self, rhs: Self) -> Bool {
     lhs._message == rhs._message
   }
 

@@ -34,15 +34,15 @@
 
     let onWillDisappear: () -> Void
 
-    func makeCoordinator() -> WillDisappearHandler.Coordinator {
+    func makeCoordinator() -> Self.Coordinator {
       Coordinator(onWillDisappear: onWillDisappear)
     }
 
-    func makeUIViewController(context: UIViewControllerRepresentableContext<WillDisappearHandler>) -> UIViewController {
+    func makeUIViewController(context: UIViewControllerRepresentableContext<Self>) -> UIViewController {
       context.coordinator
     }
 
-    func updateUIViewController(_: UIViewController, context _: UIViewControllerRepresentableContext<WillDisappearHandler>) {}
+    func updateUIViewController(_: UIViewController, context _: UIViewControllerRepresentableContext<Self>) {}
   }
 
   // MARK: - WillDisappearModifier

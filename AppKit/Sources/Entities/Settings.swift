@@ -3,14 +3,14 @@ import Foundation
 // MARK: - Settings
 
 struct Settings: Hashable, Then {
-  var isRemoteTranscriptionEnabled: Bool = false
-  var useMockedClients: Bool = false
+  var isRemoteTranscriptionEnabled = false
+  var useMockedClients = false
   var selectedModel: VoiceModelType = .default
   var parameters = TranscriptionParameters()
-  var isICloudSyncEnabled: Bool = false
-  var shouldMixWithOtherAudio: Bool = false
-  var isAutoTranscriptionEnabled: Bool = false
-  var isUsingGPU: Bool = false
+  var isICloudSyncEnabled = false
+  var shouldMixWithOtherAudio = false
+  var isAutoTranscriptionEnabled = false
+  var isUsingGPU = false
 
   var voiceLanguage: VoiceLanguage {
     get { parameters.language }

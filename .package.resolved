@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/CocoaLumberjack/CocoaLumberjack.git",
       "state" : {
-        "revision" : "363ed23d19a931809ea834a7d722da830353806a",
-        "version" : "3.8.2"
+        "revision" : "4b8714a7fb84d42393314ce897127b3939885ec3",
+        "version" : "3.8.5"
       }
     },
     {
@@ -15,17 +15,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/rollbar/rollbar-apple",
       "state" : {
-        "revision" : "c2b6a51b90694953734882146e0d566bbca25c09",
-        "version" : "3.2.0"
+        "revision" : "2dce6849ca1ecb2154578eed87c48709edd502ff",
+        "version" : "3.3.0"
       }
     },
     {
       "identity" : "swift-log",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-log.git",
+      "location" : "https://github.com/apple/swift-log",
       "state" : {
-        "revision" : "532d8b529501fb73a2455b179e0bbb6d49b652ed",
-        "version" : "1.5.3"
+        "revision" : "e97a6fcb1ab07462881ac165fdbb37f067e205d5",
+        "version" : "1.5.4"
       }
     },
     {
@@ -34,7 +34,7 @@
       "location" : "https://github.com/ggerganov/whisper.cpp.git",
       "state" : {
         "branch" : "master",
-        "revision" : "37a709f6558c6d9783199e2b8cbb136e1c41d346"
+        "revision" : "8fac6455ffeb0a0950a84e790ddb74f7290d33c4"
       }
     }
   ],

@@ -18,9 +18,9 @@ extension Optional {
   var describing: String {
     switch self {
     case let .some(value):
-      return "\(value)"
+      "\(value)"
     case .none:
-      return "nil"
+      "nil"
     }
   }
 
@@ -41,10 +41,10 @@ extension Optional {
   var isSome: Bool {
     switch self {
     case .none:
-      return false
+      false
 
     case .some:
-      return true
+      true
     }
   }
 
@@ -54,7 +54,7 @@ extension Optional {
       preconditionFailure("nil unwrap")
 
     case let .some(unwrapped):
-      return unwrapped
+      unwrapped
     }
   }
 }

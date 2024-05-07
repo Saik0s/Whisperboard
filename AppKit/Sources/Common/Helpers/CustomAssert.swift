@@ -9,7 +9,7 @@ func customAssert(_ condition: @autoclosure () -> Bool,
     return
   }
 
-  log.error("assertion failed in \(file):\(line) \(message())")
+  logs.error("assertion failed in \(file):\(line) \(message())")
 
   if useDebugBreakpoint {
     #if DEBUG

@@ -8,7 +8,7 @@ struct VoiceModel: Equatable, Identifiable, Then {
   var modelType: VoiceModelType
   var downloadProgress: Double = 0
   var isDownloaded: Bool { downloadProgress >= 1 }
-  var isDownloading: Bool = false
+  var isDownloading = false
   var isQuantizedModel: Bool { modelType.isQuantizedModel }
 }
 
@@ -39,27 +39,27 @@ enum VoiceModelType: CaseIterable, Codable, Equatable {
 
   var fileName: String {
     switch self {
-    case .tinyEN: return "ggml-tiny.en.bin"
-    case .tiny: return "ggml-tiny.bin"
-    case .baseEN: return "ggml-base.en.bin"
-    case .base: return "ggml-base.bin"
-    case .smallEN: return "ggml-small.en.bin"
-    case .small: return "ggml-small.bin"
-    case .mediumEN: return "ggml-medium.en.bin"
-    case .medium: return "ggml-medium.bin"
-    case .largeV1: return "ggml-large-v1.bin"
-    case .largeV2: return "ggml-large-v2.bin"
-    case .largeV3: return "ggml-large-v3.bin"
-    case .tinyQuantized: return "ggml-tiny-q5_1.bin"
-    case .tinyENQuantized: return "ggml-tiny.en-q5_1.bin"
-    case .baseQuantized: return "ggml-base-q5_1.bin"
-    case .baseENQuantized: return "ggml-base.en-q5_1.bin"
-    case .smallQuantized: return "ggml-small-q5_1.bin"
-    case .smallENQuantized: return "ggml-small.en-q5_1.bin"
-    case .mediumQuantized: return "ggml-medium-q5_0.bin"
-    case .mediumENQuantized: return "ggml-medium.en-q5_0.bin"
-    case .largeV2Quantized: return "ggml-large-v2-q5_0.bin"
-    case .largeV3Quantized: return "ggml-large-v3-q5_0.bin"
+    case .tinyEN: "ggml-tiny.en.bin"
+    case .tiny: "ggml-tiny.bin"
+    case .baseEN: "ggml-base.en.bin"
+    case .base: "ggml-base.bin"
+    case .smallEN: "ggml-small.en.bin"
+    case .small: "ggml-small.bin"
+    case .mediumEN: "ggml-medium.en.bin"
+    case .medium: "ggml-medium.bin"
+    case .largeV1: "ggml-large-v1.bin"
+    case .largeV2: "ggml-large-v2.bin"
+    case .largeV3: "ggml-large-v3.bin"
+    case .tinyQuantized: "ggml-tiny-q5_1.bin"
+    case .tinyENQuantized: "ggml-tiny.en-q5_1.bin"
+    case .baseQuantized: "ggml-base-q5_1.bin"
+    case .baseENQuantized: "ggml-base.en-q5_1.bin"
+    case .smallQuantized: "ggml-small-q5_1.bin"
+    case .smallENQuantized: "ggml-small.en-q5_1.bin"
+    case .mediumQuantized: "ggml-medium-q5_0.bin"
+    case .mediumENQuantized: "ggml-medium.en-q5_0.bin"
+    case .largeV2Quantized: "ggml-large-v2-q5_0.bin"
+    case .largeV3Quantized: "ggml-large-v3-q5_0.bin"
     }
   }
 
@@ -67,122 +67,123 @@ enum VoiceModelType: CaseIterable, Codable, Equatable {
     switch self {
     case .baseENQuantized, .baseQuantized, .largeV2Quantized, .largeV3Quantized, .mediumENQuantized, .mediumQuantized,
          .smallENQuantized, .smallQuantized, .tinyENQuantized, .tinyQuantized:
-      return true
+      true
+
     default:
-      return false
+      false
     }
   }
 
   var readableName: String {
     switch self {
-    case .tinyEN: return "Tiny (English)"
-    case .tiny: return "Tiny"
-    case .baseEN: return "Base (English)"
-    case .base: return "Base"
-    case .smallEN: return "Small (English)"
-    case .small: return "Small"
-    case .mediumEN: return "Medium (English)"
-    case .medium: return "Medium"
-    case .largeV1: return "Large V1"
-    case .largeV2: return "Large V2"
-    case .largeV3: return "Large V3"
+    case .tinyEN: "Tiny (English)"
+    case .tiny: "Tiny"
+    case .baseEN: "Base (English)"
+    case .base: "Base"
+    case .smallEN: "Small (English)"
+    case .small: "Small"
+    case .mediumEN: "Medium (English)"
+    case .medium: "Medium"
+    case .largeV1: "Large V1"
+    case .largeV2: "Large V2"
+    case .largeV3: "Large V3"
     case .baseENQuantized:
-      return "Base (English) Quantized"
+      "Base (English) Quantized"
     case .baseQuantized:
-      return "Base Quantized"
+      "Base Quantized"
     case .largeV2Quantized:
-      return "Large V2 Quantized"
+      "Large V2 Quantized"
     case .largeV3Quantized:
-      return "Large V3 Quantized"
+      "Large V3 Quantized"
     case .mediumENQuantized:
-      return "Medium (English) Quantized"
+      "Medium (English) Quantized"
     case .mediumQuantized:
-      return "Medium Quantized"
+      "Medium Quantized"
     case .smallENQuantized:
-      return "Small (English) Quantized"
+      "Small (English) Quantized"
     case .smallQuantized:
-      return "Small Quantized"
+      "Small Quantized"
     case .tinyENQuantized:
-      return "Tiny (English) Quantized"
+      "Tiny (English) Quantized"
     case .tinyQuantized:
-      return "Tiny Quantized"
+      "Tiny Quantized"
     }
   }
 
   var modelDescription: String {
     switch self {
-    case .tinyEN: return "The English-specific version of the tiny model."
-    case .tiny: return "A fast, compact model with decent accuracy."
-    case .baseEN: return "The English-specific version of the base model."
-    case .base: return "A larger model that provides better accuracy at the cost of some speed."
-    case .smallEN: return "The English-specific version of the small model."
-    case .small: return "A well-balanced model, offering a good compromise between size and accuracy."
-    case .mediumEN: return "The English-specific version of the medium model."
-    case .medium: return "A more powerful model with even better accuracy."
-    case .largeV1: return "Version 1 of the large model, with great accuracy and detail."
-    case .largeV2: return "Version 2 of the large model, improved and optimized."
-    case .largeV3: return "Version 3 of the large model, the latest and most advanced."
+    case .tinyEN: "The English-specific version of the tiny model."
+    case .tiny: "A fast, compact model with decent accuracy."
+    case .baseEN: "The English-specific version of the base model."
+    case .base: "A larger model that provides better accuracy at the cost of some speed."
+    case .smallEN: "The English-specific version of the small model."
+    case .small: "A well-balanced model, offering a good compromise between size and accuracy."
+    case .mediumEN: "The English-specific version of the medium model."
+    case .medium: "A more powerful model with even better accuracy."
+    case .largeV1: "Version 1 of the large model, with great accuracy and detail."
+    case .largeV2: "Version 2 of the large model, improved and optimized."
+    case .largeV3: "Version 3 of the large model, the latest and most advanced."
     case .baseENQuantized, .baseQuantized, .largeV2Quantized, .largeV3Quantized, .mediumENQuantized, .mediumQuantized,
          .smallENQuantized, .smallQuantized, .tinyENQuantized, .tinyQuantized:
-      return "This is a quantized model that is smaller in size and requires less memory, but is still fast and accurate."
+      "This is a quantized model that is smaller in size and requires less memory, but is still fast and accurate."
     }
   }
 
   var sizeLabel: String {
     switch self {
-    case .tiny: return "78 MB"
-    case .tinyEN: return "78 MB"
-    case .tinyENQuantized, .tinyQuantized: return "32 MB"
-    case .base: return "148 MB"
-    case .baseEN: return "148 MB"
-    case .baseENQuantized, .baseQuantized: return "60 MB"
-    case .small: return "488 MB"
-    case .smallEN: return "488 MB"
-    case .smallENQuantized, .smallQuantized: return "190 MB"
-    case .medium: return "1.5 GB"
-    case .mediumEN: return "1.5 GB"
-    case .mediumENQuantized, .mediumQuantized: return "539 MB"
-    case .largeV1: return "3.1 GB"
-    case .largeV2: return "3.1 GB"
-    case .largeV2Quantized: return "1.1 GB"
-    case .largeV3: return "3.1 GB"
-    case .largeV3Quantized: return "1.1 GB"
+    case .tiny: "78 MB"
+    case .tinyEN: "78 MB"
+    case .tinyENQuantized, .tinyQuantized: "32 MB"
+    case .base: "148 MB"
+    case .baseEN: "148 MB"
+    case .baseENQuantized, .baseQuantized: "60 MB"
+    case .small: "488 MB"
+    case .smallEN: "488 MB"
+    case .smallENQuantized, .smallQuantized: "190 MB"
+    case .medium: "1.5 GB"
+    case .mediumEN: "1.5 GB"
+    case .mediumENQuantized, .mediumQuantized: "539 MB"
+    case .largeV1: "3.1 GB"
+    case .largeV2: "3.1 GB"
+    case .largeV2Quantized: "1.1 GB"
+    case .largeV3: "3.1 GB"
+    case .largeV3Quantized: "1.1 GB"
     }
   }
 
   var memoryRequired: UInt64 {
     switch self {
-    case .tiny: return 273 * 1024 * 1024
-    case .tinyEN: return 273 * 1024 * 1024
-    case .tinyENQuantized, .tinyQuantized: return 32 * 1024 * 1024
-    case .base: return 388 * 1024 * 1024
-    case .baseEN: return 388 * 1024 * 1024
-    case .baseENQuantized, .baseQuantized: return 60 * 1024 * 1024
-    case .small: return 852 * 1024 * 1024
-    case .smallEN: return 852 * 1024 * 1024
-    case .smallENQuantized, .smallQuantized: return 190 * 1024 * 1024
-    case .medium: return 2100 * 1024 * 1024
-    case .mediumEN: return 2100 * 1024 * 1024
-    case .mediumENQuantized, .mediumQuantized: return 539 * 1024 * 1024
-    case .largeV1: return 3900 * 1024 * 1024
-    case .largeV2: return 3900 * 1024 * 1024
-    case .largeV2Quantized: return 1100 * 1024 * 1024
-    case .largeV3: return 3900 * 1024 * 1024
-    case .largeV3Quantized: return 1100 * 1024 * 1024
+    case .tiny: 273 * 1024 * 1024
+    case .tinyEN: 273 * 1024 * 1024
+    case .tinyENQuantized, .tinyQuantized: 32 * 1024 * 1024
+    case .base: 388 * 1024 * 1024
+    case .baseEN: 388 * 1024 * 1024
+    case .baseENQuantized, .baseQuantized: 60 * 1024 * 1024
+    case .small: 852 * 1024 * 1024
+    case .smallEN: 852 * 1024 * 1024
+    case .smallENQuantized, .smallQuantized: 190 * 1024 * 1024
+    case .medium: 2100 * 1024 * 1024
+    case .mediumEN: 2100 * 1024 * 1024
+    case .mediumENQuantized, .mediumQuantized: 539 * 1024 * 1024
+    case .largeV1: 3900 * 1024 * 1024
+    case .largeV2: 3900 * 1024 * 1024
+    case .largeV2Quantized: 1100 * 1024 * 1024
+    case .largeV3: 3900 * 1024 * 1024
+    case .largeV3Quantized: 1100 * 1024 * 1024
     }
   }
 
   var remoteURL: URL {
-    VoiceModelType.srcURL.appending(path: fileName)
+    Self.srcURL.appending(path: fileName)
   }
 
   var localURL: URL {
     switch self {
     case .tiny:
-      return Files.AppKit.Resources.ggmlTinyBin.url
+      Files.AppKit.Resources.ggmlTinyBin.url
 
     default:
-      return VoiceModelType.localFolderURL.appending(path: fileName)
+      Self.localFolderURL.appending(path: fileName)
     }
   }
 
@@ -191,12 +192,10 @@ enum VoiceModelType: CaseIterable, Codable, Equatable {
   }
 
   static var localFolderURL: URL {
-    try! FileManager.default
-      .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-      .appending(path: "Models")
+    URL.documentsDirectory.appending(path: "Models")
   }
 
-  static var `default`: VoiceModelType { .tiny }
+  static var `default`: Self { .tiny }
 }
 
 #if DEBUG

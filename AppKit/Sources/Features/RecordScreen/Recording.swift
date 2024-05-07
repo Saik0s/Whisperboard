@@ -1,27 +1,23 @@
-
 import ComposableArchitecture
 import SwiftUI
 
 // MARK: - Recording
 
-struct Recording: ReducerProtocol {
+@Reducer
+struct Recording {
+  @ObservableState
   struct State: Equatable {
-    var date: Date
+    enum Mode {
+      case recording, encoding, paused, removing
+    }
 
-    var duration: TimeInterval = 0
-
+    var recordingInfo: RecordingInfo
     var mode: Mode = .recording
-
-    var url: URL
-
     var samples: [Float] = []
 
-    enum Mode {
-      case recording
-      case encoding
-      case paused
-      case removing
-    }
+    var url: URL { recordingInfo.fileURL }
+    var duration: TimeInterval { recordingInfo.duration }
+    var date: Date { recordingInfo.date }
   }
 
   enum Action: Equatable {
@@ -33,6 +29,7 @@ struct Recording: ReducerProtocol {
     case continueButtonTapped
     case deleteButtonTapped
     case recordingStateUpdated(RecordingState)
+    case recordingSamplesCollected(TimeInterval, [Float])
   }
 
   enum DelegateAction: Equatable {
@@ -44,17 +41,33 @@ struct Recording: ReducerProtocol {
 
   @Dependency(\.audioRecorder) var audioRecorder
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+  func reduce(into state: inout State, action: Action) -> Effect<Action> {
     switch action {
     case .task:
       state.mode = .recording
       UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
       return .run { [url = state.url, audioRecorder] send in
-        await audioRecorder.startRecording(url)
+        var sampleBatch: [Float] = []
+        var lastDuration: TimeInterval = 0
 
-        for await recState in await audioRecorder.recordingState() {
-          await send(.recordingStateUpdated(recState))
+        for await recState in await audioRecorder.startRecording(url) {
+          if case let .recording(duration, power) = recState {
+            let linear = 1 - pow(10, power / 20)
+            sampleBatch.append(contentsOf: [linear])
+            lastDuration = duration
+
+            if sampleBatch.count >= 12 {
+              await send(.recordingSamplesCollected(lastDuration, sampleBatch))
+              sampleBatch.removeAll()
+            }
+          } else {
+            if !sampleBatch.isEmpty {
+              await send(.recordingSamplesCollected(lastDuration, sampleBatch))
+              sampleBatch.removeAll()
+            }
+            await send(.recordingStateUpdated(recState))
+          }
         }
       }
 
@@ -62,7 +75,7 @@ struct Recording: ReducerProtocol {
       return .none
 
     case let .finalRecordingTime(duration):
-      state.duration = duration
+      state.recordingInfo.duration = duration
       return .none
 
     case .saveButtonTapped:
@@ -98,10 +111,12 @@ struct Recording: ReducerProtocol {
         await audioRecorder.removeCurrentRecording()
       }
 
-    case let .recordingStateUpdated(.recording(duration, power)):
-      state.duration = duration
-      let linear = 1 - pow(10, power / 20)
-      state.samples.append(contentsOf: [linear, linear, linear])
+    case .recordingStateUpdated(.recording):
+      return .none
+
+    case let .recordingSamplesCollected(duration, samples):
+      state.recordingInfo.duration = duration
+      state.samples.append(contentsOf: samples)
       return .none
 
     case .recordingStateUpdated(.paused):

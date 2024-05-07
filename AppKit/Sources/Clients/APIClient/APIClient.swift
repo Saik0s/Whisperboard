@@ -15,13 +15,13 @@ struct APIClient {
     var errorDescription: String? {
       switch self {
       case .uploadFailed:
-        return "Failed to upload recording"
+        "Failed to upload recording"
       case .resultFailed:
-        return "Failed to get transcription result"
+        "Failed to get transcription result"
       case .resultNotReady:
-        return "Transcription result is not ready yet"
+        "Transcription result is not ready yet"
       case let .resultErrorMessage(message):
-        return message
+        message
       }
     }
   }
@@ -98,9 +98,10 @@ extension APIClient: DependencyKey {
                 switch progress {
                 case let .uploading(progress):
                   continuation.yield(.uploading(progress: progress))
+
                 case let .done(response, data):
-                  log.verbose(response)
-                  log.verbose(String(data: data, encoding: .utf8) ?? "No data")
+                  logs.info("\(response)")
+                  logs.info("\(String(data: data, encoding: .utf8) ?? "No data")")
                   guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
                     continuation.finish(throwing: APIClientError.uploadFailed)
                     return
@@ -124,7 +125,7 @@ extension APIClient: DependencyKey {
         }
 
         #if DEBUG
-          log.verbose(request.cURL(pretty: true))
+          logs.info("\(request.cURL(pretty: true))")
         #endif
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -133,18 +134,21 @@ extension APIClient: DependencyKey {
           throw APIClientError.resultFailed
         }
 
-        log.verbose(httpResponse)
-        log.verbose(String(data: data, encoding: .utf8) ?? "No data")
+        logs.info("\(httpResponse)")
+        logs.info("\(String(data: data, encoding: .utf8) ?? "No data")")
 
         switch httpResponse.statusCode {
         case 200:
           let transcription = try JSONDecoder().decode(RemoteTranscription.self, from: data)
           return ResultResponse(transcription: transcription, isDone: true)
+
         case 202:
           return ResultResponse(transcription: nil, isDone: false)
+
         case 500:
           let message = String(data: data, encoding: .utf8) ?? "Unknown error"
           throw APIClientError.resultErrorMessage(message)
+
         default:
           throw APIClientError.resultFailed
         }

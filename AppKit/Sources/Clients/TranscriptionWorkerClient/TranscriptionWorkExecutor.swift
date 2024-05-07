@@ -3,6 +3,6 @@ import Foundation
 // MARK: - TranscriptionWorkExecutor
 
 protocol TranscriptionWorkExecutor {
-  func processTask(_ task: TranscriptionTask, updateTask: @escaping (TranscriptionTask) -> Void) async
-  func cancel(task: TranscriptionTask)
+  func process(task: TranscriptionTaskEnvelope) async
+  func cancelTask(id: TranscriptionTaskEnvelope.ID)
 }

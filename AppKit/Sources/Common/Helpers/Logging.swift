@@ -1,233 +1,206 @@
-import DependenciesAdditions
 import Foundation
+import Logging
 import os
 
-let log = LoggerWrapper.self
+let bundleID = Bundle.main.bundleIdentifier ?? "App"
+let osLogger = os.Logger(subsystem: bundleID, category: "General")
 
-// MARK: - LoggerWrapper
+// MARK: - Bootstrap Logger
 
-enum LoggerWrapper {
-  enum Destination {
-    case print
-    case custom(format: String, handler: (Message, String) -> Void)
+public let logs: Logging.Logger = {
+  let fileLogger: FileLogging? = logFileURL.flatMap { try? FileLogging(to: $0) }
+  LoggingSystem.bootstrap { _ in
+    UnifiedLogHandler(fileLogger: fileLogger, osLogger: osLogger)
   }
+  return Logging.Logger(label: bundleID)
+}()
 
-  enum Settings {
-    static var destinations: [Destination] = [.print]
+public let logFileURL: URL? = {
+  let logsDir: URL = .cachesDirectory.appendingPathComponent("logs")
 
-    /// C - colored area start
-    /// c - colored area end
-    /// d - date
-    /// t - time
-    /// L - level
-    /// F - file
-    /// l - line
-    /// f - function
-    /// m - message
-    static var osLogFormat: String = "%C%F:%l %m%c"
-    static var timeFormatter: DateFormatter = .withDateFormat("HH:mm:ss.SSS")
-    static var dateFormatter: DateFormatter = .withDateFormat("yyyy-MM-dd")
-    static var emojisInsteadOfColors: Bool = true
-  }
+  let options: ISO8601DateFormatter.Options = [.withDashSeparatorInDate, .withFullDate]
+  let dateString = ISO8601DateFormatter.string(from: Date(), timeZone: .current, formatOptions: options)
+  let fileName = "\(dateString).log"
+  let url: URL = logsDir.appendingPathComponent(fileName)
 
-  struct Message {
-    let value: Any
-    let level: Level
-    let function: StaticString
-    let file: StaticString
-    let line: UInt
-    let column: UInt
-    let date: Date
-    var fileName: String {
-      URL(fileURLWithPath: "\(file)").lastPathComponent
+  for url in (try? FileManager.default.contentsOfDirectory(at: logsDir, includingPropertiesForKeys: [])) ?? []
+    where url.lastPathComponent != fileName {
+    do {
+      try FileManager.default.removeItem(at: url)
+    } catch {
+      osLogger.error("Encountered error while removing old logs: \(error.localizedDescription)")
     }
   }
 
-  enum Level: String {
-    case verbose = "V"
-    case debug = "D"
-    case info = "I"
-    case warning = "W"
-    case error = "E"
+  return url
+}()
 
-    var color: Color {
-      switch self {
-      case .verbose:
-        return .blue
-      case .debug:
-        return .green
-      case .info:
-        return .cyan
-      case .warning:
-        return .yellow
-      case .error:
-        return .red
-      }
+// MARK: - ExtraLogHandler
+
+public enum ExtraLogHandler {
+  public static var isLoggingAllowed = true
+
+  public static var sessionLogs: [String] = []
+
+  public static var closure: ((
+    _ level: Logging.Logger.Level,
+    _ message: Logging.Logger.Message,
+    _ metadata: Logging.Logger.Metadata?,
+    _ source: String,
+    _ file: String,
+    _ function: String,
+    _ line: UInt
+  ) -> Void)?
+}
+
+// MARK: - UnifiedLogHandler
+
+class UnifiedLogHandler: LogHandler {
+  var logLevel: Logging.Logger.Level = .trace
+  var metadata = Logging.Logger.Metadata()
+  private var prettyMetadata: String?
+  private var fileLogger: FileLogging?
+  private let osLogger: os.Logger
+
+  init(fileLogger: FileLogging?, osLogger: os.Logger) {
+    self.fileLogger = fileLogger
+    self.osLogger = osLogger
+  }
+
+  subscript(metadataKey metadataKey: String) -> Logging.Logger.Metadata.Value? {
+    get {
+      metadata[metadataKey]
+    }
+    set {
+      metadata[metadataKey] = newValue
+      prettyMetadata = prettify(metadata)
     }
   }
 
-  enum Color: String {
-    case red = "\u{001B}[0;31m"
-    case green = "\u{001B}[0;32m"
-    case yellow = "\u{001B}[0;33m"
-    case blue = "\u{001B}[0;34m"
-    case magenta = "\u{001B}[0;35m"
-    case cyan = "\u{001B}[0;36m"
-    case white = "\u{001B}[0;37m"
-    case reset = "\u{001B}[0;0m"
-
-    var emoji: String {
-      switch self {
-      case .red:
-        return "❤️"
-      case .green:
-        return "💚"
-      case .yellow:
-        return "💛️"
-      case .blue:
-        return "💙️"
-      case .magenta:
-        return "💜"
-      case .cyan:
-        return "🐳️"
-      case .white:
-        return "🤍"
-      case .reset:
-        return ""
-      }
-    }
-
-    var value: String {
-      Settings.emojisInsteadOfColors ? emoji : rawValue
-    }
-  }
-
-  /// Creates message string from Message struct using format defined in Settings.format
-  static func format(_ message: Message, format: String) -> String {
-    format
-      // C - colored area start
-      .replacingOccurrences(of: "%C", with: message.level.color.value)
-      // c - colored area end
-      .replacingOccurrences(of: "%c", with: Color.reset.value)
-      // d - date
-      .replacingOccurrences(of: "%d", with: Settings.dateFormatter.string(from: message.date))
-      // t - time
-      .replacingOccurrences(of: "%t", with: Settings.timeFormatter.string(from: message.date))
-      // L - level
-      .replacingOccurrences(of: "%L", with: message.level.rawValue)
-      // F - file
-      .replacingOccurrences(of: "%F", with: message.fileName)
-      // l - line
-      .replacingOccurrences(of: "%l", with: "\(message.line)")
-      // f - function
-      .replacingOccurrences(of: "%f", with: "\(message.function)")
-      // m - message
-      .replacingOccurrences(of: "%m", with: "\(message.value)")
-  }
-
-  static func print(
-    level: Level,
-    _ message: @autoclosure () -> Any,
-    _ function: StaticString = #function,
-    _ file: StaticString = #file,
-    _ line: UInt = #line,
-    _ column: UInt = #column,
-    _ date: Date = Date()
+  func log(
+    level: Logging.Logger.Level,
+    message: Logging.Logger.Message,
+    metadata: Logging.Logger.Metadata?,
+    source: String,
+    file: String,
+    function: String,
+    line: UInt
   ) {
-    let message = Message(
-      value: message(),
-      level: level,
-      function: function,
-      file: file,
-      line: line,
-      column: column,
-      date: date
-    )
-    for destination in Settings.destinations {
-      switch destination {
-      case .print:
-        let formatted = LoggerWrapper.format(message, format: Settings.osLogFormat)
-        switch message.level {
-        case .error:
-          osLogger.error("\(formatted)")
-        case .warning:
-          osLogger.warning("\(formatted)")
-        case .info:
-          osLogger.info("\(formatted)")
-        case .debug:
-          osLogger.debug("\(formatted)")
-        case .verbose:
-          osLogger.log("\(formatted)")
-        }
-      case let .custom(format, handler):
-        let formatted = LoggerWrapper.format(message, format: format)
-        handler(message, formatted)
-      }
-    }
+    guard ExtraLogHandler.isLoggingAllowed else { return }
+
+    let combinedMetadata = metadata.map { self.metadata.merging($0, uniquingKeysWith: { _, new in new }) } ?? self.metadata
+    let formattedMessage = formatMessage(level: level, message: message, metadata: combinedMetadata, file: file, line: line)
+
+    ExtraLogHandler.sessionLogs.append(formattedMessage)
+
+    // Log to file if available
+    fileLogger?.stream.write(formattedMessage)
+
+    // Log to os.Logger
+    osLogger.log(level: OSLogType.from(loggerLevel: level), "\(formattedMessage)")
+
+    // Additional custom logging
+    ExtraLogHandler.closure?(level, message, metadata, source, file, function, line)
   }
 
-  private static var osLogger: os.Logger {
-    @Dependency(\.logger) var logger: os.Logger
-    return logger
+  private func formatMessage(
+    level: Logging.Logger.Level,
+    message: Logging.Logger.Message,
+    metadata: Logging.Logger.Metadata,
+    file: String,
+    line: UInt
+  ) -> String {
+    let metaString = prettify(metadata) ?? ""
+    return "\(timestamp()) \(level) [\(file):\(line)] \(metaString) \(message)"
+  }
+
+  private func prettify(_ metadata: Logging.Logger.Metadata) -> String? {
+    if metadata.isEmpty {
+      return nil
+    }
+    return metadata.map { "\($0.key)=\($0.value)" }.joined(separator: " ")
+  }
+
+  private func timestamp() -> String {
+    let options: ISO8601DateFormatter.Options = [.withColonSeparatorInTime, .withFullTime, .withFractionalSeconds]
+    return ISO8601DateFormatter.string(from: Date(), timeZone: .current, formatOptions: options)
   }
 }
 
-extension LoggerWrapper {
-  static func verbose(
-    _ items: Any...,
-    function: StaticString = #function,
-    file: StaticString = #file,
-    line: UInt = #line,
-    column: UInt = #column
-  ) {
-    LoggerWrapper.print(level: .verbose, message(from: items), function, file, line, column)
+// MARK: - FileHandlerOutputStream
+
+/// Adapted from https://nshipster.com/textoutputstream/
+struct FileHandlerOutputStream: TextOutputStream {
+  enum FileHandlerOutputStream: Error {
+    case couldNotCreateFile
   }
 
-  static func debug(
-    _ items: Any...,
-    function: StaticString = #function,
-    file: StaticString = #file,
-    line: UInt = #line,
-    column: UInt = #column
-  ) {
-    LoggerWrapper.print(level: .debug, message(from: items), function, file, line, column)
-  }
+  private let fileHandle: FileHandle
+  let encoding: String.Encoding
 
-  static func info(
-    _ items: Any...,
-    function: StaticString = #function,
-    file: StaticString = #file,
-    line: UInt = #line,
-    column: UInt = #column
-  ) {
-    LoggerWrapper.print(level: .info, message(from: items), function, file, line, column)
-  }
-
-  static func warning(
-    _ items: Any...,
-    function: StaticString = #function,
-    file: StaticString = #file,
-    line: UInt = #line,
-    column: UInt = #column
-  ) {
-    LoggerWrapper.print(level: .warning, message(from: items), function, file, line, column)
-  }
-
-  static func error(
-    _ items: Any...,
-    function: StaticString = #function,
-    file: StaticString = #file,
-    line: UInt = #line,
-    column: UInt = #column
-  ) {
-    LoggerWrapper.print(level: .error, message(from: items), function, file, line, column)
-  }
-
-  private static func message(from items: [Any]) -> Any {
-    guard items.count > 1 else {
-      return items.first ?? items
+  init(localFile url: URL, encoding: String.Encoding = .utf8) throws {
+    if !FileManager.default.fileExists(atPath: url.path) {
+      guard FileManager.default.createFile(atPath: url.path, contents: nil, attributes: nil) else {
+        throw NSError(
+          domain: "FileHandlerOutputStream",
+          code: 1,
+          userInfo: [NSLocalizedDescriptionKey: "Could not create file at \(url.path)"]
+        )
+      }
     }
 
-    return items.map { "\($0)" }.joined(separator: " ")
+    let fileHandle = try FileHandle(forWritingTo: url)
+    fileHandle.seekToEndOfFile()
+    self.fileHandle = fileHandle
+    self.encoding = encoding
+  }
+
+  mutating func write(_ string: String) {
+    if let data = string.data(using: encoding) {
+      fileHandle.write(data)
+    }
+  }
+}
+
+// MARK: - FileLogging
+
+struct FileLogging {
+  var stream: TextOutputStream
+  private var localFile: URL
+
+  init(to localFile: URL) throws {
+    stream = try FileHandlerOutputStream(localFile: localFile)
+    self.localFile = localFile
+  }
+}
+
+extension OSLogType {
+  static func from(loggerLevel: Logging.Logger.Level) -> Self {
+    switch loggerLevel {
+    case .trace:
+      // `OSLog` doesn't have `trace`, so use `debug`
+      .debug
+
+    case .debug:
+      .debug
+
+    case .info:
+      .info
+
+    case .notice:
+      // https://developer.apple.com/documentation/os/logging/generating_log_messages_from_your_code
+      // According to the documentation, `default` is `notice`.
+      .default
+
+    case .warning:
+      // `OSLog` doesn't have `warning`, so use `info`
+      .info
+
+    case .error:
+      .error
+
+    case .critical:
+      .fault
+    }
   }
 }

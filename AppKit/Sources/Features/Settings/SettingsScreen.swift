@@ -1,4 +1,3 @@
-
 import ComposableArchitecture
 import Inject
 import Popovers
@@ -7,10 +6,12 @@ import SwiftUIIntrospect
 
 // MARK: - SettingsScreen
 
-struct SettingsScreen: ReducerProtocol {
+@Reducer
+struct SettingsScreen {
+  @ObservableState
   struct State: Equatable {
-    @BindingState var settings: Settings = .init()
-    var modelSelector = ModelSelector.State()
+    @Shared var settings: Settings
+    var modelSelector: ModelSelector.State
     var subscriptionSection: SubscriptionSection.State = .init()
 
     var availableLanguages: IdentifiedArrayOf<VoiceLanguage> = []
@@ -19,13 +20,26 @@ struct SettingsScreen: ReducerProtocol {
     var freeSpace: String = ""
     var takenSpace: String = ""
     var takenSpacePercentage: Double = 0
-    var isSubscribed: Bool = false
+    var isSubscribed = false
 
-    @BindingState var isICloudSyncInProgress = false
-    @BindingState var isDebugLogPresented = false
-    @BindingState var isModelSelectorPresented = false
+    var isICloudSyncInProgress = false
+    var isDebugLogPresented = false
+    var isModelSelectorPresented = false
 
-    @PresentationState var alert: AlertState<Action.Alert>?
+    @Presents var alert: AlertState<Action.Alert>?
+
+    var selectedModelReadableName: String { modelSelector.selectedModel.readableName }
+
+    var selectedLanguageIndex: Int {
+      get { availableLanguages.firstIndex(of: settings.voiceLanguage) ?? 0 }
+      set { settings.voiceLanguage = availableLanguages[newValue] }
+    }
+
+    init() {
+      let settings = Shared(wrappedValue: Settings(), .settings)
+      _settings = settings
+      modelSelector = ModelSelector.State(selectedModel: settings.selectedModel)
+    }
   }
 
   enum Action: BindableAction, Equatable {
@@ -52,39 +66,13 @@ struct SettingsScreen: ReducerProtocol {
   }
 
   @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
-  @Dependency(\.settings) var settingsClient: SettingsClient
   @Dependency(\.openURL) var openURL: OpenURLEffect
   @Dependency(\.build) var build: BuildClient
-  @Dependency(\.storage) var storage: StorageClient
+  @Dependency(StorageClient.self) var storage: StorageClient
   @Dependency(\.subscriptionClient) var subscriptionClient: SubscriptionClient
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     BindingReducer()
-      .onChange(of: \.settings.isICloudSyncEnabled) { oldValue, newValue in
-        Reduce<State, Action> { _, _ in
-          if oldValue != newValue, newValue {
-            return .run { send in
-              if settingsClient.getSettings().isICloudSyncEnabled != newValue {
-                await send(.set(\.$isICloudSyncInProgress, true))
-                try await storage.uploadRecordingsToICloud(true)
-                await send(.set(\.$isICloudSyncInProgress, false))
-              }
-              try await settingsClient.updateSettings(settingsClient.getSettings().with(\.isICloudSyncEnabled, setTo: newValue))
-            } catch: { error, send in
-              await send(.set(\.$isICloudSyncInProgress, false))
-              await send(.set(\.$settings, settingsClient.getSettings()))
-              await send(.showError(error.equatable))
-            }
-          } else {
-            return .none
-          }
-        }
-      }
-      .onChange(of: \.settings.selectedModel) { _, _ in
-        Reduce<State, Action> { _, _ in
-          .send(.modelSelector(.reloadSelectedModel))
-        }
-      }
 
     Scope(state: \.subscriptionSection, action: /Action.subscriptionSection) {
       SubscriptionSection()
@@ -97,12 +85,7 @@ struct SettingsScreen: ReducerProtocol {
     Reduce<State, Action> { state, action in
       switch action {
       case .binding:
-        return .run { [settings = state.settings] _ in
-          try await settingsClient.updateSettings(settings)
-        } catch: { error, send in
-          await send(.set(\.$settings, settingsClient.getSettings()))
-          await send(.showError(error.equatable))
-        }
+        return .none
 
       case .modelSelector:
         return .none
@@ -113,12 +96,6 @@ struct SettingsScreen: ReducerProtocol {
       case .task:
         updateInfo(state: &state)
         return .run { send in
-          for try await settings in settingsClient.settingsPublisher().values {
-            await send(.set(\.$settings, settings))
-          }
-        } catch: { error, send in
-          await send(.showError(error.equatable))
-        }.merge(with: .run { send in
           do {
             let isSubscribed = try await subscriptionClient.checkIfSubscribed()
             await send(.updateIsSubscribed(isSubscribed))
@@ -128,12 +105,12 @@ struct SettingsScreen: ReducerProtocol {
           for await isSubscribed in subscriptionClient.isSubscribedStream() {
             await send(.updateIsSubscribed(isSubscribed))
           }
-        })
+        }
 
       case .updateInfo:
         updateInfo(state: &state)
-        state.modelSelector = .init()
-        return .send(.modelSelector(.reloadSelectedModel))
+        state.modelSelector.modelRows = []
+        return .send(.modelSelector(.reloadModels))
 
       case .openGitHub:
         return .run { _ in
@@ -150,9 +127,9 @@ struct SettingsScreen: ReducerProtocol {
         return .none
 
       case .alert(.presented(.deleteDialogConfirmed)):
+        state.settings.selectedModel = .default
         return .run { send in
           try await storage.deleteStorage()
-          try await settingsClient.setValue(.default, forKey: \.selectedModel)
           await send(.updateInfo)
         } catch: { error, send in
           await send(.showError(error.equatable))
