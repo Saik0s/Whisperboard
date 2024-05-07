@@ -1,5 +1,5 @@
 {
-  "originHash" : "e33ec28760a46c75c3dc4da1dc66d6b060635dd1ad7a4c1dc9ba4f4d9176a59c",
+  "originHash" : "5e81f8c93dc719a0d709949f4df6b9f77be4bde63e1bf6595acd0258b6013d6b",
   "pins" : [
     {
       "identity" : "audiokit",
@@ -213,8 +213,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-syntax",
       "state" : {
-        "revision" : "fa8f95c2d536d6620cc2f504ebe8a6167c9fc2dd",
-        "version" : "510.0.1"
+        "revision" : "303e5c5c36d6a558407d364878df131c3546fad8",
+        "version" : "510.0.2"
       }
     },
     {
@@ -231,8 +231,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/siteline/SwiftUI-Introspect.git",
       "state" : {
-        "revision" : "0cd2a5a5895306bc21d54a2254302d24a9a571e4",
-        "version" : "1.1.3"
+        "revision" : "7dc5b287f8040e4ad5038739850b758e78f77808",
+        "version" : "1.1.4"
       }
     },
     {

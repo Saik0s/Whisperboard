@@ -1,7 +1,3 @@
-// final class CombinedTranscriptionWorkExecutor: TranscriptionWorkExecutor {
-//   private lazy var localWorkExecutor = LocalTranscriptionWorkExecutor()
-//   private lazy var remoteWorkExecutor = RemoteTranscriptionWorkExecutor()
-
 //   init() {}
 
 //   func process(task: TranscriptionTaskEnvelope) async {

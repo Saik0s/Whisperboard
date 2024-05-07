@@ -49,7 +49,7 @@ let package = Package(
     .package(url: "https://github.com/dmrschmidt/DSWaveformImage.git", from: "13.0.2"),
     .package(url: "https://github.com/gohanlon/swift-memberwise-init-macro", from: "0.4.0"),
     .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "3.0.0"),
-    .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "1.10.1"),
+    .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "1.10.2"),
     .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.10.0"),
     .package(url: "https://github.com/pointfreeco/swift-tagged.git", from: "0.10.0"),
     .package(url: "https://github.com/siteline/SwiftUI-Introspect.git", from: "1.0.0"),
