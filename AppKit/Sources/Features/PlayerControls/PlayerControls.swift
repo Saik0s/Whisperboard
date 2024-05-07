@@ -35,7 +35,7 @@ struct PlayerControls {
 
     var currentTimeString: String {
       let currentTime = progress.map { $0 * recording.duration } ?? recording.duration
-      return dateComponentsFormatter.string(from: currentTime) ?? ""
+      return dateComponentsFormatter.string(from: currentTime.isNaN ? 0 : currentTime) ?? ""
     }
 
     init(recording: Shared<RecordingInfo>) {
@@ -169,7 +169,7 @@ struct PlayerControlsView: View {
       VStack(spacing: .grid(2)) {
         HStack(spacing: .grid(2)) {
           PlayButton(isPlaying: store.isPlaying) {
-            send(.playButtonTapped, animation: .easeIn(duration: 0.3))
+            send(.playButtonTapped)
           }
 
           VStack(alignment: .leading, spacing: .grid(1)) {

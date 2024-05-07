@@ -18,7 +18,7 @@ enum StorageError: Error {
 
 @DependencyClient
 struct StorageClient {
-  var sync: @Sendable (_ recordings: Shared<[RecordingInfo]>) -> Void
+  var sync: @Sendable (_ recordings: [RecordingInfo]) async throws -> [RecordingInfo]
   var freeSpace: @Sendable () -> UInt64 = { 0 }
   var totalSpace: @Sendable () -> UInt64 = { 0 }
   var takenSpace: @Sendable () -> UInt64 = { 0 }
@@ -33,7 +33,7 @@ extension StorageClient: DependencyKey {
     let storage = Storage()
 
     return StorageClient(
-      sync: { storage.sync(recordings: $0) },
+      sync: { try await storage.sync(recordings: $0) },
       freeSpace: { freeDiskSpaceInBytes() },
       totalSpace: { totalDiskSpaceInBytes() },
       takenSpace: { takenSpace() },
@@ -126,11 +126,10 @@ extension StorageClient: DependencyKey {
     for item in contents where item.pathExtension == "wav" {
       try FileManager.default.removeItem(at: item)
     }
-    await MainActor.run {
-      @Shared(.recordings) var recordings: [RecordingInfo]
-      recordings.removeAll()
-      storage.sync(recordings: $recordings)
-    }
+
+    @Shared(.recordings) var recordings: [RecordingInfo]
+    recordings.removeAll()
+    recordings = try await storage.sync(recordings: recordings)
   }
 }
 

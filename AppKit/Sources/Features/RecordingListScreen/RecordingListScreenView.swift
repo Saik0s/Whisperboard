@@ -19,10 +19,6 @@ struct RecordingListScreen {
     var isImportingFiles = false
 
     @Presents var alert: AlertState<Action.Alert>?
-
-    var recordingIds: [RecordingInfo.ID] {
-      recordings.map(\.id)
-    }
   }
 
   enum Action: BindableAction, Equatable {
@@ -36,6 +32,8 @@ struct RecordingListScreen {
     case didFinishImportingFiles
     case addRecordingInfo(RecordingInfo)
     case reloadCards
+    case deleteSwipeActionTapped(RecordingInfo.ID)
+    case didSyncRecordings(TaskResult<[RecordingInfo]>)
 
     enum Alert: Hashable {
       case deleteDialogConfirmed(id: RecordingInfo.ID)
@@ -55,15 +53,20 @@ struct RecordingListScreen {
       switch action {
       case .task:
         // Create initial recording cards
-        createCards(&state)
-        return .run { [recordings = state.$recordings] _ in
-          storage.sync(recordings)
+        state.recordingCards = createCards(for: state)
+        return .run { [recordings = state.$recordings] send in
+          await send(.didSyncRecordings(TaskResult { try await storage.sync(recordings.wrappedValue) }))
           for await _ in await didBecomeActive() {
-            storage.sync(recordings)
+            await send(.didSyncRecordings(TaskResult { try await storage.sync(recordings.wrappedValue) }))
           }
-        }.merge(with: .publisher { [state] in
-          state.$recordings.publisher.map { $0.map(\.id) }.removeDuplicates().map { _ in Action.reloadCards }
-        })
+        }
+//        .merge(with: .publisher { [state] in
+//          state.$recordings.publisher
+//            .map { $0.map(\.id) }
+//            .removeDuplicates()
+//            .receive(on: DispatchQueue.main)
+//            .map { _ in Action.reloadCards }
+//        })
 
       case let .addFileRecordings(urls):
         return .run { send in
@@ -99,12 +102,26 @@ struct RecordingListScreen {
         createDeleteConfirmationDialog(id: id, state: &state)
         return .none
 
-      case let .alert(.presented(.deleteDialogConfirmed(id))):
+      case let .alert(.presented(.deleteDialogConfirmed(id))),
+           let .deleteSwipeActionTapped(id):
+        if let url = state.recordingCards[id: id]?.recording.fileURL {
+          try? FileManager.default.removeItem(at: url)
+        }
+        state.recordingCards.removeAll { $0.id == id }
         state.recordings.removeAll { $0.id == id }
+
         return .none
 
       case .reloadCards:
-        createCards(&state)
+        state.recordingCards = createCards(for: state)
+        return .none
+
+      case let .didSyncRecordings(.success(recordings)):
+        state.recordings = recordings
+        return .send(.reloadCards)
+
+      case let .didSyncRecordings(.failure(error)):
+        logs.error("Failed to sync recordings: \(error)")
         return .none
 
       default:
@@ -117,14 +134,15 @@ struct RecordingListScreen {
     }
   }
 
-  private func createCards(_ state: inout State) {
+  private func createCards(for state: State) -> IdentifiedArrayOf<RecordingCard.State> {
     @SharedReader(.transcriptionTasks) var taskQueue: [TranscriptionTask]
-    state.recordingCards = state.$recordings.elements.enumerated().map { _, recording in
-      state.recordingCards[id: recording.id] ?? RecordingCard.State(
-        recording: recording,
-        queueInfo: $taskQueue.identifiedArray.elements[recording.id]
-      )
-    }.identifiedArray
+    return state.$recordings.elements
+      .map { recording in
+        state.recordingCards[id: recording.id] ?? RecordingCard.State(
+          recording: recording,
+          queueInfo: $taskQueue.identifiedArray.elements[recordingInfoID: recording.id]
+        )
+      }.identifiedArray
   }
 
   private func createDeleteConfirmationDialog(id: RecordingInfo.ID, state: inout State) {
@@ -149,16 +167,15 @@ struct RecordingListScreenView: View {
 
   var body: some View {
     WithPerceptionTracking {
-      List {
-        ForEach(store.scope(state: \.recordingCards, action: \.recordingCard)) { store in
-          makeRecordingCard(store: store)
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
+      ScrollView {
+        LazyVStack {
+          ForEach(store.scope(state: \.recordingCards, action: \.recordingCard)) { store in
+            makeRecordingCard(store: store)
+          }
+          .removeClipToBounds()
         }
-        .removeClipToBounds()
+        .padding(.grid(4))
       }
-      .listStyle(.plain)
-      .listRowSpacing(5)
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
       .background {
         EmptyStateView()
@@ -185,8 +202,9 @@ struct RecordingListScreenView: View {
           Color.black.opacity(0.5).overlay(ProgressView())
         }
       }
+      .animation(.hardShowHide(), value: store.recordingCards.count)
       .alert($store.scope(state: \.alert, action: \.alert))
-//      .messagePopup(store: store.scope(state: \.$alert, action: \.alert))
+      // .messagePopup(store: store.scope(state: \.$alert, action: \.alert))
       .task { await store.send(.task).finish() }
     }
     .enableInjection()
@@ -197,14 +215,16 @@ extension RecordingListScreenView {
   private func makeRecordingCard(store cardStore: StoreOf<RecordingCard>) -> some View {
     WithPerceptionTracking {
       HStack(spacing: .grid(4)) {
-        if store.editMode.isEditing {
-          Button { store.send(.delete(id: cardStore.id)) } label: {
-            Image(systemName: "multiply.circle.fill")
-          }
-          .iconButtonStyle()
-        }
-
         RecordingCardView(store: cardStore)
+          .scaleEffect(store.editMode.isEditing ? 0.85 : 1, anchor: .trailing)
+          .background(alignment: .leading) {
+            if store.editMode.isEditing {
+              Button { store.send(.delete(id: cardStore.id)) } label: {
+                Image(systemName: "multiply.circle.fill")
+              }
+              .iconButtonStyle()
+            }
+          }
       }
       .animation(.hardShowHide(), value: store.editMode.isEditing)
     }
@@ -224,11 +244,9 @@ struct EmptyStateView: View {
         .font(.system(size: 100))
         .foregroundColor(.DS.Text.accent)
         .shadow(color: .DS.Text.accent.opacity(isAnimating ? 1 : 0), radius: isAnimating ? 20 : 0, x: 0, y: 0)
-        .onAppear {
-          withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
-            isAnimating.toggle()
-          }
-        }
+        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
+        .onAppear { isAnimating.toggle() }
+
       VStack(spacing: .grid(1)) {
         Text("No recordings yet")
           .textStyle(.bodyBold)
@@ -242,7 +260,7 @@ struct EmptyStateView: View {
 }
 
 private extension RandomAccessCollection where Element == TranscriptionTask, Index == Int {
-  subscript(recordingInfoID: RecordingInfo.ID) -> RecordingCard.QueueInfo? {
-    firstIndex(where: { $0.recordingInfoID == recordingInfoID }).map { RecordingCard.QueueInfo(position: $0, total: self.count) }
+  subscript(recordingInfoID id: RecordingInfo.ID) -> RecordingCard.QueueInfo? {
+    firstIndex(where: { $0.recordingInfoID == id }).map { RecordingCard.QueueInfo(position: $0, total: self.count) }
   }
 }

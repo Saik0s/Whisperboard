@@ -4,6 +4,7 @@ import SwiftUI
 
 // MARK: - RecordingCardView
 
+@MainActor
 struct RecordingCardView: View {
   @ObserveInjection var inject
 
@@ -15,7 +16,7 @@ struct RecordingCardView: View {
     WithPerceptionTracking {
       NavigationLink(state: Root.Path.State.details(RecordingDetails.State(recordingCard: store.state))) {
         cardView
-      }.buttonStyle(PlainButtonStyle())
+      }
     }
   }
 

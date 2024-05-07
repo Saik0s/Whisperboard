@@ -1,9 +1,9 @@
 import ComposableArchitecture
 
 extension Array {
-  func deduplicatedArray(_ keyPath: KeyPath<Element, some Hashable>) -> Self {
-    let set = Set(map { $0[keyPath: keyPath] })
-    return filter { set.contains($0[keyPath: keyPath]) }
+  func deduplicatedArray<ID: Hashable>(_ keyPath: KeyPath<Element, ID>) -> Self {
+    var set = Set<ID>()
+    return filter { set.insert($0[keyPath: keyPath]).inserted }
   }
 }
 

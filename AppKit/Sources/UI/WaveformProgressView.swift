@@ -96,34 +96,34 @@ struct WaveformProgressView: View {
   var body: some View {
     WithPerceptionTracking {
       ZStack {
-        if !store.isImageCreated {
-          ProgressView()
-        } else {
-          Color.clear
-            .frame(height: 50)
-            .frame(maxWidth: .infinity)
-            .background {
-              waveImageView()
-            }
-            .padding(.horizontal, .grid(1))
-            .animation(.linear(duration: 0.1), value: store.progress)
-            .readSize { imageSize = $0 }
-            .gesture(
-              DragGesture(minimumDistance: 2)
-                .onChanged { value in
-                  let progress = Double(value.location.x / imageSize.width)
-                  let clampedProgress = min(max(0, progress), 1.0)
-                  if shouldSendProgressUpdate(newProgress: clampedProgress) {
-                    $store.progress.wrappedValue = clampedProgress
-                    $store.isSeeking.wrappedValue = true
-                    lastSentProgress = clampedProgress
-                  }
-                }
-                .onEnded { _ in
-                  $store.isSeeking.wrappedValue = false
-                }
-            )
+        ZStack {
+          if !store.isImageCreated {
+            ProgressView()
+          }
         }
+        .frame(height: 50)
+        .frame(maxWidth: .infinity)
+        .background {
+          waveImageView()
+        }
+        .padding(.horizontal, .grid(1))
+        .animation(.linear(duration: 0.1), value: store.progress)
+        .readSize { imageSize = $0 }
+        .gesture(
+          DragGesture(minimumDistance: 2)
+            .onChanged { value in
+              let progress = Double(value.location.x / imageSize.width)
+              let clampedProgress = min(max(0, progress), 1.0)
+              if shouldSendProgressUpdate(newProgress: clampedProgress) {
+                $store.progress.wrappedValue = clampedProgress
+                $store.isSeeking.wrappedValue = true
+                lastSentProgress = clampedProgress
+              }
+            }
+            .onEnded { _ in
+              $store.isSeeking.wrappedValue = false
+            }
+        )
       }
       .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 20), value: store.isImageCreated)
       .task { await store.send(.onTask).finish() }
@@ -151,15 +151,15 @@ struct WaveformProgressView: View {
       }.id(store.waveformImageURL)
 
       AsyncImage(url: store.waveformImageURL) { image in
-        image
-          .resizable()
-          .mask(alignment: .leading) {
-            Rectangle()
-              .frame(width: store.isPlaying ? imageSize.width * store.progress : nil)
-          }
+        image.resizable()
       } placeholder: {
         ProgressView()
-      }.id(store.waveformImageURL)
+      }
+      .mask(alignment: .leading) {
+        Rectangle()
+          .frame(width: store.isPlaying ? imageSize.width * store.progress : nil)
+      }
+      .id(store.waveformImageURL)
     }
   }
 }

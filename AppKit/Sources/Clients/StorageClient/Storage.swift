@@ -16,18 +16,11 @@ final class Storage {
 
   init() {}
 
-  func sync(recordings: Shared<[RecordingInfo]>) {
-    Task(priority: .background, operation: { [weak self] in
-      guard let self else { return }
-      do {
-        let syncedRecordings = try await read(currentRecordings: recordings.wrappedValue)
-        Task { @MainActor in
-          recordings.wrappedValue = syncedRecordings.elements
-        }
-      } catch {
-        logs.error("Error syncing recordings: \(error)")
-      }
-    })
+  func sync(recordings: [RecordingInfo]) async throws -> [RecordingInfo] {
+    try await Task(priority: .background) { [weak self] in
+      guard let self else { return [] }
+      return try await read(currentRecordings: recordings).elements
+    }.value
   }
 
   func setAsCurrentlyRecording(_ url: URL?) {

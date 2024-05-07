@@ -42,7 +42,7 @@ extension RecordingInfo: Codable {
     editedText = try container.decodeIfPresent(String.self, forKey: .editedText)
 
     // Migration logic
-    if let transcriptionHistory = try container.decodeIfPresent([Transcription].self, forKey: .transcriptionHistory) {
+    if let transcriptionHistory = try? container.decodeIfPresent([Transcription].self, forKey: .transcriptionHistory) {
       transcription = transcriptionHistory.last
     } else {
       transcription = try container.decodeIfPresent(Transcription.self, forKey: .transcription)
