@@ -1,7 +1,3 @@
-// enum RemoteTranscriptionError: Error, LocalizedError {
-//   case uploadFailed
-//   case resultFailed
-
 //   var errorDescription: String? {
 //     switch self {
 //     case .uploadFailed:
