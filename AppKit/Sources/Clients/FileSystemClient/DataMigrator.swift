@@ -1,4 +1,3 @@
-
 import Dependencies
 import Foundation
 
@@ -26,11 +25,11 @@ class DataMigrator {
     let currentVersion = migrationVersion
 
     for migration in migrations where migration.version > currentVersion {
-      log.info("Migrating to version \(migration.version) using \(type(of: migration))")
+      logs.info("Migrating to version \(migration.version) using \(type(of: migration))")
       do {
         try migration.migrate()
       } catch {
-        log.error(error)
+        logs.error("Migration failed: \(error)")
       }
       migrationVersion = migration.version
     }
@@ -83,26 +82,25 @@ struct RecordingInfoMigration: Migration {
         date: $0.date,
         duration: $0.duration,
         editedText: nil,
-        transcriptionHistory: !$0.text.isEmpty
-          ? [
-            Transcription(
-              id: UUID(),
-              fileName: $0.fileName,
-              segments: [
-                .init(
-                  startTime: 0,
-                  endTime: Int64($0.duration * 1000),
-                  text: $0.text,
-                  tokens: [],
-                  speaker: nil
-                ),
-              ],
-              parameters: TranscriptionParameters(),
-              model: .default,
-              status: .done(Date())
-            ),
-          ].identifiedArray
-          : []
+        transcription: !$0.text.isEmpty
+          ?
+          Transcription(
+            id: UUID(),
+            fileName: $0.fileName,
+            segments: [
+              .init(
+                startTime: 0,
+                endTime: Int64($0.duration * 1000),
+                text: $0.text,
+                tokens: [],
+                speaker: nil
+              ),
+            ],
+            parameters: TranscriptionParameters(),
+            model: .default,
+            status: .done(Date())
+          )
+          : nil
       )
     }
 
@@ -118,8 +116,8 @@ struct SettingsMigration: Migration {
   func migrate() throws {
     struct OldSettings: Codable, Hashable {
       var voiceLanguage: VoiceLanguage = .auto
-      var isParallelEnabled: Bool = false
-      var isRemoteTranscriptionEnabled: Bool = false
+      var isParallelEnabled = false
+      var isRemoteTranscriptionEnabled = false
     }
 
     let settingsURL = try FileManager.default

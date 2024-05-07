@@ -16,7 +16,7 @@ extension View {
     action fromDestinationAction: @escaping (ButtonAction) -> Action
   ) -> some View {
     presentation(store: store, state: toDestinationState, action: fromDestinationAction) { `self`, $isPresented, _ in
-      let alertState = store.state.value.wrappedValue.flatMap(toDestinationState)
+      let alertState = store.withState { $0.wrappedValue.flatMap(toDestinationState) }
       self.modifier(
         MessagePopupViewModifier(
           isPresented: $isPresented,
@@ -113,6 +113,7 @@ struct AlertViewPopover<ButtonAction>: View {
               if let action {
                 sendAction(action)
               }
+
             case let .animatedSend(action, animation):
               if let action {
                 withAnimation(animation) {

@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import Foundation
 
 // MARK: - Transcription
@@ -19,8 +20,16 @@ struct Transcription: Codable, Hashable, Identifiable {
 // MARK: Transcription.Status
 
 extension Transcription {
+  @CasePathable
   enum Status: Codable, Hashable {
-    case notStarted, loading, uploading(Double), error(message: String), progress(Double), done(Date), canceled, paused(TranscriptionTask)
+    case notStarted
+    case loading
+    case uploading(Double)
+    case error(message: String)
+    case progress(Double)
+    case done(Date)
+    case canceled
+    case paused(TranscriptionTask, progress: Double)
   }
 }
 
@@ -63,117 +72,130 @@ extension Transcription.Status {
   var isDone: Bool {
     switch self {
     case .done:
-      return true
+      true
+
     default:
-      return false
+      false
     }
   }
 
   var isNotStarted: Bool {
     switch self {
     case .notStarted:
-      return true
+      true
+
     default:
-      return false
+      false
     }
   }
 
   var isLoading: Bool {
     switch self {
     case .loading:
-      return true
+      true
+
     default:
-      return false
+      false
     }
   }
 
   var isUploading: Bool {
     switch self {
     case .uploading:
-      return true
+      true
+
     default:
-      return false
+      false
     }
   }
 
   var isCanceled: Bool {
     switch self {
     case .canceled:
-      return true
+      true
+
     default:
-      return false
+      false
     }
   }
 
   var isProgress: Bool {
     switch self {
     case .progress:
-      return true
+      true
+
     default:
-      return false
+      false
     }
   }
 
   var isError: Bool {
     switch self {
     case .error:
-      return true
+      true
+
     default:
-      return false
+      false
     }
   }
 
   var uploadProgress: Double? {
     switch self {
     case let .uploading(progress):
-      return progress
+      progress
+
     default:
-      return nil
+      nil
     }
   }
 
   var progressValue: Double? {
     switch self {
     case let .progress(progress):
-      return progress
+      progress
+
     default:
-      return nil
+      nil
     }
   }
 
   var errorMessage: String? {
     switch self {
     case let .error(message: message):
-      return message
+      message
+
     default:
-      return nil
+      nil
     }
   }
 
   var isLoadingOrProgress: Bool {
     switch self {
     case .loading, .progress, .uploading:
-      return true
+      true
+
     default:
-      return false
+      false
     }
   }
 
   var isErrorOrCanceled: Bool {
     switch self {
     case .canceled, .error:
-      return true
+      true
+
     default:
-      return false
+      false
     }
   }
 
   var isPaused: Bool {
     switch self {
     case .paused:
-      return true
+      true
+
     default:
-      return false
+      false
     }
   }
 }

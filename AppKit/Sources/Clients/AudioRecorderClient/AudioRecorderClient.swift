@@ -1,6 +1,6 @@
-
 import AVFoundation
 import ComposableArchitecture
+import ConcurrencyExtras
 import Dependencies
 import Foundation
 import XCTestDynamicOverlay
@@ -22,8 +22,7 @@ struct AudioRecorderClient {
   var currentTime: @Sendable () async -> TimeInterval
   var requestRecordPermission: @Sendable () async -> Bool
 
-  var recordingState: @Sendable () async -> AsyncStream<RecordingState>
-  var startRecording: @Sendable (URL) async -> Void
+  var startRecording: @Sendable (URL) async -> AsyncStream<RecordingState>
   var stopRecording: @Sendable () async -> Void
   var pauseRecording: @Sendable () async -> Void
   var continueRecording: @Sendable () async -> Void
@@ -42,7 +41,6 @@ extension AudioRecorderClient: DependencyKey {
     return Self(
       currentTime: { await audioRecorder.currentTime },
       requestRecordPermission: { await audioRecorder.requestPermission() },
-      recordingState: { audioRecorder.recordingStateSubject.asAsyncStream() },
       startRecording: { url in await audioRecorder.start(url: url) },
       stopRecording: { await audioRecorder.stop() },
       pauseRecording: { await audioRecorder.pause() },
@@ -72,25 +70,31 @@ enum AudioRecorderError: Error {
 
 private actor AudioRecorder {
   var recorder: AVAudioRecorder?
-  let recordingStateSubject = ReplaySubject<RecordingState, Never>(1)
+  var recordingStateContinuation: AsyncStream<RecordingState>.Continuation?
   var task: Task<Void, Error>?
   var isInterrupted = false
 
   @Dependency(\.audioSession) var audioSession: AudioSessionClient
 
   lazy var delegate: Delegate = .init(
-    didFinishRecording: { [audioSession, recordingStateSubject] successfully in
-      log.info("didFinishRecording: \(successfully)")
-      try? audioSession.disable(.record, true)
-      recordingStateSubject.send(.finished(successfully))
+    didFinishRecording: { [weak self] successfully in
+      logs.info("didFinishRecording: \(successfully)")
+      Task { [weak self] in
+        await self?.disableSession()
+        await self?.recordingStateContinuation?.yield(RecordingState.finished(successfully))
+        await self?.recordingStateContinuation?.finish()
+      }
     },
-    encodeErrorDidOccur: { [audioSession, recordingStateSubject] error in
-      log.info("encodeErrorDidOccur: \(error?.localizedDescription ?? "nil")")
-      try? audioSession.disable(.record, true)
-      recordingStateSubject.send(.error(error?.equatable ?? AudioRecorderError.somethingWrong.equatable))
+    encodeErrorDidOccur: { [weak self] error in
+      logs.info("encodeErrorDidOccur: \(error?.localizedDescription ?? "nil")")
+      Task { [weak self] in
+        await self?.disableSession()
+        await self?.recordingStateContinuation?.yield(RecordingState.error(error?.equatable ?? AudioRecorderError.somethingWrong.equatable))
+        await self?.recordingStateContinuation?.finish()
+      }
     },
-    interruptionOccurred: { [weak self, audioSession, recordingStateSubject] type, userInfo in
-      log.info("interruptionOccurred: \(type)")
+    interruptionOccurred: { [weak self, audioSession] type, userInfo in
+      logs.info("interruptionOccurred: \(type)")
       Task { [weak self] in
         await self?.processInterruption(type: type, userInfo: userInfo)
       }
@@ -106,57 +110,64 @@ private actor AudioRecorder {
   }
 
   func stop() {
-    log.info("")
+    logs.info("stop")
     task?.cancel()
     recorder?.stop()
     recorder = nil
   }
 
-  func start(url: URL) {
-    log.info("")
+  func start(url: URL) -> AsyncStream<RecordingState> {
+    logs.info("Start recording to: \(url)")
     if recorder?.isRecording == true {
       removeCurrentRecording()
     }
 
-    recordingStateSubject.send(.recording(duration: 0, power: 0))
+    let (stream, continuation) = AsyncStream<RecordingState>.makeStream(bufferingPolicy: .unbounded)
+    recordingStateContinuation = continuation
+
+    continuation.yield(.recording(duration: 0, power: 0))
 
     do {
-      try audioSession.enable(.record, true)
       let recorder = try AVAudioRecorder(url: url, settings: AudioRecorderSettings.whisper)
       self.recorder = recorder
       recorder.delegate = delegate
       recorder.isMeteringEnabled = true
-      recorder.record()
 
-      task = Task { [weak self] in
-        while true {
+      task = Task(priority: .utility) { [weak self] in
+        try await self?.audioSession.enable(.record, true)
+        await self?.recorder?.record()
+        while await self?.recorder != nil && !Task.isCancelled {
           await self?.updateMeters()
-          try await Task.sleep(seconds: 0.025)
+          try await Task.sleep(seconds: 0.01)
         }
       }
     } catch {
-      log.error(error)
-      recordingStateSubject.send(.error(error.equatable))
+      logs.error("start error: \(error)")
+      continuation.yield(.error(error.equatable))
     }
+
+    return stream
   }
 
   func pause() {
-    log.info("pause")
+    logs.info("pause")
     recorder?.pause()
-    recordingStateSubject.send(.paused)
+    recordingStateContinuation?.yield(.paused)
   }
 
   func `continue`() {
-    log.info("continue")
+    logs.info("continue")
     recorder?.record()
   }
 
   func removeCurrentRecording() {
-    log.info("")
+    logs.info("removeCurrentRecording")
     task?.cancel()
     recorder?.stop()
     recorder?.deleteRecording()
     recorder = nil
+    recordingStateContinuation?.finish()
+    recordingStateContinuation = nil
   }
 
   func availableMicrophones() throws -> AsyncStream<[Microphone]> {
@@ -164,12 +175,20 @@ private actor AudioRecorder {
   }
 
   func setMicrophone(_ microphone: Microphone) throws {
-    log.info("microphone: \(microphone)")
+    logs.info("microphone: \(microphone)")
     try audioSession.selectMicrophone(microphone)
   }
 
   func currentMicrophone() -> Microphone? {
     audioSession.currentMicrophone()
+  }
+
+  private func disableSession() {
+    do {
+      try audioSession.disable(.record, true)
+    } catch {
+      logs.error("turnOffSession error: \(error)")
+    }
   }
 
   private func updateMeters() async {
@@ -181,7 +200,7 @@ private actor AudioRecorder {
     guard recorder.isRecording else { return }
 
     recorder.updateMeters()
-    recordingStateSubject.send(.recording(
+    recordingStateContinuation?.yield(.recording(
       duration: recorder.currentTime,
       power: recorder.averagePower(forChannel: 0)
     ))

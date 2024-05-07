@@ -9,12 +9,10 @@ struct TouchLocatingView: UIViewRepresentable {
   struct TouchType: OptionSet {
     let rawValue: Int
 
-    static let started = TouchType(rawValue: 1 << 0)
-    static let moved = TouchType(rawValue: 1 << 1)
-    static let ended = TouchType(rawValue: 1 << 2)
+    static let started = Self(rawValue: 1 << 0)
+    static let moved = Self(rawValue: 1 << 1)
+    static let ended = Self(rawValue: 1 << 2)
     static let all: TouchType = [.started, .moved, .ended]
-
-    init(rawValue: Int) { self.rawValue = rawValue }
   }
 
   /// A closure to call when touch data has arrived

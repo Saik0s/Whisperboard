@@ -10,73 +10,72 @@ enum WaveformProgressError: Error {
   case audioFileNotFound
 }
 
+private let generationConfiguration = Waveform.Configuration(
+  size: CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width * 0.35),
+  backgroundColor: .clear,
+  style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
+  damping: .init(percentage: 0.125, sides: .both),
+  scale: DSScreen.scale,
+  verticalScalingFactor: 0.95,
+  shouldAntialias: true
+)
+
 // MARK: - WaveformProgress
 
-struct WaveformProgress: ReducerProtocol {
+@Reducer
+struct WaveformProgress {
+  @ObservableState
   struct State: Equatable, Then {
-    var fileName = ""
+    var audioFileURL: URL
+    var waveformImageURL: URL
     var progress = 0.0
     var isPlaying = false
-    var waveFormImageURL: URL?
+    var isSeeking = false
+    var isImageCreated = false
   }
 
-  enum Action: Equatable {
-    case didAppear
-    case waveFormImageCreated(TaskResult<URL>)
-    case didTouchAtHorizontalLocation(Double)
+  enum Action: Equatable, BindableAction {
+    case binding(BindingAction<State>)
+    case onTask
+    case waveformImageCreated
   }
 
-  @Dependency(\.storage) var storage: StorageClient
+  var body: some Reducer<State, Action> {
+    BindingReducer()
 
-  let waveImageDrawer = WaveformImageDrawer()
-  let configuration = Waveform.Configuration(
-    size: CGSize(width: 350, height: 120),
-    backgroundColor: .clear,
-    style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
-    damping: .init(percentage: 0.125, sides: .both),
-    scale: DSScreen.scale,
-    verticalScalingFactor: 0.95,
-    shouldAntialias: true
-  )
-
-  var body: some ReducerProtocol<State, Action> {
     Reduce<State, Action> { state, action in
       switch action {
-      case .didAppear:
-        guard state.waveFormImageURL == nil else { return .none }
+      case .binding:
+        return .none
 
-        return Effect.run { [state] send in
-          let waveImageURL = storage.waveFileURLWithName(state.fileName + ".waveform.png")
-          guard UIImage(contentsOfFile: waveImageURL.path) == nil else {
-            await send(.waveFormImageCreated(.success(waveImageURL)))
+      case .onTask:
+        guard !state.isImageCreated else { return .none }
+        return .run(priority: .background) { [state] send in
+          guard !FileManager.default.fileExists(atPath: state.waveformImageURL.path)
+            || UIImage(contentsOfFile: state.waveformImageURL.path) == nil else {
+            await send(.waveformImageCreated)
             return
           }
 
-          let audioURL = storage.audioFileURLWithName(state.fileName)
-          guard FileManager.default.fileExists(atPath: audioURL.path) else {
-            log.error("Can't find audio file at \(audioURL.path)")
-            await send(.waveFormImageCreated(.failure(WaveformProgressError.audioFileNotFound)))
+          guard FileManager.default.fileExists(atPath: state.audioFileURL.path) else {
+            logs.error("Can't find audio file at \(state.audioFileURL.path)")
+            await send(.waveformImageCreated)
             return
           }
 
-          let image = try await waveImageDrawer.waveformImage(fromAudioAt: audioURL, with: configuration)
+          let waveImageDrawer = WaveformImageDrawer()
+          let image = try await waveImageDrawer.waveformImage(fromAudioAt: state.audioFileURL, with: generationConfiguration)
           let data = try image.pngData().require()
-          try data.write(to: waveImageURL, options: .atomic)
-          await send(.waveFormImageCreated(.success(waveImageURL)))
+          try data.write(to: state.waveformImageURL, options: .atomic)
+
+          await send(.waveformImageCreated)
         } catch: { error, send in
-          await send(.waveFormImageCreated(.failure(error)))
+          logs.error("Failed to create waveform image: \(error)")
+          await send(.waveformImageCreated)
         }
 
-      case let .waveFormImageCreated(.success(url)):
-        state.waveFormImageURL = url
-        return .none
-
-      case let .waveFormImageCreated(.failure(error)):
-        log.error(error)
-        return .none
-
-      case let .didTouchAtHorizontalLocation(horizontal):
-        state.progress = horizontal
+      case .waveformImageCreated:
+        state.isImageCreated = true
         return .none
       }
     }
@@ -89,59 +88,78 @@ struct WaveformProgress: ReducerProtocol {
 struct WaveformProgressView: View {
   @ObserveInjection var inject
 
-  let store: StoreOf<WaveformProgress>
-  @ObservedObject var viewStore: ViewStoreOf<WaveformProgress>
+  @Perception.Bindable var store: StoreOf<WaveformProgress>
 
-  init(store: StoreOf<WaveformProgress>) {
-    self.store = store
-    viewStore = ViewStore(store) { $0 }
-  }
+  @State var imageSize = CGSize.zero
+  @State private var lastSentProgress: Double? = nil
 
   var body: some View {
-    Rectangle()
-      .fill(Color.clear)
-      .background {
-        waveImageView()
+    WithPerceptionTracking {
+      ZStack {
+        ZStack {
+          if !store.isImageCreated {
+            ProgressView()
+          }
+        }
+        .frame(height: 50)
+        .frame(maxWidth: .infinity)
+        .background {
+          waveImageView()
+        }
+        .padding(.horizontal, .grid(1))
+        .animation(.linear(duration: 0.1), value: store.progress)
+        .readSize { imageSize = $0 }
+        .gesture(
+          DragGesture(minimumDistance: 2)
+            .onChanged { value in
+              let progress = Double(value.location.x / imageSize.width)
+              let clampedProgress = min(max(0, progress), 1.0)
+              if shouldSendProgressUpdate(newProgress: clampedProgress) {
+                $store.progress.wrappedValue = clampedProgress
+                $store.isSeeking.wrappedValue = true
+                lastSentProgress = clampedProgress
+              }
+            }
+            .onEnded { _ in
+              $store.isSeeking.wrappedValue = false
+            }
+        )
       }
-      .frame(height: 50)
-      .frame(maxWidth: .infinity)
-      .padding(.horizontal, .grid(1))
-      .animation(.linear(duration: 0.1), value: viewStore.progress)
-      .onTouchLocationPercent { horizontal, _ in
-        viewStore.send(.didTouchAtHorizontalLocation(horizontal))
-      }
-      .onAppear {
-        viewStore.send(.didAppear)
-      }
-      .enableInjection()
+      .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 20), value: store.isImageCreated)
+      .task { await store.send(.onTask).finish() }
+    }
+    .enableInjection()
+  }
+
+  private func shouldSendProgressUpdate(newProgress: Double) -> Bool {
+    guard let lastProgress = lastSentProgress else {
+      return true
+    }
+    return abs(newProgress - lastProgress) > 0.01 // Only send updates if the change is greater than 1%
   }
 
   @ViewBuilder
   private func waveImageView() -> some View {
     ZStack {
-      AsyncImage(url: viewStore.waveFormImageURL) { image in
+      AsyncImage(url: store.waveformImageURL) { image in
         image
           .resizable()
           .renderingMode(.template)
           .foregroundColor(.DS.Text.subdued)
       } placeholder: {
         ProgressView()
-      }.id(viewStore.waveFormImageURL)
-      AsyncImage(url: viewStore.waveFormImageURL) { image in
-        image
-          .resizable()
-          .mask(alignment: .leading) {
-            GeometryReader { geometry in
-              if viewStore.isPlaying {
-                Rectangle().frame(width: geometry.size.width * viewStore.progress)
-              } else {
-                Rectangle()
-              }
-            }
-          }
+      }.id(store.waveformImageURL)
+
+      AsyncImage(url: store.waveformImageURL) { image in
+        image.resizable()
       } placeholder: {
         ProgressView()
-      }.id(viewStore.waveFormImageURL)
+      }
+      .mask(alignment: .leading) {
+        Rectangle()
+          .frame(width: store.isPlaying ? imageSize.width * store.progress : nil)
+      }
+      .id(store.waveformImageURL)
     }
   }
 }
@@ -151,7 +169,7 @@ struct WaveformProgressView: View {
     static var previews: some View {
       NavigationView {
         WaveformProgressView(
-          store: Store(initialState: WaveformProgress.State()) {
+          store: Store(initialState: WaveformProgress.State(audioFileURL: .documentsDirectory, waveformImageURL: .documentsDirectory)) {
             WaveformProgress()
           }
         )

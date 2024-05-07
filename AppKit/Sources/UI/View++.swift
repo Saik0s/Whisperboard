@@ -19,9 +19,9 @@ extension View {
       func deobfuscate(_ text: String, shift: Int) -> String {
         String(text.unicodeScalars.map { char in
           if let scalar = UnicodeScalar((char.value - UInt32(shift)) % 128) {
-            return Character(scalar)
+            Character(scalar)
           } else {
-            return Character(char)
+            Character(char)
           }
         })
       }

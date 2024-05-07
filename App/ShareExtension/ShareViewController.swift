@@ -1,11 +1,11 @@
 import AudioKit
 import AVFoundation
+import Foundation
 import MobileCoreServices
 import Social
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
-import Foundation
 
 // MARK: - ShareError
 
@@ -15,7 +15,7 @@ enum ShareError: Error, LocalizedError {
   var errorDescription: String? {
     switch self {
     case .somethingWentWrong:
-      return "Something went wrong."
+      "Something went wrong."
     }
   }
 }
@@ -389,12 +389,14 @@ extension View {
   }
 }
 
+// MARK: - NSItemProviderError
+
 enum NSItemProviderError: Swift.Error {
   case dataIsNotExtractable(UTType)
 }
 
 extension NSItemProvider {
-  func loadData<T>(for type: UTType, _ returnType: T.Type = T.self) async throws -> T {
+  func loadData<T>(for type: UTType, _: T.Type = T.self) async throws -> T {
     guard let data = try await loadItem(forTypeIdentifier: type.identifier, options: nil) as? T else {
       throw NSItemProviderError.dataIsNotExtractable(type)
     }

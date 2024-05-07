@@ -2,10 +2,8 @@ import ProjectDescription
 
 let workspace = Workspace(
   name: "WhisperBoard",
-  projects: ["App", "AppKit"],
+  projects: ["."],
   generationOptions: .options(
-    enableAutomaticXcodeSchemes: false,
-    lastXcodeUpgradeCheck: Version(15, 0, 0),
-    renderMarkdownReadme: true
+    lastXcodeUpgradeCheck: Version(15, 3, 0)
   )
 )

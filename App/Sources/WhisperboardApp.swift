@@ -6,8 +6,7 @@ import XCTestDynamicOverlay
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
   func application(_: UIApplication, didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-    appSetup()
-    return true
+    true
   }
 }
 

@@ -16,8 +16,8 @@ struct SettingsIconView: View {
       .cornerRadius(6)
   }
 
-  static func system(name systemName: String, background: Color = .DS.Background.accent) -> SettingsIconView {
-    SettingsIconView(icon: Image(systemName: systemName), iconBGColor: background)
+  static func system(name systemName: String, background: Color = .DS.Background.accent) -> Self {
+    Self(icon: Image(systemName: systemName), iconBGColor: background)
   }
 }
 

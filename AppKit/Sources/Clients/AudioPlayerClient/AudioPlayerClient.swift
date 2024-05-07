@@ -8,6 +8,7 @@ struct AudioPlayerClient {
   var play: @Sendable (URL) -> AsyncStream<PlaybackState>
   var seekProgress: @Sendable (Double) async -> Void
   var pause: @Sendable () async -> Void
+  var resume: @Sendable () async -> Void
   var stop: @Sendable () async -> Void
   var speed: @Sendable (Float) async -> Void
 }
@@ -42,7 +43,7 @@ extension AudioPlayerClient: DependencyKey {
               },
               decodeErrorDidOccur: { error in
                 try? audioSession.disable(.playback, true)
-                continuation.yield(.error(error))
+                continuation.yield(.error(error?.equatable))
                 continuation.finish()
               }
             )
@@ -51,23 +52,28 @@ extension AudioPlayerClient: DependencyKey {
             context.audioPlayer?.player.play()
             let timerTask = Task {
               let clock = ContinuousClock()
+              let lastPosition = PlaybackPosition(currentTime: 0, duration: 0)
               for await _ in clock.timer(interval: .milliseconds(100)) {
-                guard context.audioPlayer?.player.isPlaying == true else { continue }
+                guard let audioPlayer = context.audioPlayer else { continue }
 
                 let position = PlaybackPosition(
                   currentTime: context.audioPlayer?.player.currentTime ?? 0,
                   duration: context.audioPlayer?.player.duration ?? 0
                 )
-                continuation.yield(.playing(position))
+                guard lastPosition != position else { continue }
+                if context.audioPlayer?.player.isPlaying == true {
+                  context.continuation?.yield(.playing(position))
+                } else {
+                  context.continuation?.yield(.pause(position))
+                }
               }
             }
             continuation.onTermination = { _ in
               context.audioPlayer?.player.stop()
               timerTask.cancel()
             }
-
           } catch {
-            continuation.yield(.error(error))
+            continuation.yield(.error(error.equatable))
             continuation.finish()
           }
         }
@@ -86,6 +92,13 @@ extension AudioPlayerClient: DependencyKey {
       pause: {
         context.audioPlayer?.player.pause()
         context.continuation?.yield(.pause(PlaybackPosition(
+          currentTime: context.audioPlayer?.player.currentTime ?? 0,
+          duration: context.audioPlayer?.player.duration ?? 0
+        )))
+      },
+      resume: {
+        context.audioPlayer?.player.play()
+        context.continuation?.yield(.playing(PlaybackPosition(
           currentTime: context.audioPlayer?.player.currentTime ?? 0,
           duration: context.audioPlayer?.player.duration ?? 0
         )))

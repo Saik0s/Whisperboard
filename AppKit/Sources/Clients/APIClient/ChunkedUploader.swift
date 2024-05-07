@@ -88,53 +88,55 @@ class ChunkedUploader: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
 
   func uploadFile(fileURL: URL, serverURL: URL, additionalHeaders: [String: String], chunkSize: Int) -> AsyncThrowingStream<UploadState, Error> {
     AsyncThrowingStream { continuation in
-      log.debug("Starting uploadFile function with fileURL: \(fileURL)")
+      logs.debug("Starting uploadFile function with fileURL: \(fileURL)")
 
-      Task {
+      Task { [weak self] in
+        guard let self else { return }
+
         do {
-          await self.progressContainer.setContinuation(fileName: fileURL.lastPathComponent, continuation: continuation)
-          log.verbose("Continuation for \(fileURL.lastPathComponent) set")
-          log.info("Calculating hash for file at \(fileURL)")
+          await progressContainer.setContinuation(fileName: fileURL.lastPathComponent, continuation: continuation)
+          logs.info("Continuation for \(fileURL.lastPathComponent) set")
+          logs.info("Calculating hash for file at \(fileURL)")
           let hash = try hashFile(at: fileURL)
           let uploadID = UUID().uuidString
-          log.info("Generated uploadID: \(uploadID)")
+          logs.info("Generated uploadID: \(uploadID)")
           var additionalHeaders = additionalHeaders
           additionalHeaders[CustomHeaderFields.uploadID.rawValue] = uploadID
           additionalHeaders[CustomHeaderFields.hash.rawValue] = hash
-          log.info("Splitting file into chunks")
+          logs.info("Splitting file into chunks")
           let chunks = try await splitFileIntoChunks(fileURL: fileURL, chunkSize: chunkSize)
-          log.info("File split into \(chunks.count) chunks")
+          logs.info("File split into \(chunks.count) chunks")
           for chunk in chunks {
-            log.info("Uploading chunk \(chunk.index) of \(chunk.totalChunks)")
+            logs.info("Uploading chunk \(chunk.index) of \(chunk.totalChunks)")
             let (data, response) = try await uploadChunk(chunk: chunk, to: serverURL, additionalHeaders: additionalHeaders)
             if let httpURLResponse = response as? HTTPURLResponse, httpURLResponse.statusCode != 200 {
-              log.error("Upload failed with status code \(httpURLResponse.statusCode)")
-              log.error(String(data: data, encoding: .utf8) ?? "No data")
+              logs.error("Upload failed with status code \(httpURLResponse.statusCode)")
+              logs.error("\(String(data: data, encoding: .utf8) ?? "No data")")
               continuation.finish(throwing: ChunkedUploaderError.uploadTaskCreationFailed)
               break
             }
-            log.verbose("Yielded upload progress for chunk \(chunk.index)")
+            logs.info("Yielded upload progress for chunk \(chunk.index)")
             if chunk.index == chunk.totalChunks - 1 {
               continuation.yield(.done(response: response, data: data))
               continuation.finish()
-              log.info("Upload completed for file \(fileURL.lastPathComponent)")
+              logs.info("Upload completed for file \(fileURL.lastPathComponent)")
             }
           }
-          log.verbose("Continuation for \(fileURL.lastPathComponent) finished")
+          logs.info("Continuation for \(fileURL.lastPathComponent) finished")
         } catch {
-          log.error("Error occurred during file upload: \(error)")
+          logs.error("Error occurred during file upload: \(error)")
           continuation.finish(throwing: error)
         }
-        await self.progressContainer.resetProgress(fileName: fileURL.lastPathComponent)
-        await self.progressContainer.setContinuation(fileName: fileURL.lastPathComponent, continuation: nil)
+        await progressContainer.resetProgress(fileName: fileURL.lastPathComponent)
+        await progressContainer.setContinuation(fileName: fileURL.lastPathComponent, continuation: nil)
       }
     }
   }
 
   private func splitFileIntoChunks(fileURL: URL, chunkSize: Int) async throws -> [FileChunk] {
-    log.debug("Starting splitFileIntoChunks function with fileURL: \(fileURL), chunkSize: \(chunkSize)")
+    logs.debug("Starting splitFileIntoChunks function with fileURL: \(fileURL), chunkSize: \(chunkSize)")
     guard let fileHandle = try? FileHandle(forReadingFrom: fileURL) else {
-      log.error("Failed to create file handle for \(fileURL)")
+      logs.error("Failed to create file handle for \(fileURL)")
       throw ChunkedUploaderError.fileHandleCreationFailed
     }
 
@@ -145,7 +147,7 @@ class ChunkedUploader: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
 
     let totalChunks = Int(ceil(Double(fileSize) / Double(chunkSize)))
     var chunks = [FileChunk]()
-    log.info("File size: \(fileSize), total chunks: \(totalChunks)")
+    logs.info("File size: \(fileSize), total chunks: \(totalChunks)")
 
     for index in 0 ..< totalChunks {
       let nextChunkSize = min(chunkSize, Int(fileSize - fileHandle.offsetInFile))
@@ -156,10 +158,10 @@ class ChunkedUploader: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
                               index: index,
                               totalChunks: totalChunks,
                               originalFileName: fileURL.lastPathComponent))
-      log.verbose("Chunk \(index) created")
+      logs.info("Chunk \(index) created")
     }
 
-    log.info("File split into \(chunks.count) chunks")
+    logs.info("File split into \(chunks.count) chunks")
     return chunks
   }
 
@@ -168,7 +170,7 @@ class ChunkedUploader: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
     to serverURL: URL,
     additionalHeaders: [String: String]
   ) async throws -> (Data, URLResponse) {
-    log.debug("Starting uploadChunk function with chunk index: \(chunk.index), serverURL: \(serverURL), additionalHeaders: \(additionalHeaders)")
+    logs.debug("Starting uploadChunk function with chunk index: \(chunk.index), serverURL: \(serverURL), additionalHeaders: \(additionalHeaders)")
     var request = URLRequest(url: serverURL)
     request.httpMethod = "POST"
     request.addValue("application/json", forHTTPHeaderField: "Accept")
@@ -179,7 +181,7 @@ class ChunkedUploader: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
     request.addValue("\(chunk.totalChunks)", forHTTPHeaderField: CustomHeaderFields.totalChunks.rawValue)
 
     // Add any additional headers provided.
-    additionalHeaders.forEach { key, value in
+    for (key, value) in additionalHeaders {
       request.addValue(value, forHTTPHeaderField: key)
     }
 
@@ -187,7 +189,7 @@ class ChunkedUploader: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
   }
 
   func urlSession(_: URLSession, task: URLSessionTask, didSendBodyData _: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
-    log.debug(
+    logs.debug(
       "urlSession function called with task: \(task), totalBytesSent: \(totalBytesSent), totalBytesExpectedToSend: \(totalBytesExpectedToSend)"
     )
     Task.detached { [weak self] in
@@ -206,10 +208,10 @@ class ChunkedUploader: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
           let totalProgress = await self?.progressContainer.totalProgress(fileName: fileName) ?? 0.0
 
           continuation.yield(.uploading(progress: totalProgress))
-          log.verbose("Yielded upload progress for chunk \(index)")
+          logs.info("Yielded upload progress for chunk \(index)")
         }
       } else {
-        log.error("Unable to find continuation for task \(task)")
+        logs.error("Unable to find continuation for task \(task)")
       }
     }
   }
@@ -221,23 +223,23 @@ extension ChunkedUploader.ChunkedUploaderError: LocalizedError {
   var errorDescription: String? {
     switch self {
     case .fileHandleCreationFailed:
-      log.error("File handle creation failed")
+      logs.error("File handle creation failed")
       return "Unable to open file for reading."
     case .fileReadError:
-      log.error("File read error occurred")
+      logs.error("File read error occurred")
       return "An error occurred while reading the file."
     case .uploadTaskCreationFailed:
-      log.error("Upload task creation failed")
+      logs.error("Upload task creation failed")
       return "Failed to create an upload task."
     }
   }
 }
 
 private func hashFile(at url: URL) throws -> String {
-  log.debug("Starting hashFile function with url: \(url)")
+  logs.debug("Starting hashFile function with url: \(url)")
   let bufferSize = 1024 * 1024
   guard let fileHandle = try? FileHandle(forReadingFrom: url) else {
-    log.error("Failed to create file handle for \(url)")
+    logs.error("Failed to create file handle for \(url)")
     throw ChunkedUploader.ChunkedUploaderError.fileHandleCreationFailed
   }
   defer { fileHandle.closeFile() }
@@ -248,16 +250,16 @@ private func hashFile(at url: URL) throws -> String {
     let data = fileHandle.readData(ofLength: bufferSize)
     if !data.isEmpty {
       hasher.update(data: data)
-      log.verbose("Updated hasher with data of length \(data.count)")
+      logs.info("Updated hasher with data of length \(data.count)")
       return true // Continue
     } else {
-      log.verbose("No more data to read from file")
+      logs.info("No more data to read from file")
       return false // End
     }
   }) {}
 
   let digest = hasher.finalize()
   let hash = digest.map { String(format: "%02x", $0) }.joined()
-  log.info("Calculated hash: \(hash)")
+  logs.info("Calculated hash: \(hash)")
   return hash
 }

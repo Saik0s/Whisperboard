@@ -9,7 +9,7 @@ enum LocalTranscriptionError: Error, LocalizedError {
   var errorDescription: String? {
     switch self {
     case let .notEnoughMemory(available, required):
-      return "Not enough memory to transcribe file. Available: \(bytesToReadableString(bytes: available)), required: \(bytesToReadableString(bytes: required))"
+      "Not enough memory to transcribe file. Available: \(bytesToReadableString(bytes: available)), required: \(bytesToReadableString(bytes: required))"
     }
   }
 }
@@ -18,91 +18,81 @@ enum LocalTranscriptionError: Error, LocalizedError {
 
 final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
   var currentWhisperContext: (context: WhisperContextProtocol, modelType: VoiceModelType, useGPU: Bool)? = nil
-  var currentTaslId: UUID?
+  var currentTaskID: TranscriptionTaskEnvelope.ID?
 
-  private let updateTranscription: (_ transcription: Transcription) -> Void
+  init() {}
 
-  @Dependency(\.storage) var storage
-  @Dependency(\.settings) var settings
+  func process(task: TranscriptionTaskEnvelope) async {
+    currentTaskID = task.id
+    defer { currentTaskID = nil }
 
-  init(updateTranscription: @escaping (_ transcription: Transcription) -> Void) {
-    self.updateTranscription = updateTranscription
-  }
-
-  func processTask(_ task: TranscriptionTask, updateTask: @escaping (TranscriptionTask) -> Void) async {
-    currentTaslId = task.id
-    defer { currentTaslId = nil }
-
-    let initialSegments = task.segments
-    var task: TranscriptionTask = task {
-      didSet { updateTask(task) }
+    if task.recording.transcription?.id != task.id {
+      task.recording.transcription = Transcription(id: task.id, fileName: task.fileName, parameters: task.parameters, model: task.modelType)
     }
-    var transcription = Transcription(
-      id: task.id,
-      fileName: task.fileName,
-      segments: task.segments,
-      parameters: task.parameters,
-      model: task.modelType
-    ) {
-      didSet {
-        task.segments = transcription.segments
-        updateTranscription(transcription)
-      }
-    }
-
-    let fileURL = storage.audioFileURLWithName(task.fileName)
 
     do {
-      transcription.status = .loading
+      task.recording.transcription?.status = .loading
 
-      let useGPU = settings.getSettings().isUsingGPU
-      let context: WhisperContextProtocol = try await resolveContextFor(useGPU: useGPU, task: task) { task = $0 }
+      let useGPU = task.task.settings.isUsingGPU
+      let context: WhisperContextProtocol = try await resolveContextFor(useGPU: useGPU, task: task)
 
-      transcription.status = .progress(task.progress)
+      task.recording.transcription?.status = .progress(task.progress)
 
-      for try await action in try context.fullTranscribe(audioFileURL: fileURL, params: task.parameters) {
-        log.debug(action)
-        var _transcription = transcription
+      let fileURL = task.recording.fileURL
+      var parameters = task.parameters
+      parameters.offsetMilliseconds = Int(task.offset)
+
+      for try await action in context.fullTranscribe(audioFileURL: fileURL, params: parameters) {
+        logs.debug("Received WhisperAction: \(action)")
         switch action {
         case let .newSegment(segment):
-          _transcription.segments.append(segment)
-          _transcription.status = .progress(task.progress)
+          assert(
+            segment.startTime >= (task.recording.transcription?.segments.last?.endTime ?? 0),
+            "Segment start time is not after the last segment end time"
+          )
+          task.recording.transcription?.segments.append(segment)
+          task.recording.transcription?.status = .progress(task.progress)
+
         case let .progress(progress):
-          log.debug("Progress: \(progress)")
+          logs.debug("Progress: \(progress)")
+
         case let .error(error):
-          _transcription.status = .error(message: error.localizedDescription)
+          task.recording.transcription?.status = .error(message: error.localizedDescription)
+
         case .canceled:
-          _transcription.status = .canceled
-        case let .finished(segments):
-          _transcription.segments = initialSegments + segments
-          _transcription.status = .done(Date())
+          task.recording.transcription?.status = .canceled
+
+        case .finished:
+          task.recording.transcription?.status = .done(Date())
         }
-        transcription = _transcription
       }
     } catch {
-      transcription.status = .error(message: error.localizedDescription)
+      task.recording.transcription?.status = .error(message: error.localizedDescription)
     }
   }
 
-  func cancel(task: TranscriptionTask) {
-    if task.id == currentTaslId {
+  func cancelTask(id: TranscriptionTaskEnvelope.ID) {
+    if id == currentTaskID {
       currentWhisperContext?.context.cancel()
     }
   }
 
-  private func resolveContextFor(useGPU: Bool, task: TranscriptionTask,
-                                 updateTask: (TranscriptionTask) -> Void) async throws -> WhisperContextProtocol {
+  func cancelCurrentTask() {
+    currentWhisperContext?.context.cancel()
+  }
+
+  private func resolveContextFor(useGPU: Bool, task: TranscriptionTaskEnvelope) async throws -> WhisperContextProtocol {
     if let currentContext = currentWhisperContext, currentContext.modelType == task.modelType, currentContext.useGPU == useGPU {
       return currentContext.context
     } else {
       currentWhisperContext = nil
       let selectedModel = FileManager.default.fileExists(atPath: task.modelType.localURL.path) ? task.modelType : .default
       // Update model type in case it of fallback to default
-      updateTask(task.with(\.modelType, setTo: selectedModel))
+      task.task.settings.selectedModel = selectedModel
 
       let memory = freeMemoryAmount()
-      log.info("Available memory: \(bytesToReadableString(bytes: availableMemory()))")
-      log.info("Free memory: \(bytesToReadableString(bytes: memory))")
+      logs.info("Available memory: \(bytesToReadableString(bytes: availableMemory()))")
+      logs.info("Free memory: \(bytesToReadableString(bytes: memory))")
 
       guard memory > selectedModel.memoryRequired else {
         throw LocalTranscriptionError.notEnoughMemory(available: memory, required: selectedModel.memoryRequired)

@@ -41,13 +41,13 @@ enum SubscriptionClientError: Error, LocalizedError {
   var errorDescription: String? {
     switch self {
     case .noCurrentOffering:
-      return "No current offering available."
+      "No current offering available."
     case .noPackageInOffering:
-      return "No package in the current offering."
+      "No package in the current offering."
     case .cancelled:
-      return "The transaction was cancelled."
+      "The transaction was cancelled."
     case .noTransaction:
-      return "No transaction found."
+      "No transaction found."
     }
   }
 }

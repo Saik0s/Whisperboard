@@ -29,7 +29,7 @@ extension KeychainClient {
       do {
         try setString(uuidString, for: #function)
       } catch {
-        log.error(error)
+        logs.error("Could not save user ID to keychain, error: \(error)")
       }
     }
     return uuidString

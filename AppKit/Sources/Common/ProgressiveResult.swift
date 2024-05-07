@@ -44,6 +44,7 @@ extension ProgressiveResult where Value: Equatable {
     switch (lhs, rhs) {
     case let (.success(lhsValue), rhsValue):
       return lhsValue == rhsValue
+
     default:
       return false
     }
@@ -61,6 +62,7 @@ extension ProgressiveResult: Equatable where Value: Equatable {
     switch (lhs, rhs) {
     case let (.inProgress(lhsValue), .inProgress(rhsValue)):
       return lhsValue == rhsValue
+
     default:
       return isEqual(lhs: lhs, rhs: rhs)
     }
@@ -69,15 +71,19 @@ extension ProgressiveResult: Equatable where Value: Equatable {
   private static func isEqual(lhs: ProgressiveResult<Value, Progress>, rhs: ProgressiveResult<Value, Progress>) -> Bool {
     switch (lhs, rhs) {
     case (.none, .none):
-      return true
+      true
+
     case (.inProgress, .inProgress):
-      return true
+      true
+
     case let (.success(lhsValue), .success(rhsValue)):
-      return lhsValue == rhsValue
+      lhsValue == rhsValue
+
     case let (.error(lhsError), .error(rhsError)):
-      return lhsError == rhsError
+      lhsError == rhsError
+
     default:
-      return false
+      false
     }
   }
 }
@@ -94,6 +100,7 @@ extension ProgressiveResult: Hashable where Value: Hashable {
     switch self {
     case let .inProgress(progress):
       hasher.combine(progress)
+
     default:
       break
     }
@@ -103,11 +110,14 @@ extension ProgressiveResult: Hashable where Value: Hashable {
     switch self {
     case .none:
       hasher.combine(0)
+
     case .inProgress:
       hasher.combine(1)
+
     case let .success(value):
       hasher.combine(2)
       hasher.combine(value)
+
     case let .error(error):
       hasher.combine(3)
       hasher.combine(error)
@@ -147,18 +157,20 @@ extension TaskResult {
   func toProgressiveResult<Progress>() -> ProgressiveResult<Success, Progress> {
     switch self {
     case let .success(value):
-      return .success(value)
+      .success(value)
+
     case let .failure(error):
-      return .failure(error)
+      .failure(error)
     }
   }
 
   var asProgressiveResult: ProgressiveResultOf<Success> {
     switch self {
     case let .success(value):
-      return .success(value)
+      .success(value)
+
     case let .failure(error):
-      return .failure(error)
+      .failure(error)
     }
   }
 }
