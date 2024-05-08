@@ -24,7 +24,7 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
 
   @Environment(TabBarViewModel.self) private var tabBarViewModel: TabBarViewModel
 
-  private var screenWidth: CGFloat = UIScreen.main.bounds.width
+  @State private var screenWidth: CGFloat = 0
   private var tabBarUnsafeHeight: CGFloat { tabBarViewModel.tabBarHeight + (UIApplication.shared.rootWindow?.safeAreaInsets.bottom ?? 0) }
 
   @ObserveInjection private var inject
@@ -79,6 +79,7 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
       }
       .animation(.showHide(), value: selectedIndex)
     }
+    .readSize { screenWidth = $0.width }
     .enableInjection()
   }
 }
