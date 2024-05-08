@@ -29,7 +29,6 @@ struct Recording {
     case continueButtonTapped
     case deleteButtonTapped
     case recordingStateUpdated(RecordingState)
-    case recordingSamplesCollected(TimeInterval, [Float])
   }
 
   enum DelegateAction: Equatable {
@@ -48,26 +47,8 @@ struct Recording {
       UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
       return .run { [url = state.url, audioRecorder] send in
-        var sampleBatch: [Float] = []
-        var lastDuration: TimeInterval = 0
-
         for await recState in await audioRecorder.startRecording(url) {
-          if case let .recording(duration, power) = recState {
-            let linear = 1 - pow(10, power / 20)
-            sampleBatch.append(contentsOf: [linear])
-            lastDuration = duration
-
-            if sampleBatch.count >= 12 {
-              await send(.recordingSamplesCollected(lastDuration, sampleBatch))
-              sampleBatch.removeAll()
-            }
-          } else {
-            if !sampleBatch.isEmpty {
-              await send(.recordingSamplesCollected(lastDuration, sampleBatch))
-              sampleBatch.removeAll()
-            }
-            await send(.recordingStateUpdated(recState))
-          }
+          await send(.recordingStateUpdated(recState), animation: .bouncy)
         }
       }
 
@@ -111,10 +92,8 @@ struct Recording {
         await audioRecorder.removeCurrentRecording()
       }
 
-    case .recordingStateUpdated(.recording):
-      return .none
-
-    case let .recordingSamplesCollected(duration, samples):
+    case let .recordingStateUpdated(.recording(duration, powers)):
+      let samples = powers.map { 1 - pow(10, $0 / 20) }
       state.recordingInfo.duration = duration
       state.samples.append(contentsOf: samples)
       return .none

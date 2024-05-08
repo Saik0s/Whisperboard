@@ -125,7 +125,7 @@ private actor AudioRecorder {
     let (stream, continuation) = AsyncStream<RecordingState>.makeStream(bufferingPolicy: .unbounded)
     recordingStateContinuation = continuation
 
-    continuation.yield(.recording(duration: 0, power: 0))
+    continuation.yield(.recording(duration: 0, powers: []))
 
     do {
       let recorder = try AVAudioRecorder(url: url, settings: AudioRecorderSettings.whisper)
@@ -137,8 +137,7 @@ private actor AudioRecorder {
         try await self?.audioSession.enable(.record, true)
         await self?.recorder?.record()
         while await self?.recorder != nil && !Task.isCancelled {
-          await self?.updateMeters()
-          try await Task.sleep(seconds: 0.01)
+          try await self?.updateMeters()
         }
       }
     } catch {
@@ -189,7 +188,7 @@ private actor AudioRecorder {
     }
   }
 
-  private func updateMeters() async {
+  private func updateMeters() async throws {
     guard let recorder else {
       task?.cancel()
       return
@@ -197,10 +196,15 @@ private actor AudioRecorder {
 
     guard recorder.isRecording else { return }
 
-    recorder.updateMeters()
+    var powers = [Float]()
+    for _ in 0..<10 {
+      recorder.updateMeters()
+      powers.append(recorder.averagePower(forChannel: 0))
+      try await Task.sleep(seconds: 0.01)
+    }
     recordingStateContinuation?.yield(.recording(
       duration: recorder.currentTime,
-      power: recorder.averagePower(forChannel: 0)
+      powers: powers
     ))
   }
 

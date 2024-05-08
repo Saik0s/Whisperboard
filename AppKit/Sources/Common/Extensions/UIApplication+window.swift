@@ -1,8 +1,3 @@
-//
-// UIApplication+window.swift
-// GetLost
-//
-
 import UIKit
 
 public extension UIApplication {

@@ -31,7 +31,7 @@ struct RootView: View {
             RecordingDetailsView(store: store)
           }
         }
-          .navigationTransition(.slide),
+        .navigationTransition(.slide),
         screen2: RecordScreenView(store: store.scope(state: \.recordScreen, action: \.recordScreen)),
         screen3: NavigationStack {
           SettingsScreenView(store: store.scope(state: \.settingsScreen, action: \.settingsScreen))

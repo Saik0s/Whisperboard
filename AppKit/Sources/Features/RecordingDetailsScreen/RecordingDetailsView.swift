@@ -132,7 +132,7 @@ struct RecordingDetailsView: View {
 
             Button { store.send(.recordingCard(.transcribeButtonTapped)) } label: {
               Image(systemName: "arrow.clockwise")
-            }
+            }.disabled(store.recordingCard.recording.isTranscribing)
 
             ShareLink(item: store.shareAudioFileURL) {
               Image(systemName: "square.and.arrow.up")
@@ -157,36 +157,20 @@ struct RecordingDetailsView: View {
             .colorMultiply(.DS.Text.accent)
           }.iconButtonStyle()
 
-          if !store.recordingCard.recording.isTranscribed
-            && !store.recordingCard.recording.isTranscribing
-            && !store.recordingCard.recording.isPaused {
-            if let error = store.recordingCard.recording.transcriptionErrorMessage {
-              Text("Last transcription failed")
-                .textStyle(.error)
-              Text(error)
-                .textStyle(.error)
-            }
-            Button("Transcribe") {
-              store.send(.recordingCard(.transcribeButtonTapped))
-            }
-            .tertiaryButtonStyle()
-            .padding(.grid(4))
-          } else {
-            transcriptionControls()
-
-            transcriptionView
-
-            // TextField("No transcription", text: store.binding(\.$recordingCard.recordingEnvelop.text), axis: .vertical)
-            //   .focused($focusedField, equals: .text)
-            //   .lineLimit(nil)
-            //   .textFieldStyle(.roundedBorder)
-            //   .font(.DS.bodyM)
-            //   .foregroundColor(.DS.Text.base)
-            //   .background(Color.DS.Background.secondary)
+          if store.recordingCard.recording.isTranscribing || store.recordingCard.queueInfo != nil || !store.recordingCard.recording.isTranscribed {
+            TranscriptionControlsView(store: store.scope(state: \.recordingCard, action: \.recordingCard))
+          } else if let error = store.recordingCard.recording.transcription?.status.errorMessage {
+            Text("Last transcription failed")
+              .textStyle(.error)
+              .foregroundColor(.DS.Text.error)
+            Text(error)
+              .textStyle(.error)
+              .foregroundColor(.DS.Text.error)
           }
+
+          transcriptionView
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        //      .animation(.easeInOut(duration: 0.3), value: store.recordingCard)
 
         WaveformProgressView(
           store: store.scope(
