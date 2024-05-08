@@ -8,10 +8,16 @@ import SwiftUI
 
 struct RootView: View {
   @Perception.Bindable var store: StoreOf<Root>
+  @Perception.Bindable private var tabBarViewModel: TabBarViewModel
+  @Perception.Bindable private var recordButtonModel: RecordButtonModel
 
-  @State private var tabBarViewModel = TabBarViewModel()
-  @State private var recordButtonModel = RecordButtonModel(isExpanded: true)
   @Namespace private var namespace
+
+  init(store: StoreOf<Root>) {
+    self.store = store
+    tabBarViewModel = TabBarViewModel()
+    recordButtonModel = RecordButtonModel(isExpanded: true)
+  }
 
   var body: some View {
     WithPerceptionTracking {
@@ -25,7 +31,7 @@ struct RootView: View {
             RecordingDetailsView(store: store)
           }
         }
-        .navigationTransition(.slide),
+          .navigationTransition(.slide),
         screen2: RecordScreenView(store: store.scope(state: \.recordScreen, action: \.recordScreen)),
         screen3: NavigationStack {
           SettingsScreenView(store: store.scope(state: \.settingsScreen, action: \.settingsScreen))
@@ -36,11 +42,15 @@ struct RootView: View {
       .environment(tabBarViewModel)
       .environment(recordButtonModel)
       .environment(NamespaceContainer(namespace: namespace))
-      .onChange(of: store.path.isEmpty) { isEmpty in 
-        // Don't show tab bar if not on the root screen
-        withAnimation(.easeInOut(duration: 0.2)) {
-          tabBarViewModel.isVisible = isEmpty
+      .animation(.easeInOut(duration: 0.2), value: tabBarViewModel.isVisible)
+      .onAppear {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+          tabBarViewModel.isVisible = true
         }
+      }
+      .onChange(of: store.path.isEmpty) { isEmpty in
+        // Don't show tab bar if not on the root screen
+        tabBarViewModel.isVisible = isEmpty
       }
     }
   }

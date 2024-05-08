@@ -102,7 +102,7 @@ struct RecordingControls {
         return .none
       }
     }
-    .ifLet(\.recording, action: /Action.recording) { Recording() }
+    .ifLet(\.recording, action: \.recording) { Recording() }
   }
 
   private func startRecording(_ state: inout State) -> Effect<Action> {

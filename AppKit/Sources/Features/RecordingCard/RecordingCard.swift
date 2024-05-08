@@ -17,7 +17,6 @@ struct RecordingCard {
     @Shared var recording: RecordingInfo
     @SharedReader var queueInfo: QueueInfo?
     var playerControls: PlayerControls.State
-    @Presents var alert: AlertState<Action.Alert>?
 
     var isInQueue: Bool { queueInfo != nil }
     var transcription: String { recording.text }
@@ -36,9 +35,6 @@ struct RecordingCard {
     case cancelTranscriptionButtonTapped
     case recordingSelected
     case didTapResumeTranscription
-    case alert(PresentationAction<Alert>)
-
-    enum Alert: Equatable {}
   }
 
   @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
@@ -80,12 +76,8 @@ struct RecordingCard {
             await transcriptionWorker.resumeTask(task)
           }
         }
-
-      case .alert:
-        return .none
       }
     }
-    .ifLet(\.$alert, action: /Action.alert)
   }
 }
 
@@ -100,7 +92,6 @@ extension Transcription.Status {
       "Uploading... \(String(format: "%.0f", progress * 100))%"
     case let .error(message: message):
       message
-
     case let .progress(progress):
       "Transcribing... \(String(format: "%.0f", progress * 100))%"
     case .done:

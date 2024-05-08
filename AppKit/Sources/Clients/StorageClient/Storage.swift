@@ -83,8 +83,8 @@ final class Storage {
           try FileManager.default.moveItem(at: sourceURL, to: destinationURL)
           let duration = try await getFileDuration(url: destinationURL)
           let recording = RecordingInfo(
-            id: UUID().uuidString,
-            title: sourceURL.deletingPathExtension().lastPathComponent,
+            fileName: newFileName,
+            title: file,
             date: Date(),
             duration: duration
           )

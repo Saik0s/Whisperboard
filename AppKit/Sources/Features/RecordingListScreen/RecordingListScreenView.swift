@@ -60,13 +60,6 @@ struct RecordingListScreen {
             await send(.didSyncRecordings(TaskResult { try await storage.sync(recordings.wrappedValue) }))
           }
         }
-//        .merge(with: .publisher { [state] in
-//          state.$recordings.publisher
-//            .map { $0.map(\.id) }
-//            .removeDuplicates()
-//            .receive(on: DispatchQueue.main)
-//            .map { _ in Action.reloadCards }
-//        })
 
       case let .addFileRecordings(urls):
         return .run { send in
@@ -87,11 +80,11 @@ struct RecordingListScreen {
           await send(.binding(.set(\.isImportingFiles, false)))
           await send(.failedToAddRecordings(error: error.equatable))
         }
-        .animation(.gentleBounce())
+          .animation(.gentleBounce())
 
       case let .addRecordingInfo(recording):
-        state.recordings.append(recording)
-        return .none
+        state.recordings.insert(recording, at: 0)
+        return .send(.reloadCards)
 
       case let .failedToAddRecordings(error):
         logs.error("Failed to add recordings error: \(error)")
@@ -103,7 +96,7 @@ struct RecordingListScreen {
         return .none
 
       case let .alert(.presented(.deleteDialogConfirmed(id))),
-           let .deleteSwipeActionTapped(id):
+        let .deleteSwipeActionTapped(id):
         if let url = state.recordingCards[id: id]?.recording.fileURL {
           try? FileManager.default.removeItem(at: url)
         }
@@ -136,10 +129,10 @@ struct RecordingListScreen {
 
   private func createCards(for state: State) -> IdentifiedArrayOf<RecordingCard.State> {
     @SharedReader(.transcriptionTasks) var taskQueue: [TranscriptionTask]
-    return state.$recordings.elements
+    return state.recordings
       .map { recording in
         state.recordingCards[id: recording.id] ?? RecordingCard.State(
-          recording: recording,
+          recording: state.$recordings[id: recording.id] ?? Shared(recording),
           queueInfo: $taskQueue.identifiedArray.elements[recordingInfoID: recording.id]
         )
       }.identifiedArray
@@ -190,11 +183,11 @@ struct RecordingListScreenView: View {
         } label: {
           Image(systemName: "doc.badge.plus")
         }
-        .secondaryIconButtonStyle()
+          .secondaryIconButtonStyle()
       )
       .environment(
         \.editMode,
-        $store.editMode
+         $store.editMode
       )
       .removeNavigationBackground()
       .overlay {
