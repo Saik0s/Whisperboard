@@ -38,10 +38,10 @@ struct SettingsScreenView: View {
       .removeNavigationBackground()
       .navigationBarTitle("Settings")
       .navigationBarTitleDisplayMode(.inline)
-      .applyTabBarContentInset()
       .alert($store.scope(state: \.alert, action: \.alert))
       .task { await store.send(.task).finish() }
       .onAppear { store.send(.updateInfo) }
+      .applyTabBarContentInset()
     }
     .enableInjection()
   }

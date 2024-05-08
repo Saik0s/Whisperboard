@@ -10,7 +10,7 @@ public struct AppView: View {
   @MainActor static let store = Store(initialState: Root.State()) {
     Root()
     #if DEBUG
-      ._printChanges(.swiftLog())
+      ._printChanges(.swiftLog(withStateChanges: true))
     #endif
   } withDependencies: {
     if ProcessInfo.processInfo.environment["UITesting"] == "true" {

@@ -8,7 +8,7 @@ import VariableBlurView
 
 @Perceptible
 class TabBarViewModel {
-  var tabBarHeight: CGFloat = 44
+  var tabBarHeight: CGFloat = 94
   var isVisible = false
 
   init() {}
@@ -25,6 +25,7 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
   @Environment(TabBarViewModel.self) private var tabBarViewModel: TabBarViewModel
 
   private var screenWidth: CGFloat = UIScreen.main.bounds.width
+  private var tabBarUnsafeHeight: CGFloat { tabBarViewModel.tabBarHeight + (UIApplication.shared.rootWindow?.safeAreaInsets.bottom ?? 0) }
 
   @ObserveInjection private var inject
 
@@ -64,25 +65,19 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
             .offset(x: selectedIndex == .settings ? 0 : screenWidth, y: 0)
         }
 
-        if tabBarViewModel.isVisible {
-          VariableBlurView(maxBlurRadius: 10)
-            .rotationEffect(.degrees(180), anchor: .center)
-            .allowsHitTesting(false)
-            .frame(height: tabBarViewModel.tabBarHeight)
-            .frame(maxWidth: .infinity)
-            .ignoresSafeArea()
-            .transition(.opacity)
-        }
+        VariableBlurView(maxBlurRadius: 10)
+          .rotationEffect(.degrees(180), anchor: .center)
+          .allowsHitTesting(false)
+          .frame(height: tabBarUnsafeHeight)
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+          .opacity(tabBarViewModel.isVisible ? 1 : 0)
+          .ignoresSafeArea()
+
         AnimatedTabBar(selectedIndex: $selectedIndex)
           .readSize { tabBarViewModel.tabBarHeight = $0.height }
-          .offset(x: 0, y: tabBarViewModel.isVisible ? 0 : (tabBarViewModel.tabBarHeight + (UIApplication.shared.rootWindow?.safeAreaInsets.bottom ?? 0)))
+          .offset(x: 0, y: tabBarViewModel.isVisible ? 0 : tabBarUnsafeHeight)
       }
       .animation(.showHide(), value: selectedIndex)
-      .onAppear {
-        withAnimation(.easeInOut(duration: 0.2)) {
-          tabBarViewModel.isVisible = true
-        }
-      }
     }
     .enableInjection()
   }

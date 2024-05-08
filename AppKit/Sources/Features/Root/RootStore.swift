@@ -74,17 +74,16 @@ struct Root {
         subscriptionClient.configure(keychainClient.userID)
 
         @Shared(.transcriptionTasks) var taskQueue: [TranscriptionTask]
-        @Shared(.recordings) var recordings: [RecordingInfo]
 
         // Pausing unfinished transcription on app launch
-        for recording in recordings {
+        for recording in state.recordingListScreen.recordings {
           if let transcription = recording.transcription, transcription.status.isLoadingOrProgress {
             if let task = taskQueue[id: transcription.id] {
               logs.debug("Marking \(recording.fileName) transcription as paused")
-              recordings[id: recording.id]?.transcription?.status = .paused(task, progress: recording.progress)
+              state.recordingListScreen.recordings[id: recording.id]?.transcription?.status = .paused(task, progress: recording.progress)
             } else {
               logs.debug("Marking \(recording.fileName) transcription as failed")
-              recordings[id: recording.id]?.transcription?.status = .error(message: "Transcription failed")
+              state.recordingListScreen.recordings[id: recording.id]?.transcription?.status = .error(message: "Transcription failed")
             }
             taskQueue[id: transcription.id] = nil
           }

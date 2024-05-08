@@ -166,8 +166,6 @@ private actor AudioRecorder {
     recorder?.stop()
     recorder?.deleteRecording()
     recorder = nil
-    recordingStateContinuation?.finish()
-    recordingStateContinuation = nil
   }
 
   func availableMicrophones() throws -> AsyncStream<[Microphone]> {

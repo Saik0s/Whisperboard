@@ -106,13 +106,11 @@ struct RecordingCardView: View {
         }
       }
     }
-//    .animation(.easeInOut(duration: 0.3), value: store.state)
     .multilineTextAlignment(.leading)
     .padding(.grid(2))
     .cardStyle(isPrimary: store.playerControls.isPlaying)
     .offset(y: showItem ? 0 : 200)
     .opacity(showItem ? 1 : 0)
-    .alert($store.scope(state: \.alert, action: \.alert))
     .onAppear {
       withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
         showItem = true
