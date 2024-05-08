@@ -92,6 +92,7 @@ extension Transcription.Status {
       "Uploading... \(String(format: "%.0f", progress * 100))%"
     case let .error(message: message):
       message
+
     case let .progress(progress):
       "Transcribing... \(String(format: "%.0f", progress * 100))%"
     case .done:

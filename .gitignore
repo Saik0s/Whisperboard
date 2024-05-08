@@ -137,3 +137,5 @@ cpd-output.xml
 build/
 TuistCache/
 Tuist/.build
+
+buildServer.json

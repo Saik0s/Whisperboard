@@ -206,7 +206,6 @@ struct RecordingControlsView: View {
           }
         }
         .padding(.horizontal, .grid(3))
-        .animation(.easeIn(duration: 0.1), value: store.recording)
         .popover(
           present: $store.isGoToNewRecordingPopupPresented,
           attributes: {

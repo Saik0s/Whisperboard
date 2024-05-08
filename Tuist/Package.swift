@@ -46,7 +46,7 @@ let package = Package(
     .package(url: "https://github.com/airbnb/lottie-spm.git", from: "4.3.3"),
     .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "0.1.0"),
     .package(url: "https://github.com/AudioKit/AudioKit.git", from: "5.6.0"),
-    .package(url: "https://github.com/dmrschmidt/DSWaveformImage.git", from: "13.0.2"),
+    .package(url: "https://github.com/dmrschmidt/DSWaveformImage.git", from: "14.2.2"),
     .package(url: "https://github.com/gohanlon/swift-memberwise-init-macro", from: "0.4.0"),
     .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "3.0.0"),
     .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "1.10.2"),

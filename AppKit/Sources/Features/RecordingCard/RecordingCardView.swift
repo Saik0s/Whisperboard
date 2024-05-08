@@ -51,56 +51,7 @@ struct RecordingCardView: View {
               .fill(.ultraThinMaterial)
               .continuousCornerRadius(.grid(2))
 
-            if store.recording.isTranscribing || store.queueInfo != nil {
-              VStack(spacing: .grid(2)) {
-                if store.recording.isTranscribing {
-                  HStack(spacing: .grid(2)) {
-                    ProgressView()
-                      .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
-
-                    Text(store.recording.transcription?.status.message ?? "")
-                      .textStyle(.subheadline)
-                  }
-                } else if let queueInfo = store.queueInfo {
-                  Text("In queue: \(queueInfo.position) of \(queueInfo.total)")
-                    .textStyle(.body)
-                }
-
-                Button("Cancel") {
-                  store.send(.cancelTranscriptionButtonTapped)
-                }.tertiaryButtonStyle()
-              }
-              .padding(.grid(2))
-            } else if store.recording.isPaused {
-              VStack(spacing: .grid(1)) {
-                Text(store.recording.transcription?.status.message ?? "")
-                  .textStyle(.body)
-
-                HStack {
-                  Button("Resume") {
-                    store.send(.didTapResumeTranscription)
-                  }.tertiaryButtonStyle()
-
-                  Button("Start Over") {
-                    store.send(.transcribeButtonTapped)
-                  }.tertiaryButtonStyle()
-                }
-              }
-              .padding(.grid(2))
-            } else if !store.recording.isTranscribed {
-              VStack(spacing: .grid(1)) {
-                if let error = store.recording.transcriptionErrorMessage {
-                  Text(error)
-                    .textStyle(.error)
-                }
-
-                Button("Transcribe") {
-                  store.send(.transcribeButtonTapped)
-                }
-                .tertiaryButtonStyle()
-              }
-              .padding(.grid(2))
-            }
+            TranscriptionControlsView(store: store)
           }
           .transition(.scale(scale: 0, anchor: .top).combined(with: .opacity).animation(.easeInOut(duration: 0.2)))
         }
@@ -117,5 +68,66 @@ struct RecordingCardView: View {
       }
     }
     .enableInjection()
+  }
+}
+
+// MARK: - TranscriptionControlsView
+
+struct TranscriptionControlsView: View {
+  @Perception.Bindable var store: StoreOf<RecordingCard>
+
+  var body: some View {
+    WithPerceptionTracking {
+      if store.recording.isPaused {
+        VStack(spacing: .grid(1)) {
+          Text(store.recording.transcription?.status.message ?? "")
+            .textStyle(.body)
+
+          HStack {
+            Button("Resume") {
+              store.send(.didTapResumeTranscription)
+            }.tertiaryButtonStyle()
+
+            Button("Start Over") {
+              store.send(.transcribeButtonTapped)
+            }.tertiaryButtonStyle()
+          }
+        }
+        .padding(.grid(2))
+      } else if store.recording.isTranscribing || store.queueInfo != nil {
+        VStack(spacing: .grid(2)) {
+          if store.recording.isTranscribing {
+            HStack(spacing: .grid(2)) {
+              ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .DS.Text.accent))
+
+              Text(store.recording.transcription?.status.message ?? "")
+                .textStyle(.subheadline)
+            }
+          } else if let queueInfo = store.queueInfo {
+            Text("In queue: \(queueInfo.position) of \(queueInfo.total)")
+              .textStyle(.body)
+          }
+
+          Button("Cancel") {
+            store.send(.cancelTranscriptionButtonTapped)
+          }.tertiaryButtonStyle()
+        }
+        .padding(.grid(2))
+      } else if !store.recording.isTranscribed {
+        VStack(spacing: .grid(1)) {
+          if let error = store.recording.transcriptionErrorMessage {
+            Text(error)
+              .textStyle(.error)
+          }
+
+          Button("Transcribe") {
+            store.send(.transcribeButtonTapped)
+          }
+          .tertiaryButtonStyle()
+        }
+        .padding(.grid(2))
+      }
+    }
   }
 }

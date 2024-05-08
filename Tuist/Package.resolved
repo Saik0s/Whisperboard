@@ -1,5 +1,5 @@
 {
-  "originHash" : "8a88849ef4d5b11ad37b2a2d1fd54359f3289e4dcefbf54c905a74e0f386df8f",
+  "originHash" : "5afd538bd9993a215d43e2605521ff70e7d161306aafc9f9fcbfee8edd8e17da",
   "pins" : [
     {
       "identity" : "audiokit",
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/dmrschmidt/DSWaveformImage.git",
       "state" : {
-        "revision" : "e670b8da140c39036f171b9754ed25126b8d414b",
-        "version" : "13.0.2"
+        "revision" : "4c56578ee10128ee2b2c04c9c5aa73812de722db",
+        "version" : "14.2.2"
       }
     },
     {
