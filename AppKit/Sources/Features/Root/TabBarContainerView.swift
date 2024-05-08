@@ -39,8 +39,8 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
     WithPerceptionTracking {
       ZStack(alignment: .bottom) {
         FluidGradient(
-          blobs: [Color(hexString: "#000029"), Color(hexString: "#140029"), Color(hexString: "#000000")],
-          highlights: [Color(hexString: "#1D004D"), Color(hexString: "#000055"), Color(hexString: "#200020")],
+          blobs: [Color(hexString: "#000040"), Color(hexString: "#000030"), Color(hexString: "#000020")],
+          highlights: [Color(hexString: "#1D004D"), Color(hexString: "#300055"), Color(hexString: "#100020")],
           speed: 0.2,
           blur: 0.75
         )
@@ -65,15 +65,24 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
         }
 
         if tabBarViewModel.isVisible {
-          AnimatedTabBar(selectedIndex: $selectedIndex)
-            .readSize { tabBarViewModel.tabBarHeight = $0.height }
-            .frame(maxHeight: .infinity, alignment: .bottom)
-            .transition(.move(edge: .bottom))
+          VariableBlurView(maxBlurRadius: 10)
+            .rotationEffect(.degrees(180), anchor: .center)
+            .allowsHitTesting(false)
+            .frame(height: tabBarViewModel.tabBarHeight)
+            .frame(maxWidth: .infinity)
+            .ignoresSafeArea()
+            .transition(.opacity)
         }
+        AnimatedTabBar(selectedIndex: $selectedIndex)
+          .readSize { tabBarViewModel.tabBarHeight = $0.height }
+          .offset(x: 0, y: tabBarViewModel.isVisible ? 0 : (tabBarViewModel.tabBarHeight + (UIApplication.shared.rootWindow?.safeAreaInsets.bottom ?? 0)))
       }
       .animation(.showHide(), value: selectedIndex)
-      .animation(.showHide(), value: tabBarViewModel.isVisible)
-      .onAppear { tabBarViewModel.isVisible = true }
+      .onAppear {
+        withAnimation(.easeInOut(duration: 0.2)) {
+          tabBarViewModel.isVisible = true
+        }
+      }
     }
     .enableInjection()
   }
