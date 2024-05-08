@@ -24,6 +24,7 @@ struct AnimatedTabBar: View {
       }
       .opacity(selectedIndex == .record ? 0 : 1)
       .disabled(selectedIndex == .record)
+      .frame(maxWidth: selectedIndex == .record ? .infinity : nil)
 
       TabBarButton(
         image: Image(systemName: "gear"),
@@ -35,13 +36,6 @@ struct AnimatedTabBar: View {
     .padding(.horizontal)
     .background(TabBarBackground(selectedIndex: selectedIndex))
     .padding()
-    .frame(maxWidth: .infinity)
-    .background {
-      VariableBlurView(maxBlurRadius: 10)
-        .rotationEffect(.degrees(180), anchor: .center)
-        .allowsHitTesting(false)
-        .ignoresSafeArea()
-    }
   }
 }
 

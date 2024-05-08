@@ -38,7 +38,9 @@ struct RootView: View {
       .environment(NamespaceContainer(namespace: namespace))
       .onChange(of: store.path.isEmpty) { isEmpty in 
         // Don't show tab bar if not on the root screen
-        tabBarViewModel.isVisible = isEmpty
+        withAnimation(.easeInOut(duration: 0.2)) {
+          tabBarViewModel.isVisible = isEmpty
+        }
       }
     }
   }
