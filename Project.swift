@@ -237,8 +237,7 @@ let project = Project(
         .external(name: "NavigationTransitions"),
         // .external(name: "RevenueCat"),
 
-        // .external(name: "whisper"),
-        // .package(product: "NavigationTransitions"),
+        .external(name: "WhisperKit"),
         .package(product: "whisper"),
         .package(product: "RollbarNotifier"),
       ],

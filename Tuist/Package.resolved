@@ -1,5 +1,5 @@
 {
-  "originHash" : "5e81f8c93dc719a0d709949f4df6b9f77be4bde63e1bf6595acd0258b6013d6b",
+  "originHash" : "8a88849ef4d5b11ad37b2a2d1fd54359f3289e4dcefbf54c905a74e0f386df8f",
   "pins" : [
     {
       "identity" : "audiokit",
@@ -80,6 +80,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "a6895602c7db1683be1c68363564de4fb09521cd"
+      }
+    },
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser.git",
+      "state" : {
+        "revision" : "c8ed701b513cf5177118a175d85fbbbcd707ab41",
+        "version" : "1.3.0"
       }
     },
     {
@@ -227,6 +236,15 @@
       }
     },
     {
+      "identity" : "swift-transformers",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/huggingface/swift-transformers.git",
+      "state" : {
+        "revision" : "74b94211bdc741694ed7e700a1104c72e5ba68fe",
+        "version" : "0.1.7"
+      }
+    },
+    {
       "identity" : "swiftui-introspect",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/siteline/SwiftUI-Introspect.git",
@@ -260,6 +278,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "aac95d7a528b8aa37bf2228d0e2d13fa0ed11f9d"
+      }
+    },
+    {
+      "identity" : "whisperkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/argmaxinc/WhisperKit.git",
+      "state" : {
+        "revision" : "c20943d3f5d6f64981e9eaed8a3a9c3a62124fc5",
+        "version" : "0.6.1"
       }
     },
     {

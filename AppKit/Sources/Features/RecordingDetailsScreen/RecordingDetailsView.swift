@@ -210,6 +210,7 @@ struct RecordingDetailsView: View {
       }
       .alert($store.scope(state: \.alert, action: \.alert))
       .alert($store.scope(state: \.recordingCard.alert, action: \.recordingCard.alert))
+      .background(Color.DS.Background.primary)
     }
     .enableInjection()
   }

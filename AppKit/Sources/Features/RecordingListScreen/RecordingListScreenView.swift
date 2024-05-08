@@ -206,6 +206,7 @@ struct RecordingListScreenView: View {
       .alert($store.scope(state: \.alert, action: \.alert))
       // .messagePopup(store: store.scope(state: \.$alert, action: \.alert))
       .task { await store.send(.task).finish() }
+      .applyTabBarContentInset()
     }
     .enableInjection()
   }
