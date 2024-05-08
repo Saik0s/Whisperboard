@@ -58,5 +58,6 @@ let package = Package(
     .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     .package(url: "https://github.com/Cindori/FluidGradient.git", from: "1.0.0"),
     .package(url: "https://github.com/davdroman/swiftui-navigation-transitions.git", from: "0.13.3"),
+    .package(url: "https://github.com/argmaxinc/WhisperKit.git", from: "0.6.1"),
   ]
 )
