@@ -114,7 +114,13 @@ public actor AudioFileStreamRecorder {
 
     // Setup audio file for writing
     logs.info("Writing audio file to \(fileURL)")
-    audioFile = try AVAudioFile(forWriting: fileURL, settings: AudioRecorderSettings.whisper)
+    let desiredFormat = try AVAudioFormat(
+      commonFormat: .pcmFormatFloat32,
+      sampleRate: Double(WhisperKit.sampleRate),
+      channels: AVAudioChannelCount(1),
+      interleaved: false
+    ).require()
+    audioFile = try AVAudioFile(forWriting: fileURL, settings: desiredFormat.settings)
 
     guard state.isTranscriptionEnabled else {
       task = Task { [weak self] in
@@ -194,10 +200,13 @@ public actor AudioFileStreamRecorder {
   private func onAudioBufferCallback(_ floatArray: [Float]) {
     // Write buffer to audio file
     do {
-      let format = try AVAudioFormat(settings: AudioRecorderSettings.whisper).require()
-      let frameCapacity = AVAudioFrameCount(floatArray.count)
-      let buffer = try AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCapacity).require()
-      try audioFile?.write(from: buffer)
+      var floatArray = floatArray
+      try floatArray.withUnsafeMutableBufferPointer { bytes in
+        let audioBuffer = AudioBuffer(mNumberChannels: 1, mDataByteSize: UInt32(bytes.count * MemoryLayout<Float>.size), mData: bytes.baseAddress)
+        var bufferList = AudioBufferList(mNumberBuffers: 1, mBuffers: audioBuffer)
+        let outputAudioBuffer = try AVAudioPCMBuffer(pcmFormat: audioFile.require().processingFormat, bufferListNoCopy: &bufferList)!
+        try self.audioFile?.write(from: outputAudioBuffer)
+      }
     } catch {
       logs.error("Failed to write audio buffer to file: \(error.localizedDescription)")
     }
