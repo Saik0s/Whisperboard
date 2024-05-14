@@ -8,12 +8,12 @@ extension DependencyValues {
     get { self[DidBecomeActiveKey.self] }
     set { self[DidBecomeActiveKey.self] = newValue }
   }
-  
+
   var willEnterForeground: @Sendable () async -> AsyncStream<Void> {
     get { self[WillEnterForegroundKey.self] }
     set { self[WillEnterForegroundKey.self] = newValue }
   }
-  
+
   var didEnterBackground: @Sendable () async -> AsyncStream<Void> {
     get { self[DidEnterBackgroundKey.self] }
     set { self[DidEnterBackgroundKey.self] = newValue }

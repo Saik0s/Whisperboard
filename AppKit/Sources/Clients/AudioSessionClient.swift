@@ -97,7 +97,7 @@ extension AudioSessionClient: DependencyKey {
             try session.setCategory(.playAndRecord, mode: mode, options: modifiedOptions)
           }
 
-          try session.setActive(true)
+          try session.setActive(true, options: .notifyOthersOnDeactivation)
           try session.setPreferredInput(mic?.port)
         }
       },
@@ -120,7 +120,7 @@ extension AudioSessionClient: DependencyKey {
         }
 
         if updateActivation && (!isPlaybackActive.value && !isRecordActive.value) {
-          try session.setActive(false)
+          try session.setActive(false, options: .notifyOthersOnDeactivation)
         }
       },
       requestRecordPermission: {
@@ -131,23 +131,27 @@ extension AudioSessionClient: DependencyKey {
         }
       },
       availableMicrophones: {
-        let updateStream = AsyncStream<[Microphone]>(
-          NotificationCenter.default
-            .notifications(named: AVAudioSession.routeChangeNotification)
-            .map { _ -> [Microphone] in
-              AVAudioSession.sharedInstance().availableInputs?.map(Microphone.init) ?? []
-            }
-        )
-
-        try session.setCategory(.playAndRecord, mode: mode, options: options)
-
-        return AsyncStream([Microphone].self) { continuation in
+        AsyncStream([Microphone].self) { continuation in
           continuation.yield(microphones)
 
-          Task {
+          let task = Task(priority: .background) {
+            let updateStream = AsyncStream<[Microphone]>(
+              NotificationCenter.default
+                .notifications(named: AVAudioSession.routeChangeNotification)
+                .map { _ -> [Microphone] in
+                  AVAudioSession.sharedInstance().availableInputs?.map(Microphone.init) ?? []
+                }
+            )
+
+            try session.setCategory(.playAndRecord, mode: mode, options: options)
+
             for await microphones in updateStream {
               continuation.yield(microphones)
             }
+          }
+
+          continuation.onTermination = { @Sendable _ in
+            task.cancel()
           }
         }
       },

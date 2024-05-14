@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import WhisperKit
 
 // MARK: - Recording
 
@@ -7,123 +8,277 @@ import SwiftUI
 struct Recording {
   @ObservableState
   struct State: Equatable {
-    enum Mode {
+    enum Mode: Equatable {
       case recording, encoding, paused, removing
+    }
+
+    enum LiveTranscriptionState: Equatable {
+      case idle, loading(String), transcribing(String), error(String)
     }
 
     var recordingInfo: RecordingInfo
     var mode: Mode = .recording
     var samples: [Float] = []
+    var isLiveTranscription = false
+    var liveTranscriptionState: LiveTranscriptionState = .idle
+    var liveTranscriptionModelState: ModelLoadingStage = .loading
+
+    @Presents var alert: AlertState<Action.Alert>?
 
     var url: URL { recordingInfo.fileURL }
     var duration: TimeInterval { recordingInfo.duration }
     var date: Date { recordingInfo.date }
   }
 
-  enum Action: Equatable {
-    case task
-    case delegate(DelegateAction)
-    case finalRecordingTime(TimeInterval)
+  enum Action: Equatable, BindableAction {
+    case binding(BindingAction<State>)
+    case startRecording(withLiveTranscription: Bool)
+    case delegate(Delegate)
+    // case finalRecordingTime(TimeInterval)
     case saveButtonTapped
     case pauseButtonTapped
     case continueButtonTapped
     case deleteButtonTapped
-    case recordingStateUpdated(RecordingState)
-  }
+    // case recordingStateUpdated(RecordingState)
+    case transcriptionStateUpdated(AudioFileStreamRecorder.State)
+    case modelStateUpdated(ModelLoadingStage)
+    case alert(PresentationAction<Alert>)
 
-  enum DelegateAction: Equatable {
-    case didFinish(TaskResult<State>)
-    case didCancel
+    enum Delegate: Equatable {
+      case didFinish(TaskResult<State>)
+      case didCancel
+    }
+
+    enum Alert: Hashable {
+      case error(String)
+    }
   }
 
   struct Failed: Equatable, Error {}
 
   @Dependency(\.audioRecorder) var audioRecorder
 
-  func reduce(into state: inout State, action: Action) -> Effect<Action> {
-    switch action {
-    case .task:
-      state.mode = .recording
-      UIImpactFeedbackGenerator(style: .light).impactOccurred()
+  @Dependency(RecordingTranscriptionStream.self) var recordingTranscriptionStream
 
-      return .run { [url = state.url, audioRecorder] send in
-        for await recState in await audioRecorder.startRecording(url) {
-          await send(.recordingStateUpdated(recState), animation: .bouncy)
-        }
-      }
+  var body: some ReducerOf<Self> {
+    BindingReducer()
 
-    case .delegate:
-      return .none
+    Reduce { state, action in
+      switch action {
+      case .binding:
+        return .none
 
-    case let .finalRecordingTime(duration):
-      state.recordingInfo.duration = duration
-      return .none
+      case let .startRecording(withLiveTranscription):
+        state.mode = .recording
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
-    case .saveButtonTapped:
-      UIImpactFeedbackGenerator(style: .light).impactOccurred()
-      state.mode = .encoding
+        return .run { [url = state.url, recordingTranscriptionStream] send in
+          if withLiveTranscription {
+            try await withThrowingTaskGroup(of: Void.self) { group in
+              group.addTask {
+                for try await modelState in try await recordingTranscriptionStream.loadModel("base") {
+                  await send(.modelStateUpdated(modelState), animation: .bouncy)
+                }
+              }
 
-      return .run { send in
-        await send(.finalRecordingTime(audioRecorder.currentTime()))
-        await audioRecorder.stopRecording()
-      }
+              group.addTask {
+                for try await transcriptionState in try await recordingTranscriptionStream.startLiveTranscription(url) {
+                  await send(.transcriptionStateUpdated(transcriptionState), animation: .bouncy)
+                }
+              }
 
-    case .pauseButtonTapped:
-      UIImpactFeedbackGenerator(style: .light).impactOccurred()
-      state.mode = .paused
-
-      return .run { [audioRecorder] _ in
-        await audioRecorder.pauseRecording()
-      }
-
-    case .continueButtonTapped:
-      UIImpactFeedbackGenerator(style: .light).impactOccurred()
-      state.mode = .recording
-
-      return .run { [audioRecorder] _ in
-        await audioRecorder.continueRecording()
-      }
-
-    case .deleteButtonTapped:
-      UIImpactFeedbackGenerator(style: .light).impactOccurred()
-      state.mode = .removing
-
-      return .run { [audioRecorder] _ in
-        await audioRecorder.removeCurrentRecording()
-      }
-
-    case let .recordingStateUpdated(.recording(duration, powers)):
-      let samples = powers.map { 1 - pow(10, $0 / 20) }
-      state.recordingInfo.duration = duration
-      state.samples.append(contentsOf: samples)
-      return .none
-
-    case .recordingStateUpdated(.paused):
-      state.mode = .paused
-      return .none
-
-    case .recordingStateUpdated(.stopped):
-      state.mode = .encoding
-      return .none
-
-    case let .recordingStateUpdated(.error(error)):
-      return .run { send in
-        await send(.delegate(.didFinish(.failure(error))))
-      }
-
-    case let .recordingStateUpdated(.finished(successfully)):
-      return .run { [state] send in
-        guard state.mode == .encoding else {
-          await send(.delegate(.didCancel))
-          return
+              try await group.waitForAll()
+            }
+          } else {
+            for try await transcriptionState in await recordingTranscriptionStream.startRecordingWithoutTranscription(url) {
+              await send(.transcriptionStateUpdated(transcriptionState), animation: .bouncy)
+            }
+            // for await recState in await audioRecorder.startRecording(url) {
+            //   await send(.recordingStateUpdated(recState), animation: .bouncy)
+            // }
+          }
+        } catch: { error, send in
+          await send(.alert(.presented(.error(error.localizedDescription))))
+          await send(.delegate(.didFinish(.failure(error))))
         }
 
-        if successfully {
-          await send(.delegate(.didFinish(.success(state))))
-        } else {
-          await send(.delegate(.didFinish(.failure(Failed()))))
+      case .delegate:
+        return .none
+
+      // case let .finalRecordingTime(duration):
+      //   state.recordingInfo.duration = duration
+      //   return .none
+
+      case .saveButtonTapped:
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        state.mode = .encoding
+
+        return .run { [recordingTranscriptionStream, state] send in
+          // await send(.finalRecordingTime(audioRecorder.currentTime()))
+          // await audioRecorder.stopRecording()
+          await recordingTranscriptionStream.stopRecording()
+            await send(.delegate(.didFinish(.success(state))))
         }
+
+      case .pauseButtonTapped:
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        state.mode = .paused
+
+        return .run { [recordingTranscriptionStream] _ in
+          // await audioRecorder.pauseRecording()
+          await recordingTranscriptionStream.pauseRecording()
+        }
+
+      case .continueButtonTapped:
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        state.mode = .recording
+
+        return .run { [recordingTranscriptionStream] _ in
+          // await audioRecorder.continueRecording()
+          await recordingTranscriptionStream.resumeRecording()
+        }
+
+      case .deleteButtonTapped:
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        state.mode = .removing
+
+        return .run { [recordingTranscriptionStream, state] send in
+          // await audioRecorder.removeCurrentRecording()
+          await recordingTranscriptionStream.stopRecording()
+          try? FileManager.default.removeItem(at: state.recordingInfo.fileURL)
+            await send(.delegate(.didCancel))
+        }
+
+      // case let .recordingStateUpdated(.recording(duration, powers)):
+      //   let samples = powers.map { 1 - pow(10, $0 / 20) }
+      //   state.recordingInfo.duration = duration
+      //   state.samples.append(contentsOf: samples)
+      //   return .none
+
+      // case .recordingStateUpdated(.paused):
+      //   state.mode = .paused
+      //   return .none
+
+      // case .recordingStateUpdated(.stopped):
+      //   state.mode = .encoding
+      //   return .none
+
+      // case let .recordingStateUpdated(.error(error)):
+      //   return .run { send in
+      //     await send(.delegate(.didFinish(.failure(error))))
+      //     await send(.alert(.presented(.error(error.localizedDescription))))
+      //   }
+
+      // case let .recordingStateUpdated(.finished(successfully)):
+      //   return .run { [state] send in
+      //     guard state.mode == .encoding else {
+      //       await send(.delegate(.didCancel))
+      //       return
+      //     }
+
+      //     if successfully {
+      //       await send(.delegate(.didFinish(.success(state))))
+      //     } else {
+      //       await send(.delegate(.didFinish(.failure(Failed()))))
+      //       await send(.alert(.presented(.error("Recording failed"))))
+      //     }
+      //   }
+
+      case let .transcriptionStateUpdated(transcriptionState):
+        let confirmedText = transcriptionState.confirmedSegments
+          .map { "- \($0.text)" }
+          .joined(separator: "\n")
+
+        let unconfirmedText = transcriptionState.unconfirmedSegments
+          .map { segment in
+            """
+            - ID: \(segment.id)
+              Seek: \(segment.seek)
+              Start: \(segment.start)
+              End: \(segment.end)
+              Text: \(segment.text)
+            """
+          }
+          .joined(separator: "\n")
+
+        let completeTranscription = """
+        isRecording: \(transcriptionState.isRecording)
+        recordingDuration: \(transcriptionState.recordingDuration)
+        currentFallbacks: \(transcriptionState.currentFallbacks)
+        lastBufferSize: \(transcriptionState.lastBufferSize)
+        lastConfirmedSegmentEndSeconds: \(transcriptionState.lastConfirmedSegmentEndSeconds)
+        ---
+        Confirmed:
+        \(confirmedText)
+        Unconfirmed:
+        \(unconfirmedText)
+        """
+        state.liveTranscriptionState = .transcribing(completeTranscription)
+
+        if state.recordingInfo.transcription == nil {
+          @Shared(.settings) var settings: Settings
+          state.recordingInfo.transcription = Transcription(
+            id: UUID(),
+            fileName: state.recordingInfo.fileName,
+            parameters: settings.parameters,
+            model: settings.selectedModel
+          )
+        }
+
+        let rawSegments = transcriptionState.confirmedSegments + transcriptionState.unconfirmedSegments
+        let transcriptionSegments: [Segment] = rawSegments.map { segment in
+          Segment(
+            startTime: Int64(segment.start),
+            endTime: Int64(segment.end),
+            text: segment.text,
+            tokens: segment.tokens.enumerated().map { index, tokenID in
+              Token(
+                id: Int32(tokenID),
+                index: Int32(index),
+                text: recordingTranscriptionStream.tokenIDToToken(tokenID),
+                data: TokenData(
+                  id: tokenID,
+                  tid: index,
+                  probability: segment.tokenLogProbs.first?[tokenID] ?? 0,
+                  logProbability: 0,
+                  timestampProbability: 0,
+                  sumTimestampProbabilities: 0,
+                  startTime: 0,
+                  endTime: 0,
+                  voiceLength: 0
+                ),
+                speaker: nil
+              )
+            },
+            speaker: nil
+          )
+        }
+
+        state.recordingInfo.transcription?.segments = transcriptionSegments
+        state.samples = transcriptionState.waveSamples
+        state.recordingInfo.duration = transcriptionState.recordingDuration
+        return .none
+
+      case let .modelStateUpdated(modelState):
+        state.liveTranscriptionModelState = modelState
+        return .none
+
+      case let .alert(.presented(.error(message))):
+        state.alert = AlertState {
+          TextState("Error")
+        } actions: {
+          ButtonState(role: .cancel) {
+            TextState("OK")
+          }
+        } message: {
+          TextState(message)
+        }
+        return .none
+
+      case .alert:
+        return .none
       }
     }
+    .ifLet(\.$alert, action: \.alert)
   }
 }
