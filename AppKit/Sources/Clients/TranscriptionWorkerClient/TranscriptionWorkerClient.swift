@@ -8,159 +8,169 @@ import UIKit
 
 // MARK: - TranscriptionWorkerClient
 
-@DependencyClient
-struct TranscriptionWorkerClient {
-  var enqueueTaskForRecordingID: @Sendable (_ id: RecordingInfo.ID, _ settings: Settings) async -> Void
-  var cancelTaskForRecordingID: @Sendable (_ id: RecordingInfo.ID) async -> Void
-  var cancelAllTasks: @Sendable () async -> Void
-  var handleBGProcessingTask: @Sendable (_ bgTask: BGProcessingTask) -> Void
-  var getAvailableLanguages: @Sendable () -> [VoiceLanguage] = { [] }
-  var resumeTask: @Sendable (_ task: TranscriptionTask) async -> Void
-}
+@Reducer
+struct TranscriptionWorker: Reducer {
+  @ObservableState
+  struct State: Equatable {
+    @Shared(.transcriptionTasks) var taskQueue: [TranscriptionTask] = []
+    @Shared(.recordings) var recordings: [RecordingInfo] = []
+    fileprivate var backgroundTask: UIBackgroundTaskIdentifier = .invalid
 
-// MARK: DependencyKey
+    var isProcessing: Bool {
+      currentTask != nil
+    }
 
-extension TranscriptionWorkerClient: DependencyKey {
-  static let liveValue: TranscriptionWorkerClient = {
-    let localWorkExecutor = LocalTranscriptionWorkExecutor()
-    let worker = TranscriptionWorker(executor: localWorkExecutor)
+    var currentTask: TranscriptionTask?
+  }
 
-    return TranscriptionWorkerClient(
-      enqueueTaskForRecordingID: { [worker] id, settings in
-        let task = TranscriptionTask(recordingInfoID: id, settings: settings)
-        await MainActor.run { worker.taskQueue.append(task) }
-        await worker.processTasks()
-      },
-      cancelTaskForRecordingID: { [worker] id in
-        if let task = worker.currentTask, task.recordingInfoID == id {
-          localWorkExecutor.cancelTask(id: task.id)
+  enum Action {
+    case task
+    case processTasks
+    case handleBGProcessingTask(BGProcessingTask)
+    case beginBackgroundTask
+    case endBackgroundTask
+    case scheduleBackgroundProcessingTask
+    case cancelScheduledBackgroundProcessingTask
+    case enqueueTaskForRecordingID(RecordingInfo.ID, Settings)
+    case cancelTaskForRecordingID(RecordingInfo.ID)
+    case cancelAllTasks
+    case resumeTask(TranscriptionTask)
+    case setCurrentTask(TranscriptionTask)
+    case currentTaskFinishProcessing
+    case setBackgroundTask(UIBackgroundTaskIdentifier) // Added this case
+  }
+
+  static let backgroundTaskIdentifier = "me.igortarasenko.Whisperboard"
+
+  @Dependency(\.localTranscriptionWorkExecutor) var executor: TranscriptionWorkExecutor
+  @Dependency(\.didEnterBackground) var didEnterBackground: @Sendable () async -> AsyncStream<Void>
+  @Dependency(\.willEnterForeground) var willEnterForeground: @Sendable () async -> AsyncStream<Void>
+
+  var body: some Reducer<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .task:
+        return .run { send in
+          async let backgroundTask: Void = {
+            for await _ in await didEnterBackground() {
+              await send(.beginBackgroundTask)
+              await send(.scheduleBackgroundProcessingTask)
+            }
+          }()
+
+          async let foregroundTask: Void = {
+            for await _ in await willEnterForeground() {
+              await send(.endBackgroundTask)
+              await send(.cancelScheduledBackgroundProcessingTask)
+            }
+          }()
+
+          await backgroundTask
+          await foregroundTask
         }
-        await MainActor.run { worker.taskQueue.removeAll { $0.recordingInfoID == id } }
-      },
-      cancelAllTasks: { [worker] in
-        localWorkExecutor.cancelCurrentTask()
-        await MainActor.run { worker.taskQueue.removeAll() }
-      },
-      handleBGProcessingTask: { task in
-        worker.handleBGProcessingTask(bgTask: task)
-      },
-      getAvailableLanguages: {
-        [.auto] + WhisperContext.getAvailableLanguages()
-      },
-      resumeTask: { [worker] task in
-        await MainActor.run { worker.taskQueue.append(task) }
-        await worker.processTasks()
+
+      case .processTasks:
+        return .run { [state] send in
+          guard !state.isProcessing else { return }
+
+          if let task = await getNextTask(state: state) {
+            await send(.setCurrentTask(task.task))
+            await executor.process(task: task)
+            await send(.currentTaskFinishProcessing)
+            await send(.processTasks) // Send processTasks action again after finishing the current task
+          }
+        }
+
+      case let .handleBGProcessingTask(bgTask):
+        return .run { send in
+          await send(.processTasks)
+          bgTask.expirationHandler = {
+            Task { await send(.cancelScheduledBackgroundProcessingTask) }
+          }
+        }
+
+      case .beginBackgroundTask:
+        guard state.isProcessing else { return .none }
+        return .run { send in
+          let taskIdentifier = await UIApplication.shared.beginBackgroundTask {
+            Task { await send(.endBackgroundTask) }
+          }
+          await send(.setBackgroundTask(taskIdentifier))
+        }
+
+      case .endBackgroundTask:
+        return .send(.setBackgroundTask(.invalid))
+
+      case let .setBackgroundTask(taskIdentifier):
+        if state.backgroundTask != .invalid {
+          UIApplication.shared.endBackgroundTask(state.backgroundTask)
+        }
+        state.backgroundTask = taskIdentifier
+        return .none
+
+      case .scheduleBackgroundProcessingTask:
+        guard state.isProcessing else { return .none }
+        let request = BGProcessingTaskRequest(identifier: TranscriptionWorker.backgroundTaskIdentifier)
+        request.requiresNetworkConnectivity = false
+        request.requiresExternalPower = false
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 1)
+
+        do {
+          try BGTaskScheduler.shared.submit(request)
+        } catch {
+          logs.error("Could not schedule background task: \(error)")
+        }
+        return .none
+
+      case .cancelScheduledBackgroundProcessingTask:
+        BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: TranscriptionWorker.backgroundTaskIdentifier)
+        return .none
+      case let .enqueueTaskForRecordingID(id, settings):
+        let task = TranscriptionTask(recordingInfoID: id, settings: settings)
+        state.taskQueue.append(task)
+        return .send(.processTasks)
+
+      case let .cancelTaskForRecordingID(id):
+        if let task = state.taskQueue.first(where: { $0.recordingInfoID == id }) {
+          executor.cancelTask(id: task.id)
+        }
+        state.taskQueue.removeAll { $0.recordingInfoID == id }
+        return .none
+
+      case .cancelAllTasks:
+        if let currentTaskID = state.currentTask?.id {
+          executor.cancelTask(id: currentTaskID)
+        }
+        state.taskQueue.removeAll()
+        return .none
+
+      case let .resumeTask(task):
+        state.taskQueue.insert(task, at: 0)
+        return .send(.processTasks)
+
+      case let .setCurrentTask(task):
+        state.currentTask = task
+        return .none
+
+      case .currentTaskFinishProcessing:
+        state.currentTask = nil
+        if let currentTask = state.currentTask {
+          state.taskQueue.removeAll { $0.id == currentTask.id }
+        }
+        return .none
       }
-    )
-  }()
-}
-
-extension DependencyValues {
-  var transcriptionWorker: TranscriptionWorkerClient {
-    get { self[TranscriptionWorkerClient.self] }
-    set { self[TranscriptionWorkerClient.self] = newValue }
-  }
-}
-
-// MARK: - TranscriptionWorker
-
-class TranscriptionWorker {
-  static let processingTaskIdentifier = "me.igortarasenko.Whisperboard"
-
-  var currentTask: TranscriptionTask?
-
-  @MainActor @Shared(.isProcessing) var isProcessing: Bool
-  @MainActor @Shared(.transcriptionTasks) var taskQueue: [TranscriptionTask]
-  @MainActor @Shared(.recordings) var recordings: [RecordingInfo]
-
-  private let executor: TranscriptionWorkExecutor
-
-  private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
-  private var cancellables: Set<AnyCancellable> = []
-  private var task: Task<Void, Never>?
-
-  init(executor: TranscriptionWorkExecutor) {
-    self.executor = executor
-
-    NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification).sink { [weak self] _ in
-      guard let self else { return }
-      Task { @MainActor in
-        guard self.isProcessing else { return }
-        self.beginBackgroundTask()
-        self.scheduleBackgroundProcessingTask()
-      }
-    }.store(in: &cancellables)
-
-    NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification).sink { [weak self] _ in
-      guard let self else { return }
-      endBackgroundTask()
-      cancelScheduledBackgroundProcessingTask()
-    }.store(in: &cancellables)
+    }
   }
 
   @MainActor
-  func processTasks() {
-    task = Task(priority: .background) { [weak self] in
-      guard let self, !isProcessing else { return }
-      isProcessing = true
-      defer { isProcessing = false }
-
-      while let task = await getNextTask() {
-        currentTask = task.task
-        await executor.process(task: task)
-        currentTask = nil
-        taskQueue[id: task.task.id] = nil
-      }
+  private func getNextTask(state: State) async -> TranscriptionTaskEnvelope? {
+    let filteredQueue = state.$taskQueue.elements.filter { task in
+      state.recordings.contains { $0.id == task.wrappedValue.recordingInfoID }
     }
-  }
-
-  func handleBGProcessingTask(bgTask: BGProcessingTask) {
-    Task { @MainActor in
-      processTasks()
-    }
-
-    bgTask.expirationHandler = { [weak self] in
-      self?.task?.cancel()
-    }
-  }
-
-  @MainActor
-  private func getNextTask() async -> TranscriptionTaskEnvelope? {
-    taskQueue = taskQueue.filter { task in
-      recordings.contains { $0.id == task.recordingInfoID }
-    }
-    return $taskQueue.elements.compactMap { task in
-      $recordings.elements
+    return filteredQueue.compactMap { task in
+      state.$recordings.elements
         .first { $0.id == task.recordingInfoID }
         .map { TranscriptionTaskEnvelope(task: task, recording: $0) }
     }.first
-  }
-
-  private func beginBackgroundTask() {
-    backgroundTask = UIApplication.shared.beginBackgroundTask {
-      self.endBackgroundTask()
-    }
-  }
-
-  private func endBackgroundTask() {
-    UIApplication.shared.endBackgroundTask(backgroundTask)
-    backgroundTask = .invalid
-  }
-
-  private func scheduleBackgroundProcessingTask() {
-    let request = BGProcessingTaskRequest(identifier: TranscriptionWorker.processingTaskIdentifier)
-    request.requiresNetworkConnectivity = false
-    request.requiresExternalPower = false
-    request.earliestBeginDate = Date(timeIntervalSinceNow: 1)
-
-    do {
-      try BGTaskScheduler.shared.submit(request)
-    } catch {
-      logs.error("Could not schedule background task: \(error)")
-    }
-  }
-
-  private func cancelScheduledBackgroundProcessingTask() {
-    BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: TranscriptionWorker.processingTaskIdentifier)
   }
 }

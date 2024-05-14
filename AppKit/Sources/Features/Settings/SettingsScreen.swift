@@ -65,7 +65,6 @@ struct SettingsScreen {
     }
   }
 
-  @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
   @Dependency(\.openURL) var openURL: OpenURLEffect
   @Dependency(\.build) var build: BuildClient
   @Dependency(StorageClient.self) var storage: StorageClient
@@ -170,7 +169,7 @@ struct SettingsScreen {
     state.freeSpace = storage.freeSpace().readableString
     state.takenSpace = storage.takenSpace().readableString
     state.takenSpacePercentage = min(1, max(0, 1 - Double(storage.freeSpace()) / Double(storage.freeSpace() + storage.takenSpace())))
-    state.availableLanguages = transcriptionWorker.getAvailableLanguages().identifiedArray
+    state.availableLanguages = WhisperContext.getAvailableLanguages().identifiedArray
   }
 
   private func createDeleteConfirmationDialog(state: inout State) {

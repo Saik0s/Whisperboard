@@ -1,5 +1,5 @@
 {
-  "originHash" : "5afd538bd9993a215d43e2605521ff70e7d161306aafc9f9fcbfee8edd8e17da",
+  "originHash" : "d1e73196feccc7beaade2ee2f3664b63ee367f2d74349dec843d34a115a0d78f",
   "pins" : [
     {
       "identity" : "audiokit",
@@ -132,8 +132,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-composable-architecture.git",
       "state" : {
-        "revision" : "e6c0959044cbe2c934ac0ce9c3c4ead86350f44f",
-        "version" : "1.10.2"
+        "revision" : "433a23118f739078644ebeb4009e23d307af694a",
+        "version" : "1.10.4"
       }
     },
     {
@@ -159,8 +159,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-dependencies",
       "state" : {
-        "revision" : "d3a5af3038a09add4d7682f66555d6212058a3c0",
-        "version" : "1.2.2"
+        "revision" : "350e1e119babe8525f9bd155b76640a5de270184",
+        "version" : "1.3.0"
       }
     },
     {
@@ -168,8 +168,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tgrapperon/swift-dependencies-additions",
       "state" : {
-        "revision" : "02e7b1801a96828049fe4d3e8bdc5e608ef5ffbc",
-        "version" : "1.0.1"
+        "revision" : "406ed2d853eb0e377173660f0965591ea7d31207",
+        "version" : "1.0.2"
       }
     },
     {

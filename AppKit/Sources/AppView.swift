@@ -24,7 +24,7 @@ public struct AppView: View {
       Rollbar.initWithConfiguration(config)
     #endif
 
-    BGTaskScheduler.shared.register(forTaskWithIdentifier: TranscriptionWorker.processingTaskIdentifier, using: nil) { task in
+    BGTaskScheduler.shared.register(forTaskWithIdentifier: TranscriptionWorker.backgroundTaskIdentifier, using: nil) { task in
       guard let task = task as? BGProcessingTask else { return }
       Self.store.send(.registerForBGProcessingTasks(task))
     }

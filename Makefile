@@ -2,7 +2,7 @@
 MISE=$(HOME)/.local/bin/mise
 TUIST=$(MISE) x tuist -- tuist
 
-all: bootstrap project_file build_server
+all: bootstrap project_file
 
 bootstrap:
 	command -v $(MISE) >/dev/null 2>&1 || curl https://mise.jdx.dev/install.sh | sh
@@ -34,7 +34,7 @@ secrets:
 	sh ./ci_scripts/secrets.sh
 
 build_server:
-	xcode-build-server config -workspace WhisperBoard.xcworkspace -scheme WhisperBoard || echo "consult https://github.com/SolaWing/xcode-build-server"
+	xcode-build-server config -workspace WhisperBoard.xcworkspace -scheme WhisperBoard || echo "consult https://github.com/SolaWing/xcode-build-server for vscode support"
 
 analyze:
 	sh ./ci_scripts/cpd_run.sh && echo "CPD done"

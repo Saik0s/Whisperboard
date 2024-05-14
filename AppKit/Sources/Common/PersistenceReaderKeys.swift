@@ -17,9 +17,3 @@ extension PersistenceReaderKey where Self == PersistenceKeyDefault<FileStorageKe
     PersistenceKeyDefault(.fileStorage(.documentsDirectory.appending(component: "settings.json")), .init())
   }
 }
-
-extension PersistenceReaderKey where Self == PersistenceKeyDefault<InMemoryKey<Bool>> {
-  static var isProcessing: Self {
-    PersistenceKeyDefault(.inMemory("isProcessing"), false)
-  }
-}

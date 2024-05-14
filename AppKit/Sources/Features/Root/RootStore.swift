@@ -1,6 +1,7 @@
 import BackgroundTasks
 import Combine
 import ComposableArchitecture
+import DependenciesAdditions
 import SwiftUI
 
 // MARK: - Root
@@ -16,6 +17,7 @@ struct Root {
 
   @ObservableState
   struct State: Equatable {
+    var transcriptionWorker = TranscriptionWorker.State()
     var recordingListScreen = RecordingListScreen.State()
     var recordScreen = RecordScreen.State()
     var settingsScreen = SettingsScreen.State()
@@ -25,13 +27,14 @@ struct Root {
     @Presents var alert: AlertState<Action.Alert>?
 
     var isRecording: Bool { recordScreen.recordingControls.recording != nil }
-    var isTranscribing: Bool { recordingListScreen.recordings.contains { $0.isTranscribing } }
+    var isTranscribing: Bool { transcriptionWorker.isProcessing }
     var shouldDisableIdleTimer: Bool { isRecording || isTranscribing }
   }
 
   enum Action: BindableAction {
     case task
     case binding(BindingAction<State>)
+    case transcriptionWorker(TranscriptionWorker.Action)
     case recordingListScreen(RecordingListScreen.Action)
     case recordScreen(RecordScreen.Action)
     case settingsScreen(SettingsScreen.Action)
@@ -44,12 +47,23 @@ struct Root {
   }
 
   @Dependency(StorageClient.self) var storage: StorageClient
-  @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
   @Dependency(\.keychainClient) var keychainClient: KeychainClient
   @Dependency(\.subscriptionClient) var subscriptionClient: SubscriptionClient
+  @Dependency(\.application) var application: Application
 
   var body: some Reducer<State, Action> {
     BindingReducer()
+      .onChange(of: \.shouldDisableIdleTimer) { _, shouldDisableIdleTimer in
+        Reduce { _, _ in
+          .run { _ in
+            await MainActor.run { application.isIdleTimerDisabled = shouldDisableIdleTimer }
+          }
+        }
+      }
+
+    Scope(state: \.transcriptionWorker, action: \.transcriptionWorker) {
+      TranscriptionWorker()
+    }
 
     Scope(state: \.recordingListScreen, action: \.recordingListScreen) {
       RecordingListScreen()
@@ -68,26 +82,25 @@ struct Root {
       }
     }
 
-    Reduce<State, Action> { state, action in
+    Reduce { state, action in
       switch action {
       case .task:
         subscriptionClient.configure(keychainClient.userID)
 
-        @Shared(.transcriptionTasks) var taskQueue: [TranscriptionTask]
-
         // Pausing unfinished transcription on app launch
         for recording in state.recordingListScreen.recordings {
           if let transcription = recording.transcription, transcription.status.isLoadingOrProgress {
-            if let task = taskQueue[id: transcription.id] {
+            if let task = state.transcriptionWorker.taskQueue[id: transcription.id] {
               logs.debug("Marking \(recording.fileName) transcription as paused")
               state.recordingListScreen.recordings[id: recording.id]?.transcription?.status = .paused(task, progress: recording.progress)
             } else {
               logs.debug("Marking \(recording.fileName) transcription as failed")
               state.recordingListScreen.recordings[id: recording.id]?.transcription?.status = .error(message: "Transcription failed")
             }
-            taskQueue[id: transcription.id] = nil
+            state.transcriptionWorker.taskQueue[id: transcription.id] = nil
           }
         }
+
         return .none
 
       case .settingsScreen(.binding(.set(\.settings.isICloudSyncEnabled, true))):
@@ -95,9 +108,10 @@ struct Root {
 
       case let .recordScreen(.delegate(.newRecordingCreated(recordingInfo))):
         state.recordingListScreen.recordings.append(recordingInfo)
-        return .run { [state] _ in
+        return .run { [state] send in
+          try await Task.sleep(for: .seconds(1))
           if state.settingsScreen.settings.isAutoTranscriptionEnabled {
-            await transcriptionWorker.enqueueTaskForRecordingID(recordingInfo.id, state.settingsScreen.settings)
+            await send(.transcriptionWorker(.enqueueTaskForRecordingID(recordingInfo.id, state.settingsScreen.settings)))
           }
         }.merge(with: uploadNewRecordingsToICloud(state))
 
@@ -130,8 +144,27 @@ struct Root {
         return .none
 
       case let .registerForBGProcessingTasks(task):
-        transcriptionWorker.handleBGProcessingTask(bgTask: task)
-        return .none
+        return .run { send in
+          await send(.transcriptionWorker(.handleBGProcessingTask(task)))
+        }
+
+      case let .recordingListScreen(.recordingCard(.element(_, .delegate(.enqueueTaskForRecordingID(recordingID))))),
+           let .path(.element(_, .details(.recordingCard(.delegate(.enqueueTaskForRecordingID(recordingID)))))):
+        return .run { [state] send in
+          await send(.transcriptionWorker(.enqueueTaskForRecordingID(recordingID, state.settingsScreen.settings)))
+        }
+
+      case let .recordingListScreen(.recordingCard(.element(_, .delegate(.cancelTaskForRecordingID(recordingID))))),
+           let .path(.element(_, .details(.recordingCard(.delegate(.cancelTaskForRecordingID(recordingID)))))):
+        return .run {  send in
+          await send(.transcriptionWorker(.cancelTaskForRecordingID(recordingID)))
+        }
+
+      case let .recordingListScreen(.recordingCard(.element(_, .delegate(.resumeTask(task))))),
+           let .path(.element(_, .details(.recordingCard(.delegate(.resumeTask(task)))))):
+        return .run {  send in
+          await send(.transcriptionWorker(.resumeTask(task)))
+        }
 
       default:
         return .none
@@ -139,12 +172,6 @@ struct Root {
     }
     .ifLet(\.$alert, action: \.alert)
     .forEach(\.path, action: \.path)
-    .onChange(of: \.shouldDisableIdleTimer) { _, shouldDisableIdleTimer in
-      Reduce { _, _ in
-        UIApplication.shared.isIdleTimerDisabled = shouldDisableIdleTimer
-        return .none
-      }
-    }
   }
 
   func uploadNewRecordingsToICloud(_ state: State) -> Effect<Action> {
