@@ -1,5 +1,5 @@
 {
-  "originHash" : "d1e73196feccc7beaade2ee2f3664b63ee367f2d74349dec843d34a115a0d78f",
+  "originHash" : "3bffd7c09057bf784a228f53f5c95d802673b8b8ad250354f8a79baabd9c9b7c",
   "pins" : [
     {
       "identity" : "audiokit",
@@ -80,6 +80,24 @@
       "state" : {
         "branch" : "main",
         "revision" : "a6895602c7db1683be1c68363564de4fb09521cd"
+      }
+    },
+    {
+      "identity" : "pulse",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kean/pulse.git",
+      "state" : {
+        "revision" : "4f34c4f91cda623a7627e6d5e35dbbbb514b8daa",
+        "version" : "4.1.1"
+      }
+    },
+    {
+      "identity" : "pulseloghandler",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kean/PulseLogHandler.git",
+      "state" : {
+        "revision" : "7280e980b71a1267099e7751a900fd1e67b7f4bb",
+        "version" : "4.0.1"
       }
     },
     {

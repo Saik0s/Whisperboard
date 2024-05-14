@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import Inject
+import PulseUI
 import SwiftUI
 
 // MARK: - SettingsScreenView
@@ -161,15 +162,8 @@ struct SpeechSectionView: View {
           )
 
           SettingsSheetButton(icon: .system(name: "ladybug", background: .systemGreen), title: "Show logs") {
-            ScrollView {
-              LazyVStack(alignment: .leading, spacing: .grid(1)) {
-                ForEach(logs.enumerated().reversed(), id: \.offset) { index, log in
-                  Text("\(index + 1). \(log)").font(.footnote).monospaced()
-                }
-              }
-            }
-            .onAppear {
-              logs = Array(ExtraLogHandler.sessionLogs.enumerated())
+            NavigationStack {
+              ConsoleView(store: .shared)
             }
           }
         } header: {

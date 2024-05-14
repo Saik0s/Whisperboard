@@ -79,7 +79,7 @@ private actor AudioRecorder {
   lazy var delegate: Delegate = .init(
     didFinishRecording: { [weak self] successfully in
       logs.info("didFinishRecording: \(successfully)")
-      Task { [weak self] in
+      Task(priority: .background) { [weak self] in
         await self?.disableSession()
         await self?.recordingStateContinuation?.yield(RecordingState.finished(successfully))
         await self?.recordingStateContinuation?.finish()
@@ -87,7 +87,7 @@ private actor AudioRecorder {
     },
     encodeErrorDidOccur: { [weak self] error in
       logs.info("encodeErrorDidOccur: \(error?.localizedDescription ?? "nil")")
-      Task { [weak self] in
+      Task(priority: .background) { [weak self] in
         await self?.disableSession()
         await self?.recordingStateContinuation?.yield(RecordingState.error(error?.equatable ?? AudioRecorderError.somethingWrong.equatable))
         await self?.recordingStateContinuation?.finish()
@@ -95,7 +95,7 @@ private actor AudioRecorder {
     },
     interruptionOccurred: { [weak self, audioSession] type, userInfo in
       logs.info("interruptionOccurred: \(type)")
-      Task { [weak self] in
+      Task(priority: .background) { [weak self] in
         await self?.processInterruption(type: type, userInfo: userInfo)
       }
     }
@@ -197,7 +197,7 @@ private actor AudioRecorder {
     guard recorder.isRecording else { return }
 
     var powers = [Float]()
-    for _ in 0..<10 {
+    for _ in 0 ..< 10 {
       recorder.updateMeters()
       powers.append(recorder.averagePower(forChannel: 0))
       try await Task.sleep(seconds: 0.01)

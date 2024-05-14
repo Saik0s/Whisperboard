@@ -1,13 +1,3 @@
-//   var errorDescription: String? {
-//     switch self {
-//     case .uploadFailed:
-//       "Failed to upload recording"
-//     case .resultFailed:
-//       "Failed to get transcription result"
-//     }
-//   }
-// }
-
 // // MARK: - RemoteTranscriptionWorkExecutor
 
 // final class RemoteTranscriptionWorkExecutor: TranscriptionWorkExecutor {

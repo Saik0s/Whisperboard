@@ -1,6 +1,7 @@
 import Foundation
 import Logging
 import os
+import PulseLogHandler
 
 let bundleID = Bundle.main.bundleIdentifier ?? "App"
 let osLogger = os.Logger(subsystem: bundleID, category: "General")
@@ -9,8 +10,8 @@ let osLogger = os.Logger(subsystem: bundleID, category: "General")
 
 public let logs: Logging.Logger = {
   let fileLogger: FileLogging? = logFileURL.flatMap { try? FileLogging(to: $0) }
-  LoggingSystem.bootstrap { _ in
-    UnifiedLogHandler(fileLogger: fileLogger, osLogger: osLogger)
+  LoggingSystem.bootstrap { label in
+    UnifiedLogHandler(fileLogger: fileLogger, osLogger: osLogger, pulseLogger: PersistentLogHandler(label: label))
   }
   return Logging.Logger(label: bundleID)
 }()
@@ -61,10 +62,12 @@ class UnifiedLogHandler: LogHandler {
   private var prettyMetadata: String?
   private var fileLogger: FileLogging?
   private let osLogger: os.Logger
+  private let pulseLogger: PersistentLogHandler
 
-  init(fileLogger: FileLogging?, osLogger: os.Logger) {
+  init(fileLogger: FileLogging?, osLogger: os.Logger, pulseLogger: PersistentLogHandler) {
     self.fileLogger = fileLogger
     self.osLogger = osLogger
+    self.pulseLogger = pulseLogger
   }
 
   subscript(metadataKey metadataKey: String) -> Logging.Logger.Metadata.Value? {
@@ -92,6 +95,9 @@ class UnifiedLogHandler: LogHandler {
     let formattedMessage = formatMessage(level: level, message: message, metadata: combinedMetadata, file: file, line: line)
 
     ExtraLogHandler.sessionLogs.append(formattedMessage)
+
+    // Log to Pulse
+    pulseLogger.log(level: level, message: "\(formattedMessage)", metadata: metadata, file: file, function: function, line: line)
 
     // Log to file if available
     fileLogger?.stream.write(formattedMessage)

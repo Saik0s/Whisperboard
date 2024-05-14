@@ -2,31 +2,31 @@ import Foundation
 
 // MARK: - EquatableError
 
-struct EquatableError: Error, Equatable, Hashable {
+public struct EquatableError: Error, Equatable, Hashable {
   private let _base: Error
   private let _message: String
 
-  init(_ base: Error) {
+  public init(_ base: Error) {
     _base = base
     _message = String(describing: base)
   }
 
-  static func == (lhs: Self, rhs: Self) -> Bool {
+  public static func == (lhs: Self, rhs: Self) -> Bool {
     lhs._message == rhs._message
   }
 
-  func hash(into hasher: inout Hasher) {
+  public func hash(into hasher: inout Hasher) {
     hasher.combine(_message)
   }
 }
 
-extension Error {
+public extension Error {
   var equatable: EquatableError {
     EquatableError(self)
   }
 }
 
-extension Error {
+public extension Error {
   static var unknown: EquatableError {
     NSError(domain: "Unknown", code: 0, userInfo: nil).equatable
   }

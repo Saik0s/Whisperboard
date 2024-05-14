@@ -94,7 +94,16 @@ let project = Project(
             "NSUbiquitousContainerSupportedFolderLevels": "Any",
           ],
         ],
-      ]),
+      ].merging(
+        Environment.isAppStore.getBoolean(default: false)
+          ? [:]
+          : [
+            "NSLocalNetworkUsageDescription": Plist.Value(stringLiteral: "Network usage required for debugging purposes"),
+            "NSBonjourServices": [
+              .string("_pulse._tcp"),
+            ],
+          ]
+      ) { _, new in new }),
       sources: "App/Sources/**",
       resources: .resources(
         ["App/Resources/**"],
@@ -226,15 +235,17 @@ let project = Project(
         .external(name: "DSWaveformImage"),
         .external(name: "DSWaveformImageViews"),
         .external(name: "DynamicColor"),
+        .external(name: "FluidGradient"),
         .external(name: "Inject"),
         .external(name: "KeychainAccess"),
         .external(name: "Logging"),
         .external(name: "Lottie"),
+        .external(name: "NavigationTransitions"),
         .external(name: "Popovers"),
+        .external(name: "PulseLogHandler"),
+        .external(name: "PulseUI"),
         .external(name: "SwiftUIIntrospect"),
         .external(name: "VariableBlurView"),
-        .external(name: "FluidGradient"),
-        .external(name: "NavigationTransitions"),
         // .external(name: "RevenueCat"),
 
         .external(name: "WhisperKit"),

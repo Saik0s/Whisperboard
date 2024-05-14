@@ -139,3 +139,4 @@ TuistCache/
 Tuist/.build
 
 buildServer.json
+.aider*

@@ -1,5 +1,3 @@
-//   init() {}
-
 //   func process(task: TranscriptionTaskEnvelope) async {
 //     if task.isRemote {
 //       await remoteWorkExecutor.process(task: task)

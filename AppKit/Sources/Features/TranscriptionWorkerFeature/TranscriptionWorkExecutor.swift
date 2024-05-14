@@ -1,5 +1,5 @@
-import Foundation
 import Dependencies
+import Foundation
 
 // MARK: - TranscriptionWorkExecutor
 
@@ -15,10 +15,8 @@ extension DependencyValues {
   }
 }
 
-// MARK: - DidBecomeActiveKey
+// MARK: - TranscriptionWorkExecutorKey
 
 private enum TranscriptionWorkExecutorKey: DependencyKey {
-  static let liveValue: TranscriptionWorkExecutor = {
-    LocalTranscriptionWorkExecutor()
-  }()
+  static let liveValue: TranscriptionWorkExecutor = LocalTranscriptionWorkExecutor()
 }

@@ -12,6 +12,11 @@ import SwiftUI
 struct RecordingControls {
   @ObservableState
   struct State: Equatable {
+    enum TranscriptionViewMode {
+      case simple
+      case technical
+    }
+
     enum RecorderPermission {
       case allowed
       case denied
@@ -22,6 +27,8 @@ struct RecordingControls {
     var recording: Recording.State?
     var audioRecorderPermission = RecorderPermission.undetermined
     var isGoToNewRecordingPopupPresented = false
+    var isLiveTranscriptionEnabled = false
+    var transcriptionViewMode = TranscriptionViewMode.simple
   }
 
   enum Action: Equatable, BindableAction {
@@ -38,6 +45,8 @@ struct RecordingControls {
   @Dependency(\.date) var date
   @Dependency(\.continuousClock) var clock
   @Dependency(\.uuid) var uuid
+
+  enum CancelID: Hashable { case recording }
 
   var body: some ReducerOf<Self> {
     BindingReducer()
@@ -61,15 +70,15 @@ struct RecordingControls {
 
       case .recording(.delegate(.didCancel)):
         state.recording = nil
-        return .none
+        return .cancel(id: CancelID.recording)
 
       case .recording(.delegate(.didFinish(.success))):
         state.recording = nil
-        return .none
+        return .cancel(id: CancelID.recording)
 
       case .recording(.delegate(.didFinish(.failure))):
         state.recording = nil
-        return .none
+        return .cancel(id: CancelID.recording)
 
       case .recording:
         return .none
@@ -107,9 +116,9 @@ struct RecordingControls {
 
   private func startRecording(_ state: inout State) -> Effect<Action> {
     state.recording = Recording.State(recordingInfo: RecordingInfo(id: uuid().uuidString, title: "New Recording", date: date.now, duration: 0))
-    return .run { send in
-      await send(.recording(.task))
-    }
+    return .run { [state] send in
+      await send(.recording(.startRecording(withLiveTranscription: state.isLiveTranscriptionEnabled)))
+    }.cancellable(id: CancelID.recording, cancelInFlight: true)
   }
 
   private var micPermissionAlert: AlertState<Action> {
@@ -139,16 +148,24 @@ struct RecordingControlsView: View {
   var body: some View {
     WithPerceptionTracking {
       VStack(spacing: .grid(3)) {
-        WaveformLiveCanvas(samples: store.recording?.samples ?? [], configuration: Waveform.Configuration(
-          backgroundColor: .clear,
-          style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
-          damping: .init(percentage: 0.125, sides: .both),
-          scale: DSScreen.scale,
-          verticalScalingFactor: 0.95,
-          shouldAntialias: true
-        ))
-        .frame(maxWidth: .infinity)
-
+        if store.isLiveTranscriptionEnabled {
+          liveTranscriptionView()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        } else {
+          WaveformLiveCanvas(samples: store.recording?.samples ?? [], configuration: Waveform.Configuration(
+            backgroundColor: .clear,
+            style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
+            damping: .init(percentage: 0.125, sides: .both),
+            scale: DSScreen.scale,
+            verticalScalingFactor: 0.95,
+            shouldAntialias: true
+          ))
+          .frame(maxWidth: .infinity)
+        }
+        if store.recording == nil {
+          Toggle("Live Transcription", systemImage: "text.bubble", isOn: $store.isLiveTranscriptionEnabled)
+            .transition(.move(edge: .top).combined(with: .opacity))
+        }
         Text(currentTime)
           .foregroundColor(.DS.Text.accent)
           .textStyle(.navigationTitle)
@@ -235,19 +252,70 @@ struct RecordingControlsView: View {
     }
     .enableInjection()
   }
-}
 
-#if DEBUG
+  @ViewBuilder
+  private func liveTranscriptionView() -> some View {
+    VStack(spacing: .grid(2)) {
+      if let recording = store.recording {
+        let liveTranscriptionState = recording.liveTranscriptionState
+        let modelState = recording.liveTranscriptionModelState
 
-  struct RecordingControlsView_Previews: PreviewProvider {
-    static var previews: some View {
-      NavigationView {
-        RecordingControlsView(
-          store: Store(initialState: RecordingControls.State()) {
-            RecordingControls()
+        LabeledContent {
+          Text("\(modelState)")
+            .foregroundColor(modelState.is(\.completed) ? .DS.Text.base : .DS.Text.accent)
+            .textStyle(.body)
+        } label: {
+          Label("Model State", systemImage: "info.circle")
+            .foregroundColor(.DS.Text.base)
+            .textStyle(.body)
+        }
+        .padding(.grid(4))
+        .cardStyle()
+        .fixedSize(horizontal: true, vertical: true)
+
+        Picker("View Mode", selection: $store.transcriptionViewMode) {
+          Text("Simple").tag(RecordingControls.State.TranscriptionViewMode.simple)
+          Text("Technical").tag(RecordingControls.State.TranscriptionViewMode.technical)
+        }
+        .pickerStyle(SegmentedPickerStyle())
+        .padding(.grid(4))
+
+        if store.transcriptionViewMode == .simple {
+          ScrollView(showsIndicators: false) {
+            Text(recording.recordingInfo.text)
+              .foregroundColor(.DS.Text.base)
+              .textStyle(.body)
+              .lineLimit(nil)
+              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+              .padding(.vertical, .grid(2))
+              .padding(.horizontal, .grid(4))
           }
-        )
+        } else {
+          if case let .loading(text) = liveTranscriptionState {
+            HStack {
+              ProgressView()
+                .progressViewStyle(.circular)
+
+              Text(text)
+                .foregroundColor(.DS.Text.subdued)
+                .textStyle(.body)
+            }
+          } else if case let .error(text) = liveTranscriptionState {
+            Text(text)
+              .foregroundColor(.DS.Text.error)
+              .textStyle(.bodyBold)
+          } else if case let .transcribing(text) = liveTranscriptionState {
+            ScrollView(showsIndicators: false) {
+              Text(text)
+                .multilineTextAlignment(.leading)
+                .textStyle(.body)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+          }
+        }
+
+        Spacer()
       }
     }
   }
-#endif
+}

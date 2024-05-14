@@ -1,6 +1,6 @@
 import Foundation
 
-enum RecordingState: Equatable {
+public enum RecordingState: Equatable {
   case recording(duration: TimeInterval, powers: [Float])
   case paused
   case stopped

@@ -11,6 +11,7 @@ public struct AppView: View {
     Root()
     #if DEBUG
       ._printChanges(.swiftLog(withStateChanges: true))
+      .signpost("WhisperBoard_Root")
     #endif
   } withDependencies: {
     if ProcessInfo.processInfo.environment["UITesting"] == "true" {
