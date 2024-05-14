@@ -46,6 +46,8 @@ struct TranscriptionWorker: Reducer {
   @Dependency(\.didEnterBackground) var didEnterBackground: @Sendable () async -> AsyncStream<Void>
   @Dependency(\.willEnterForeground) var willEnterForeground: @Sendable () async -> AsyncStream<Void>
 
+  enum CancelID: Hashable { case processing }
+
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
@@ -70,23 +72,20 @@ struct TranscriptionWorker: Reducer {
         }
 
       case .processTasks:
-        return .run { [state] send in
-          guard !state.isProcessing else { return }
+        guard !state.isProcessing else { return .none }
 
+        return .run(priority: .background) { [state] send in
           if let task = await getNextTask(state: state) {
             await send(.setCurrentTask(task.task))
             await executor.process(task: task)
             await send(.currentTaskFinishProcessing)
-            await send(.processTasks) // Send processTasks action again after finishing the current task
           }
-        }
+        }.cancellable(id: CancelID.processing, cancelInFlight: true)
 
       case let .handleBGProcessingTask(bgTask):
         return .run { send in
+          bgTask.expirationHandler = {}
           await send(.processTasks)
-          bgTask.expirationHandler = {
-            Task { await send(.cancelScheduledBackgroundProcessingTask) }
-          }
         }
 
       case .beginBackgroundTask:
@@ -125,6 +124,7 @@ struct TranscriptionWorker: Reducer {
       case .cancelScheduledBackgroundProcessingTask:
         BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: TranscriptionWorker.backgroundTaskIdentifier)
         return .none
+
       case let .enqueueTaskForRecordingID(id, settings):
         let task = TranscriptionTask(recordingInfoID: id, settings: settings)
         state.taskQueue.append(task)
@@ -153,11 +153,13 @@ struct TranscriptionWorker: Reducer {
         return .none
 
       case .currentTaskFinishProcessing:
-        state.currentTask = nil
         if let currentTask = state.currentTask {
           state.taskQueue.removeAll { $0.id == currentTask.id }
         }
-        return .none
+        state.currentTask = nil
+        return .run { send in
+          await send(.processTasks) // Send processTasks action again after finishing the current task
+        }
       }
     }
   }

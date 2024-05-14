@@ -5,7 +5,7 @@ import Dependencies
 
 protocol TranscriptionWorkExecutor {
   func process(task: TranscriptionTaskEnvelope) async
-  func cancelTask(id: TranscriptionTaskEnvelope.ID)
+  func cancelTask(id: TranscriptionTask.ID)
 }
 
 extension DependencyValues {

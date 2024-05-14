@@ -19,6 +19,7 @@ enum StorageError: Error {
 @DependencyClient
 struct StorageClient {
   var sync: @Sendable (_ recordings: [RecordingInfo]) async throws -> [RecordingInfo]
+  var setCurrentRecordingURL: @Sendable (_ url: URL?) -> Void
   var freeSpace: @Sendable () -> UInt64 = { 0 }
   var totalSpace: @Sendable () -> UInt64 = { 0 }
   var takenSpace: @Sendable () -> UInt64 = { 0 }
@@ -29,11 +30,12 @@ struct StorageClient {
 // MARK: DependencyKey
 
 extension StorageClient: DependencyKey {
-  static let liveValue: Self = {
+  static let liveValue: StorageClient = {
     let storage = Storage()
 
     return StorageClient(
       sync: { try await storage.sync(recordings: $0) },
+      setCurrentRecordingURL: { storage.setAsCurrentlyRecording($0) },
       freeSpace: { freeDiskSpaceInBytes() },
       totalSpace: { totalDiskSpaceInBytes() },
       takenSpace: { takenSpace() },
@@ -48,7 +50,10 @@ extension StorageClient: DependencyKey {
         }
 
         await Task(priority: .background) {
-          @Shared(.inMemory("uploadedFiles")) var uploadedFiles: [String] = []
+          var uploadedFiles: [String] {
+            get { UserDefaults.standard.array(forKey: "uploadedFiles") as? [String] ?? [] }
+            set { UserDefaults.standard.set(newValue, forKey: "uploadedFiles") }
+          }
           if reset {
             uploadedFiles = []
           }

@@ -3,7 +3,8 @@ import Foundation
 
 // MARK: - TranscriptionTaskEnvelope
 
-struct TranscriptionTaskEnvelope: Identifiable {
+@MainActor
+struct TranscriptionTaskEnvelope {
   var id: TranscriptionTask.ID { task.id }
   @Shared var task: TranscriptionTask
   @Shared var recording: RecordingInfo
