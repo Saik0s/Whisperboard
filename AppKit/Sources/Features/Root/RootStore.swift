@@ -60,6 +60,12 @@ struct Root {
           }
         }
       }
+      .onChange(of: \.recordScreen.recordingControls.recording?.url) { _, url in
+        Reduce { _, _ in
+          storage.setCurrentRecordingURL(url: url)
+          return .none
+        }
+      }
 
     Scope(state: \.transcriptionWorker, action: \.transcriptionWorker) {
       TranscriptionWorker()
@@ -101,13 +107,15 @@ struct Root {
           }
         }
 
-        return .none
+        return .run { send in
+          await send(.transcriptionWorker(.task))
+        }
 
       case .settingsScreen(.binding(.set(\.settings.isICloudSyncEnabled, true))):
         return uploadNewRecordingsToICloud(state)
 
       case let .recordScreen(.delegate(.newRecordingCreated(recordingInfo))):
-        state.recordingListScreen.recordings.append(recordingInfo)
+        state.recordingListScreen.recordings.insert(recordingInfo, at: 0)
         return .run { [state] send in
           try await Task.sleep(for: .seconds(1))
           if state.settingsScreen.settings.isAutoTranscriptionEnabled {
@@ -148,21 +156,21 @@ struct Root {
           await send(.transcriptionWorker(.handleBGProcessingTask(task)))
         }
 
-      case let .recordingListScreen(.recordingCard(.element(_, .delegate(.enqueueTaskForRecordingID(recordingID))))),
-           let .path(.element(_, .details(.recordingCard(.delegate(.enqueueTaskForRecordingID(recordingID)))))):
+      case let .path(.element(_, .details(.recordingCard(.delegate(.enqueueTaskForRecordingID(recordingID)))))),
+           let .recordingListScreen(.recordingCard(.element(_, .delegate(.enqueueTaskForRecordingID(recordingID))))):
         return .run { [state] send in
           await send(.transcriptionWorker(.enqueueTaskForRecordingID(recordingID, state.settingsScreen.settings)))
         }
 
-      case let .recordingListScreen(.recordingCard(.element(_, .delegate(.cancelTaskForRecordingID(recordingID))))),
-           let .path(.element(_, .details(.recordingCard(.delegate(.cancelTaskForRecordingID(recordingID)))))):
-        return .run {  send in
+      case let .path(.element(_, .details(.recordingCard(.delegate(.cancelTaskForRecordingID(recordingID)))))),
+           let .recordingListScreen(.recordingCard(.element(_, .delegate(.cancelTaskForRecordingID(recordingID))))):
+        return .run { send in
           await send(.transcriptionWorker(.cancelTaskForRecordingID(recordingID)))
         }
 
-      case let .recordingListScreen(.recordingCard(.element(_, .delegate(.resumeTask(task))))),
-           let .path(.element(_, .details(.recordingCard(.delegate(.resumeTask(task)))))):
-        return .run {  send in
+      case let .path(.element(_, .details(.recordingCard(.delegate(.resumeTask(task)))))),
+           let .recordingListScreen(.recordingCard(.element(_, .delegate(.resumeTask(task))))):
+        return .run { send in
           await send(.transcriptionWorker(.resumeTask(task)))
         }
 

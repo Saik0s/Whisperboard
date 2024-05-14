@@ -73,6 +73,7 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
   }
 
   func fullTranscribe(audioFileURL: URL, params: TranscriptionParameters) -> AsyncThrowingStream<WhisperAction, Error> {
+    isCancelled = false
     var fullParams = toWhisperParams(params)
     let idPointer = id.toPointer()
     fullParams.new_segment_callback_user_data = idPointer
