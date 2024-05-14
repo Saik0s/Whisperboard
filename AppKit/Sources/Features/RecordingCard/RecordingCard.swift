@@ -35,9 +35,14 @@ struct RecordingCard {
     case cancelTranscriptionButtonTapped
     case recordingSelected
     case didTapResumeTranscription
-  }
+    case delegate(DelegateAction)
 
-  @Dependency(\.transcriptionWorker) var transcriptionWorker: TranscriptionWorkerClient
+    enum DelegateAction: Equatable {
+      case enqueueTaskForRecordingID(String)
+      case cancelTaskForRecordingID(String)
+      case resumeTask(TranscriptionTask)
+    }
+  }
 
   var body: some Reducer<State, Action> {
     BindingReducer()
@@ -54,28 +59,25 @@ struct RecordingCard {
       case .playerControls:
         return .none
 
-      case .transcribeButtonTapped:
-        logs.debug("Transcribe tapped for recording \(state.recording.id)")
-        return .run { [state] _ in
-          @Shared(.settings) var settings
-          await transcriptionWorker.enqueueTaskForRecordingID(state.recording.id, settings)
-        }
-
-      case .cancelTranscriptionButtonTapped:
-        state.recording.transcription?.status = .canceled
-        return .run { [state] _ in
-          await transcriptionWorker.cancelTaskForRecordingID(state.recording.id)
-        }
-
       case .recordingSelected:
         return .none
 
+      case .delegate:
+        return .none
+
+      case .transcribeButtonTapped:
+        logs.debug("Transcribe tapped for recording \(state.recording.id)")
+        return .send(.delegate(.enqueueTaskForRecordingID(state.recording.id)))
+
+      case .cancelTranscriptionButtonTapped:
+        state.recording.transcription?.status = .canceled
+        return .send(.delegate(.cancelTaskForRecordingID(state.recording.id)))
+
       case .didTapResumeTranscription:
-        return .run { [state] _ in
-          if let transcription = state.recording.transcription, case let .paused(task, _) = transcription.status {
-            await transcriptionWorker.resumeTask(task)
-          }
+        if let transcription = state.recording.transcription, case let .paused(task, _) = transcription.status {
+          return .send(.delegate(.resumeTask(task)))
         }
+        return .none
       }
     }
   }

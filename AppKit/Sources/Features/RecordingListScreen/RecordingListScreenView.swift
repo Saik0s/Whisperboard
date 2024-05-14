@@ -54,12 +54,17 @@ struct RecordingListScreen {
       case .task:
         // Create initial recording cards
         state.recordingCards = createCards(for: state)
+
         return .run { [recordings = state.$recordings] send in
           await send(.didSyncRecordings(TaskResult { try await storage.sync(recordings.wrappedValue) }))
           for await _ in await didBecomeActive() {
             await send(.didSyncRecordings(TaskResult { try await storage.sync(recordings.wrappedValue) }))
           }
-        }
+        }.merge(with: .run { [recordings = state.$recordings] send in
+          for await _ in recordings.publisher.map({ $0.map(\.id) }).removeDuplicates().values {
+            await send(.reloadCards)
+          }
+        })
 
       case let .addFileRecordings(urls):
         return .run { send in
@@ -84,7 +89,7 @@ struct RecordingListScreen {
 
       case let .addRecordingInfo(recording):
         state.recordings.insert(recording, at: 0)
-        return .send(.reloadCards)
+        return .none
 
       case let .failedToAddRecordings(error):
         logs.error("Failed to add recordings error: \(error)")
@@ -111,7 +116,7 @@ struct RecordingListScreen {
 
       case let .didSyncRecordings(.success(recordings)):
         state.recordings = recordings
-        return .send(.reloadCards)
+        return .none
 
       case let .didSyncRecordings(.failure(error)):
         logs.error("Failed to sync recordings: \(error)")
@@ -135,7 +140,9 @@ struct RecordingListScreen {
           recording: recording,
           queueInfo: $taskQueue.identifiedArray.elements[recordingInfoID: recording.id]
         )
-      }.identifiedArray
+      }
+      .sorted(by: { $0.recording.date > $1.recording.date })
+      .identifiedArray
   }
 
   private func createDeleteConfirmationDialog(id: RecordingInfo.ID, state: inout State) {
@@ -238,8 +245,11 @@ struct EmptyStateView: View {
         .font(.system(size: 100))
         .foregroundColor(.DS.Text.accent)
         .shadow(color: .DS.Text.accent.opacity(isAnimating ? 1 : 0), radius: isAnimating ? 20 : 0, x: 0, y: 0)
-        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
-        .onAppear { isAnimating.toggle() }
+        .onAppear {
+          withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true).delay(0.5)) {
+            isAnimating.toggle()
+          }
+        }
 
       VStack(spacing: .grid(1)) {
         Text("No recordings yet")
