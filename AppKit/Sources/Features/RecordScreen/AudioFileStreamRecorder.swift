@@ -1,3 +1,5 @@
+import Accelerate
+import AudioKit
 import AVFoundation
 import ComposableArchitecture
 import Dependencies
@@ -16,21 +18,18 @@ extension WordTiming: @unchecked Sendable {}
 
 public actor AudioFileStreamRecorder {
   public struct State: Equatable, Sendable, CustomDumpStringConvertible {
-    public var isRecording = false
     public var currentFallbacks: Int = 0
     public var lastBufferSize: Int = 0
     public var lastConfirmedSegmentEndSeconds: Float = 0
-    public var recordingDuration: Double = 0.0
-    public var isPaused = false
     public var confirmedSegments: [TranscriptionSegment] = []
     public var unconfirmedSegments: [TranscriptionSegment] = []
     public var isTranscriptionEnabled = true
     public var waveSamples: [Float] = []
+    public var fileURL: URL?
+    public var error: EquatableError?
 
     public var customDumpDescription: String {
       """
-      isRecording: \(isRecording)
-      recordingDuration: \(recordingDuration)
       currentFallbacks: \(currentFallbacks)
       lastBufferSize: \(lastBufferSize)
       lastConfirmedSegmentEndSeconds: \(lastConfirmedSegmentEndSeconds)
@@ -45,6 +44,9 @@ public actor AudioFileStreamRecorder {
       """
     }
   }
+
+  private var nodeRecorder: NodeRecorder?
+  private var audioEngine: AudioEngine = AudioEngine()
 
   private var state: AudioFileStreamRecorder.State = .init() {
     didSet {
@@ -64,7 +66,8 @@ public actor AudioFileStreamRecorder {
   private var audioFile: AVAudioFile?
   private let whisperKit: WhisperKit
 
-  private var task: Task<Void, Error>?
+  private var isRecording: Bool { nodeRecorder?.isRecording ?? false }
+  private var isPaused: Bool { nodeRecorder?.isPaused ?? false }
 
   @Dependency(\.audioSession) var audioSession: AudioSessionClient
 
@@ -91,87 +94,56 @@ public actor AudioFileStreamRecorder {
   }
 
   public func startRecording(at fileURL: URL) async throws {
-    guard !state.isRecording else { return }
+    guard !isRecording else {
+      throw NSError(domain: "AudioFileStreamRecorder", code: 1, userInfo: [NSLocalizedDescriptionKey: "Recording is already in progress."])
+    }
+
     guard await AudioProcessor.requestRecordPermission() else {
-      logs.error("Microphone access was not granted.")
-      return
+      throw NSError(domain: "AudioFileStreamRecorder", code: 1, userInfo: [NSLocalizedDescriptionKey: "Microphone access was not granted."])
     }
 
-    state.isRecording = true
-    state.isPaused = false
-    audioProcessor.audioSamples = []
-    audioProcessor.audioEnergy = []
+    state.fileURL = fileURL
 
-    try audioSession.enable(.record, true)
-    audioProcessor.audioEngine = try audioProcessor.setupEngine()
-
-    // Set the callback
-    audioProcessor.audioBufferCallback = { [weak self] buffer in
+    try nodeRecorder?.reset()
+    nodeRecorder = try audioProcessor.createNodeRecorder(audioEngine: audioEngine, fileURL: fileURL, shouldProcessBuffer: state.isTranscriptionEnabled) { [weak self] data in
       Task { [weak self] in
-        await self?.onAudioBufferCallback(buffer)
+        await self?.onNewChannelData(data)
       }
     }
+    try audioEngine.start()
+    try nodeRecorder?.record()
 
-    // Setup audio file for writing
-    logs.info("Writing audio file to \(fileURL)")
-    let desiredFormat = try AVAudioFormat(
-      commonFormat: .pcmFormatFloat32,
-      sampleRate: Double(WhisperKit.sampleRate),
-      channels: AVAudioChannelCount(1),
-      interleaved: false
-    ).require()
-    audioFile = try AVAudioFile(forWriting: fileURL, settings: desiredFormat.settings)
+    logs.info("Started recording to \(nodeRecorder?.audioFile?.url.path() ?? "-")")
 
-    guard state.isTranscriptionEnabled else {
-      task = Task { [weak self] in
-        await self?.updateRecordingDuration()
-      }
-      return
-    }
-
-    // Create a task group to run the duration update loop and transcription loop concurrently
-    task = Task { [weak self] in
-      await withTaskGroup(of: Void.self) { [weak self] group in
-        group.addTask { [weak self] in
-          await self?.updateRecordingDuration()
-        }
-        group.addTask { [weak self] in
-          await self?.realtimeLoop()
-        }
-
-        await group.waitForAll()
-      }
-    }
+    await realtimeLoop()
   }
 
   public func stopRecording() {
-    state.isRecording = false
-    audioProcessor.stopRecording()
-    task?.cancel()
-    task = nil
+    nodeRecorder?.stop()
     logs.info("Recording has ended")
+    audioEngine.stop()
   }
 
   public func pauseRecording() {
-    guard state.isRecording, !state.isPaused else { return }
-    state.isPaused = true
-    audioProcessor.pauseRecording()
+    nodeRecorder?.pause()
     logs.info("Recording has been paused")
   }
 
   public func resumeRecording() {
-    guard state.isRecording, state.isPaused else { return }
-    state.isPaused = false
-    try? audioProcessor.audioEngine?.start()
+    nodeRecorder?.resume()
     logs.info("Recording has been resumed")
   }
 
+  private func onNewChannelData(_ data: [Float]) {
+    state.waveSamples = AudioFileStreamRecorder.getWaveformAdjustedSamples(from: data, samplesPerPixel: WhisperKit.sampleRate / 10)
+  }
+
   private func realtimeLoop() async {
-    while state.isRecording {
+    while isRecording {
       do {
         // wait for the model to load
-        if whisperKit.modelState != .loaded || state.isPaused || !state.isTranscriptionEnabled {
-          try await Task.sleep(nanoseconds: 100_000_000)
+        if whisperKit.modelState != .loaded || isPaused || !state.isTranscriptionEnabled {
+          try await Task.sleep(for: .seconds(0.3))
           continue
         }
 
@@ -179,36 +151,6 @@ public actor AudioFileStreamRecorder {
       } catch {
         logs.error("Error: \(error.localizedDescription)")
       }
-    }
-  }
-
-  private func updateRecordingDuration() async {
-    while state.isRecording {
-      if !state.isPaused {
-        state.recordingDuration += 0.1
-        state.waveSamples = audioProcessor.relativeEnergy
-      }
-      try? await Task.sleep(nanoseconds: 100_000_000) // sleep for 100ms
-    }
-  }
-
-  private func onProgressCallback(_ progress: TranscriptionProgress) {
-    let fallbacks = Int(progress.timings.totalDecodingFallbacks)
-    state.currentFallbacks = fallbacks
-  }
-
-  private func onAudioBufferCallback(_ floatArray: [Float]) {
-    // Write buffer to audio file
-    do {
-      var floatArray = floatArray
-      try floatArray.withUnsafeMutableBufferPointer { bytes in
-        let audioBuffer = AudioBuffer(mNumberChannels: 1, mDataByteSize: UInt32(bytes.count * MemoryLayout<Float>.size), mData: bytes.baseAddress)
-        var bufferList = AudioBufferList(mNumberBuffers: 1, mBuffers: audioBuffer)
-        let outputAudioBuffer = try AVAudioPCMBuffer(pcmFormat: audioFile.require().processingFormat, bufferListNoCopy: &bufferList)!
-        try self.audioFile?.write(from: outputAudioBuffer)
-      }
-    } catch {
-      logs.error("Failed to write audio buffer to file: \(error.localizedDescription)")
     }
   }
 
@@ -297,6 +239,11 @@ public actor AudioFileStreamRecorder {
     }
   }
 
+  private func onProgressCallback(_ progress: TranscriptionProgress) {
+    let fallbacks = Int(progress.timings.totalDecodingFallbacks)
+    state.currentFallbacks = fallbacks
+  }
+
   private static func shouldStopEarly(
     progress: TranscriptionProgress,
     options: DecodingOptions,
@@ -318,5 +265,28 @@ public actor AudioFileStreamRecorder {
     }
 
     return nil
+  }
+
+  private static func getWaveformAdjustedSamples(from samples: [Float], samplesPerPixel: Int) -> [Float] {
+    let sampleCount = samples.count
+    let adjustedSampleCount = max(64, samplesPerPixel)
+
+    var adjustedSamples = [Float](repeating: 0.0, count: adjustedSampleCount)
+
+    let framesPerBuffer = sampleCount / adjustedSampleCount
+
+    for i in 0 ..< adjustedSampleCount {
+      let startIndex = i * framesPerBuffer
+      let endIndex = min(startIndex + framesPerBuffer, sampleCount)
+
+      let bufferSamples = Array(samples[startIndex ..< endIndex])
+
+      var rms: Float = 0.0
+      vDSP_rmsqv(bufferSamples, 1, &rms, vDSP_Length(bufferSamples.count))
+
+      adjustedSamples[i] = rms
+    }
+
+    return adjustedSamples
   }
 }

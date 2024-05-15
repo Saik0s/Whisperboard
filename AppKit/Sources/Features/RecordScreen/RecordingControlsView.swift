@@ -140,7 +140,7 @@ struct RecordingControlsView: View {
   @Environment(NamespaceContainer.self) var namespace
 
   var currentTime: String {
-    (store.recording?.duration).flatMap {
+    (store.recording?.recordingInfo.duration).flatMap {
       dateComponentsFormatter.string(from: $0)
     } ?? ""
   }

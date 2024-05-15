@@ -9,7 +9,7 @@ import SwiftUI
 public struct AppView: View {
   @MainActor static let store = Store(initialState: Root.State()) {
     Root()
-    #if DEBUG
+    #if !APPSTORE
       ._printChanges(.swiftLog(withStateChanges: true))
       .signpost("WhisperBoard_Root")
     #endif

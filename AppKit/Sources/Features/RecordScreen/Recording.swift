@@ -16,7 +16,7 @@ struct Recording {
       case idle, loading(String), transcribing(String), error(String)
     }
 
-    var recordingInfo: RecordingInfo
+    @Shared var recordingInfo: RecordingInfo
     var mode: Mode = .recording
     var samples: [Float] = []
     var isLiveTranscription = false
@@ -25,21 +25,19 @@ struct Recording {
 
     @Presents var alert: AlertState<Action.Alert>?
 
-    var url: URL { recordingInfo.fileURL }
-    var duration: TimeInterval { recordingInfo.duration }
-    var date: Date { recordingInfo.date }
+    init(recordingInfo: RecordingInfo) {
+      _recordingInfo = Shared(recordingInfo)
+    }
   }
 
   enum Action: Equatable, BindableAction {
     case binding(BindingAction<State>)
-    case startRecording(withLiveTranscription: Bool)
     case delegate(Delegate)
-    // case finalRecordingTime(TimeInterval)
+    case startRecording(withLiveTranscription: Bool)
     case saveButtonTapped
     case pauseButtonTapped
     case continueButtonTapped
     case deleteButtonTapped
-    // case recordingStateUpdated(RecordingState)
     case transcriptionStateUpdated(AudioFileStreamRecorder.State)
     case modelStateUpdated(ModelLoadingStage)
     case alert(PresentationAction<Alert>)
@@ -72,7 +70,7 @@ struct Recording {
         state.mode = .recording
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
-        return .run { [url = state.url, recordingTranscriptionStream] send in
+        return .run { [url = state.recordingInfo.fileURL, recordingTranscriptionStream] send in
           if withLiveTranscription {
             try await withThrowingTaskGroup(of: Void.self) { group in
               group.addTask {
@@ -89,6 +87,9 @@ struct Recording {
 
               try await group.waitForAll()
             }
+
+            try await recordingTranscriptionStream.unloadModel()
+            await send(.modelStateUpdated(.loading), animation: .bouncy)
           } else {
             for try await transcriptionState in await recordingTranscriptionStream.startRecordingWithoutTranscription(url) {
               await send(.transcriptionStateUpdated(transcriptionState), animation: .bouncy)
@@ -117,7 +118,7 @@ struct Recording {
           // await send(.finalRecordingTime(audioRecorder.currentTime()))
           // await audioRecorder.stopRecording()
           await recordingTranscriptionStream.stopRecording()
-            await send(.delegate(.didFinish(.success(state))))
+          await send(.delegate(.didFinish(.success(state))))
         }
 
       case .pauseButtonTapped:
@@ -146,7 +147,7 @@ struct Recording {
           // await audioRecorder.removeCurrentRecording()
           await recordingTranscriptionStream.stopRecording()
           try? FileManager.default.removeItem(at: state.recordingInfo.fileURL)
-            await send(.delegate(.didCancel))
+          await send(.delegate(.didCancel))
         }
 
       // case let .recordingStateUpdated(.recording(duration, powers)):
@@ -202,8 +203,6 @@ struct Recording {
           .joined(separator: "\n")
 
         let completeTranscription = """
-        isRecording: \(transcriptionState.isRecording)
-        recordingDuration: \(transcriptionState.recordingDuration)
         currentFallbacks: \(transcriptionState.currentFallbacks)
         lastBufferSize: \(transcriptionState.lastBufferSize)
         lastConfirmedSegmentEndSeconds: \(transcriptionState.lastConfirmedSegmentEndSeconds)
@@ -256,7 +255,7 @@ struct Recording {
 
         state.recordingInfo.transcription?.segments = transcriptionSegments
         state.samples = transcriptionState.waveSamples
-        state.recordingInfo.duration = transcriptionState.recordingDuration
+        state.recordingInfo.duration = Double(transcriptionState.waveSamples.count * 10)
         return .none
 
       case let .modelStateUpdated(modelState):

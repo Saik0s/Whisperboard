@@ -221,8 +221,8 @@ extension DecodingOptions {
       language: nil,
       temperature: 0.0,
       temperatureIncrementOnFallback: 0.2,
-      temperatureFallbackCount: 1,
-      sampleLength: 112,
+      temperatureFallbackCount: 3,
+      sampleLength: 224,
       topK: 5,
       usePrefillPrompt: false,
       usePrefillCache: false,
@@ -234,7 +234,7 @@ extension DecodingOptions {
       compressionRatioThreshold: 2.4,
       logProbThreshold: -1.0,
       firstTokenLogProbThreshold: nil,
-      noSpeechThreshold: 0.6,
+      noSpeechThreshold: 0.3,
       concurrentWorkerCount: 1
     )
   }
@@ -260,3 +260,4 @@ extension Task where Failure == Error {
     return result.value.required()
   }
 }
+

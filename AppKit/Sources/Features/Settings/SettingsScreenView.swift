@@ -40,7 +40,6 @@ struct SettingsScreenView: View {
       .navigationBarTitle("Settings")
       .navigationBarTitleDisplayMode(.inline)
       .alert($store.scope(state: \.alert, action: \.alert))
-      .task { await store.send(.task).finish() }
       .onAppear { store.send(.updateInfo) }
       .applyTabBarContentInset()
     }

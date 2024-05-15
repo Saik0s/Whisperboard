@@ -6,6 +6,7 @@ import SwiftUI
 
 // MARK: - RootView
 
+@MainActor
 struct RootView: View {
   @Perception.Bindable var store: StoreOf<Root>
   @Perception.Bindable private var tabBarViewModel: TabBarViewModel
@@ -38,7 +39,12 @@ struct RootView: View {
         }
       )
       .accentColor(.white)
-      .task { await store.send(.task).finish() }
+      .task {
+        store.send(.task)
+        store.send(.recordingListScreen(.task))
+        store.send(.settingsScreen(.task))
+        store.send(.recordScreen(.micSelector(.task)))
+      }
       .environment(tabBarViewModel)
       .environment(recordButtonModel)
       .environment(NamespaceContainer(namespace: namespace))
