@@ -52,24 +52,7 @@ struct TranscriptionWorker: Reducer {
     Reduce { state, action in
       switch action {
       case .task:
-        return .run { send in
-          async let backgroundTask: Void = {
-            for await _ in await didEnterBackground() {
-              await send(.beginBackgroundTask)
-              await send(.scheduleBackgroundProcessingTask)
-            }
-          }()
-
-          async let foregroundTask: Void = {
-            for await _ in await willEnterForeground() {
-              await send(.endBackgroundTask)
-              await send(.cancelScheduledBackgroundProcessingTask)
-            }
-          }()
-
-          await backgroundTask
-          await foregroundTask
-        }
+        return .none
 
       case .processTasks:
         guard !state.isProcessing else { return .none }
@@ -77,7 +60,11 @@ struct TranscriptionWorker: Reducer {
         return .run(priority: .background) { [state] send in
           if let task = await getNextTask(state: state) {
             await send(.setCurrentTask(task.task))
+            await send(.beginBackgroundTask)
+            await send(.scheduleBackgroundProcessingTask)
             await executor.process(task: task)
+            await send(.endBackgroundTask)
+            await send(.cancelScheduledBackgroundProcessingTask)
             await send(.currentTaskFinishProcessing)
           }
         }.cancellable(id: CancelID.processing, cancelInFlight: true)

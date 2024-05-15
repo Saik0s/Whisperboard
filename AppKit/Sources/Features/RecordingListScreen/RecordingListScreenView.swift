@@ -204,8 +204,6 @@ struct RecordingListScreenView: View {
       }
       .animation(.hardShowHide(), value: store.recordingCards.count)
       .alert($store.scope(state: \.alert, action: \.alert))
-      // .messagePopup(store: store.scope(state: \.$alert, action: \.alert))
-      .task { await store.send(.task).finish() }
       .applyTabBarContentInset()
     }
     .enableInjection()

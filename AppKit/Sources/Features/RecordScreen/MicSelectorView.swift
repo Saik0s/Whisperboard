@@ -123,7 +123,6 @@ struct MicSelectorView: View {
       }
       .fixedSize(horizontal: true, vertical: false)
       .alert($store.scope(state: \.alert, action: \.alert))
-      .task { store.send(.task) }
     }
     .enableInjection()
   }

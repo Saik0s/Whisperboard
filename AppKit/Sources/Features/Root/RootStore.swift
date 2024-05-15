@@ -60,7 +60,7 @@ struct Root {
           }
         }
       }
-      .onChange(of: \.recordScreen.recordingControls.recording?.url) { _, url in
+      .onChange(of: \.recordScreen.recordingControls.recording?.recordingInfo.fileURL) { _, url in
         Reduce { _, _ in
           storage.setCurrentRecordingURL(url: url)
           return .none
@@ -114,11 +114,16 @@ struct Root {
       case .settingsScreen(.binding(.set(\.settings.isICloudSyncEnabled, true))):
         return uploadNewRecordingsToICloud(state)
 
+      // Inserts a new recording into the recording list and enqueues a transcription task if auto-transcription is enabled
       case let .recordScreen(.delegate(.newRecordingCreated(recordingInfo))):
+        // In case it was transcribed during the recording, we want to mark it as done
+        var recordingInfo = recordingInfo
+        recordingInfo.transcription?.status = .done(Date())
         state.recordingListScreen.recordings.insert(recordingInfo, at: 0)
-        return .run { [state] send in
+
+        return .run { [state, recordingInfo] send in
           try await Task.sleep(for: .seconds(1))
-          if state.settingsScreen.settings.isAutoTranscriptionEnabled {
+          if state.settingsScreen.settings.isAutoTranscriptionEnabled && recordingInfo.transcription == nil {
             await send(.transcriptionWorker(.enqueueTaskForRecordingID(recordingInfo.id, state.settingsScreen.settings)))
           }
         }.merge(with: uploadNewRecordingsToICloud(state))
@@ -126,6 +131,7 @@ struct Root {
       case .path(.element(_, .details(.delegate(.deleteDialogConfirmed)))):
         guard let id = state.path.last?.details?.recordingCard.id else { return .none }
         state.recordingListScreen.recordings.removeAll(where: { $0.id == id })
+        state.path.removeLast()
         return .none
 
       case .recordScreen(.delegate(.goToNewRecordingTapped)):
