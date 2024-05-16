@@ -208,7 +208,7 @@ struct Recording {
 
         state.recordingInfo.transcription?.segments = transcriptionSegments
         state.samples = transcriptionState.waveSamples
-        state.recordingInfo.duration = Double(transcriptionState.waveSamples.count * 10)
+        state.recordingInfo.duration = transcriptionState.duration
         return .none
 
       case let .modelStateUpdated(modelState):
