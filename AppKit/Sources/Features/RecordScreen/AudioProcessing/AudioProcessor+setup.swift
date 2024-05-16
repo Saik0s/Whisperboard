@@ -1,4 +1,3 @@
-import AudioKit
 import AVFoundation
 import Dependencies
 import Foundation
@@ -45,10 +44,6 @@ extension AudioProcessor {
     inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: nodeFormat) { [weak self] (buffer: AVAudioPCMBuffer, _: AVAudioTime) in
       guard let self else { return }
 
-      if let rawBufferCallback {
-        rawBufferCallback(buffer)
-      }
-
       var buffer = buffer
       if !buffer.format.sampleRate.isEqual(to: Double(WhisperKit.sampleRate)) {
         do {
@@ -57,6 +52,10 @@ extension AudioProcessor {
           Logging.error("Failed to resample buffer: \(error)")
           return
         }
+      }
+
+      if let rawBufferCallback {
+        rawBufferCallback(buffer)
       }
 
       let newBufferArray = Self.convertBufferToArray(buffer: buffer)
@@ -83,46 +82,5 @@ extension AudioProcessor {
     audioEngine = try setupEngineForRecording(inputDeviceID: inputDeviceID, rawBufferCallback: rawBufferCallback)
 
     audioBufferCallback = callback
-  }
-}
-
-extension AudioProcessor {
-  func createNodeRecorder(audioEngine: AudioEngine, fileURL: URL, shouldProcessBuffer _: Bool, callback: (([Float]) -> Void)? = nil) throws -> NodeRecorder {
-    audioSamples = []
-    audioEnergy = []
-
-    let inputNode = try audioEngine.input.require()
-
-    // Desired format (16,000 Hz, 1 channel)
-    guard let desiredFormat = AVAudioFormat(
-      commonFormat: .pcmFormatFloat32,
-      sampleRate: Double(WhisperKit.sampleRate),
-      channels: AVAudioChannelCount(1),
-      interleaved: false
-    ) else {
-      throw WhisperKitError.audioProcessingFailed("Failed to create desired format")
-    }
-    AudioKit.Settings.audioFormat = desiredFormat
-
-    @Dependency(\.audioSession) var audioSession: AudioSessionClient
-    try audioSession.enable(.record, true)
-
-    let recorder = try NodeRecorder(node: inputNode, bus: 0, shouldCleanupRecordings: false) { [weak self] sampleData, time in
-      guard let self else { return }
-      logs.debug("NodeRecorder callback: \(time) \(sampleData.count) samples")
-      processBuffer(sampleData)
-    }
-
-    audioBufferCallback = callback
-
-    self.audioEngine = audioEngine.avEngine
-
-    var settings = AudioKit.Settings.audioFormat.settings
-    settings[AVLinearPCMIsNonInterleaved] = NSNumber(value: false)
-
-    var audioFile: AVAudioFile? = try AVAudioFile(forWriting: fileURL, settings: settings)
-    recorder.openFile(file: &audioFile)
-
-    return recorder
   }
 }

@@ -114,7 +114,7 @@ extension RecordingTranscriptionStream: DependencyKey {
                 localModelURL.appendingPathComponent(model)
               } else {
                 try await WhisperKit.download(variant: model, from: repoName, progressCallback: { progress in
-                  continuation.yield(.downloading(progress: progress.fractionCompleted))
+                  continuation.yield(.downloading(progress: Double(round(100 * progress.fractionCompleted) / 100)))
                 })
               }
 

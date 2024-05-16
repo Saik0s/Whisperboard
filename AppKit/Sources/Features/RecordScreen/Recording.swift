@@ -94,9 +94,6 @@ struct Recording {
             for try await transcriptionState in await recordingTranscriptionStream.startRecordingWithoutTranscription(url) {
               await send(.transcriptionStateUpdated(transcriptionState), animation: .bouncy)
             }
-            // for await recState in await audioRecorder.startRecording(url) {
-            //   await send(.recordingStateUpdated(recState), animation: .bouncy)
-            // }
           }
         } catch: { error, send in
           await send(.alert(.presented(.error(error.localizedDescription))))
@@ -106,17 +103,11 @@ struct Recording {
       case .delegate:
         return .none
 
-      // case let .finalRecordingTime(duration):
-      //   state.recordingInfo.duration = duration
-      //   return .none
-
       case .saveButtonTapped:
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         state.mode = .encoding
 
         return .run { [recordingTranscriptionStream, state] send in
-          // await send(.finalRecordingTime(audioRecorder.currentTime()))
-          // await audioRecorder.stopRecording()
           await recordingTranscriptionStream.stopRecording()
           await send(.delegate(.didFinish(.success(state))))
         }
@@ -126,7 +117,6 @@ struct Recording {
         state.mode = .paused
 
         return .run { [recordingTranscriptionStream] _ in
-          // await audioRecorder.pauseRecording()
           await recordingTranscriptionStream.pauseRecording()
         }
 
@@ -135,7 +125,6 @@ struct Recording {
         state.mode = .recording
 
         return .run { [recordingTranscriptionStream] _ in
-          // await audioRecorder.continueRecording()
           await recordingTranscriptionStream.resumeRecording()
         }
 
@@ -144,46 +133,10 @@ struct Recording {
         state.mode = .removing
 
         return .run { [recordingTranscriptionStream, state] send in
-          // await audioRecorder.removeCurrentRecording()
           await recordingTranscriptionStream.stopRecording()
           try? FileManager.default.removeItem(at: state.recordingInfo.fileURL)
           await send(.delegate(.didCancel))
         }
-
-      // case let .recordingStateUpdated(.recording(duration, powers)):
-      //   let samples = powers.map { 1 - pow(10, $0 / 20) }
-      //   state.recordingInfo.duration = duration
-      //   state.samples.append(contentsOf: samples)
-      //   return .none
-
-      // case .recordingStateUpdated(.paused):
-      //   state.mode = .paused
-      //   return .none
-
-      // case .recordingStateUpdated(.stopped):
-      //   state.mode = .encoding
-      //   return .none
-
-      // case let .recordingStateUpdated(.error(error)):
-      //   return .run { send in
-      //     await send(.delegate(.didFinish(.failure(error))))
-      //     await send(.alert(.presented(.error(error.localizedDescription))))
-      //   }
-
-      // case let .recordingStateUpdated(.finished(successfully)):
-      //   return .run { [state] send in
-      //     guard state.mode == .encoding else {
-      //       await send(.delegate(.didCancel))
-      //       return
-      //     }
-
-      //     if successfully {
-      //       await send(.delegate(.didFinish(.success(state))))
-      //     } else {
-      //       await send(.delegate(.didFinish(.failure(Failed()))))
-      //       await send(.alert(.presented(.error("Recording failed"))))
-      //     }
-      //   }
 
       case let .transcriptionStateUpdated(transcriptionState):
         let confirmedText = transcriptionState.confirmedSegments

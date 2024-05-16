@@ -132,20 +132,24 @@ extension AudioSessionClient: DependencyKey {
       },
       availableMicrophones: {
         AsyncStream([Microphone].self) { continuation in
-          continuation.yield(microphones)
-
           let task = Task(priority: .background) {
             let updateStream = AsyncStream<[Microphone]>(
               NotificationCenter.default
                 .notifications(named: AVAudioSession.routeChangeNotification)
                 .map { _ -> [Microphone] in
-                  AVAudioSession.sharedInstance().availableInputs?.map(Microphone.init) ?? []
+                  microphones
                 }
+                .removeDuplicates(by: { old, new in
+                  old.map(\.port.portName).sorted() != new.map(\.port.portName).sorted()
+                })
             )
 
             try session.setCategory(.playAndRecord, mode: mode, options: options)
 
+            continuation.yield(microphones)
+
             for await microphones in updateStream {
+              logs.debug("Microphones: \(microphones.map(\.port.portName).sorted())")
               continuation.yield(microphones)
             }
           }
