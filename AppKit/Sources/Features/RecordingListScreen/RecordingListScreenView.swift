@@ -167,50 +167,57 @@ struct RecordingListScreenView: View {
 
   var body: some View {
     WithPerceptionTracking {
-      ScrollView {
-        LazyVStack {
-          ForEach(store.scope(state: \.recordingCards, action: \.recordingCard)) { store in
-            makeRecordingCard(store: store)
-          }
-          .removeClipToBounds()
-        }
-        .padding(.grid(4))
-      }
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      .background {
-        EmptyStateView()
-          .hidden(!store.recordingCards.isEmpty)
-      }
-      .navigationTitle("Recordings")
-      .navigationBarTitleDisplayMode(.inline)
-      .navigationBarItems(
-        leading: EditButton(),
-        trailing: FilePicker(types: [.wav, .mp3, .mpeg4Audio], allowMultiple: true) { urls in
-          store.send(.addFileRecordings(urls: urls))
-        } label: {
-          Image(systemName: "doc.badge.plus")
-        }
-        .secondaryIconButtonStyle()
-      )
-      .environment(
-        \.editMode,
-        $store.editMode
-      )
-      .removeNavigationBackground()
-      .overlay {
-        if store.isImportingFiles {
-          Color.black.opacity(0.5).overlay(ProgressView())
-        }
-      }
-      .animation(.hardShowHide(), value: store.recordingCards.count)
-      .alert($store.scope(state: \.alert, action: \.alert))
-      .applyTabBarContentInset()
+      content
     }
     .enableInjection()
+  }
+
+  private var content: some View {
+    ScrollView {
+      cardsStack()
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    .background {
+      if store.recordingCards.isEmpty {
+        EmptyStateView()
+      }
+    }
+    .overlay {
+      if store.isImportingFiles {
+        Color.black.opacity(0.5).overlay(ProgressView())
+      }
+    }
+    .animation(.hardShowHide(), value: store.recordingCards.count)
+    .navigationTitle("Recordings")
+    .navigationBarTitleDisplayMode(.inline)
+    .navigationBarItems(leading: EditButton(), trailing: filePickerButton())
+    .removeNavigationBackground()
+    .environment(\.editMode, $store.editMode)
+    .alert($store.scope(state: \.alert, action: \.alert))
+    .applyTabBarContentInset()
   }
 }
 
 extension RecordingListScreenView {
+  private func filePickerButton() -> some View {
+    FilePicker(types: [.wav, .mp3, .mpeg4Audio], allowMultiple: true) { urls in
+      store.send(.addFileRecordings(urls: urls))
+    } label: {
+      Image(systemName: "doc.badge.plus")
+    }
+    .secondaryIconButtonStyle()
+  }
+
+  private func cardsStack() -> some View {
+    LazyVStack {
+      ForEach(store.scope(state: \.recordingCards, action: \.recordingCard)) { store in
+        makeRecordingCard(store: store)
+      }
+      .removeClipToBounds()
+    }
+    .padding(.grid(4))
+  }
+
   private func makeRecordingCard(store cardStore: StoreOf<RecordingCard>) -> some View {
     WithPerceptionTracking {
       HStack(spacing: .grid(4)) {

@@ -1,5 +1,4 @@
 import Accelerate
-import AudioKit
 import AVFoundation
 import ComposableArchitecture
 import Dependencies
@@ -27,6 +26,9 @@ public actor AudioFileStreamRecorder {
     public var waveSamples: [Float] = []
     public var fileURL: URL?
     public var error: EquatableError?
+    public var duration: TimeInterval = 0
+    public var isRecording: Bool = false
+    public var isPaused: Bool = false
 
     public var customDumpDescription: String {
       """
@@ -41,18 +43,15 @@ public actor AudioFileStreamRecorder {
       ]
       isTranscriptionEnabled: \(isTranscriptionEnabled)
       waveSamples(count): \(waveSamples.count)
+      isRecording: \(isRecording)
+      isPaused: \(isPaused)
       """
     }
   }
 
-  private var nodeRecorder: NodeRecorder?
-  private var audioEngine: AudioEngine = AudioEngine()
-
   private var state: AudioFileStreamRecorder.State = .init() {
     didSet {
-      if state != oldValue {
-        stateChangeCallback?(state)
-      }
+      throttleStateChangeCallback()
     }
   }
 
@@ -65,11 +64,6 @@ public actor AudioFileStreamRecorder {
   private let decodingOptions: DecodingOptions
   private var audioFile: AVAudioFile?
   private let whisperKit: WhisperKit
-
-  private var isRecording: Bool { nodeRecorder?.isRecording ?? false }
-  private var isPaused: Bool { nodeRecorder?.isPaused ?? false }
-
-  @Dependency(\.audioSession) var audioSession: AudioSessionClient
 
   public init(
     whisperKit: WhisperKit,
@@ -94,7 +88,7 @@ public actor AudioFileStreamRecorder {
   }
 
   public func startRecording(at fileURL: URL) async throws {
-    guard !isRecording else {
+    guard !state.isRecording else {
       throw NSError(domain: "AudioFileStreamRecorder", code: 1, userInfo: [NSLocalizedDescriptionKey: "Recording is already in progress."])
     }
 
@@ -104,45 +98,79 @@ public actor AudioFileStreamRecorder {
 
     state.fileURL = fileURL
 
-    try nodeRecorder?.reset()
-    nodeRecorder = try audioProcessor.createNodeRecorder(audioEngine: audioEngine, fileURL: fileURL, shouldProcessBuffer: state.isTranscriptionEnabled) { [weak self] data in
+    let desiredFormat = try AVAudioFormat(
+      commonFormat: .pcmFormatFloat32,
+      sampleRate: Double(WhisperKit.sampleRate),
+      channels: AVAudioChannelCount(1),
+      interleaved: false
+    ).require()
+    audioFile = try AVAudioFile(forWriting: fileURL, settings: desiredFormat.settings)
+
+    try audioProcessor.startFileRecording(inputDeviceID: nil, rawBufferCallback: { [weak self] buffer in
       Task { [weak self] in
-        await self?.onNewChannelData(data)
+        await self?.onAudioBufferCallback(buffer)
       }
-    }
-    try audioEngine.start()
-    try nodeRecorder?.record()
+    }, callback: { [weak self] buffer in
+      Task { [weak self] in
+        await self?.onNewChannelData(buffer)
+      }
+    })
 
-    logs.info("Started recording to \(nodeRecorder?.audioFile?.url.path() ?? "-")")
-
+    state.isRecording = true
+    state.isPaused = false
     await realtimeLoop()
   }
 
   public func stopRecording() {
-    nodeRecorder?.stop()
+    audioProcessor.stopRecording()
     logs.info("Recording has ended")
-    audioEngine.stop()
+    audioFile = nil
+    state.isRecording = false
+    state.isPaused = false
   }
 
   public func pauseRecording() {
-    nodeRecorder?.pause()
+    audioProcessor.pauseRecording()
     logs.info("Recording has been paused")
+    state.isPaused = true
   }
 
   public func resumeRecording() {
-    nodeRecorder?.resume()
-    logs.info("Recording has been resumed")
+    do {
+      try audioProcessor.audioEngine?.start()
+      logs.info("Recording has been resumed")
+      state.isPaused = false
+    } catch {
+      logs.error("Failed to resume recording: \(error.localizedDescription)")
+      stopRecording()
+    }
   }
 
-  private func onNewChannelData(_ data: [Float]) {
-    state.waveSamples = AudioFileStreamRecorder.getWaveformAdjustedSamples(from: data, samplesPerPixel: WhisperKit.sampleRate / 10)
+  private func onNewChannelData(_: [Float]) {
+    state.waveSamples = audioProcessor.relativeEnergy
+  }
+
+  private func onAudioBufferCallback(_ buffer: AVAudioPCMBuffer) {
+    // Write buffer to audio file
+    do {
+      try audioFile?.write(from: buffer)
+      if let audioFile {
+        let frameCount = audioFile.length
+        let sampleRate = audioFile.fileFormat.sampleRate
+        state.duration = Double(frameCount) / sampleRate
+      } else {
+        state.duration = 0
+      }
+    } catch {
+      logs.error("Failed to write audio buffer to file: \(error.localizedDescription)")
+    }
   }
 
   private func realtimeLoop() async {
-    while isRecording {
+    while state.isRecording {
       do {
         // wait for the model to load
-        if whisperKit.modelState != .loaded || isPaused || !state.isTranscriptionEnabled {
+        if whisperKit.modelState != .loaded || state.isPaused || !state.isTranscriptionEnabled {
           try await Task.sleep(for: .seconds(0.3))
           continue
         }
@@ -267,26 +295,17 @@ public actor AudioFileStreamRecorder {
     return nil
   }
 
-  private static func getWaveformAdjustedSamples(from samples: [Float], samplesPerPixel: Int) -> [Float] {
-    let sampleCount = samples.count
-    let adjustedSampleCount = max(64, samplesPerPixel)
+  private var lastStateChangeCallbackTime: Date?
 
-    var adjustedSamples = [Float](repeating: 0.0, count: adjustedSampleCount)
-
-    let framesPerBuffer = sampleCount / adjustedSampleCount
-
-    for i in 0 ..< adjustedSampleCount {
-      let startIndex = i * framesPerBuffer
-      let endIndex = min(startIndex + framesPerBuffer, sampleCount)
-
-      let bufferSamples = Array(samples[startIndex ..< endIndex])
-
-      var rms: Float = 0.0
-      vDSP_rmsqv(bufferSamples, 1, &rms, vDSP_Length(bufferSamples.count))
-
-      adjustedSamples[i] = rms
+  private func throttleStateChangeCallback() {
+    let now = Date()
+    if let lastTime = lastStateChangeCallbackTime, now.timeIntervalSince(lastTime) < 0.25 {
+      return
     }
-
-    return adjustedSamples
+    lastStateChangeCallbackTime = now
+    Task {
+      try await Task.sleep(for: .seconds(0.25))
+      stateChangeCallback?(state)
+    }
   }
 }

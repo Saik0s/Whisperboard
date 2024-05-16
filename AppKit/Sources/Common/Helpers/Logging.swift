@@ -9,31 +9,10 @@ let osLogger = os.Logger(subsystem: bundleID, category: "General")
 // MARK: - Bootstrap Logger
 
 public let logs: Logging.Logger = {
-  let fileLogger: FileLogging? = logFileURL.flatMap { try? FileLogging(to: $0) }
   LoggingSystem.bootstrap { label in
-    UnifiedLogHandler(fileLogger: fileLogger, osLogger: osLogger, pulseLogger: PersistentLogHandler(label: label))
+    UnifiedLogHandler(osLogger: osLogger, pulseLogger: PersistentLogHandler(label: label))
   }
   return Logging.Logger(label: bundleID)
-}()
-
-public let logFileURL: URL? = {
-  let logsDir: URL = .cachesDirectory.appendingPathComponent("logs")
-
-  let options: ISO8601DateFormatter.Options = [.withDashSeparatorInDate, .withFullDate]
-  let dateString = ISO8601DateFormatter.string(from: Date(), timeZone: .current, formatOptions: options)
-  let fileName = "\(dateString).log"
-  let url: URL = logsDir.appendingPathComponent(fileName)
-
-  for url in (try? FileManager.default.contentsOfDirectory(at: logsDir, includingPropertiesForKeys: [])) ?? []
-    where url.lastPathComponent != fileName {
-    do {
-      try FileManager.default.removeItem(at: url)
-    } catch {
-      osLogger.error("Encountered error while removing old logs: \(error.localizedDescription)")
-    }
-  }
-
-  return url
 }()
 
 // MARK: - ExtraLogHandler
@@ -60,12 +39,10 @@ class UnifiedLogHandler: LogHandler {
   var logLevel: Logging.Logger.Level = .trace
   var metadata = Logging.Logger.Metadata()
   private var prettyMetadata: String?
-  private var fileLogger: FileLogging?
   private let osLogger: os.Logger
   private let pulseLogger: PersistentLogHandler
 
-  init(fileLogger: FileLogging?, osLogger: os.Logger, pulseLogger: PersistentLogHandler) {
-    self.fileLogger = fileLogger
+  init(osLogger: os.Logger, pulseLogger: PersistentLogHandler) {
     self.osLogger = osLogger
     self.pulseLogger = pulseLogger
   }
@@ -99,9 +76,6 @@ class UnifiedLogHandler: LogHandler {
     // Log to Pulse
     pulseLogger.log(level: level, message: "\(formattedMessage)", metadata: metadata, file: file, function: function, line: line)
 
-    // Log to file if available
-    fileLogger?.stream.write(formattedMessage)
-
     // Log to os.Logger
     osLogger.log(level: OSLogType.from(loggerLevel: level), "\(formattedMessage)")
 
@@ -130,53 +104,6 @@ class UnifiedLogHandler: LogHandler {
   private func timestamp() -> String {
     let options: ISO8601DateFormatter.Options = [.withColonSeparatorInTime, .withFullTime, .withFractionalSeconds]
     return ISO8601DateFormatter.string(from: Date(), timeZone: .current, formatOptions: options)
-  }
-}
-
-// MARK: - FileHandlerOutputStream
-
-/// Adapted from https://nshipster.com/textoutputstream/
-struct FileHandlerOutputStream: TextOutputStream {
-  enum FileHandlerOutputStream: Error {
-    case couldNotCreateFile
-  }
-
-  private let fileHandle: FileHandle
-  let encoding: String.Encoding
-
-  init(localFile url: URL, encoding: String.Encoding = .utf8) throws {
-    if !FileManager.default.fileExists(atPath: url.path) {
-      guard FileManager.default.createFile(atPath: url.path, contents: nil, attributes: nil) else {
-        throw NSError(
-          domain: "FileHandlerOutputStream",
-          code: 1,
-          userInfo: [NSLocalizedDescriptionKey: "Could not create file at \(url.path)"]
-        )
-      }
-    }
-
-    let fileHandle = try FileHandle(forWritingTo: url)
-    fileHandle.seekToEndOfFile()
-    self.fileHandle = fileHandle
-    self.encoding = encoding
-  }
-
-  mutating func write(_ string: String) {
-    if let data = string.data(using: encoding) {
-      fileHandle.write(data)
-    }
-  }
-}
-
-// MARK: - FileLogging
-
-struct FileLogging {
-  var stream: TextOutputStream
-  private var localFile: URL
-
-  init(to localFile: URL) throws {
-    stream = try FileHandlerOutputStream(localFile: localFile)
-    self.localFile = localFile
   }
 }
 

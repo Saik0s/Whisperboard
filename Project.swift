@@ -246,9 +246,9 @@ let project = Project(
         .external(name: "PulseUI"),
         .external(name: "SwiftUIIntrospect"),
         .external(name: "VariableBlurView"),
+        .external(name: "WhisperKit"),
         // .external(name: "RevenueCat"),
 
-        .external(name: "WhisperKit"),
         .package(product: "whisper"),
         .package(product: "RollbarNotifier"),
       ],
