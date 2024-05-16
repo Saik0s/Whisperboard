@@ -106,6 +106,7 @@ public actor AudioFileStreamRecorder {
     ).require()
     audioFile = try AVAudioFile(forWriting: fileURL, settings: desiredFormat.settings)
 
+    audioProcessor.relativeEnergyWindow = 10
     try audioProcessor.startFileRecording(inputDeviceID: nil, rawBufferCallback: { [weak self] buffer in
       Task { [weak self] in
         await self?.onAudioBufferCallback(buffer)
@@ -147,7 +148,7 @@ public actor AudioFileStreamRecorder {
   }
 
   private func onNewChannelData(_: [Float]) {
-    state.waveSamples = audioProcessor.relativeEnergy
+    state.waveSamples = audioProcessor.relativeEnergy.map { 1 - $0 }
   }
 
   private func onAudioBufferCallback(_ buffer: AVAudioPCMBuffer) {
