@@ -4,15 +4,15 @@ import Foundation
 import WhisperKit
 
 extension AudioProcessor {
-  func setupEngineForRecording(inputDeviceID: DeviceID? = nil, rawBufferCallback: ((AVAudioPCMBuffer) -> Void)? = nil) throws -> AVAudioEngine {
+  func startFileRecording(fileURL: URL, rawBufferCallback: ((AVAudioPCMBuffer, [Float]) -> Void)? = nil) throws -> AVAudioFile {
+    audioSamples = []
+    audioEnergy = []
+
+    @Dependency(\.audioSession) var audioSession: AudioSessionClient
+    try audioSession.enable(.record, true)
+
     let audioEngine = AVAudioEngine()
     let inputNode = audioEngine.inputNode
-
-    #if os(macOS)
-      if let inputDeviceID {
-        assignAudioInput(inputNode: inputNode, inputDeviceID: inputDeviceID)
-      }
-    #endif
 
     let hardwareSampleRate = audioEngine.inputNode.inputFormat(forBus: 0).sampleRate
     let inputFormat = inputNode.outputFormat(forBus: 0)
@@ -54,33 +54,19 @@ extension AudioProcessor {
         }
       }
 
-      if let rawBufferCallback {
-        rawBufferCallback(buffer)
-      }
-
       let newBufferArray = Self.convertBufferToArray(buffer: buffer)
       processBuffer(newBufferArray)
+
+      if let rawBufferCallback {
+        rawBufferCallback(buffer, newBufferArray)
+      }
     }
 
     audioEngine.prepare()
     try audioEngine.start()
 
-    return audioEngine
-  }
+    self.audioEngine = audioEngine
 
-  func startFileRecording(
-    inputDeviceID: DeviceID? = nil,
-    rawBufferCallback: ((AVAudioPCMBuffer) -> Void)? = nil,
-    callback: (([Float]) -> Void)? = nil
-  ) throws {
-    audioSamples = []
-    audioEnergy = []
-
-    @Dependency(\.audioSession) var audioSession: AudioSessionClient
-    try audioSession.enable(.record, true)
-
-    audioEngine = try setupEngineForRecording(inputDeviceID: inputDeviceID, rawBufferCallback: rawBufferCallback)
-
-    audioBufferCallback = callback
+    return try AVAudioFile(forWriting: fileURL, settings: desiredFormat.settings)
   }
 }

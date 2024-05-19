@@ -145,6 +145,10 @@ struct RecordingControlsView: View {
     } ?? ""
   }
 
+  var bufferEnergy: [Float] {
+    store.recording?.bufferEnergy ?? []
+  }
+
   var body: some View {
     WithPerceptionTracking {
       VStack(spacing: .grid(3)) {
@@ -152,15 +156,31 @@ struct RecordingControlsView: View {
           liveTranscriptionView()
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         } else {
-          WaveformLiveCanvas(samples: store.recording?.samples ?? [], configuration: Waveform.Configuration(
-            backgroundColor: .clear,
-            style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
-            damping: .init(percentage: 0.125, sides: .both),
-            scale: DSScreen.scale,
-            verticalScalingFactor: 0.95,
-            shouldAntialias: true
-          ))
-          .frame(maxWidth: .infinity)
+          GeometryReader { geometry in
+            ScrollView(.horizontal) {
+              HStack(spacing: 1) {
+                let startIndex = max(bufferEnergy.count - 300, 0)
+                ForEach(Array(bufferEnergy.enumerated())[startIndex...], id: \.element) { _, energy in
+                  RoundedRectangle(cornerRadius: 2)
+                    .fill(energy > Float(0.3) ? Color.green.opacity(0.2) : Color.red.opacity(0.2))
+                    .frame(width: 2, height: CGFloat(energy) * geometry.size.height)
+                    .transition(.scale(scale: 0).combined(with: .opacity).animation(.bouncy))
+                }
+              }
+            }
+            .defaultScrollAnchor(.trailing)
+            .frame(height: 24)
+            .scrollIndicators(.never)
+          }
+//          WaveformLiveCanvas(samples: store.recording?.samples ?? [], configuration: Waveform.Configuration(
+//            backgroundColor: .clear,
+//            style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
+//            damping: .init(percentage: 0.125, sides: .both),
+//            scale: DSScreen.scale,
+//            verticalScalingFactor: 0.95,
+//            shouldAntialias: true
+//          ))
+//          .frame(maxWidth: .infinity)
         }
         if store.recording == nil {
           Toggle("Live Transcription", systemImage: "text.bubble", isOn: $store.isLiveTranscriptionEnabled)
