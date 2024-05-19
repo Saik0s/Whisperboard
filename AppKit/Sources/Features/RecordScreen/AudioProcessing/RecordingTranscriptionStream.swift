@@ -33,7 +33,7 @@ public enum RecordingTranscriptionStreamError: Error {
 // MARK: - ModelLoadingStage
 
 @CasePathable
-public enum ModelLoadingStage: Equatable {
+public enum ModelLoadingStage: Sendable, Equatable {
   case downloading(progress: Double)
   case prewarming
   case loading
@@ -73,6 +73,47 @@ extension RecordingTranscriptionStream: DependencyKey {
     let repoName = "argmaxinc/whisperkit-coreml"
     let localModelURL = URL.documentsDirectory.appending(component: "huggingface/models/\(repoName)")
 
+    @Sendable func loadModelAsync(model: String, continuation: AsyncThrowingStream<ModelLoadingStage, Error>.Continuation) async {
+      do {
+        let localModelFiles = (try? FileManager.default.contentsOfDirectory(atPath: localModelURL.path())) ?? []
+        logs.info("Local model files: \(localModelFiles)")
+        let localModels = WhisperKit.formatModelFiles(localModelFiles)
+        logs.info("Formatted local models: \(localModels)")
+
+        var folder: URL = if localModels.contains(model) {
+          localModelURL.appendingPathComponent(model)
+        } else {
+          try await WhisperKit.download(variant: model, from: repoName, progressCallback: { progress in
+            continuation.yield(.downloading(progress: Double(round(100 * progress.fractionCompleted) / 100)))
+          })
+        }
+
+        resources.whisperKitInstance.modelFolder = folder
+        continuation.yield(.prewarming)
+        do {
+          try await resources.whisperKitInstance.prewarmModels()
+          logs.info("Models prewarmed successfully. \(resources.whisperKitInstance.modelState)")
+        } catch {
+          logs.error("Failed to prewarm models: \(error.localizedDescription)")
+          throw error
+        }
+
+        continuation.yield(.loading)
+        do {
+          try await resources.whisperKitInstance.loadModels()
+          logs.info("Models loaded successfully. \(resources.whisperKitInstance.modelState)")
+        } catch {
+          logs.error("Failed to load models: \(error.localizedDescription)")
+          throw error
+        }
+
+        continuation.yield(.completed)
+        continuation.finish()
+      } catch {
+        continuation.finish(throwing: error)
+      }
+    }
+
     return RecordingTranscriptionStream(
       startLiveTranscription: { fileURL in
         AsyncThrowingStream { continuation in
@@ -88,10 +129,13 @@ extension RecordingTranscriptionStream: DependencyKey {
             await resources.setAudioFileStreamRecorder(recorder)
 
             do {
-              try await resources.audioFileStreamRecorder?.startRecording(at: fileURL)
+              try await recorder.startRecording(at: fileURL)
             } catch {
               continuation.finish(throwing: error)
+              return
             }
+
+            continuation.finish(throwing: nil)
           }
 
           continuation.onTermination = { _ in
@@ -104,44 +148,7 @@ extension RecordingTranscriptionStream: DependencyKey {
       loadModel: { model in
         AsyncThrowingStream { continuation in
           Task {
-            do {
-              let localModelFiles = (try? FileManager.default.contentsOfDirectory(atPath: localModelURL.path())) ?? []
-              logs.info("Local model files: \(localModelFiles)")
-              let localModels = WhisperKit.formatModelFiles(localModelFiles)
-              logs.info("Formatted local models: \(localModels)")
-
-              var folder: URL = if localModels.contains(model) {
-                localModelURL.appendingPathComponent(model)
-              } else {
-                try await WhisperKit.download(variant: model, from: repoName, progressCallback: { progress in
-                  continuation.yield(.downloading(progress: Double(round(100 * progress.fractionCompleted) / 100)))
-                })
-              }
-
-              resources.whisperKitInstance.modelFolder = folder
-              continuation.yield(.prewarming)
-              do {
-                try await resources.whisperKitInstance.prewarmModels()
-                logs.info("Models prewarmed successfully. \(resources.whisperKitInstance.modelState)")
-              } catch {
-                logs.error("Failed to prewarm models: \(error.localizedDescription)")
-                throw error
-              }
-
-              continuation.yield(.loading)
-              do {
-                try await resources.whisperKitInstance.loadModels()
-                logs.info("Models loaded successfully. \(resources.whisperKitInstance.modelState)")
-              } catch {
-                logs.error("Failed to load models: \(error.localizedDescription)")
-                throw error
-              }
-
-              continuation.yield(.completed)
-              continuation.finish()
-            } catch {
-              continuation.finish(throwing: error)
-            }
+            await loadModelAsync(model: model, continuation: continuation)
           }
         }
       },
@@ -239,25 +246,3 @@ extension DecodingOptions {
     )
   }
 }
-
-extension Task where Failure == Error {
-  /// Performs an async task in a sync context and returns the result.
-  ///
-  /// - Note: This function blocks the thread until the given operation is finished. The caller is responsible for managing multithreading.
-  static func synchronous(priority: TaskPriority? = nil, operation: @escaping @Sendable () async throws -> Success) -> Success {
-    let semaphore = DispatchSemaphore(value: 0)
-    let result: LockIsolated<Success?> = .init(nil)
-
-    Task(priority: priority) {
-      defer { semaphore.signal() }
-      let operationResult = try await operation()
-      result.setValue(operationResult)
-      return operationResult
-    }
-
-    semaphore.wait()
-
-    return result.value.required()
-  }
-}
-

@@ -29,6 +29,7 @@ public actor AudioFileStreamRecorder {
     public var duration: TimeInterval = 0
     public var isRecording: Bool = false
     public var isPaused: Bool = false
+    public var liveTranscriptionModelState: ModelLoadingStage = .loading
 
     public var customDumpDescription: String {
       """
@@ -98,24 +99,12 @@ public actor AudioFileStreamRecorder {
 
     state.fileURL = fileURL
 
-    let desiredFormat = try AVAudioFormat(
-      commonFormat: .pcmFormatFloat32,
-      sampleRate: Double(WhisperKit.sampleRate),
-      channels: AVAudioChannelCount(1),
-      interleaved: false
-    ).require()
-    audioFile = try AVAudioFile(forWriting: fileURL, settings: desiredFormat.settings)
 
-    audioProcessor.relativeEnergyWindow = 10
-    try audioProcessor.startFileRecording(inputDeviceID: nil, rawBufferCallback: { [weak self] buffer in
+    audioFile = try audioProcessor.startFileRecording(fileURL: fileURL) { [weak self] buffer, _ in
       Task { [weak self] in
         await self?.onAudioBufferCallback(buffer)
       }
-    }, callback: { [weak self] buffer in
-      Task { [weak self] in
-        await self?.onNewChannelData(buffer)
-      }
-    })
+    }
 
     state.isRecording = true
     state.isPaused = false
@@ -147,11 +136,9 @@ public actor AudioFileStreamRecorder {
     }
   }
 
-  private func onNewChannelData(_: [Float]) {
-    state.waveSamples = audioProcessor.relativeEnergy.map { 1 - $0 }
-  }
-
   private func onAudioBufferCallback(_ buffer: AVAudioPCMBuffer) {
+    state.waveSamples = audioProcessor.relativeEnergy.map { 1 - $0 }
+
     // Write buffer to audio file
     do {
       try audioFile?.write(from: buffer)
@@ -170,8 +157,7 @@ public actor AudioFileStreamRecorder {
   private func realtimeLoop() async {
     while state.isRecording {
       do {
-        // wait for the model to load
-        if whisperKit.modelState != .loaded || state.isPaused || !state.isTranscriptionEnabled {
+        if !state.isTranscriptionEnabled {
           try await Task.sleep(for: .seconds(0.3))
           continue
         }
@@ -260,6 +246,17 @@ public actor AudioFileStreamRecorder {
     var options = decodingOptions
     options.clipTimestamps = [state.lastConfirmedSegmentEndSeconds]
     let checkWindow = compressionCheckWindow
+    if whisperKit.modelState != .loaded {
+      state.liveTranscriptionModelState = .loading
+      if whisperKit.modelState == .unloaded {
+        try await whisperKit.loadModels(prewarmMode: true)
+      } else {
+        while whisperKit.modelState != .loaded {
+          try await Task.sleep(for: .seconds(0.1))
+        }
+      }
+      state.liveTranscriptionModelState = .completed
+    }
     return try await whisperKit.transcribe(audioArray: samples, decodeOptions: options) { [weak self] progress in
       Task { [weak self] in
         await self?.onProgressCallback(progress)

@@ -39,7 +39,6 @@ struct Recording {
     case continueButtonTapped
     case deleteButtonTapped
     case transcriptionStateUpdated(AudioFileStreamRecorder.State)
-    case modelStateUpdated(ModelLoadingStage)
     case alert(PresentationAction<Alert>)
 
     enum Delegate: Equatable {
@@ -72,24 +71,9 @@ struct Recording {
 
         return .run { [url = state.recordingInfo.fileURL, recordingTranscriptionStream] send in
           if withLiveTranscription {
-            try await withThrowingTaskGroup(of: Void.self) { group in
-              group.addTask {
-                for try await modelState in try await recordingTranscriptionStream.loadModel("base") {
-                  await send(.modelStateUpdated(modelState), animation: .bouncy)
-                }
-              }
-
-              group.addTask {
-                for try await transcriptionState in try await recordingTranscriptionStream.startLiveTranscription(url) {
-                  await send(.transcriptionStateUpdated(transcriptionState), animation: .bouncy)
-                }
-              }
-
-              try await group.waitForAll()
+            for try await transcriptionState in try await recordingTranscriptionStream.startLiveTranscription(url) {
+              await send(.transcriptionStateUpdated(transcriptionState), animation: .bouncy)
             }
-
-            try await recordingTranscriptionStream.unloadModel()
-            await send(.modelStateUpdated(.loading), animation: .bouncy)
           } else {
             for try await transcriptionState in await recordingTranscriptionStream.startRecordingWithoutTranscription(url) {
               await send(.transcriptionStateUpdated(transcriptionState), animation: .bouncy)
@@ -209,6 +193,7 @@ struct Recording {
         state.recordingInfo.transcription?.segments = transcriptionSegments
         state.samples = transcriptionState.waveSamples
         state.recordingInfo.duration = transcriptionState.duration
+        state.liveTranscriptionModelState = transcriptionState.liveTranscriptionModelState
         return .none
 
       case let .modelStateUpdated(modelState):
