@@ -91,7 +91,7 @@ class UnifiedLogHandler: LogHandler {
     line: UInt
   ) -> String {
     let metaString = prettify(metadata) ?? ""
-    return "\(timestamp()) \(level) [\(file):\(line)] \(metaString) \(message)"
+    return "\(timestamp()) \(level) [\(file.lastPathComponent):\(line)] \(metaString) \(message)"
   }
 
   private func prettify(_ metadata: Logging.Logger.Metadata) -> String? {

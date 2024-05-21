@@ -1,5 +1,5 @@
 {
-  "originHash" : "028392f7585092e007c4b459e910d825f1dbdb42e396eaffa25dc79ba86361d0",
+  "originHash" : "0e7bbbb7f4a26eaa0604cb7bd4ce5e5c78527eda4bdd9ec6329479e7a7a49b53",
   "pins" : [
     {
       "identity" : "cocoalumberjack",
@@ -8,6 +8,24 @@
       "state" : {
         "revision" : "4b8714a7fb84d42393314ce897127b3939885ec3",
         "version" : "3.8.5"
+      }
+    },
+    {
+      "identity" : "ettrace",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/EmergeTools/ETTrace.git",
+      "state" : {
+        "revision" : "87d669a8f822bd425ff1bd028e5486eda682b5ba",
+        "version" : "1.0.3"
+      }
+    },
+    {
+      "identity" : "peertalk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/EmergeTools/peertalk.git",
+      "state" : {
+        "revision" : "02b8bebff91cd3d7a5d89c0ddb4bbd873c62879d",
+        "version" : "1.0.0"
       }
     },
     {
@@ -20,12 +38,30 @@
       }
     },
     {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser.git",
+      "state" : {
+        "revision" : "46989693916f56d1186bd59ac15124caef896560",
+        "version" : "1.3.1"
+      }
+    },
+    {
       "identity" : "swift-log",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log",
       "state" : {
         "revision" : "e97a6fcb1ab07462881ac165fdbb37f067e205d5",
         "version" : "1.5.4"
+      }
+    },
+    {
+      "identity" : "swifter",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/httpswift/swifter.git",
+      "state" : {
+        "revision" : "9483a5d459b45c3ffd059f7b55f9638e268632fd",
+        "version" : "1.5.0"
       }
     },
     {
