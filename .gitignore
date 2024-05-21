@@ -140,3 +140,4 @@ Tuist/.build
 
 buildServer.json
 .aider*
+App/Support/Reveal/

@@ -20,6 +20,10 @@ appstore: secrets
 	TUIST_IS_APP_STORE=1 $(TUIST) install
 	TUIST_IS_APP_STORE=1 $(TUIST) generate --no-open
 
+project_cache_warmup:
+	$(TUIST) cache WhisperBoardKit --external-only
+	$(TUIST) generate -n
+
 build_debug:
 	$(TUIST) build --generate --configuration Debug --build-output-path .build/
 

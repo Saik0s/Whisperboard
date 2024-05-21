@@ -8,6 +8,9 @@ public let appDeploymentTargets: DeploymentTargets = .iOS(deploymentTargetString
 public let appDestinations: Destinations = [.iPhone, .iPad]
 public let devTeam = "8A76N862C8"
 
+let isRevealSupported = FileManager.default.fileExists(atPath: "SkeletonProject/Support/RevealServer.xcframework")
+print("RevealServer.xcframework is \(isRevealSupported ? "supported" : "not supported")")
+
 let project = Project(
   name: "WhisperBoard",
 
@@ -22,6 +25,7 @@ let project = Project(
   packages: [
     .package(url: "https://github.com/ggerganov/whisper.cpp.git", .branch("master")),
     .package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0"),
+    .package(url: "https://github.com/EmergeTools/ETTrace.git", from: "1.0.0"),
   ],
 
   settings: .settings(
@@ -36,7 +40,7 @@ let project = Project(
       "DEVELOPMENT_TEAM": SettingValue(stringLiteral: devTeam),
     ],
     debug: [
-      "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -enable-actor-data-race-checks",
+      "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -debug-time-expression-type-checking -Xfrontend -enable-actor-data-race-checks",
       "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
     ]
   ),
@@ -148,6 +152,11 @@ let project = Project(
             name: "Reveal Server",
             basedOnDependencyAnalysis: false
           ),
+          .post(
+            script: "xclogparser parse --workspace WhisperBoard.xcworkspace --reporter html || true",
+            name: "XCLogParser",
+            basedOnDependencyAnalysis: false
+          ),
         ],
 
       dependencies: [
@@ -156,8 +165,12 @@ let project = Project(
       ] + (Environment.isAppStore.getBoolean(default: false)
         ? []
         : [
-          .xcframework(path: "//App/Support/Reveal/RevealServer.xcframework", status: .optional),
-        ]),
+          .package(product: "ETTrace"),
+        ])
+        // Check if RevealServer framework exists at this path and only then include it in this array of dependencies
+        + (isRevealSupported && !Environment.isAppStore.getBoolean(default: false)
+          ? [.xcframework(path: "//App/Support/Reveal/RevealServer.xcframework", status: .optional)]
+          : []),
 
       settings: .settings(
         base: [
