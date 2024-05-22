@@ -46,9 +46,7 @@ struct Recording {
       case didCancel
     }
 
-    enum Alert: Hashable {
-      case error(String)
-    }
+    enum Alert: Hashable {}
   }
 
   struct Failed: Equatable, Error {}
@@ -80,7 +78,7 @@ struct Recording {
             }
           }
         } catch: { error, send in
-          await send(.alert(.presented(.error(error.localizedDescription))))
+          logs.error("Error while starting recording: \(error)")
           await send(.delegate(.didFinish(.failure(error))))
         }
 
@@ -194,22 +192,6 @@ struct Recording {
         state.samples = transcriptionState.waveSamples
         state.recordingInfo.duration = transcriptionState.duration
         state.liveTranscriptionModelState = transcriptionState.liveTranscriptionModelState
-        return .none
-
-      case let .modelStateUpdated(modelState):
-        state.liveTranscriptionModelState = modelState
-        return .none
-
-      case let .alert(.presented(.error(message))):
-        state.alert = AlertState {
-          TextState("Error")
-        } actions: {
-          ButtonState(role: .cancel) {
-            TextState("OK")
-          }
-        } message: {
-          TextState(message)
-        }
         return .none
 
       case .alert:

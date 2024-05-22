@@ -146,7 +146,7 @@ struct RecordingControlsView: View {
   }
 
   var bufferEnergy: [Float] {
-    store.recording?.bufferEnergy ?? []
+    store.recording?.samples ?? []
   }
 
   var body: some View {
@@ -158,17 +158,19 @@ struct RecordingControlsView: View {
         } else {
           GeometryReader { geometry in
             ScrollView(.horizontal) {
-              HStack(spacing: 1) {
-                let startIndex = max(bufferEnergy.count - 300, 0)
-                ForEach(Array(bufferEnergy.enumerated())[startIndex...], id: \.element) { _, energy in
-                  RoundedRectangle(cornerRadius: 2)
-                    .fill(energy > Float(0.3) ? Color.green.opacity(0.2) : Color.red.opacity(0.2))
-                    .frame(width: 2, height: CGFloat(energy) * geometry.size.height)
-                    .transition(.scale(scale: 0).combined(with: .opacity).animation(.bouncy))
+              WithPerceptionTracking {
+                HStack(spacing: 1) {
+                  let startIndex = max(bufferEnergy.count - 300, 0)
+                  ForEach(Array(bufferEnergy.enumerated())[startIndex...], id: \.element) { _, energy in
+                    RoundedRectangle(cornerRadius: 2)
+                      .fill(energy > Float(0.3) ? Color.green.opacity(0.2) : Color.red.opacity(0.2))
+                      .frame(width: 2, height: CGFloat(energy) * geometry.size.height)
+                      .transition(.scale(scale: 0).combined(with: .opacity).animation(.bouncy))
+                  }
                 }
               }
             }
-            .defaultScrollAnchor(.trailing)
+//            .defaultScrollAnchor(.trailing)
             .frame(height: 24)
             .scrollIndicators(.never)
           }
