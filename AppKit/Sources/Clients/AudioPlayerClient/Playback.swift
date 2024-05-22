@@ -9,8 +9,8 @@ struct PlaybackPosition: Equatable {
   var progress: Double { currentTime / duration }
 
   static func == (lhs: PlaybackPosition, rhs: PlaybackPosition) -> Bool {
-    return lhs.currentTime.rounded(toPlaces: 2) == rhs.currentTime.rounded(toPlaces: 2) &&
-           lhs.duration.rounded(toPlaces: 2) == rhs.duration.rounded(toPlaces: 2)
+    lhs.currentTime.rounded(toPlaces: 2) == rhs.currentTime.rounded(toPlaces: 2) &&
+      lhs.duration.rounded(toPlaces: 2) == rhs.duration.rounded(toPlaces: 2)
   }
 }
 

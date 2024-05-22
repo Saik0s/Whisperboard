@@ -16,6 +16,8 @@ enum AudioRecorderSettings {
   ]
 }
 
+// MARK: - RecordingState
+
 public enum RecordingState: Equatable {
   case recording(duration: TimeInterval, powers: [Float])
   case paused

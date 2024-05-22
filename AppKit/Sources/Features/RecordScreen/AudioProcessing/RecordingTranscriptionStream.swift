@@ -73,7 +73,8 @@ extension RecordingTranscriptionStream: DependencyKey {
     let repoName = "argmaxinc/whisperkit-coreml"
     let localModelURL = URL.documentsDirectory.appending(component: "huggingface/models/\(repoName)")
 
-    @Sendable func loadModelAsync(model: String, continuation: AsyncThrowingStream<ModelLoadingStage, Error>.Continuation) async {
+    @Sendable
+    func loadModelAsync(model: String, continuation: AsyncThrowingStream<ModelLoadingStage, Error>.Continuation) async {
       do {
         let localModelFiles = (try? FileManager.default.contentsOfDirectory(atPath: localModelURL.path())) ?? []
         logs.info("Local model files: \(localModelFiles)")

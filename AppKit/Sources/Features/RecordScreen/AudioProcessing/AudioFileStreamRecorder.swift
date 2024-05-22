@@ -25,10 +25,9 @@ public actor AudioFileStreamRecorder {
     public var isTranscriptionEnabled = true
     public var waveSamples: [Float] = []
     public var fileURL: URL?
-    public var error: EquatableError?
     public var duration: TimeInterval = 0
-    public var isRecording: Bool = false
-    public var isPaused: Bool = false
+    public var isRecording = false
+    public var isPaused = false
     public var liveTranscriptionModelState: ModelLoadingStage = .loading
 
     public var customDumpDescription: String {
@@ -98,7 +97,6 @@ public actor AudioFileStreamRecorder {
     }
 
     state.fileURL = fileURL
-
 
     audioFile = try audioProcessor.startFileRecording(fileURL: fileURL) { [weak self] buffer, _ in
       Task { [weak self] in
