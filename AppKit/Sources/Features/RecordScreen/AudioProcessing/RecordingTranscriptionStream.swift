@@ -3,31 +3,71 @@ import Dependencies
 import Foundation
 import WhisperKit
 
+// MARK: - LiveTranscriptionResources
+
+actor LiveTranscriptionResources {
+  let audioProcessor: AudioProcessor
+  let whisperKitInstance: WhisperKit
+  var audioFileStreamRecorder: AudioFileStreamRecorder?
+
+  init() async throws {
+    audioProcessor = AudioProcessor()
+    whisperKitInstance = try await WhisperKit(
+      audioProcessor: audioProcessor,
+      verbose: false,
+      logLevel: .info,
+      prewarm: false,
+      load: false,
+      download: false
+    )
+  }
+
+  func setAudioFileStreamRecorder(_ recorder: AudioFileStreamRecorder) {
+    audioFileStreamRecorder = recorder
+  }
+}
+
+let resources = Task.synchronous {
+  try await LiveTranscriptionResources()
+}
+
+let repoName = "argmaxinc/whisperkit-coreml"
+let localModelURL = URL.documentsDirectory.appending(component: "huggingface/models/\(repoName)")
+
+public enum FileTranscriptionProgress {
+  case progress(TranscriptionProgress)
+  case finished(TranscriptionResult)
+}
+
 // MARK: - RecordingTranscriptionStream
 
 @DependencyClient
 public struct RecordingTranscriptionStream: Sendable {
   public var startLiveTranscription: @Sendable (_ fileURL: URL) async throws
     -> AsyncThrowingStream<AudioFileStreamRecorder.State, Error> = { _ in .finished(throwing: nil) }
-  public var loadModel: @Sendable (String) async throws -> AsyncThrowingStream<ModelLoadingStage, Error> = { _ in .finished(throwing: nil) }
-  public var unloadModel: @Sendable () async throws -> Void = {}
-  public var removeModel: @Sendable (String) async throws -> Void = { _ in }
-  public var fetchModels: @Sendable () async throws -> Void = {}
   public var tokenIDToToken: @Sendable (Int) -> String = { _ in "" }
   public var startRecordingWithoutTranscription: @Sendable (_ fileURL: URL) async
     -> AsyncThrowingStream<AudioFileStreamRecorder.State, Error> = { _ in
       .finished(throwing: nil)
     }
 
+  public var startFileTranscription: @Sendable (_ fileURL: URL) async -> AsyncThrowingStream<FileTranscriptionProgress, Error> = { _ in
+    .finished(throwing: nil)
+  }
+
   public var stopRecording: @Sendable () async -> Void = {}
   public var pauseRecording: @Sendable () async -> Void = {}
   public var resumeRecording: @Sendable () async -> Void = {}
 }
 
-// MARK: - RecordingTranscriptionStreamError
+// MARK: - ModelManagement
 
-public enum RecordingTranscriptionStreamError: Error {
-  case tokenizerUnavailable
+@DependencyClient
+public struct ModelManagement: Sendable {
+  public var loadModel: @Sendable (String) async throws -> AsyncThrowingStream<ModelLoadingStage, Error> = { _ in .finished(throwing: nil) }
+  public var unloadModel: @Sendable () async throws -> Void = {}
+  public var removeModel: @Sendable (String) async throws -> Void = { _ in }
+  public var fetchModels: @Sendable () async throws -> Void = {}
 }
 
 // MARK: - ModelLoadingStage
@@ -43,36 +83,116 @@ public enum ModelLoadingStage: Sendable, Equatable {
 // MARK: - RecordingTranscriptionStream + DependencyKey
 
 extension RecordingTranscriptionStream: DependencyKey {
-  public static var liveValue: RecordingTranscriptionStream = {
-    actor LiveTranscriptionResources {
-      let audioProcessor: AudioProcessor
-      let whisperKitInstance: WhisperKit
-      var audioFileStreamRecorder: AudioFileStreamRecorder?
+  public static var liveValue: RecordingTranscriptionStream = .init(
+    startLiveTranscription: { fileURL in
+      AsyncThrowingStream { continuation in
+        Task {
+          @Shared(.settings) var settings: Settings
+          let recorder = AudioFileStreamRecorder(
+            whisperKit: resources.whisperKitInstance,
+            audioProcessor: resources.audioProcessor,
+            decodingOptions: .realtime,
+            useVAD: settings.isVADEnabled
+          ) { newState in
+            continuation.yield(newState)
+          }
 
-      init() async throws {
-        self.audioProcessor = AudioProcessor()
-        self.whisperKitInstance = try await WhisperKit(
-          audioProcessor: audioProcessor,
-          verbose: false,
-          logLevel: .info,
-          prewarm: false,
-          load: false,
-          download: false
-        )
+          await resources.setAudioFileStreamRecorder(recorder)
+
+          do {
+            try await recorder.startRecording(at: fileURL)
+          } catch {
+            continuation.finish(throwing: error)
+            return
+          }
+
+          continuation.finish(throwing: nil)
+        }
+
+        continuation.onTermination = { _ in
+          Task {
+            await resources.audioFileStreamRecorder?.stopRecording()
+          }
+        }
       }
+    },
+    tokenIDToToken: { tokenID in
+      resources.whisperKitInstance.tokenizer?.convertIdToToken(tokenID) ?? ""
+    },
+    startRecordingWithoutTranscription: { url in
+      AsyncThrowingStream { continuation in
+        Task {
+          let recorder = AudioFileStreamRecorder(
+            whisperKit: resources.whisperKitInstance,
+            audioProcessor: resources.audioProcessor,
+            decodingOptions: .realtime,
+            isTranscriptionEnabled: false,
+            stateChangeCallback: { newState in
+              continuation.yield(newState)
+            }
+          )
 
-      func setAudioFileStreamRecorder(_ recorder: AudioFileStreamRecorder) {
-        self.audioFileStreamRecorder = recorder
+          await resources.setAudioFileStreamRecorder(recorder)
+
+          Task {
+            do {
+              try await resources.audioFileStreamRecorder?.startRecording(at: url)
+            } catch {
+              continuation.finish(throwing: error)
+            }
+          }
+
+          continuation.onTermination = { _ in
+            Task {
+              await resources.audioFileStreamRecorder?.stopRecording()
+            }
+          }
+        }
       }
+    },
+    startFileTranscription: { url in
+      AsyncThrowingStream { continuation in
+        Task {
+          let isShouldStop = LockIsolated<Bool>(false)
+          do {
+            let results: [TranscriptionResult] = try await resources.whisperKitInstance
+              .transcribe(audioPath: url.path(), decodeOptions: .realtime) { progress in
+                continuation.yield(.progress(progress))
+                return isShouldStop.value
+              }
+
+            let result = try results.first.require()
+            continuation.yield(.finished(result))
+            continuation.finish()
+          } catch {
+            continuation.finish(throwing: error)
+            return
+          }
+        }
+
+        continuation.onTermination = { _ in
+          Task {
+            await resources.audioFileStreamRecorder?.stopRecording()
+          }
+        }
+      }
+    },
+    stopRecording: {
+      await resources.audioFileStreamRecorder?.stopRecording()
+    },
+    pauseRecording: {
+      await resources.audioFileStreamRecorder?.pauseRecording()
+    },
+    resumeRecording: {
+      await resources.audioFileStreamRecorder?.resumeRecording()
     }
+  )
+}
 
-    let resources = Task.synchronous {
-      try await LiveTranscriptionResources()
-    }
+// MARK: - ModelManagement + DependencyKey
 
-    let repoName = "argmaxinc/whisperkit-coreml"
-    let localModelURL = URL.documentsDirectory.appending(component: "huggingface/models/\(repoName)")
-
+extension ModelManagement: DependencyKey {
+  public static var liveValue: ModelManagement = {
     @Sendable
     func loadModelAsync(model: String, continuation: AsyncThrowingStream<ModelLoadingStage, Error>.Continuation) async {
       do {
@@ -115,37 +235,7 @@ extension RecordingTranscriptionStream: DependencyKey {
       }
     }
 
-    return RecordingTranscriptionStream(
-      startLiveTranscription: { fileURL in
-        AsyncThrowingStream { continuation in
-          Task {
-            let recorder = AudioFileStreamRecorder(
-              whisperKit: resources.whisperKitInstance,
-              audioProcessor: resources.audioProcessor,
-              decodingOptions: .realtime
-            ) { newState in
-              continuation.yield(newState)
-            }
-
-            await resources.setAudioFileStreamRecorder(recorder)
-
-            do {
-              try await recorder.startRecording(at: fileURL)
-            } catch {
-              continuation.finish(throwing: error)
-              return
-            }
-
-            continuation.finish(throwing: nil)
-          }
-
-          continuation.onTermination = { _ in
-            Task {
-              await resources.audioFileStreamRecorder?.stopRecording()
-            }
-          }
-        }
-      },
+    return ModelManagement(
       loadModel: { model in
         AsyncThrowingStream { continuation in
           Task {
@@ -173,49 +263,6 @@ extension RecordingTranscriptionStream: DependencyKey {
             print("Error: \(error.localizedDescription)")
           }
         }
-      },
-      tokenIDToToken: { tokenID in
-        resources.whisperKitInstance.tokenizer?.convertIdToToken(tokenID) ?? ""
-      },
-      startRecordingWithoutTranscription: { url in
-        AsyncThrowingStream { continuation in
-          Task {
-            let recorder = AudioFileStreamRecorder(
-              whisperKit: resources.whisperKitInstance,
-              audioProcessor: resources.audioProcessor,
-              decodingOptions: .realtime,
-              isTranscriptionEnabled: false,
-              stateChangeCallback: { newState in
-                continuation.yield(newState)
-              }
-            )
-
-            await resources.setAudioFileStreamRecorder(recorder)
-
-            Task {
-              do {
-                try await resources.audioFileStreamRecorder?.startRecording(at: url)
-              } catch {
-                continuation.finish(throwing: error)
-              }
-            }
-
-            continuation.onTermination = { _ in
-              Task {
-                await resources.audioFileStreamRecorder?.stopRecording()
-              }
-            }
-          }
-        }
-      },
-      stopRecording: {
-        await resources.audioFileStreamRecorder?.stopRecording()
-      },
-      pauseRecording: {
-        await resources.audioFileStreamRecorder?.pauseRecording()
-      },
-      resumeRecording: {
-        await resources.audioFileStreamRecorder?.resumeRecording()
       }
     )
   }()

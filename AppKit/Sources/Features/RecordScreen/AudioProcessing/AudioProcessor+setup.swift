@@ -4,7 +4,7 @@ import Foundation
 import WhisperKit
 
 extension AudioProcessor {
-  func startFileRecording(fileURL: URL, rawBufferCallback: ((AVAudioPCMBuffer, [Float]) -> Void)? = nil) throws -> AVAudioFile {
+  func startFileRecording(rawBufferCallback: ((AVAudioPCMBuffer, [Float]) -> Void)? = nil) throws -> AVAudioConverter {
     audioSamples = []
     audioEnergy = []
 
@@ -44,6 +44,7 @@ extension AudioProcessor {
     inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: nodeFormat) { [weak self] (buffer: AVAudioPCMBuffer, _: AVAudioTime) in
       guard let self else { return }
 
+      let initialBuffer = buffer
       var buffer = buffer
       if !buffer.format.sampleRate.isEqual(to: Double(WhisperKit.sampleRate)) {
         do {
@@ -58,7 +59,7 @@ extension AudioProcessor {
       processBuffer(newBufferArray)
 
       if let rawBufferCallback {
-        rawBufferCallback(buffer, newBufferArray)
+        rawBufferCallback(initialBuffer, newBufferArray)
       }
     }
 
@@ -67,6 +68,6 @@ extension AudioProcessor {
 
     self.audioEngine = audioEngine
 
-    return try AVAudioFile(forWriting: fileURL, settings: desiredFormat.settings)
+    return converter
   }
 }

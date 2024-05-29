@@ -6,6 +6,7 @@ import Foundation
 
 struct FileImportClient {
   var importFile: @Sendable (_ from: URL, _ to: URL) async throws -> Void
+  var importFileSync: @Sendable (_ from: URL, _ to: URL) throws -> Void
 }
 
 // MARK: DependencyKey
@@ -22,6 +23,31 @@ extension FileImportClient: DependencyKey {
 
         let converter = FormatConverter(inputURL: from, outputURL: to, options: options)
         try await converter.startAsync()
+      },
+      importFileSync: { from, to in
+        var options = FormatConverter.Options()
+        options.format = .wav
+        options.sampleRate = 16000
+        options.bitDepth = 24
+        options.channels = 1
+        options.isInterleaved = false
+
+        let converter = FormatConverter(inputURL: from, outputURL: to, options: options)
+        let semaphore = DispatchSemaphore(value: 0)
+        var thrownError: Error?
+        
+        converter.start { error in
+          if let error {
+            thrownError = error
+          }
+          semaphore.signal()
+        }
+        
+        semaphore.wait()
+        
+        if let error = thrownError {
+          throw error
+        }
       }
     )
   }

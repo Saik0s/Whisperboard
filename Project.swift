@@ -8,8 +8,116 @@ public let appDeploymentTargets: DeploymentTargets = .iOS(deploymentTargetString
 public let appDestinations: Destinations = [.iPhone, .iPad]
 public let devTeam = "8A76N862C8"
 
-let isRevealSupported = FileManager.default.fileExists(atPath: "SkeletonProject/Support/RevealServer.xcframework")
+let isAppStore = Environment.isAppStore.getBoolean(default: false)
+let isDev = Environment.isDev.getBoolean(default: false) && !isAppStore
+let additionalCondition = isAppStore ? "APPSTORE" : isDev ? "DEV" : ""
+
+let isRevealSupported = FileManager.default.fileExists(atPath: "App/Support/Reveal/RevealServer.xcframework") && !isAppStore
 print("RevealServer.xcframework is \(isRevealSupported ? "supported" : "not supported")")
+
+var appInfoPlist: [String: Plist.Value] = [
+  "CFBundleShortVersionString": Plist.Value(stringLiteral: version),
+  "CFBundleURLTypes": [
+    [
+      "CFBundleTypeRole": "Editor",
+      "CFBundleURLName": .string("WhisperBoard"),
+      "CFBundleURLSchemes": [
+        .string("whisperboard"),
+      ],
+    ],
+  ],
+  "UIApplicationSceneManifest": [
+    "UIApplicationSupportsMultipleScenes": false,
+    "UISceneConfigurations": [],
+  ],
+  "ITSAppUsesNonExemptEncryption": false,
+  "UILaunchScreen": [
+    "UILaunchScreen": [:],
+  ],
+  "UISupportedInterfaceOrientations": [
+    "UIInterfaceOrientationPortrait",
+  ],
+  "UISupportedInterfaceOrientations~ipad": [
+    "UIInterfaceOrientationPortrait",
+    "UIInterfaceOrientationPortraitUpsideDown",
+    "UIInterfaceOrientationLandscapeLeft",
+    "UIInterfaceOrientationLandscapeRight",
+  ],
+  "NSMicrophoneUsageDescription": "WhisperBoard uses the microphone to record voice and later transcribe it.",
+  "UIUserInterfaceStyle": "Dark",
+  "UIBackgroundModes": [
+    "audio",
+    "processing",
+  ],
+  "BGTaskSchedulerPermittedIdentifiers": [
+    "$(PRODUCT_BUNDLE_IDENTIFIER)",
+  ],
+  "NSUbiquitousContainers": [
+    "iCloud.me.igortarasenko.whisperboard": [
+      "NSUbiquitousContainerIsDocumentScopePublic": true,
+      "NSUbiquitousContainerName": "WhisperBoard",
+      "NSUbiquitousContainerSupportedFolderLevels": "Any",
+    ],
+  ],
+]
+
+if isDev {
+  appInfoPlist["NSLocalNetworkUsageDescription"] = Plist.Value.string("Network usage required for debugging purposes")
+  appInfoPlist["NSBonjourServices"] = [Plist.Value.string("_pulse._tcp")]
+}
+
+func createAppTarget(suffix: String = "", scripts: [TargetScript] = [], dependencies: [TargetDependency] = []) -> Target {
+  .target(
+    name: "WhisperBoard" + suffix,
+    destinations: appDestinations,
+    product: .app,
+    bundleId: "me.igortarasenko.Whisperboard" + suffix,
+    deploymentTargets: appDeploymentTargets,
+    infoPlist: .extendingDefault(with: appInfoPlist),
+    sources: "App/Sources/**",
+    resources: .resources(
+      ["App/Resources/**"],
+      privacyManifest: .privacyManifest(
+        tracking: false,
+        trackingDomains: [],
+        collectedDataTypes: [
+          [
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeName",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality",
+            ],
+          ],
+        ],
+        accessedApiTypes: [
+          [
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1",
+            ],
+          ],
+        ]
+      )
+    ),
+    entitlements: "App/Support/app.entitlements",
+    scripts: scripts,
+
+    dependencies: [
+      .target(name: "ShareExtension"),
+      .target(name: "WhisperBoardKit"),
+    ] + dependencies,
+
+    settings: .settings(
+      base: [
+        "CODE_SIGN_STYLE": "Automatic",
+        "MARKETING_VERSION": SettingValue(stringLiteral: version),
+        "CODE_SIGN_IDENTITY": "iPhone Developer",
+        "CODE_SIGNING_REQUIRED": "YES",
+      ]
+    )
+  )
+}
 
 let project = Project(
   name: "WhisperBoard",
@@ -22,11 +130,9 @@ let project = Project(
     )
   ),
 
-  packages: [
-    .package(url: "https://github.com/ggerganov/whisper.cpp.git", .branch("master")),
-    .package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0"),
-    .package(url: "https://github.com/EmergeTools/ETTrace.git", from: "1.0.0"),
-  ],
+  packages: [.package(url: "https://github.com/ggerganov/whisper.cpp.git", .branch("master"))]
+    + (isAppStore ? [.package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0")] : [])
+    + (isDev ? [.package(url: "https://github.com/EmergeTools/ETTrace.git", from: "1.0.0")] : []),
 
   settings: .settings(
     base: [
@@ -39,149 +145,56 @@ let project = Project(
       "CODE_SIGNING_REQUIRED": "NO",
       "DEVELOPMENT_TEAM": SettingValue(stringLiteral: devTeam),
     ],
-    debug: [
-      "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -debug-time-expression-type-checking -Xfrontend -enable-actor-data-race-checks",
-      "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
-    ]
+    debug: isDev
+      ? [
+        "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -debug-time-expression-type-checking -Xfrontend -enable-actor-data-race-checks",
+        "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
+      ]
+      : [:]
   ),
 
-  targets: [
-    // MARK: - App
+  targets:
 
-    .target(
-      name: "WhisperBoard",
-      destinations: appDestinations,
-      product: .app,
-      bundleId: "me.igortarasenko.Whisperboard",
-      deploymentTargets: appDeploymentTargets,
-      infoPlist: .extendingDefault(with: [
-        "CFBundleShortVersionString": Plist.Value(stringLiteral: version),
-        "CFBundleURLTypes": [
+  // MARK: - App
+
+  (isAppStore
+    ? [
+      createAppTarget(suffix: "", scripts: [], dependencies: []),
+    ]
+    : isDev
+      ? [
+        createAppTarget(
+          suffix: "Dev",
+          scripts:
           [
-            "CFBundleTypeRole": "Editor",
-            "CFBundleURLName": .string("WhisperBoard"),
-            "CFBundleURLSchemes": [
-              .string("whisperboard"),
-            ],
+            .post(
+              path: "ci_scripts/post_build_checks.sh",
+              name: "Additional Checks",
+              basedOnDependencyAnalysis: false
+            ),
+            .post(
+              script: """
+              export REVEAL_SERVER_FILENAME="RevealServer.xcframework"
+              export REVEAL_SERVER_PATH="${SRCROOT}/App/Support/Reveal/${REVEAL_SERVER_FILENAME}"
+              [ -d "${REVEAL_SERVER_PATH}" ] && "${REVEAL_SERVER_PATH}/Scripts/integrate_revealserver.sh" || echo "Reveal Server not loaded into ${TARGET_NAME}: ${REVEAL_SERVER_FILENAME} could not be found."
+              """,
+              name: "Reveal Server",
+              basedOnDependencyAnalysis: false
+            ),
+            .post(
+              script: "xclogparser parse --workspace WhisperBoard.xcworkspace --reporter html || true",
+              name: "XCLogParser",
+              basedOnDependencyAnalysis: false
+            ),
           ],
-        ],
-        "UIApplicationSceneManifest": [
-          "UIApplicationSupportsMultipleScenes": false,
-          "UISceneConfigurations": [],
-        ],
-        "ITSAppUsesNonExemptEncryption": false,
-        "UILaunchScreen": [
-          "UILaunchScreen": [:],
-        ],
-        "UISupportedInterfaceOrientations": [
-          "UIInterfaceOrientationPortrait",
-        ],
-        "UISupportedInterfaceOrientations~ipad": [
-          "UIInterfaceOrientationPortrait",
-          "UIInterfaceOrientationPortraitUpsideDown",
-          "UIInterfaceOrientationLandscapeLeft",
-          "UIInterfaceOrientationLandscapeRight",
-        ],
-        "NSMicrophoneUsageDescription": "WhisperBoard uses the microphone to record voice and later transcribe it.",
-        "UIUserInterfaceStyle": "Dark",
-        "UIBackgroundModes": [
-          "audio",
-          "processing",
-        ],
-        "BGTaskSchedulerPermittedIdentifiers": [
-          "$(PRODUCT_BUNDLE_IDENTIFIER)",
-        ],
-        "NSUbiquitousContainers": [
-          "iCloud.me.igortarasenko.whisperboard": [
-            "NSUbiquitousContainerIsDocumentScopePublic": true,
-            "NSUbiquitousContainerName": "WhisperBoard",
-            "NSUbiquitousContainerSupportedFolderLevels": "Any",
-          ],
-        ],
-      ].merging(
-        Environment.isAppStore.getBoolean(default: false)
-          ? [:]
-          : [
-            "NSLocalNetworkUsageDescription": Plist.Value(stringLiteral: "Network usage required for debugging purposes"),
-            "NSBonjourServices": [
-              .string("_pulse._tcp"),
-            ],
-          ]
-      ) { _, new in new }),
-      sources: "App/Sources/**",
-      resources: .resources(
-        ["App/Resources/**"],
-        privacyManifest: .privacyManifest(
-          tracking: false,
-          trackingDomains: [],
-          collectedDataTypes: [
-            [
-              "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeName",
-              "NSPrivacyCollectedDataTypeLinked": false,
-              "NSPrivacyCollectedDataTypeTracking": false,
-              "NSPrivacyCollectedDataTypePurposes": [
-                "NSPrivacyCollectedDataTypePurposeAppFunctionality",
-              ],
-            ],
-          ],
-          accessedApiTypes: [
-            [
-              "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
-              "NSPrivacyAccessedAPITypeReasons": [
-                "CA92.1",
-              ],
-            ],
-          ]
-        )
-      ),
-      entitlements: "App/Support/app.entitlements",
-      scripts: Environment.isAppStore.getBoolean(default: false)
-        ? []
-        : [
-          .post(
-            path: "ci_scripts/post_build_checks.sh",
-            name: "Additional Checks",
-            basedOnDependencyAnalysis: false
-          ),
-          .post(
-            script: """
-            export REVEAL_SERVER_FILENAME="RevealServer.xcframework"
-            export REVEAL_SERVER_PATH="${SRCROOT}/App/Support/Reveal/${REVEAL_SERVER_FILENAME}"
-            [ -d "${REVEAL_SERVER_PATH}" ] && "${REVEAL_SERVER_PATH}/Scripts/integrate_revealserver.sh" || echo "Reveal Server not loaded into ${TARGET_NAME}: ${REVEAL_SERVER_FILENAME} could not be found."
-            """,
-            name: "Reveal Server",
-            basedOnDependencyAnalysis: false
-          ),
-          .post(
-            script: "xclogparser parse --workspace WhisperBoard.xcworkspace --reporter html || true",
-            name: "XCLogParser",
-            basedOnDependencyAnalysis: false
-          ),
-        ],
-
-      dependencies: [
-        .target(name: "ShareExtension"),
-        .target(name: "WhisperBoardKit"),
-      ] + (Environment.isAppStore.getBoolean(default: false)
-        ? []
-        : [
-          .package(product: "ETTrace"),
-        ])
-        // Check if RevealServer framework exists at this path and only then include it in this array of dependencies
-        + (isRevealSupported && !Environment.isAppStore.getBoolean(default: false)
-          ? [.xcframework(path: "//App/Support/Reveal/RevealServer.xcframework", status: .optional)]
-          : []),
-
-      settings: .settings(
-        base: [
-          "CODE_SIGN_STYLE": "Automatic",
-          "MARKETING_VERSION": SettingValue(stringLiteral: version),
-          "CODE_SIGN_IDENTITY": "iPhone Developer",
-          "CODE_SIGNING_REQUIRED": "YES",
-        ]
-      )
-    ),
-
+          dependencies: [.package(product: "ETTrace")]
+            // Check if RevealServer framework exists at this path and only then include it in this array of dependencies
+            + (isRevealSupported ? [.xcframework(path: "//App/Support/Reveal/RevealServer.xcframework", status: .optional)] : [])
+        ),
+      ]
+      : [
+        createAppTarget(suffix: "", scripts: [], dependencies: []),
+      ]) + [
     // MARK: - ShareExtension
 
     .target(
@@ -238,8 +251,6 @@ let project = Project(
       resources: "AppKit/Resources/**",
       dependencies: [
         .sdk(name: "c++", type: .library, status: .required),
-        // .sdk(name: "CloudKit", type: .framework, status: .optional),
-        // .sdk(name: "StoreKit", type: .framework, status: .optional),
 
         .external(name: "AsyncAlgorithms"),
         .external(name: "AudioKit"),
@@ -263,17 +274,16 @@ let project = Project(
         // .external(name: "RevenueCat"),
 
         .package(product: "whisper"),
-        .package(product: "RollbarNotifier"),
-      ],
+      ] + (isAppStore ? [.package(product: "RollbarNotifier")] : []),
       settings: .settings(
         base: [
           "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/AppKit/Support/Bridging.h",
         ],
         debug: [
-          "SWIFT_ACTIVE_COMPILATION_CONDITIONS": Environment.isAppStore.getBoolean(default: false) ? "APPSTORE DEBUG" : "DEBUG",
+          "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition) DEBUG",
         ],
         release: [
-          "SWIFT_ACTIVE_COMPILATION_CONDITIONS": Environment.isAppStore.getBoolean(default: false) ? "APPSTORE" : "",
+          "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition)",
         ]
       )
     ),

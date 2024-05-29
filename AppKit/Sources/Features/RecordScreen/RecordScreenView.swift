@@ -28,8 +28,6 @@ struct RecordScreen {
     }
   }
 
-  @Dependency(StorageClient.self) var storage: StorageClient
-
   var body: some Reducer<State, Action> {
     BindingReducer()
 

@@ -7,6 +7,7 @@ import IdentifiedCollections
 import os.log
 import SwiftUI
 import whisper
+import WhisperKit
 
 // MARK: - WhisperError
 
@@ -117,7 +118,7 @@ final class WhisperContext: Identifiable, WhisperContextProtocol {
 
     DispatchQueue.global(qos: .background).async { [self] in
       do {
-        let samples = try decodeWaveFile(audioFileURL)
+        let samples = try convertAndDecodeWaveFile(audioFileURL)
 
         let freeMemory = freeMemoryAmount()
         logs.info("Free system memory available: \(freeMemory) bytes")
@@ -241,13 +242,8 @@ private extension Int {
   }
 }
 
-private func decodeWaveFile(_ url: URL) throws -> [Float] {
-  let data = try Data(contentsOf: url)
-  let floats = stride(from: 44, to: data.count, by: 2).map {
-    data[$0 ..< $0 + 2].withUnsafeBytes {
-      let short = Int16(littleEndian: $0.load(as: Int16.self))
-      return max(-1.0, min(Float(short) / 32767.0, 1.0))
-    }
-  }
-  return floats
+private func convertAndDecodeWaveFile(_ url: URL) throws -> [Float] {
+  let audioBuffer = try AudioProcessor.loadAudio(fromPath: url.path())
+  let audioArray = AudioProcessor.convertBufferToArray(buffer: audioBuffer)
+  return audioArray
 }

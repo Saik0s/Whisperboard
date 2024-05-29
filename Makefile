@@ -16,6 +16,10 @@ update: secrets
 	$(TUIST) install --update
 	$(TUIST) generate --no-open
 
+dev: secrets
+	TUIST_IS_DEV=1 $(TUIST) install
+	TUIST_IS_DEV=1 $(TUIST) generate --no-open
+
 appstore: secrets
 	TUIST_IS_APP_STORE=1 $(TUIST) install
 	TUIST_IS_APP_STORE=1 $(TUIST) generate --no-open
