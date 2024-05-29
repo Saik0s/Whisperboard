@@ -39,6 +39,7 @@ struct Recording {
     case continueButtonTapped
     case deleteButtonTapped
     case transcriptionStateUpdated(AudioFileStreamRecorder.State)
+    case modelStateUpdated(ModelLoadingStage)
     case alert(PresentationAction<Alert>)
 
     enum Delegate: Equatable {
@@ -49,11 +50,8 @@ struct Recording {
     enum Alert: Hashable {}
   }
 
-  struct Failed: Equatable, Error {}
-
-  @Dependency(\.audioRecorder) var audioRecorder
-
   @Dependency(RecordingTranscriptionStream.self) var recordingTranscriptionStream
+  @Dependency(ModelManagement.self) var modelManagement
 
   var body: some ReducerOf<Self> {
     BindingReducer()
@@ -69,6 +67,10 @@ struct Recording {
 
         return .run { [url = state.recordingInfo.fileURL, recordingTranscriptionStream] send in
           if withLiveTranscription {
+            @Shared(.settings) var settings: Settings
+            for try await modelState in try await modelManagement.loadModel(settings.selectedModel.fileName) {
+              await send(.modelStateUpdated(modelState), animation: .bouncy)
+            }
             for try await transcriptionState in try await recordingTranscriptionStream.startLiveTranscription(url) {
               await send(.transcriptionStateUpdated(transcriptionState), animation: .bouncy)
             }
@@ -192,6 +194,10 @@ struct Recording {
         state.samples = transcriptionState.waveSamples
         state.recordingInfo.duration = transcriptionState.duration
         state.liveTranscriptionModelState = transcriptionState.liveTranscriptionModelState
+        return .none
+
+      case let .modelStateUpdated(modelState):
+        state.liveTranscriptionModelState = modelState
         return .none
 
       case .alert:

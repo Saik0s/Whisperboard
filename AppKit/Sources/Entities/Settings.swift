@@ -11,6 +11,7 @@ struct Settings: Hashable, Then {
   var shouldMixWithOtherAudio = false
   var isAutoTranscriptionEnabled = false
   var isUsingGPU = false
+  var isVADEnabled = false
 
   var voiceLanguage: VoiceLanguage {
     get { parameters.language }
@@ -30,6 +31,7 @@ extension Settings: Codable {
     case shouldMixWithOtherAudio
     case isAutoTranscriptionEnabled
     case isUsingGPU
+    case isVADEnabled
   }
 
   init(from decoder: Decoder) throws {
@@ -42,5 +44,6 @@ extension Settings: Codable {
     shouldMixWithOtherAudio = (try? container.decode(Bool.self, forKey: .shouldMixWithOtherAudio)) ?? false
     isAutoTranscriptionEnabled = (try? container.decode(Bool.self, forKey: .isAutoTranscriptionEnabled)) ?? false
     isUsingGPU = (try? container.decode(Bool.self, forKey: .isUsingGPU)) ?? false
+    isVADEnabled = (try? container.decode(Bool.self, forKey: .isVADEnabled)) ?? false
   }
 }

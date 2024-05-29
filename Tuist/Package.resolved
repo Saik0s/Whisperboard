@@ -87,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kean/pulse.git",
       "state" : {
-        "revision" : "4f34c4f91cda623a7627e6d5e35dbbbb514b8daa",
-        "version" : "4.1.1"
+        "revision" : "2e5e5f86c31970dc72613e480a1ba0b06bab81a2",
+        "version" : "4.2.1"
       }
     },
     {
@@ -195,8 +195,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-identified-collections",
       "state" : {
-        "revision" : "2481e39ea43e14556ca9628259fa6b377427730c",
-        "version" : "1.0.1"
+        "revision" : "d533cd18b0b456b106694a9899f917ee595f2666",
+        "version" : "1.0.2"
       }
     },
     {
@@ -222,8 +222,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-perception",
       "state" : {
-        "revision" : "8e8ca36c02abc7775a3ab81f9468c0df5fe22c2c",
-        "version" : "1.1.7"
+        "revision" : "9b77fbd07b9529312f7e9adb10f5131acd9e2363",
+        "version" : "1.2.0"
       }
     },
     {
@@ -276,8 +276,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swiftui-navigation",
       "state" : {
-        "revision" : "2ec6c3a15293efff6083966b38439a4004f25565",
-        "version" : "1.3.0"
+        "revision" : "7ab04c6e2e6a73d34d5a762970ef88bf0aedb084",
+        "version" : "1.4.0"
       }
     },
     {
@@ -303,8 +303,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/argmaxinc/WhisperKit.git",
       "state" : {
-        "revision" : "c20943d3f5d6f64981e9eaed8a3a9c3a62124fc5",
-        "version" : "0.6.1"
+        "revision" : "3aa94e8c3950afdeaf916cb1da71e44f62bd2864",
+        "version" : "0.7.1"
       }
     },
     {

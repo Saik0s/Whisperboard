@@ -98,11 +98,13 @@ public actor AudioFileStreamRecorder {
 
     state.fileURL = fileURL
 
-    audioFile = try audioProcessor.startFileRecording(fileURL: fileURL) { [weak self] buffer, _ in
+    let converter = try audioProcessor.startFileRecording { [weak self] buffer, _ in
       Task { [weak self] in
         await self?.onAudioBufferCallback(buffer)
       }
     }
+
+    audioFile = try AVAudioFile(forWriting: fileURL, settings: converter.inputFormat.settings)
 
     state.isRecording = true
     state.isPaused = false
@@ -135,7 +137,7 @@ public actor AudioFileStreamRecorder {
   }
 
   private func onAudioBufferCallback(_ buffer: AVAudioPCMBuffer) {
-    state.waveSamples = audioProcessor.relativeEnergy.map { 1 - $0 }
+    state.waveSamples = audioProcessor.relativeEnergy
 
     // Write buffer to audio file
     do {

@@ -174,6 +174,7 @@ struct RecordingControlsView: View {
             .frame(height: 24)
             .scrollIndicators(.never)
           }
+          .frame(maxHeight: .infinity)
 //          WaveformLiveCanvas(samples: store.recording?.samples ?? [], configuration: Waveform.Configuration(
 //            backgroundColor: .clear,
 //            style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),

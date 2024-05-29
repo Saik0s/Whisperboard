@@ -1,6 +1,10 @@
 import BackgroundTasks
 import ComposableArchitecture
-import RollbarNotifier
+
+#if canImport(RollbarNotifier)
+  import RollbarNotifier
+#endif
+
 import SwiftUI
 
 // MARK: - AppView
@@ -9,7 +13,7 @@ import SwiftUI
 public struct AppView: View {
   @MainActor static let store = Store(initialState: Root.State()) {
     Root()
-    #if !APPSTORE
+    #if DEV
       ._printChanges(.swiftLog(withStateChanges: true))
       .signpost("WhisperBoard_Root")
     #endif
@@ -20,7 +24,7 @@ public struct AppView: View {
   }
 
   public init() {
-    #if APPSTORE
+    #if canImport(RollbarNotifier)
       let config = RollbarConfig.mutableConfig(withAccessToken: Secrets.ROLLBAR_ACCESS_TOKEN)
       Rollbar.initWithConfiguration(config)
     #endif
