@@ -1,5 +1,5 @@
 {
-  "originHash" : "d1b69986f8b099590627edc8b492f16759e477cc17073b31c51119fb85fe36d0",
+  "originHash" : "3093442a5834c22c133a4921fde6e7bafd4e3f487363de7364e3b8ffff188bdf",
   "pins" : [
     {
       "identity" : "ettrace",
@@ -35,15 +35,6 @@
       "state" : {
         "revision" : "9483a5d459b45c3ffd059f7b55f9638e268632fd",
         "version" : "1.5.0"
-      }
-    },
-    {
-      "identity" : "whisper.cpp",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ggerganov/whisper.cpp.git",
-      "state" : {
-        "branch" : "master",
-        "revision" : "8fac6455ffeb0a0950a84e790ddb74f7290d33c4"
       }
     }
   ],
