@@ -8,7 +8,6 @@ verbose: true
 workspace: WhisperBoard.xcworkspace
 report_exclude:
   - App/Derived/*
-  - AppKit/Derived/*
   - Tuist/*
   - build/*
-  - AppKit/Sources/Clients/Secrets.swift
+  - Sources/AppKit/Clients/Secrets.swift

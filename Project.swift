@@ -130,7 +130,7 @@ let project = Project(
     )
   ),
 
-  packages: [.package(url: "https://github.com/ggerganov/whisper.cpp.git", .branch("master"))]
+  packages: []
     + (isAppStore ? [.package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0")] : [])
     + (isDev ? [.package(url: "https://github.com/EmergeTools/ETTrace.git", from: "1.0.0")] : []),
 
@@ -149,8 +149,11 @@ let project = Project(
       ? [
         "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -debug-time-expression-type-checking -Xfrontend -enable-actor-data-race-checks",
         "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
+        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition) DEBUG",
       ]
-      : [:]
+      : [
+        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition)",
+      ]
   ),
 
   targets:
@@ -243,15 +246,13 @@ let project = Project(
     .target(
       name: "WhisperBoardKit",
       destinations: appDestinations,
-      product: .framework,
+      product: .staticFramework,
       bundleId: "me.igortarasenko.WhisperboardKit",
       deploymentTargets: appDeploymentTargets,
       infoPlist: .extendingDefault(with: [:]),
-      sources: "AppKit/Sources/**",
-      resources: "AppKit/Resources/**",
+      sources: "Sources/AppKit/**",
+      resources: "Resources/AppKit/**",
       dependencies: [
-        .sdk(name: "c++", type: .library, status: .required),
-
         .external(name: "AsyncAlgorithms"),
         .external(name: "AudioKit"),
         .external(name: "ComposableArchitecture"),
@@ -273,17 +274,13 @@ let project = Project(
         .external(name: "WhisperKit"),
         // .external(name: "RevenueCat"),
 
-        .package(product: "whisper"),
+        .target(name: "Common"),
+        .target(name: "AudioProcessing"),
+
       ] + (isAppStore ? [.package(product: "RollbarNotifier")] : []),
       settings: .settings(
         base: [
-          "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/AppKit/Support/Bridging.h",
-        ],
-        debug: [
-          "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition) DEBUG",
-        ],
-        release: [
-          "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition)",
+          "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Support/AppKit/Bridging.h",
         ]
       )
     ),
@@ -293,9 +290,61 @@ let project = Project(
       product: .unitTests,
       bundleId: "me.igortarasenko.WhisperboardKitTests",
       infoPlist: .default,
-      sources: "AppKit/Tests/**",
+      sources: "Tests/AppKit/**",
       dependencies: [
         .target(name: "WhisperBoardKit"),
+        .external(name: "SnapshotTesting"),
+      ]
+    ),
+
+    .target(
+      name: "AudioProcessing",
+      destinations: appDestinations,
+      product: .staticFramework,
+      bundleId: "me.igortarasenko.WhisperboardKit.AudioProcessing",
+      infoPlist: .default,
+      sources: "Sources/AudioProcessing/**",
+      dependencies: [
+        .external(name: "AudioKit"),
+        .external(name: "WhisperKit"),
+        .external(name: "Perception"),
+        .target(name: "Common"),
+      ]
+    ),
+    .target(
+      name: "AudioProcessingTests",
+      destinations: appDestinations,
+      product: .unitTests,
+      bundleId: "me.igortarasenko.WhisperboardKit.AudioProcessingTests",
+      infoPlist: .default,
+      sources: "Tests/AudioProcessing/**",
+      resources: "TestResources/AudioProcessing/**",
+      dependencies: [
+        .target(name: "AudioProcessing"),
+        .external(name: "SnapshotTesting"),
+      ]
+    ),
+    .target(
+      name: "Common",
+      destinations: appDestinations,
+      product: .staticFramework,
+      bundleId: "me.igortarasenko.WhisperboardKit.Common",
+      infoPlist: .default,
+      sources: "Sources/Common/**",
+      dependencies: [
+        .external(name: "PulseLogHandler"),
+        .external(name: "ComposableArchitecture"),
+      ]
+    ),
+    .target(
+      name: "CommonTests",
+      destinations: appDestinations,
+      product: .unitTests,
+      bundleId: "me.igortarasenko.WhisperboardKit.CommonTests",
+      infoPlist: .default,
+      sources: "Tests/Common/**",
+      dependencies: [
+        .target(name: "Common"),
         .external(name: "SnapshotTesting"),
       ]
     ),
