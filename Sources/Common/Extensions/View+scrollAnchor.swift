@@ -7,7 +7,7 @@ public extension View {
     }
 
     return ScrollViewReader { scrollView in
-      onChange(of: valueToTrack) {
+      onChange(of: valueToTrack) { _ in
         withAnimation {
           scrollView.scrollTo(id, anchor: anchor)
         }

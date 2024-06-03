@@ -1,28 +1,42 @@
-import Dependencies
 import Foundation
-import IdentifiedCollections
 
 // MARK: - RecordingInfo
 
-struct RecordingInfo: Identifiable, Hashable, Then {
-  var id: String { fileName }
+public struct RecordingInfo: Identifiable, Hashable, Then {
+  public var id: String { fileName }
 
-  var fileName: String
-  var title = ""
-  var date: Date
-  var duration: TimeInterval
-  var editedText: String?
-  var transcription: Transcription?
+  public var fileName: String
+  public var title = ""
+  public var date: Date
+  public var duration: TimeInterval
+  public var editedText: String?
+  public var transcription: Transcription?
 
-  var text: String { editedText ?? transcription?.text ?? "" }
-  var isTranscribed: Bool { transcription?.status.isDone == true }
-  var isTranscribing: Bool { transcription?.status.isLoadingOrProgress == true }
-  var isPaused: Bool { transcription?.status.isPaused == true }
-  var transcriptionErrorMessage: String? { transcription?.status.errorMessage }
+  public var text: String { editedText ?? transcription?.text ?? "" }
+  public var isTranscribed: Bool { transcription?.status.isDone == true }
+  public var isTranscribing: Bool { transcription?.status.isLoadingOrProgress == true }
+  public var isPaused: Bool { transcription?.status.isPaused == true }
+  public var transcriptionErrorMessage: String? { transcription?.status.errorMessage }
 
-  var segments: [Segment] { transcription?.segments ?? [] }
-  var offset: Int64 { segments.last?.endTime ?? 0 }
-  var progress: Double { Double(offset) / Double(duration * 1000) }
+  public var segments: [Segment] { transcription?.segments ?? [] }
+  public var offset: Int64 { segments.last?.endTime ?? 0 }
+  public var progress: Double { Double(offset) / Double(duration * 1000) }
+
+  public init(
+    fileName: String,
+    title: String = "",
+    date: Date,
+    duration: TimeInterval,
+    editedText: String? = nil,
+    transcription: Transcription? = nil
+  ) {
+    self.fileName = fileName
+    self.title = title
+    self.date = date
+    self.duration = duration
+    self.editedText = editedText
+    self.transcription = transcription
+  }
 }
 
 // MARK: Codable
@@ -33,7 +47,7 @@ extension RecordingInfo: Codable {
     case transcriptionHistory // this for migration
   }
 
-  init(from decoder: Decoder) throws {
+  public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     fileName = try container.decode(String.self, forKey: .fileName)
     title = try container.decode(String.self, forKey: .title)
@@ -49,7 +63,7 @@ extension RecordingInfo: Codable {
     }
   }
 
-  func encode(to encoder: Encoder) throws {
+  public func encode(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
     try container.encode(fileName, forKey: .fileName)
     try container.encode(title, forKey: .title)
@@ -60,17 +74,17 @@ extension RecordingInfo: Codable {
   }
 }
 
-extension RecordingInfo {
+public extension RecordingInfo {
   var fileURL: URL {
-    Storage.recordingsDirectoryURL.appending(path: fileName)
+    Configs.recordingsDirectoryURL.appending(path: fileName)
   }
 
   var waveformImageURL: URL {
-    Storage.recordingsDirectoryURL.appending(path: fileName + ".waveform.png")
+    Configs.recordingsDirectoryURL.appending(path: fileName + ".waveform.png")
   }
 }
 
-extension RecordingInfo {
+public extension RecordingInfo {
   init(id: String, title: String, date: Date, duration: TimeInterval) {
     fileName = "\(id).wav"
     self.title = title
@@ -88,7 +102,7 @@ extension RecordingInfo {
 
 #if DEBUG
 
-  extension RecordingInfo {
+  public extension RecordingInfo {
     static let mock = RecordingInfo(
       fileName: "mock.wav",
       title: "Random thoughts",

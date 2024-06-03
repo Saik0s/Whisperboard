@@ -10,37 +10,37 @@ public enum ProgressiveResult<Value, Progress> {
   case error(EquatableError)
 }
 
-extension ProgressiveResult where Progress == Void {
-  public static var inProgress: Self {
+public extension ProgressiveResult where Progress == Void {
+  static var inProgress: Self {
     .inProgress(())
   }
 }
 
-extension ProgressiveResult {
-  public static func failure(_ error: Error) -> ProgressiveResult {
+public extension ProgressiveResult {
+  static func failure(_ error: Error) -> ProgressiveResult {
     ProgressiveResult.error(error.equatable)
   }
 }
 
-extension ProgressiveResult {
-  public var successValue: Value? {
+public extension ProgressiveResult {
+  var successValue: Value? {
     guard case let .success(value) = self else { return nil }
     return value
   }
 
-  public var progressValue: Progress? {
+  var progressValue: Progress? {
     guard case let .inProgress(progress) = self else { return nil }
     return progress
   }
 
-  public var errorValue: Error? {
+  var errorValue: Error? {
     guard case let .error(error) = self else { return nil }
     return error
   }
 }
 
-extension ProgressiveResult where Value: Equatable {
-  public static func == (lhs: Self, rhs: Value) -> Bool where Progress == Void {
+public extension ProgressiveResult where Value: Equatable {
+  static func == (lhs: Self, rhs: Value) -> Bool where Progress == Void {
     switch (lhs, rhs) {
     case let (.success(lhsValue), rhsValue):
       return lhsValue == rhsValue
@@ -127,34 +127,34 @@ extension ProgressiveResult: Hashable where Value: Hashable {
 
 public typealias ProgressiveResultOf<Value> = ProgressiveResult<Value, Void>
 
-extension ProgressiveResult {
-  public var isNone: Bool {
+public extension ProgressiveResult {
+  var isNone: Bool {
     guard case .none = self else { return false }
     return true
   }
 
-  public var isInProgress: Bool {
+  var isInProgress: Bool {
     guard case .inProgress = self else { return false }
     return true
   }
 
-  public var isSuccess: Bool {
+  var isSuccess: Bool {
     guard case .success = self else { return false }
     return true
   }
 
-  public var isError: Bool {
+  var isError: Bool {
     guard case .error = self else { return false }
     return true
   }
 
-  public var isFinished: Bool {
+  var isFinished: Bool {
     isSuccess || isError
   }
 }
 
-extension TaskResult {
-  public func toProgressiveResult<Progress>() -> ProgressiveResult<Success, Progress> {
+public extension TaskResult {
+  func toProgressiveResult<Progress>() -> ProgressiveResult<Success, Progress> {
     switch self {
     case let .success(value):
       .success(value)
@@ -164,7 +164,7 @@ extension TaskResult {
     }
   }
 
-  public var asProgressiveResult: ProgressiveResultOf<Success> {
+  var asProgressiveResult: ProgressiveResultOf<Success> {
     switch self {
     case let .success(value):
       .success(value)

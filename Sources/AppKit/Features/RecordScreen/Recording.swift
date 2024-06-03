@@ -1,4 +1,5 @@
 import AudioProcessing
+import Common
 import ComposableArchitecture
 import SwiftUI
 import WhisperKit
@@ -19,15 +20,18 @@ struct Recording {
 
     @Shared var recordingInfo: RecordingInfo
     var mode: Mode = .recording
-    @Shared var samples: [Float] = []
+    @Shared var samples: [Float]
     var isLiveTranscription = false
-    @Shared var liveTranscriptionState: LiveTranscriptionState = .idle
-    @Shared var liveTranscriptionModelState: ModelLoadingStage = .loading
+    @Shared var liveTranscriptionState: LiveTranscriptionState
+    @Shared var liveTranscriptionModelState: ModelLoadingStage
 
     @Presents var alert: AlertState<Action.Alert>?
 
     init(recordingInfo: RecordingInfo) {
       _recordingInfo = Shared(recordingInfo)
+      _samples = Shared([])
+      _liveTranscriptionState = Shared(.idle)
+      _liveTranscriptionModelState = Shared(.loading)
     }
   }
 
@@ -59,18 +63,21 @@ struct Recording {
       case .binding:
         return .none
 
+      case .delegate:
+        return .none
+
       case let .startRecording(withLiveTranscription):
         state.mode = .recording
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
-        return .run { [state, recordingTranscriptionStream] _ in
+        return .run { [state] _ in
           if withLiveTranscription {
-            for try await liveState in try await recordingTranscriptionStream.startLiveTranscription(fileURL: state.recordingInfo.fileURL) {
+            for try await liveState in try await recordingTranscriptionStream.startLiveTranscription(state.recordingInfo.fileURL) {
               switch liveState {
               case let .transcription(transcriptionState):
                 let confirmedText = transcriptionState.confirmedSegments
                   .map { "- \($0.text)" }
-                  .joined(separator: "\n")
+                  .joined()
 
                 let unconfirmedText = transcriptionState.unconfirmedSegments
                   .map { segment in
@@ -82,7 +89,7 @@ struct Recording {
                       Text: \(segment.text)
                     """
                   }
-                  .joined(separator: "\n")
+                  .joined()
 
                 let completeTranscription = """
                 currentFallbacks: \(transcriptionState.currentFallbacks)
@@ -94,15 +101,15 @@ struct Recording {
                 Unconfirmed:
                 \(unconfirmedText)
                 """
-                state.liveTranscriptionState.wrappedValue = .transcribing(completeTranscription)
+                state.$liveTranscriptionState.wrappedValue = .transcribing(completeTranscription)
 
-                if state.recordingInfo.wrappedValue.transcription == nil {
+                if state.$recordingInfo.wrappedValue.transcription == nil {
                   @Shared(.settings) var settings: Settings
-                  state.recordingInfo.wrappedValue.transcription = Transcription(
+                  state.$recordingInfo.wrappedValue.transcription = Transcription(
                     id: UUID(),
                     fileName: state.recordingInfo.fileName,
                     parameters: settings.parameters,
-                    model: settings.selectedModel
+                    model: settings.selectedModel ?? recordingTranscriptionStream.defaultModel
                   )
                 }
 
@@ -110,7 +117,7 @@ struct Recording {
                 let transcriptionSegments: [Segment] = rawSegments.map(\.asSimpleSegment)
 
                 state.recordingInfo.wrappedValue.transcription?.segments = transcriptionSegments
-                state.liveTranscriptionModelState.wrappedValue = transcriptionState.liveTranscriptionModelState
+                state.liveTranscriptionModelState.wrappedValue = transcriptionState.modelState.asModelLoadingStage(progress: state.loadingProgressValue)
 
               case let .recording(recordingState):
                 state.recordingInfo.wrappedValue.duration = recordingState.duration
@@ -128,9 +135,6 @@ struct Recording {
           logs.error("Error while starting recording: \(error)")
           await send(.delegate(.didFinish(.failure(error))))
         }
-
-      case .delegate:
-        return .none
 
       case .saveButtonTapped:
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -178,17 +182,17 @@ struct Recording {
 extension TranscriptionSegment {
   var asSimpleSegment: Segment {
     Segment(
-      startTime: Int64(segment.start),
-      endTime: Int64(segment.end),
-      text: segment.text,
-      tokens: segment.tokens.enumerated().map { index, tokenID in
+      startTime: Int64(start),
+      endTime: Int64(end),
+      text: text,
+      tokens: tokens.enumerated().map { index, tokenID in
         Token(
-          id: Int32(tokenID),
-          index: Int32(index),
+          id: tokenID,
+          index: index,
           data: TokenData(
             id: tokenID,
             tid: index,
-            probability: segment.tokenLogProbs.first?[tokenID] ?? 0
+            logProbability: tokenLogProbs.first?[tokenID] ?? 0
           ),
           speaker: nil
         )

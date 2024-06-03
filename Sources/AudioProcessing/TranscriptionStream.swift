@@ -1,48 +1,38 @@
 import Accelerate
 import AVFoundation
+import Common
 import ComposableArchitecture
 import CoreML
 import Dependencies
 import Foundation
 import WhisperKit
 
-// MARK: - ModelLoadingStage
-
-@CasePathable
-public enum ModelLoadingStage: Sendable, Equatable {
-  case downloading(progress: Double)
-  case prewarming
-  case loading
-  case completed
-}
-
 // MARK: - TranscriptionStream
 
 public actor TranscriptionStream {
-  public struct State: Equatable {
+  public struct State {
     public var currentFallbacks: Int = 0
     public var lastBufferSize: Int = 0
     public var lastConfirmedSegmentEndSeconds: Float = 0
     public var confirmedSegments: [TranscriptionSegment] = []
     public var unconfirmedSegments: [TranscriptionSegment] = []
-    public var liveTranscriptionModelState: ModelLoadingStage = .loading
     public var isWorking = true
     public var transcriptionProgress: TranscriptionProgress?
 
     public var selectedModel: String = WhisperKit.recommendedModels().default
     public var repoName: String = "argmaxinc/whisperkit-coreml"
     public var selectedLanguage: String = "english"
-    public var enableTimestamps: Bool = true
-    public var enablePromptPrefill: Bool = true
-    public var enableCachePrefill: Bool = true
-    public var enableSpecialCharacters: Bool = false
-    public var enableEagerDecoding: Bool = false
+    public var enableTimestamps = true
+    public var enablePromptPrefill = true
+    public var enableCachePrefill = true
+    public var enableSpecialCharacters = false
+    public var enableEagerDecoding = false
     public var temperatureStart: Double = 0
     public var fallbackCount: Double = 5
-    public var compressionCheckWindow: Double = 60
+    public var compressionCheckWindow: Int = 60
     public var sampleLength: Double = 224
     public var silenceThreshold: Double = 0.3
-    public var useVAD: Bool = true
+    public var useVAD = true
     public var tokenConfirmationsNeeded: Double = 2
     public var chunkingStrategy: ChunkingStrategy = .none
     public var encoderComputeUnits: MLComputeUnits = .cpuAndNeuralEngine
@@ -74,30 +64,32 @@ public actor TranscriptionStream {
     public var effectiveSpeedFactor: TimeInterval = 0
     public var currentEncodingLoops: Int = 0
     public var currentLag: TimeInterval = 0
-    public var lastConfirmedSegmentEndSeconds: Float = 0
 
     public let requiredSegmentsForConfirmation: Int = 2
 
     public let task: DecodingTask = .transcribe
+
+    fileprivate var firstTokenTime: TimeInterval = 0
+    fileprivate var pipelineStart: TimeInterval = 0
+    fileprivate var prevResult: TranscriptionResult? = nil
   }
 
-  private var state: TranscriptionStream.State = .init() {
+  public var state: TranscriptionStream.State = .init() {
     didSet {
       stateChangeCallback?(state)
     }
   }
 
+  public var stateChangeCallback: ((State) -> Void)?
+
   private var whisperKit: WhisperKit?
-
   private let audioProcessor: AudioProcessor
-  private let stateChangeCallback: ((State) -> Void)?
 
-  public init(audioProcessor: AudioProcessor, stateChangeCallback: ((State) -> Void)?) {
+  public init(audioProcessor: AudioProcessor) {
     self.audioProcessor = audioProcessor
-    self.stateChangeCallback = stateChangeCallback
   }
 
-  func fetchModels() async {
+  func fetchModels() async throws {
     state.availableModels = [state.selectedModel]
 
     if let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
@@ -146,8 +138,8 @@ public actor TranscriptionStream {
     logs.info("Finished initializing WhisperKit")
     guard let whisperKit else { return }
 
-    var folder: URL? = if localModels.contains(model) && !redownload {
-      URL(fileURLWithPath: localModelPath).appendingPathComponent(model)
+    let folder: URL? = if state.localModels.contains(model) && !redownload {
+      URL(fileURLWithPath: state.localModelPath).appendingPathComponent(model)
     } else {
       try await WhisperKit.download(variant: model, from: state.repoName, progressCallback: { progress in
         self.state.loadingProgressValue = Float(progress.fractionCompleted) * self.state.specializationProgressRatio
@@ -174,10 +166,10 @@ public actor TranscriptionStream {
       } catch {
         progressBarTask.cancel()
         if !redownload {
-          loadModel(model, redownload: true)
+          try await loadModel(model, redownload: true)
           return
         } else {
-          modelState = .unloaded
+          state.modelState = .unloaded
           return
         }
       }
@@ -197,8 +189,19 @@ public actor TranscriptionStream {
     }
   }
 
+  public func deleteModel(_ model: String) async throws {
+    if model == state.selectedModel {
+      await whisperKit?.unloadModels()
+      state.selectedModel = state.availableModels.first ?? WhisperKit.recommendedModels().default
+    }
+
+    let modelPath = state.localModelPath.appendingPathComponent(model)
+    state.localModels.removeAll(where: { $0 == model })
+    try FileManager.default.removeItem(atPath: modelPath)
+  }
+
   private func updateProgressBar(targetProgress: Float, maxTime: TimeInterval) async {
-    let initialProgress = loadingProgressValue
+    let initialProgress = state.loadingProgressValue
     let decayConstant = -log(1 - targetProgress) / Float(maxTime)
 
     let startTime = Date()
@@ -210,9 +213,7 @@ public actor TranscriptionStream {
       let progressIncrement = (1 - initialProgress) * (1 - decayFactor)
       let currentProgress = initialProgress + progressIncrement
 
-      await MainActor.run {
-        loadingProgressValue = currentProgress
-      }
+      state.loadingProgressValue = currentProgress
 
       if currentProgress >= targetProgress {
         break
@@ -226,7 +227,9 @@ public actor TranscriptionStream {
     }
   }
 
-  public func startRealtimeLoop(shouldStopWhenNoSamplesLeft: Bool = false) async throws {
+  public func startRealtimeLoop(shouldStopWhenNoSamplesLeft: Bool = false, callback: @escaping (State) -> Void) async throws {
+    stateChangeCallback = callback
+
     while state.isWorking && (shouldStopWhenNoSamplesLeft ? !audioProcessor.audioSamples.isEmpty : true) {
       do {
         try await transcribeCurrentBuffer()
@@ -239,6 +242,7 @@ public actor TranscriptionStream {
 
   public func stopRealtimeLoop() {
     state.isWorking = false
+    stateChangeCallback = nil
   }
 
   public func resetState() {
@@ -265,10 +269,8 @@ public actor TranscriptionStream {
         silenceThreshold: Float(state.silenceThreshold)
       )
       guard voiceDetected else {
-        await MainActor.run {
-          if self.state.currentText.isEmpty {
-            self.state.currentText = "Waiting for speech..."
-          }
+        if state.currentText.isEmpty {
+          state.currentText = "Waiting for speech..."
         }
 
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -282,14 +284,15 @@ public actor TranscriptionStream {
     let transcriptions = try await transcribeAudioSamples(Array(currentBuffer))
 
     var skipAppend = false
-    if let result = transcriptions.first {
-      hypothesisWords = result.allWords.filter { $0.start >= self.lastAgreedSeconds }
+    let transcription = transcriptions.first
+    if let result = transcription {
+      state.hypothesisWords = result.allWords.filter { $0.start >= state.lastAgreedSeconds }
 
-      if let prevResult {
-        state.prevWords = state.prevResult.allWords.filter { $0.start >= state.lastAgreedSeconds }
+      if let prevResult = state.prevResult {
+        state.prevWords = prevResult.allWords.filter { $0.start >= state.lastAgreedSeconds }
         let commonPrefix = findLongestCommonPrefix(state.prevWords, state.hypothesisWords)
         logs.info("[EagerMode] Prev \"\((state.prevWords.map(\.word)).joined())\"")
-        logs.info("[EagerMode] Next \"\((hypothesisWords.map(\.word)).joined())\"")
+        logs.info("[EagerMode] Next \"\((state.hypothesisWords.map(\.word)).joined())\"")
         logs.info("[EagerMode] Found common prefix \"\((commonPrefix.map(\.word)).joined())\"")
 
         if commonPrefix.count >= Int(state.tokenConfirmationsNeeded) {
@@ -297,15 +300,15 @@ public actor TranscriptionStream {
           state.lastAgreedSeconds = state.lastAgreedWords.first!.start
           logs
             .info(
-              "[EagerMode] Found new last agreed word \"\(lastAgreedWords.first!.word)\" at \(lastAgreedSeconds) seconds"
+              "[EagerMode] Found new last agreed word \"\(state.lastAgreedWords.first!.word)\" at \(state.lastAgreedSeconds) seconds"
             )
 
           state.confirmedWords
             .append(contentsOf: commonPrefix.prefix(commonPrefix.count - Int(state.tokenConfirmationsNeeded)))
           let currentWords = state.confirmedWords.map(\.word).joined()
-          logs.info("[EagerMode] Current:  \(state.lastAgreedSeconds) -> \(Double(samples.count) / 16000.0) \(currentWords)")
+          logs.info("[EagerMode] Current:  \(state.lastAgreedSeconds) -> \(Double(audioProcessor.audioSamples.count) / 16000.0) \(currentWords)")
         } else {
-          logs.info("[EagerMode] Using same last agreed time \(lastAgreedSeconds)")
+          logs.info("[EagerMode] Using same last agreed time \(state.lastAgreedSeconds)")
           skipAppend = true
         }
       }
@@ -338,19 +341,19 @@ public actor TranscriptionStream {
     state.effectiveSpeedFactor = totalAudio / Double(state.totalInferenceTime)
 
     if segments.count > state.requiredSegmentsForConfirmation {
-      let numberOfSegmentsToConfirm = segments.count - requiredSegmentsForConfirmation
+      let numberOfSegmentsToConfirm = segments.count - state.requiredSegmentsForConfirmation
       let confirmedSegmentsArray = Array(segments.prefix(numberOfSegmentsToConfirm))
-      let remainingSegments = Array(segments.suffix(requiredSegmentsForConfirmation))
+      let remainingSegments = Array(segments.suffix(state.requiredSegmentsForConfirmation))
 
-      if let lastConfirmedSegment = confirmedSegmentsArray.last, lastConfirmedSegment.end > self.lastConfirmedSegmentEndSeconds {
-        lastConfirmedSegmentEndSeconds = lastConfirmedSegment.end
-        if !confirmedSegments.contains(confirmedSegmentsArray) {
-          confirmedSegments.append(contentsOf: confirmedSegmentsArray)
+      if let lastConfirmedSegment = confirmedSegmentsArray.last, lastConfirmedSegment.end > state.lastConfirmedSegmentEndSeconds {
+        state.lastConfirmedSegmentEndSeconds = lastConfirmedSegment.end
+        if !state.confirmedSegments.contains(confirmedSegmentsArray) {
+          state.confirmedSegments.append(contentsOf: confirmedSegmentsArray)
         }
       }
-      unconfirmedSegments = remainingSegments
+      state.unconfirmedSegments = remainingSegments
     } else {
-      unconfirmedSegments = segments
+      state.unconfirmedSegments = segments
     }
 
     // MARK: - regular transcription mode
@@ -385,6 +388,8 @@ public actor TranscriptionStream {
   }
 
   private func transcribeAudioSamples(_ samples: [Float]) async throws -> [TranscriptionResult] {
+    guard let whisperKit else { throw NSError(domain: "WhisperKit not initialized", code: 1) }
+
     var options = DecodingOptions(
       verbose: false,
       task: state.task,
@@ -408,7 +413,7 @@ public actor TranscriptionStream {
       concurrentWorkerCount: 1
     )
     options.clipTimestamps = [state.lastConfirmedSegmentEndSeconds]
-    let lastAgreedTokens = lastAgreedWords.flatMap(\.tokens)
+    let lastAgreedTokens = state.lastAgreedWords.flatMap(\.tokens)
     options.prefixTokens = lastAgreedTokens
     let checkWindow = state.compressionCheckWindow
 
@@ -450,3 +455,4 @@ public actor TranscriptionStream {
     ModelComputeOptions(audioEncoderCompute: state.encoderComputeUnits, textDecoderCompute: state.decoderComputeUnits)
   }
 }
+

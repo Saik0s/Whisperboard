@@ -1,11 +1,12 @@
 import AVFoundation
+import Common
 import Foundation
 import WhisperKit
 
 // MARK: - RecordingStream
 
 public actor RecordingStream {
-  public struct State: Equatable, Sendable, CustomDumpStringConvertible {
+  public struct State: Equatable, Sendable {
     public var isRecording = false
     public var isPaused = false
     public var fileURL: URL?
@@ -14,23 +15,23 @@ public actor RecordingStream {
     public var duration: TimeInterval = 0
   }
 
-  private var state: TranscriptionStream.State = .init() {
+  public var state: State = .init() {
     didSet {
       stateChangeCallback?(state)
     }
   }
 
   private let audioProcessor: AudioProcessor
-  private let stateChangeCallback: ((State) -> Void)?
-
   private var audioFile: AVAudioFile?
+  private var stateChangeCallback: ((State) -> Void)? = nil
 
-  public init(audioProcessor: AudioProcessor, stateChangeCallback: ((State) -> Void)?) {
+  public init(audioProcessor: AudioProcessor) {
     self.audioProcessor = audioProcessor
-    self.stateChangeCallback = stateChangeCallback
   }
 
-  public func startRecording(at fileURL: URL) async throws {
+  public func startRecording(at fileURL: URL, callback: @escaping (State) -> Void) async throws {
+    stateChangeCallback = callback
+
     guard !state.isRecording else {
       throw NSError(domain: "TranscriptionStream", code: 1, userInfo: [NSLocalizedDescriptionKey: "Recording is already in progress."])
     }
@@ -59,6 +60,7 @@ public actor RecordingStream {
     audioFile = nil
     state.isRecording = false
     state.isPaused = false
+    stateChangeCallback = nil
   }
 
   public func pauseRecording() {

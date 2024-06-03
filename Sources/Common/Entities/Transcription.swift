@@ -3,23 +3,41 @@ import Foundation
 
 // MARK: - Transcription
 
-struct Transcription: Codable, Hashable, Identifiable {
-  let id: UUID
-  var fileName: String
-  var startDate: Date = .init()
-  var segments: [Segment] = []
-  var parameters: TranscriptionParameters
-  var model: VoiceModelType
-  var status: Status = .notStarted
+public struct Transcription: Codable, Hashable, Identifiable {
+  public let id: UUID
+  public var fileName: String
+  public var startDate: Date = .init()
+  public var segments: [Segment] = []
+  public var parameters: TranscriptionParameters
+  public var model: String
+  public var status: Status = .notStarted
 
-  var text: String {
+  public var text: String {
     segments.map(\.text).joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  public init(
+    id: UUID = UUID(),
+    fileName: String,
+    startDate: Date = .init(),
+    segments: [Segment] = [],
+    parameters: TranscriptionParameters,
+    model: String,
+    status: Status = .notStarted
+  ) {
+    self.id = id
+    self.fileName = fileName
+    self.startDate = startDate
+    self.segments = segments
+    self.parameters = parameters
+    self.model = model
+    self.status = status
   }
 }
 
 // MARK: Transcription.Status
 
-extension Transcription {
+public extension Transcription {
   @CasePathable
   enum Status: Codable, Hashable {
     case notStarted
@@ -35,34 +53,69 @@ extension Transcription {
 
 // MARK: - Segment
 
-struct Segment: Codable, Hashable, Identifiable {
-  var id: Int64 { startTime }
-  let startTime: Int64
-  let endTime: Int64
-  let text: String
-  let tokens: [Token]
-  let speaker: String?
+public struct Segment: Codable, Hashable, Identifiable {
+  public var id: Int64 { startTime }
+  public let startTime: Int64
+  public let endTime: Int64
+  public let text: String
+  public let tokens: [Token]
+  public let speaker: String?
+
+  public init(
+    startTime: Int64,
+    endTime: Int64,
+    text: String,
+    tokens: [Token],
+    speaker: String? = nil
+  ) {
+    self.startTime = startTime
+    self.endTime = endTime
+    self.text = text
+    self.tokens = tokens
+    self.speaker = speaker
+  }
 }
 
 // MARK: - Token
 
-struct Token: Codable, Hashable, Identifiable {
-  let id: Int
-  let index: Int
-  let data: TokenData
-  let speaker: String?
+public struct Token: Codable, Hashable, Identifiable {
+  public let id: Int
+  public let index: Int
+  public let data: TokenData
+  public let speaker: String?
+
+  public init(
+    id: Int,
+    index: Int,
+    data: TokenData,
+    speaker: String? = nil
+  ) {
+    self.id = id
+    self.index = index
+    self.data = data
+    self.speaker = speaker
+  }
 }
 
 // MARK: - TokenData
 
-struct TokenData: Codable, Hashable, Identifiable {
-  let id: Int
-  let tid: Int
-  let probability: Float
-  let logProbability: Float
+public struct TokenData: Codable, Hashable, Identifiable {
+  public let id: Int
+  public let tid: Int
+  public let logProbability: Float
+
+  public init(
+    id: Int,
+    tid: Int,
+    logProbability: Float
+  ) {
+    self.id = id
+    self.tid = tid
+    self.logProbability = logProbability
+  }
 }
 
-extension Transcription.Status {
+public extension Transcription.Status {
   var isDone: Bool {
     switch self {
     case .done:
@@ -195,7 +248,7 @@ extension Transcription.Status {
 }
 
 #if DEBUG
-  extension Transcription {
+  public extension Transcription {
     static let mock1 = Transcription(
       id: UUID(),
       fileName: "test1",
@@ -209,17 +262,10 @@ extension Transcription.Status {
             Token(
               id: 0,
               index: 0,
-              text: "This is a random sentence.",
               data: TokenData(
                 id: 0,
                 tid: 0,
-                probability: 0,
-                logProbability: 0,
-                timestampProbability: 0,
-                sumTimestampProbabilities: 0,
-                startTime: 0,
-                endTime: 0,
-                voiceLength: 0
+                logProbability: 0.1
               ),
               speaker: nil
             ),
@@ -228,7 +274,7 @@ extension Transcription.Status {
         ),
       ],
       parameters: TranscriptionParameters(),
-      model: .tiny,
+      model: "tiny",
       status: .done(Date())
     )
 
@@ -245,17 +291,10 @@ extension Transcription.Status {
             Token(
               id: 0,
               index: 0,
-              text: "This is another random sentence. Here is a second sentence.",
               data: TokenData(
                 id: 0,
                 tid: 0,
-                probability: 0,
-                logProbability: 0,
-                timestampProbability: 0,
-                sumTimestampProbabilities: 0,
-                startTime: 0,
-                endTime: 0,
-                voiceLength: 0
+                logProbability: 0.1
               ),
               speaker: nil
             ),
@@ -264,7 +303,7 @@ extension Transcription.Status {
         ),
       ],
       parameters: TranscriptionParameters(),
-      model: .tiny,
+      model: "tiny",
       status: .done(Date())
     )
 
@@ -281,17 +320,10 @@ extension Transcription.Status {
             Token(
               id: 0,
               index: 0,
-              text: "Here is a random sentence. This is a second sentence. And a third one.",
               data: TokenData(
                 id: 0,
                 tid: 0,
-                probability: 0,
-                logProbability: 0,
-                timestampProbability: 0,
-                sumTimestampProbabilities: 0,
-                startTime: 0,
-                endTime: 0,
-                voiceLength: 0
+                logProbability: 0.1
               ),
               speaker: nil
             ),
@@ -300,7 +332,7 @@ extension Transcription.Status {
         ),
       ],
       parameters: TranscriptionParameters(),
-      model: .tiny,
+      model: "tiny",
       status: .done(Date())
     )
   }

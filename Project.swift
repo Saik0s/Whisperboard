@@ -266,6 +266,7 @@ let project = Project(
         .external(name: "Logging"),
         .external(name: "Lottie"),
         .external(name: "NavigationTransitions"),
+        .external(name: "OrderedCollections"),
         .external(name: "Popovers"),
         .external(name: "PulseLogHandler"),
         .external(name: "PulseUI"),
@@ -308,6 +309,8 @@ let project = Project(
         .external(name: "AudioKit"),
         .external(name: "WhisperKit"),
         .external(name: "Perception"),
+        .external(name: "Dependencies"),
+        .external(name: "ComposableArchitecture"),
         .target(name: "Common"),
       ]
     ),
@@ -333,6 +336,7 @@ let project = Project(
       sources: "Sources/Common/**",
       dependencies: [
         .external(name: "PulseLogHandler"),
+        .external(name: "Pulse"),
         .external(name: "ComposableArchitecture"),
       ]
     ),

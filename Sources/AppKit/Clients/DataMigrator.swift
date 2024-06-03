@@ -1,5 +1,7 @@
+import Common
 import Dependencies
 import Foundation
+import WhisperKit
 
 // MARK: - Migration
 
@@ -97,7 +99,7 @@ struct RecordingInfoMigration: Migration {
               ),
             ],
             parameters: TranscriptionParameters(),
-            model: .default,
+            model: "tiny",
             status: .done(Date())
           )
           : nil
@@ -114,25 +116,34 @@ struct SettingsMigration: Migration {
   var version: Int { 2 }
 
   func migrate() throws {
+    struct VoiceLanguage: Codable, Hashable, Identifiable {
+      let id: Int32
+      let code: String
+      let name: String
+      init(id: Int32, code: String) {
+        self.id = id
+        self.code = code
+        name = Locale.current.localizedString(forLanguageCode: code) ?? code
+      }
+
+      static let auto = VoiceLanguage(id: -1, code: "auto")
+    }
+
     struct OldSettings: Codable, Hashable {
       var voiceLanguage: VoiceLanguage = .auto
-      var isParallelEnabled = false
-      var isRemoteTranscriptionEnabled = false
     }
 
     let settingsURL = try FileManager.default
       .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
       .appendingPathComponent("settings.json")
 
-    let oldSettings = try Settings.fromFile(path: settingsURL.path)
+    let oldSettings = try OldSettings.fromFile(path: settingsURL.path)
     let selectedModelName = UserDefaults.standard.string(forKey: "selectedModelName")
-    let selectedModel = VoiceModelType.allCases.first(where: { $0.fileName == selectedModelName }) ?? .default
 
     let newSettings = Settings(
-      isRemoteTranscriptionEnabled: oldSettings.isRemoteTranscriptionEnabled,
       useMockedClients: false,
-      selectedModel: selectedModel,
-      parameters: TranscriptionParameters(language: oldSettings.voiceLanguage)
+      selectedModel: selectedModelName,
+      parameters: TranscriptionParameters(language: oldSettings.voiceLanguage.code)
     )
     try newSettings.saveToFile(at: settingsURL)
   }

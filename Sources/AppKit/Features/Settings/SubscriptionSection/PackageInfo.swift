@@ -1,3 +1,4 @@
+import Common
 import Foundation
 
 struct PackageInfo: Identifiable, Hashable {

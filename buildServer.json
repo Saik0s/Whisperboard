@@ -14,6 +14,6 @@
 	],
 	"workspace": "/Users/igortarasenko/Projects/whisperboard_ios/WhisperBoard.xcworkspace",
 	"build_root": "/Users/igortarasenko/Library/Developer/Xcode/DerivedData/WhisperBoard-bucrccgeucxbtwazlvkhdbtyfhgp",
-	"scheme": "WhisperBoard",
+	"scheme": "WhisperBoardKit",
 	"kind": "xcode"
 }

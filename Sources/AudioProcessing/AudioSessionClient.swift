@@ -1,11 +1,13 @@
 import AVFoundation
+import Combine
+import Common
 import ComposableArchitecture
 import Dependencies
 import Foundation
 
 // MARK: - AudioSessionType
 
-enum AudioSessionType {
+public enum AudioSessionType {
   case playback
   case record
   case playAndRecord
@@ -13,16 +15,16 @@ enum AudioSessionType {
 
 // MARK: - AudioSessionClient
 
-struct AudioSessionClient {
-  var enable: @Sendable (_ type: AudioSessionType, _ updateActivation: Bool) throws -> Void
-  var disable: @Sendable (_ type: AudioSessionType, _ updateActivation: Bool) throws -> Void
-  var requestRecordPermission: @Sendable () async -> Bool
-  var availableMicrophones: @Sendable () throws -> AsyncStream<[Microphone]>
-  var currentMicrophone: @Sendable () -> Microphone?
-  var selectMicrophone: @Sendable (Microphone) throws -> Void
+public struct AudioSessionClient {
+  public var enable: @Sendable (_ type: AudioSessionType, _ updateActivation: Bool) throws -> Void
+  public var disable: @Sendable (_ type: AudioSessionType, _ updateActivation: Bool) throws -> Void
+  public var requestRecordPermission: @Sendable () async -> Bool
+  public var availableMicrophones: @Sendable () throws -> AsyncStream<[Microphone]>
+  public var currentMicrophone: @Sendable () -> Microphone?
+  public var selectMicrophone: @Sendable (Microphone) throws -> Void
 }
 
-extension DependencyValues {
+public extension DependencyValues {
   var audioSession: AudioSessionClient {
     get { self[AudioSessionClient.self] }
     set { self[AudioSessionClient.self] = newValue }
@@ -32,7 +34,7 @@ extension DependencyValues {
 // MARK: - AudioSessionClient + DependencyKey
 
 extension AudioSessionClient: DependencyKey {
-  static var liveValue: AudioSessionClient = {
+  public static var liveValue: AudioSessionClient = {
     let isPlaybackActive = LockIsolated(false)
     let isRecordActive = LockIsolated(false)
     @Shared(.settings) var settings: Settings = .init()
@@ -133,22 +135,18 @@ extension AudioSessionClient: DependencyKey {
       availableMicrophones: {
         AsyncStream([Microphone].self) { continuation in
           let task = Task(priority: .background) {
-            let updateStream = AsyncStream<[Microphone]>(
-              NotificationCenter.default
-                .notifications(named: AVAudioSession.routeChangeNotification)
-                .map { _ -> [Microphone] in
-                  microphones
-                }
-                .removeDuplicates(by: { old, new in
-                  old.map(\.port.portName).sorted() != new.map(\.port.portName).sorted()
-                })
-            )
+            let updateStream = NotificationCenter.default
+              .publisher(for: AVAudioSession.routeChangeNotification)
+              .map { _ -> [Microphone] in microphones }
+              .removeDuplicates(by: { old, new in
+                old.map(\.portName).sorted() != new.map(\.portName).sorted()
+              })
 
             try session.setCategory(.playAndRecord, mode: mode, options: options)
 
             continuation.yield(microphones)
 
-            for await microphones in updateStream {
+            for await microphones in updateStream.values {
               logs.debug("Microphones: \(microphones.map(\.port.portName).sorted())")
               continuation.yield(microphones)
             }

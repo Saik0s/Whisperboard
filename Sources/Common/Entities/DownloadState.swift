@@ -2,13 +2,13 @@ import Foundation
 
 // MARK: - DownloadState
 
-enum DownloadState {
+public enum DownloadState {
   case inProgress(Double)
-  case success(fileURL: URL)
+  case success
   case failure(Error)
 }
 
-extension DownloadState {
+public extension DownloadState {
   var progress: Double {
     switch self {
     case let .inProgress(progress):

@@ -1,3 +1,4 @@
+import Common
 import ComposableArchitecture
 import SwiftUI
 
@@ -124,7 +125,7 @@ struct PlayerControls {
 
       case let .playbackUpdated(.error(error)):
         state.mode = .idle
-        let message = "Failed to play audio\n\(error?.localizedDescription ?? "Unknown error")"
+        let message = "Failed to play audio \(error?.localizedDescription ?? "Unknown error")"
         logs.error("\(message)")
         return .cancel(id: PlayID())
 
