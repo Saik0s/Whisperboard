@@ -122,7 +122,7 @@ struct SpeechSectionView: View {
         SettingsInlinePickerButton(
           icon: .system(name: "globe", background: .systemGreen.darken(by: 0.1)),
           title: "Language",
-          choices: store.availableLanguages.map(\.name.titleCased),
+          choices: store.availableLanguages.map(\.titleCased),
           selectedIndex: $store.selectedLanguageIndex
         )
       }

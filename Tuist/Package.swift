@@ -4,36 +4,7 @@ import PackageDescription
 #if TUIST
   import ProjectDescription
 
-  let packageSettings = PackageSettings(
-    // productTypes: [
-    //   "AsyncAlgorithms": .framework,
-    //   "AudioKit": .framework,
-    //   "ComposableArchitecture": .framework,
-    //   "DependenciesAdditions": .framework,
-    //   "DSWaveformImage": .framework,
-    //   "DSWaveformImageViews": .framework,
-    //   "DynamicColor": .framework,
-    //   "Inject": .framework,
-    //   "KeychainAccess": .framework,
-    //   "Logging": .framework,
-    //   "Lottie": .framework,
-    //   "Popovers": .framework,
-    //   "SwiftUIIntrospect": .framework,
-    //   "VariableBlurView": .framework,
-    //   "FluidGradient": .framework,
-    //   "NavigationTransitions": .framework,
-    //   "CombineSchedulers": .framework,
-    //   "Clocks": .framework,
-    //   "OrderedCollections": .framework,
-    //   "Dependencies": .framework,
-    //   "XCTestDynamicOverlay": .framework,
-    //   "ConcurrencyExtras": .framework,
-    //   "_CollectionsUtilities": .framework,
-    // ],
-    baseSettings: .settings(base: [
-      "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
-    ])
-  )
+  let packageSettings = PackageSettings()
 #endif
 
 let package = Package(
@@ -41,10 +12,10 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/krzysztofzablocki/Inject.git", branch: "main"),
 
-    .package(url: "https://github.com/aheze/Popovers.git", branch: "main"),
-    .package(url: "https://github.com/aheze/VariableBlurView.git", branch: "main"),
-    .package(url: "https://github.com/airbnb/lottie-spm.git", from: "4.3.3"),
-    .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "0.1.0"),
+    .package(url: "https://github.com/aheze/Popovers.git", from: "1.3.2"),
+    .package(url: "https://github.com/aheze/VariableBlurView.git", from: "1.0.0"),
+    .package(url: "https://github.com/airbnb/lottie-spm.git", from: "4.4.3"),
+    .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.0"),
     .package(url: "https://github.com/AudioKit/AudioKit.git", from: "5.6.0"),
     .package(url: "https://github.com/dmrschmidt/DSWaveformImage.git", from: "14.2.2"),
     .package(url: "https://github.com/gohanlon/swift-memberwise-init-macro", from: "0.4.0"),
@@ -58,7 +29,7 @@ let package = Package(
     .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     .package(url: "https://github.com/Cindori/FluidGradient.git", from: "1.0.0"),
     .package(url: "https://github.com/davdroman/swiftui-navigation-transitions.git", from: "0.13.3"),
-    .package(url: "https://github.com/argmaxinc/WhisperKit.git", from: "0.6.1"),
+    .package(url: "https://github.com/argmaxinc/WhisperKit.git", from: "0.7.2"),
     .package(url: "https://github.com/kean/PulseLogHandler.git", from: "4.0.1"),
   ]
 )

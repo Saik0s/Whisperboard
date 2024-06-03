@@ -1,5 +1,5 @@
 {
-  "originHash" : "3bffd7c09057bf784a228f53f5c95d802673b8b8ad250354f8a79baabd9c9b7c",
+  "originHash" : "d42e323bbcdb48a91a69d70f70c205fc90d2d0d358e4e93192acfc3e613f204d",
   "pins" : [
     {
       "identity" : "audiokit",
@@ -78,8 +78,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aheze/Popovers.git",
       "state" : {
-        "branch" : "main",
-        "revision" : "a6895602c7db1683be1c68363564de4fb09521cd"
+        "revision" : "de44c4dd7271ec6413fe350f7efadb14e5e18dce",
+        "version" : "1.3.2"
       }
     },
     {
@@ -87,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kean/pulse.git",
       "state" : {
-        "revision" : "2e5e5f86c31970dc72613e480a1ba0b06bab81a2",
-        "version" : "4.2.1"
+        "revision" : "b7982a03165ebcc63f2e70236cc674d4e4dd3dc9",
+        "version" : "4.2.2"
       }
     },
     {
@@ -114,8 +114,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-async-algorithms.git",
       "state" : {
-        "revision" : "9cfed92b026c524674ed869a4ff2dcfdeedf8a2a",
-        "version" : "0.1.0"
+        "revision" : "da4e36f86544cdf733a40d59b3a2267e3a7bbf36",
+        "version" : "1.0.0"
       }
     },
     {
@@ -294,8 +294,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aheze/VariableBlurView.git",
       "state" : {
-        "branch" : "main",
-        "revision" : "aac95d7a528b8aa37bf2228d0e2d13fa0ed11f9d"
+        "revision" : "5646a3e7fe418c587db7e55e5b24138a628dc72d",
+        "version" : "1.0.2"
       }
     },
     {
@@ -303,8 +303,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/argmaxinc/WhisperKit.git",
       "state" : {
-        "revision" : "3aa94e8c3950afdeaf916cb1da71e44f62bd2864",
-        "version" : "0.7.1"
+        "revision" : "aa4bb901c8a09c8b5320ff4bb9fe64a095614d4e",
+        "version" : "0.7.2"
       }
     },
     {

@@ -14,9 +14,15 @@ public enum LiveTranscriptionUpdate {
 // MARK: - ModelStatus
 
 public struct ModelStatus {
-  let model: String
-  let isDownloaded: Bool
-  let isSelected: Bool
+  public let model: String
+  public let isDownloaded: Bool
+  public let isSelected: Bool
+
+  public init(model: String, isDownloaded: Bool, isSelected: Bool) {
+    self.model = model
+    self.isDownloaded = isDownloaded
+    self.isSelected = isSelected
+  }
 }
 
 // MARK: - RecordingTranscriptionStream
@@ -203,25 +209,29 @@ private final class RecordingTranscriptionStreamContainer {
 
   func loadModel(_ model: String) -> AsyncStream<ModelLoadingStage> {
     let (stream, continuation) = AsyncStream<ModelLoadingStage>.makeStream()
-    Task {
-      let task = Task {
+    Task { [weak self] in
+      guard let self else { return }
+
+      let task = Task { [weak self] in
+        guard let self else { return }
+
         while true {
-          let state = await transcriptionStream.state
+          let state = await self.transcriptionStream.state
           continuation.yield(.inProgress(Double(state.loadingProgressValue), state.modelState))
           try await Task.sleep(for: .seconds(0.3))
         }
       }
 
       do {
-        try await transcriptionStream.loadModel(model)
+        try await self.transcriptionStream.loadModel(model)
         task.cancel()
-        let state = await transcriptionStream.state
+        let state = await self.transcriptionStream.state
         continuation.yield(.success(state.modelState))
       } catch {
         logs.error("Failed to load model \(error)")
         task.cancel()
-        let state = await transcriptionStream.state
-        continuation.yield(.failure(error, state.modelState))
+        let state = await self.transcriptionStream.state
+        continuation.yield(.failure(error.equatable, state.modelState))
       }
 
       continuation.finish()
@@ -236,11 +246,23 @@ private final class RecordingTranscriptionStreamContainer {
 
 // MARK: - ModelLoadingStage
 
-public enum ModelLoadingStage {
+public enum ModelLoadingStage: Equatable {
+  case idle
   case inProgress(Double, ModelState)
   case success(ModelState)
-  case failure(Error, ModelState)
+  case failure(EquatableError, ModelState)
 }
+
+public extension ModelLoadingStage {
+  var isSuccess: Bool {
+    switch self {
+    case .success(_): return true
+    default: return false
+    }
+  }
+}
+
+// MARK: - ModelLoadingStageError
 
 public enum ModelLoadingStageError: Error {
   case modelNotLoaded
@@ -255,9 +277,8 @@ public extension ModelState {
     case .loading: .inProgress(progress, self)
     case .prewarmed: .success(self)
     case .prewarming: .inProgress(progress, self)
-    case .unloaded: .failure(ModelLoadingStageError.modelNotLoaded, self)
+    case .unloaded: .failure(ModelLoadingStageError.modelNotLoaded.equatable, self)
     case .unloading: .inProgress(progress, self)
     }
   }
 }
-

@@ -456,3 +456,39 @@ public actor TranscriptionStream {
   }
 }
 
+public extension TranscriptionStream.State {
+  var segments: [TranscriptionSegment] {
+    confirmedSegments + unconfirmedSegments
+  }
+  
+  var asCompleteTranscription: String {
+    let confirmedText = confirmedSegments
+      .map { "- \($0.text)" }
+      .joined()
+
+    let unconfirmedText = unconfirmedSegments
+      .map { segment in
+        """
+        - ID: \(segment.id)
+          Seek: \(segment.seek)
+          Start: \(segment.start)
+          End: \(segment.end)
+          Text: \(segment.text)
+        """
+      }
+      .joined()
+
+    let completeTranscription = """
+    currentFallbacks: \(currentFallbacks)
+    lastBufferSize: \(lastBufferSize)
+    lastConfirmedSegmentEndSeconds: \(lastConfirmedSegmentEndSeconds)
+    ---
+    Confirmed:
+    \(confirmedText)
+    Unconfirmed:
+    \(unconfirmedText)
+    """
+
+    return completeTranscription
+  }
+}

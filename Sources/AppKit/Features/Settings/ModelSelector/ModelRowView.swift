@@ -19,14 +19,14 @@ struct ModelRow {
     var isDownloading: Bool { progress < 0.99 && progress > 0.01 }
   }
 
-  enum Action: Equatable {
+  enum Action {
     case downloadModelTapped
     case selectModelTapped
     case modelUpdated(progress: Double)
     case loadError(String)
     case deleteModelTapped
     case cancelDownloadTapped
-    case didRemoveModel(Result<Void, EquatableError>)
+    case didRemoveModel(Result<Void, Error>)
   }
 
   struct CancelDownloadID: Hashable {}
@@ -44,8 +44,11 @@ struct ModelRow {
         return .run { [model = state.model] send in
           for await downloadState in recordingTranscriptionStream.loadModel(model) {
             switch downloadState {
+            case .idle:
+              break
+
             case let .inProgress(progress, _):
-               await send(.modelUpdated(progress: progress))
+              await send(.modelUpdated(progress: progress))
 
             case .success:
               await send(.modelUpdated(progress: 1))
@@ -69,7 +72,7 @@ struct ModelRow {
 
         state.isRemovingModel = true
         return .run { [model = state.model] send in
-          await send(.didRemoveModel(Result { try await recordingTranscriptionStream.deleteModel(model) }.mapError { $0.equatable() }))
+          await send(.didRemoveModel(Result { try await recordingTranscriptionStream.deleteModel(model) }.mapError { $0.equatable }))
         }
 
       case .didRemoveModel(.success):
@@ -126,7 +129,7 @@ struct ModelRowView: View {
           } else if store.isDownloading {
             Button("Cancel") { store.send(.cancelDownloadTapped) }
               .tertiaryButtonStyle()
-          } else if store.model.isDownloaded == false {
+          } else if store.isDownloaded == false {
             Button("Download") { store.send(.downloadModelTapped) }
               .secondaryButtonStyle()
           } else {
@@ -135,8 +138,8 @@ struct ModelRowView: View {
           }
         }
 
-        if store.model.isDownloading {
-          ProgressView(value: store.model.downloadProgress)
+        if store.isDownloading {
+          ProgressView(value: store.progress)
         }
       }
       .foregroundColor(isSelected ? Color.DS.Text.success : Color.DS.Text.base)
@@ -195,7 +198,7 @@ extension View {
     static var previews: some View {
       ModelRowView(
         store: Store(
-          initialState: ModelRow.State(model: .fixture),
+          initialState: ModelRow.State(model: "tiny"),
           reducer: { ModelRow() }
         ),
         isSelected: false

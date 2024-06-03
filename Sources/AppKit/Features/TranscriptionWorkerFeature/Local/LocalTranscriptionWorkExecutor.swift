@@ -1,6 +1,7 @@
 import Common
 import Dependencies
 import Foundation
+import AudioProcessing
 
 // MARK: - LocalTranscriptionError
 
@@ -19,7 +20,6 @@ enum LocalTranscriptionError: Error, LocalizedError {
 
 final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
   var currentTaskID: TranscriptionTask.ID?
-  @Dependency(ModelManagement.self) var modelManagement
   @Dependency(RecordingTranscriptionStream.self) var transcriptionStream
 
   init() {}
@@ -73,7 +73,7 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
         task.recording.transcription?.status = .loading
       }
 
-      for try await modelState in try await modelManagement.loadModel(task.modelType.fileName) {
+      for try await modelState in await transcriptionStream.loadModel(task.modelType) {
         logs.debug("Model state: \(modelState)")
       }
 
@@ -89,7 +89,7 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
 
       // loop through transcription updates
 
-      for try await transcriptionState in await transcriptionStream.startFileTranscription(fileURL: fileURL) {
+      for try await transcriptionState in try await transcriptionStream.startFileTranscription(fileURL) {
         await MainActor.run {
           task.recording.transcription?.segments = transcriptionState.segments.map(\.asSimpleSegment)
           task.recording.transcription?.status = .progress(task.progress)
