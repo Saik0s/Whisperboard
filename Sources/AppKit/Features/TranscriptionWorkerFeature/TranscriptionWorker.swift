@@ -120,7 +120,11 @@ struct TranscriptionWorker: Reducer {
         return .send(.processTasks)
 
       case let .cancelTaskForRecordingID(id):
-        let isCurrent = executor.currentTaskID == id
+        let task = state.taskQueue.first { task in
+          task.recordingInfoID == id
+        }
+
+        let isCurrent = task.map { task in executor.currentTaskID == task.id } ?? false
         state.taskQueue.removeAll { $0.recordingInfoID == id }
         return isCurrent ? .cancel(id: CancelID.processing) : .none
 

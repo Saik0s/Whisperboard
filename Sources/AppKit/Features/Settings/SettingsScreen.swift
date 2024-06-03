@@ -1,10 +1,10 @@
+import AudioProcessing
 import Common
 import ComposableArchitecture
 import Inject
 import Popovers
 import SwiftUI
 import SwiftUIIntrospect
-import AudioProcessing
 import WhisperKit
 
 // MARK: - SettingsScreen
@@ -17,7 +17,7 @@ struct SettingsScreen {
     var modelSelector: ModelSelector.State
     var subscriptionSection: SubscriptionSection.State = .init()
 
-    var availableLanguages: [String] = Constants.languages.keys.sorted()
+    let availableLanguages: [String] = Constants.languages.keys.sorted()
     var appVersion: String = ""
     var buildNumber: String = ""
     var freeSpace: String = ""
@@ -34,7 +34,7 @@ struct SettingsScreen {
     var selectedModelReadableName: String { modelSelector.selectedModel }
 
     var selectedLanguageIndex: Int {
-      get { settings.voiceLanguage.map { availableLanguages.firstIndex(of: $0) } ?? 0 }
+      get { settings.voiceLanguage.flatMap { availableLanguages.firstIndex(of: $0) } ?? 0 }
       set { settings.voiceLanguage = availableLanguages[safe: newValue] }
     }
 
@@ -45,7 +45,7 @@ struct SettingsScreen {
     }
   }
 
-  enum Action: BindableAction, Equatable {
+  enum Action: BindableAction {
     case alert(PresentationAction<Alert>)
     case binding(BindingAction<State>)
     case task
@@ -129,7 +129,7 @@ struct SettingsScreen {
         return .none
 
       case .alert(.presented(.deleteDialogConfirmed)):
-        state.settings.selectedModel = .default
+        state.settings.selectedModel = WhisperKit.recommendedModels().default
         return .run { send in
           try await storage.deleteStorage()
           await send(.updateInfo)
@@ -172,7 +172,6 @@ struct SettingsScreen {
     state.freeSpace = storage.freeSpace().readableString
     state.takenSpace = storage.takenSpace().readableString
     state.takenSpacePercentage = min(1, max(0, 1 - Double(storage.freeSpace()) / Double(storage.freeSpace() + storage.takenSpace())))
-    state.availableLanguages = WhisperContext.getAvailableLanguages().identifiedArray
   }
 
   private func createDeleteConfirmationDialog(state: inout State) {

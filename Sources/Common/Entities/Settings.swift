@@ -4,7 +4,7 @@ import Foundation
 
 public struct Settings: Hashable {
   public var useMockedClients: Bool
-  public var selectedModel: String?
+  public var selectedModel: String
   public var parameters: TranscriptionParameters
   public var isICloudSyncEnabled: Bool
   public var shouldMixWithOtherAudio: Bool
@@ -19,7 +19,7 @@ public struct Settings: Hashable {
 
   public init(
     useMockedClients: Bool = false,
-    selectedModel: String? = nil,
+    selectedModel: String = "tiny",
     parameters: TranscriptionParameters = TranscriptionParameters(),
     isICloudSyncEnabled: Bool = false,
     shouldMixWithOtherAudio: Bool = false,
@@ -55,7 +55,7 @@ extension Settings: Codable {
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     useMockedClients = (try? container.decode(Bool.self, forKey: .useMockedClients)) ?? false
-    selectedModel = (try? container.decode(String?.self, forKey: .selectedModel))
+    selectedModel = (try? container.decode(String?.self, forKey: .selectedModel)) ?? "tiny"
     parameters = (try? container.decode(TranscriptionParameters.self, forKey: .parameters)) ?? TranscriptionParameters()
     isICloudSyncEnabled = (try? container.decode(Bool.self, forKey: .isICloudSyncEnabled)) ?? false
     shouldMixWithOtherAudio = (try? container.decode(Bool.self, forKey: .shouldMixWithOtherAudio)) ?? false

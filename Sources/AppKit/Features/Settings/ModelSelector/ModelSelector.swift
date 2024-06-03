@@ -22,10 +22,11 @@ struct ModelSelector {
     }
   }
 
-  enum Action: Equatable, BindableAction {
+  enum Action: BindableAction {
     case binding(BindingAction<State>)
     case modelRow(IdentifiedActionOf<ModelRow>)
     case alert(PresentationAction<Alert>)
+    case didReceiveError(Error)
 
     case reloadModels
 
@@ -40,19 +41,25 @@ struct ModelSelector {
     Reduce<State, Action> { state, action in
       switch action {
       case .reloadModels:
-        return .run(operation: reloadModels(send:))
+        return .run { send in
+          await reloadModels(send: send)
+        }
 
       case let .modelRow(.element(_, action: .loadError(message))):
         state.alert = .error(message: message)
         return .none
 
       case .modelRow(.element(_, action: .didRemoveModel)):
-        return .run(operation: reloadModels(send:))
+        return .run { send in
+          await reloadModels(send: send)
+        }
 
       case let .modelRow(.element(id, action: .selectModelTapped)):
         guard let modelRow = state.modelRows[id: id] else { return .none }
         state.selectedModel = modelRow.model
-        return .run(operation: reloadModels(send:))
+        return .run { send in
+          await reloadModels(send: send)
+        }
 
       case .modelRow:
         return .none
@@ -62,6 +69,10 @@ struct ModelSelector {
 
       case .alert:
         return .none
+
+      case let .didReceiveError(error):
+        state.alert = .error(message: error.localizedDescription)
+        return .none
       }
     }
     .forEach(\.modelRows, action: \.modelRow) {
@@ -70,12 +81,14 @@ struct ModelSelector {
     .ifLet(\.$alert, action: \.alert)
   }
 
-  private func reloadModels(send: Send<Action>) async throws {
-    let rows = try await transcriptionStream
-      .fetchModels()
-      .map { ModelRow.State(model: $0) }
-      .identifiedArray
-    await send(.set(\.modelRows, rows))
+  private func reloadModels(send: Send<Action>) async {
+    do {
+      let models = try await transcriptionStream.fetchModels()
+      let rows = models.map { ModelRow.State(model: $0.model) }.identifiedArray
+      await send(.set(\.modelRows, rows))
+    } catch {
+      await send(.didReceiveError(error))
+    }
   }
 }
 
@@ -90,7 +103,7 @@ struct ModelSelectorView: View {
         Section {
           ForEach(store.scope(state: \.modelRows, action: \.modelRow)) { modelRowStore in
             WithPerceptionTracking {
-              ModelRowView(store: modelRowStore, isSelected: store.selectedModel == modelRowStore.model.modelType)
+              ModelRowView(store: modelRowStore, isSelected: store.selectedModel == modelRowStore.model)
             }
           }
           .listRowBackground(Color.DS.Background.secondary)

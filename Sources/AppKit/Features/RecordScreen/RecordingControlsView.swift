@@ -283,11 +283,11 @@ struct RecordingControlsView: View {
     VStack(spacing: .grid(2)) {
       if let recording = store.recording {
         let liveTranscriptionState = recording.liveTranscriptionState
-        let modelState = recording.modelState
+        let modelState = recording.liveTranscriptionModelState
 
         LabeledContent {
           Text("\(modelState)")
-            .foregroundColor(modelState.is(\.completed) ? .DS.Text.base : .DS.Text.accent)
+            .foregroundColor(modelState.isSuccess ? .DS.Text.base : .DS.Text.accent)
             .textStyle(.body)
         } label: {
           Label("Model State", systemImage: "info.circle")

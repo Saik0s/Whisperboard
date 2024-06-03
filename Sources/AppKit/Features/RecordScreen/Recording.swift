@@ -3,6 +3,7 @@ import Common
 import ComposableArchitecture
 import SwiftUI
 import WhisperKit
+import Dependencies
 
 // MARK: - Recording
 
@@ -31,7 +32,7 @@ struct Recording {
       _recordingInfo = Shared(recordingInfo)
       _samples = Shared([])
       _liveTranscriptionState = Shared(.idle)
-      _liveTranscriptionModelState = Shared(.loading)
+      _liveTranscriptionModelState = Shared(.idle)
     }
   }
 
@@ -53,7 +54,7 @@ struct Recording {
     enum Alert: Hashable {}
   }
 
-  @Dependency(RecordingTranscriptionStream.self) var recordingTranscriptionStream
+  @Dependency(RecordingTranscriptionStream.self) var transcriptionStream: RecordingTranscriptionStream
 
   var body: some ReducerOf<Self> {
     BindingReducer()
@@ -72,63 +73,35 @@ struct Recording {
 
         return .run { [state] _ in
           if withLiveTranscription {
-            for try await liveState in try await recordingTranscriptionStream.startLiveTranscription(state.recordingInfo.fileURL) {
+            for try await liveState in try await transcriptionStream.startLiveTranscription(state.recordingInfo.fileURL) {
               switch liveState {
               case let .transcription(transcriptionState):
-                let confirmedText = transcriptionState.confirmedSegments
-                  .map { "- \($0.text)" }
-                  .joined()
-
-                let unconfirmedText = transcriptionState.unconfirmedSegments
-                  .map { segment in
-                    """
-                    - ID: \(segment.id)
-                      Seek: \(segment.seek)
-                      Start: \(segment.start)
-                      End: \(segment.end)
-                      Text: \(segment.text)
-                    """
-                  }
-                  .joined()
-
-                let completeTranscription = """
-                currentFallbacks: \(transcriptionState.currentFallbacks)
-                lastBufferSize: \(transcriptionState.lastBufferSize)
-                lastConfirmedSegmentEndSeconds: \(transcriptionState.lastConfirmedSegmentEndSeconds)
-                ---
-                Confirmed:
-                \(confirmedText)
-                Unconfirmed:
-                \(unconfirmedText)
-                """
-                state.$liveTranscriptionState.wrappedValue = .transcribing(completeTranscription)
+                state.$liveTranscriptionState.wrappedValue = .transcribing(transcriptionState.asCompleteTranscription)
 
                 if state.$recordingInfo.wrappedValue.transcription == nil {
                   @Shared(.settings) var settings: Settings
                   state.$recordingInfo.wrappedValue.transcription = Transcription(
-                    id: UUID(),
                     fileName: state.recordingInfo.fileName,
                     parameters: settings.parameters,
-                    model: settings.selectedModel ?? recordingTranscriptionStream.defaultModel
+                    model: settings.selectedModel
                   )
                 }
 
-                let rawSegments = transcriptionState.confirmedSegments + transcriptionState.unconfirmedSegments
-                let transcriptionSegments: [Segment] = rawSegments.map(\.asSimpleSegment)
+                let transcriptionSegments: [Segment] = transcriptionState.segments.map(\.asSimpleSegment)
 
-                state.recordingInfo.wrappedValue.transcription?.segments = transcriptionSegments
-                state.liveTranscriptionModelState.wrappedValue = transcriptionState.modelState.asModelLoadingStage(progress: state.loadingProgressValue)
+                state.$recordingInfo.wrappedValue.transcription?.segments = transcriptionSegments
+                state.$liveTranscriptionModelState.wrappedValue = transcriptionState.modelState.asModelLoadingStage(progress: Double(transcriptionState.loadingProgressValue))
 
               case let .recording(recordingState):
-                state.recordingInfo.wrappedValue.duration = recordingState.duration
-                state.samples.wrappedValue = recordingState.waveSamples
+                state.$recordingInfo.wrappedValue.duration = recordingState.duration
+                state.$samples.wrappedValue = recordingState.waveSamples
               }
             }
           } else {
-            for try await recordingState in try await recordingTranscriptionStream
-              .startRecordingWithoutTranscription(fileURL: state.recordingInfo.fileURL) {
-              state.recordingInfo.wrappedValue.duration = recordingState.duration
-              state.samples.wrappedValue = recordingState.waveSamples
+            for try await recordingState in try await transcriptionStream
+              .startRecordingWithoutTranscription(state.recordingInfo.fileURL) {
+              state.$recordingInfo.wrappedValue.duration = recordingState.duration
+              state.$samples.wrappedValue = recordingState.waveSamples
             }
           }
         } catch: { error, send in
@@ -140,8 +113,8 @@ struct Recording {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         state.mode = .encoding
 
-        return .run { [recordingTranscriptionStream, state] send in
-          await recordingTranscriptionStream.stopRecording()
+        return .run { [state] send in
+          await transcriptionStream.stopRecording()
           await send(.delegate(.didFinish(.success(state))))
         }
 
@@ -149,24 +122,24 @@ struct Recording {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         state.mode = .paused
 
-        return .run { [recordingTranscriptionStream] _ in
-          await recordingTranscriptionStream.pauseRecording()
+        return .run { _ in
+          await transcriptionStream.pauseRecording()
         }
 
       case .continueButtonTapped:
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         state.mode = .recording
 
-        return .run { [recordingTranscriptionStream] _ in
-          await recordingTranscriptionStream.resumeRecording()
+        return .run { _ in
+          await transcriptionStream.resumeRecording()
         }
 
       case .deleteButtonTapped:
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         state.mode = .removing
 
-        return .run { [recordingTranscriptionStream, state] send in
-          await recordingTranscriptionStream.stopRecording()
+        return .run { [state] send in
+          await transcriptionStream.stopRecording()
           try? FileManager.default.removeItem(at: state.recordingInfo.fileURL)
           await send(.delegate(.didCancel))
         }
