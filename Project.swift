@@ -166,6 +166,7 @@ let project = Project(
     ]
     : isDev
       ? [
+        createAppTarget(suffix: "", scripts: [], dependencies: []),
         createAppTarget(
           suffix: "Dev",
           scripts:
