@@ -1,4 +1,6 @@
 import AsyncAlgorithms
+import AudioProcessing
+import Common
 import ComposableArchitecture
 import Inject
 import SwiftUI
@@ -9,82 +11,83 @@ import SwiftUI
 struct ModelRow {
   @ObservableState
   struct State: Equatable, Identifiable {
-    var id: VoiceModel.ID { model.id }
-    var model: VoiceModel
+    var id: String { model }
+    var model: String
     var isRemovingModel = false
+    var progress: Double = 0
+    var isDownloaded: Bool { progress == 1 }
+    var isDownloading: Bool { progress < 0.99 && progress > 0.01 }
   }
 
   enum Action: Equatable {
     case downloadModelTapped
     case selectModelTapped
-    case modelUpdated(VoiceModel)
+    case modelUpdated(progress: Double)
     case loadError(String)
     case deleteModelTapped
     case cancelDownloadTapped
-    case didRemoveModel
+    case didRemoveModel(Result<Void, EquatableError>)
   }
 
-  @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
-
   struct CancelDownloadID: Hashable {}
+
+  @Dependency(RecordingTranscriptionStream.self) var recordingTranscriptionStream
 
   var body: some Reducer<State, Action> {
     Reduce<State, Action> { state, action in
       switch action {
       case .downloadModelTapped:
-        guard !state.model.isDownloading else { return .none }
-        state.model.isDownloading = true
+        guard !state.isDownloading else { return .none }
 
-        return .run { [modelType = state.model.modelType] send in
-          var lastProgressUpdate = Date()
-          for try await downloadState in await modelDownload.downloadModel(modelType) {
+        state.progress = 0.01
+
+        return .run { [model = state.model] send in
+          for await downloadState in recordingTranscriptionStream.loadModel(model) {
             switch downloadState {
-            case let .inProgress(progress):
-              let now = Date()
-              if now.timeIntervalSince(lastProgressUpdate) > 0.1 {
-                lastProgressUpdate = now
-                await send(.modelUpdated(VoiceModel(modelType: modelType, downloadProgress: progress, isDownloading: true)))
-              }
+            case let .inProgress(progress, _):
+               await send(.modelUpdated(progress: progress))
 
             case .success:
-              await send(.modelUpdated(VoiceModel(modelType: modelType, downloadProgress: 1, isDownloading: false)))
+              await send(.modelUpdated(progress: 1))
               await send(.selectModelTapped)
 
-            case let .failure(error):
+            case let .failure(error, _):
               await send(.loadError(error.localizedDescription))
             }
           }
-        } catch: { error, send in
-          await send(.loadError(error.localizedDescription))
         }.cancellable(id: CancelDownloadID(), cancelInFlight: true)
 
       case .selectModelTapped:
         return .none
 
-      case let .modelUpdated(model):
-        state.model = model
+      case let .modelUpdated(progress):
+        state.progress = progress
         return .none
 
       case .deleteModelTapped:
-        guard state.model.isDownloaded else { return .none }
+        guard state.isDownloaded else { return .none }
 
         state.isRemovingModel = true
-        return .run { [modelType = state.model.modelType] send in
-          modelDownload.deleteModel(modelType)
-          await send(.didRemoveModel)
+        return .run { [model = state.model] send in
+          await send(.didRemoveModel(Result { try await recordingTranscriptionStream.deleteModel(model) }.mapError { $0.equatable() }))
         }
 
-      case .didRemoveModel:
+      case .didRemoveModel(.success):
+        state.isRemovingModel = false
+        return .none
+
+      case let .didRemoveModel(.failure(error)):
+        logs.error("Failed to remove model: \(error)")
         state.isRemovingModel = false
         return .none
 
       case let .loadError(error):
         logs.error("Failed to download model: \(error)")
-        state.model.isDownloading = false
+        state.progress = 0
         return .none
 
       case .cancelDownloadTapped:
-        state.model.isDownloading = false
+        state.progress = 0
         return .cancel(id: CancelDownloadID())
       }
     }
@@ -106,21 +109,21 @@ struct ModelRowView: View {
         HStack(spacing: .grid(2)) {
           VStack(alignment: .leading, spacing: .grid(1)) {
             VStack(alignment: .leading, spacing: 0) {
-              Text(store.model.modelType.readableName)
+              Text(store.model)
                 .textStyle(.headline)
-
-              Text(store.model.modelType.sizeLabel)
-                .textStyle(.subheadline)
+//              Text(store.model.modelType.sizeLabel)
+//                .textStyle(.subheadline)
             }
 
-            Text(store.model.modelType.modelDescription)
-              .textStyle(.captionBase)
+            // TODO: description
+//            Text(store.model.modelType.modelDescription)
+//              .textStyle(.captionBase)
           }
           .frame(maxWidth: .infinity, alignment: .leading)
 
           if store.isRemovingModel {
             ProgressView()
-          } else if store.model.isDownloading {
+          } else if store.isDownloading {
             Button("Cancel") { store.send(.cancelDownloadTapped) }
               .tertiaryButtonStyle()
           } else if store.model.isDownloaded == false {
@@ -139,7 +142,7 @@ struct ModelRowView: View {
       .foregroundColor(isSelected ? Color.DS.Text.success : Color.DS.Text.base)
       .contentShape(Rectangle())
       .onTapGesture { store.send(.selectModelTapped) }
-      .contextMenu(store.model.isDownloaded && store.model.modelType != .tiny ? contextMenuBuilder() : nil)
+      .contextMenu(store.isDownloaded ? contextMenuBuilder() : nil)
     }
     .enableInjection()
   }

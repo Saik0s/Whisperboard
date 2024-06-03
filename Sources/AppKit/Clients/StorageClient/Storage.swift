@@ -1,12 +1,11 @@
 import Combine
+import Common
 import ComposableArchitecture
 import Dependencies
 import Foundation
 import UIKit
 
 final class Storage {
-  static var recordingsDirectoryURL: URL { .documentsDirectory }
-
   static var containerGroupURL: URL? {
     let appGroupName = "group.whisperboard"
     return FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName)?.appending(component: "share")
@@ -34,11 +33,11 @@ final class Storage {
     storedRecordings = try await updateDurations(storedRecordings)
 
     // If there are files in shared container, move them to the documents directory
-    await storedRecordings.append(contentsOf: moveSharedFiles(to: Self.recordingsDirectoryURL))
+    await storedRecordings.append(contentsOf: moveSharedFiles(to: Configs.recordingsDirectoryURL))
 
     // Get the files in the documents directory with the .wav extension
     let recordingFiles = try FileManager.default
-      .contentsOfDirectory(atPath: Self.recordingsDirectoryURL.path)
+      .contentsOfDirectory(atPath: Configs.recordingsDirectoryURL.path)
       .filter { $0.hasSuffix(".wav") }
       // Remove the currently recording file from the list until it is finished
       .filter { $0 != currentlyRecordingURL?.lastPathComponent }
@@ -102,7 +101,7 @@ final class Storage {
   }
 
   private func createInfo(fileName: String) async throws -> RecordingInfo {
-    let docURL = Self.recordingsDirectoryURL
+    let docURL = Configs.recordingsDirectoryURL
     let fileURL = docURL.appending(component: fileName)
     let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
     let date = attributes[.creationDate] as? Date ?? Date()

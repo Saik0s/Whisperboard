@@ -122,7 +122,7 @@ public extension String {
     return word
   }
 
-  public static func randomSentence(wordsCount: Int = 10, firstCapital: Bool = true, addPeriod: Bool = true) -> String {
+  static func randomSentence(wordsCount: Int = 10, firstCapital: Bool = true, addPeriod: Bool = true) -> String {
     var sentence = (0 ..< wordsCount)
       .map { _ in String.randomWord(length: .random(in: 2 ... 10)) }
       .joined(separator: " ")

@@ -1,8 +1,11 @@
+import Common
 import ComposableArchitecture
 import Inject
 import Popovers
 import SwiftUI
 import SwiftUIIntrospect
+import AudioProcessing
+import WhisperKit
 
 // MARK: - SettingsScreen
 
@@ -14,7 +17,7 @@ struct SettingsScreen {
     var modelSelector: ModelSelector.State
     var subscriptionSection: SubscriptionSection.State = .init()
 
-    var availableLanguages: IdentifiedArrayOf<VoiceLanguage> = []
+    var availableLanguages: [String] = Constants.languages.keys.sorted()
     var appVersion: String = ""
     var buildNumber: String = ""
     var freeSpace: String = ""
@@ -28,11 +31,11 @@ struct SettingsScreen {
 
     @Presents var alert: AlertState<Action.Alert>?
 
-    var selectedModelReadableName: String { modelSelector.selectedModel.readableName }
+    var selectedModelReadableName: String { modelSelector.selectedModel }
 
     var selectedLanguageIndex: Int {
-      get { availableLanguages.firstIndex(of: settings.voiceLanguage) ?? 0 }
-      set { settings.voiceLanguage = availableLanguages[newValue] }
+      get { settings.voiceLanguage.map { availableLanguages.firstIndex(of: $0) } ?? 0 }
+      set { settings.voiceLanguage = availableLanguages[safe: newValue] }
     }
 
     init() {

@@ -1,3 +1,5 @@
+import AudioProcessing
+import Common
 import ComposableArchitecture
 import Foundation
 import Inject
@@ -13,9 +15,9 @@ struct ModelSelector {
 
     @Presents var alert: AlertState<Action.Alert>?
 
-    @Shared var selectedModel: VoiceModelType
+    @Shared var selectedModel: String
 
-    init(selectedModel: Shared<VoiceModelType>) {
+    init(selectedModel: Shared<String>) {
       _selectedModel = selectedModel
     }
   }
@@ -30,7 +32,7 @@ struct ModelSelector {
     enum Alert: Equatable {}
   }
 
-  @Dependency(\.modelDownload) var modelDownload: ModelDownloadClient
+  @Dependency(RecordingTranscriptionStream.self) var transcriptionStream: RecordingTranscriptionStream
 
   var body: some Reducer<State, Action> {
     BindingReducer()
@@ -38,22 +40,19 @@ struct ModelSelector {
     Reduce<State, Action> { state, action in
       switch action {
       case .reloadModels:
-        reloadModels(state: &state)
-        return .none
+        return .run(operation: reloadModels(send:))
 
       case let .modelRow(.element(_, action: .loadError(message))):
         state.alert = .error(message: message)
         return .none
 
       case .modelRow(.element(_, action: .didRemoveModel)):
-        reloadModels(state: &state)
-        return .none
+        return .run(operation: reloadModels(send:))
 
       case let .modelRow(.element(id, action: .selectModelTapped)):
         guard let modelRow = state.modelRows[id: id] else { return .none }
-        state.selectedModel = modelRow.model.modelType
-        reloadModels(state: &state)
-        return .none
+        state.selectedModel = modelRow.model
+        return .run(operation: reloadModels(send:))
 
       case .modelRow:
         return .none
@@ -71,8 +70,12 @@ struct ModelSelector {
     .ifLet(\.$alert, action: \.alert)
   }
 
-  private func reloadModels(state: inout State) {
-    state.modelRows = modelDownload.getModels().map { ModelRow.State(model: $0) }.identifiedArray
+  private func reloadModels(send: Send<Action>) async throws {
+    let rows = try await transcriptionStream
+      .fetchModels()
+      .map { ModelRow.State(model: $0) }
+      .identifiedArray
+    await send(.set(\.modelRows, rows))
   }
 }
 

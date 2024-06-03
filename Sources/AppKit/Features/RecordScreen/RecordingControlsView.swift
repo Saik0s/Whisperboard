@@ -1,3 +1,5 @@
+import AudioProcessing
+import Common
 import ComposableArchitecture
 import DSWaveformImage
 import DSWaveformImageViews
@@ -5,7 +7,6 @@ import Foundation
 import Inject
 import Popovers
 import SwiftUI
-import AudioProcessing
 
 // MARK: - RecordingControls
 
@@ -41,7 +42,7 @@ struct RecordingControls {
     case goToNewRecordingButtonTapped
   }
 
-  @Dependency(\.audioRecorder.requestRecordPermission) var requestRecordPermission
+  @Dependency(\.audioSession.requestRecordPermission) var requestRecordPermission
   @Dependency(\.openSettings) var openSettings
   @Dependency(\.date) var date
   @Dependency(\.continuousClock) var clock
@@ -282,7 +283,7 @@ struct RecordingControlsView: View {
     VStack(spacing: .grid(2)) {
       if let recording = store.recording {
         let liveTranscriptionState = recording.liveTranscriptionState
-        let modelState = recording.liveTranscriptionModelState
+        let modelState = recording.modelState
 
         LabeledContent {
           Text("\(modelState)")

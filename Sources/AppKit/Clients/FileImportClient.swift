@@ -35,16 +35,16 @@ extension FileImportClient: DependencyKey {
         let converter = FormatConverter(inputURL: from, outputURL: to, options: options)
         let semaphore = DispatchSemaphore(value: 0)
         var thrownError: Error?
-        
+
         converter.start { error in
           if let error {
             thrownError = error
           }
           semaphore.signal()
         }
-        
+
         semaphore.wait()
-        
+
         if let error = thrownError {
           throw error
         }

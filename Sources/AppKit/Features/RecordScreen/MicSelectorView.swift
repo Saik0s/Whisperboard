@@ -1,4 +1,6 @@
+import AudioProcessing
 import AVFoundation
+import Common
 import ComposableArchitecture
 import Inject
 import SwiftUI
@@ -29,7 +31,7 @@ struct MicSelector {
     enum Alert: Equatable {}
   }
 
-  @Dependency(\.audioRecorder) var audioRecorder: AudioRecorderClient
+  @Dependency(\.audioSession) var audioSession: AudioSessionClient
 
   var body: some Reducer<State, Action> {
     BindingReducer()
@@ -38,7 +40,7 @@ struct MicSelector {
       switch action {
       case .task:
         return .run { send in
-          for await mics in try await audioRecorder.availableMicrophones() {
+          for await mics in try audioSession.availableMicrophones() {
             logs.debug("Available microphones: \(mics)")
             await send(.micsUpdated(mics))
           }
@@ -53,7 +55,7 @@ struct MicSelector {
 
       case .checkCurrentMic:
         return .run { send in
-          let mic = try await audioRecorder.currentMicrophone()
+          let mic = audioSession.currentMicrophone()
           await send(.setCurrentMic(mic))
         } catch: { error, send in
           logs.error("Error while fetching current microphone: \(error)")
@@ -66,7 +68,7 @@ struct MicSelector {
 
       case let .micSelected(mic):
         return .run { send in
-          try await audioRecorder.setMicrophone(mic)
+          try audioSession.selectMicrophone(mic)
           await send(.setCurrentMic(mic))
         } catch: { error, send in
           logs.error("Error while setting microphone: \(error)")
