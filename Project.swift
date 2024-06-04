@@ -14,6 +14,8 @@ let additionalCondition = isAppStore ? "APPSTORE" : isDev ? "DEV" : ""
 
 let isRevealSupported = FileManager.default.fileExists(atPath: "App/Support/Reveal/RevealServer.xcframework") && !isAppStore
 print("RevealServer.xcframework is \(isRevealSupported ? "supported" : "not supported")")
+let isEttraceSupported = FileManager.default.fileExists(atPath: "App/Support/ETTrace.xcframework") && !isAppStore
+print("RevealServer.xcframework is \(isEttraceSupported ? "supported" : "not supported")")
 
 var appInfoPlist: [String: Plist.Value] = [
   "CFBundleShortVersionString": Plist.Value(stringLiteral: version),
@@ -103,9 +105,9 @@ func createAppTarget(suffix: String = "", scripts: [TargetScript] = [], dependen
     entitlements: "App/Support/app.entitlements",
     scripts: scripts,
 
-    dependencies: [.target(name: "WhisperBoardKit")] 
-    + (suffix.isEmpty ? [.target(name: "ShareExtension")] : [])
-    + dependencies,
+    dependencies: [.target(name: "WhisperBoardKit")]
+      + (suffix.isEmpty ? [.target(name: "ShareExtension")] : [])
+      + dependencies,
 
     settings: .settings(
       base: [
@@ -129,9 +131,8 @@ let project = Project(
     )
   ),
 
-  packages: []
-    + (isAppStore ? [.package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0")] : [])
-    + (isDev ? [.package(url: "https://github.com/EmergeTools/ETTrace.git", from: "1.0.0")] : []),
+  packages: [
+  ] + (isAppStore ? [.package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0")] : []),
 
   settings: .settings(
     base: [
@@ -176,6 +177,11 @@ let project = Project(
               basedOnDependencyAnalysis: false
             ),
             .post(
+              script: "periphery scan",
+              name: "Periphery",
+              basedOnDependencyAnalysis: false
+            ),
+            .post(
               script: """
               export REVEAL_SERVER_FILENAME="RevealServer.xcframework"
               export REVEAL_SERVER_PATH="${SRCROOT}/App/Support/Reveal/${REVEAL_SERVER_FILENAME}"
@@ -190,9 +196,10 @@ let project = Project(
               basedOnDependencyAnalysis: false
             ),
           ],
-          dependencies: [.package(product: "ETTrace")]
+          dependencies: []
             // Check if RevealServer framework exists at this path and only then include it in this array of dependencies
             + (isRevealSupported ? [.xcframework(path: "//App/Support/Reveal/RevealServer.xcframework", status: .optional)] : [])
+            + (isEttraceSupported ? [.xcframework(path: "//App/Support/ETTrace.xcframework", status: .optional)] : [])
         ),
       ]
       : [
@@ -277,7 +284,6 @@ let project = Project(
 
         .target(name: "Common"),
         .target(name: "AudioProcessing"),
-
       ] + (isAppStore ? [.package(product: "RollbarNotifier")] : []),
       settings: .settings(
         base: [

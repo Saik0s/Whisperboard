@@ -2,7 +2,6 @@ import Common
 import ComposableArchitecture
 import Inject
 import SwiftUI
-import VariableBlurView
 
 // MARK: - RecordingDetails
 

@@ -4,7 +4,6 @@ import Inject
 import Lottie
 import Popovers
 import SwiftUI
-import VariableBlurView
 
 // MARK: - SubscriptionSection
 

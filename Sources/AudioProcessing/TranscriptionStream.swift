@@ -460,7 +460,7 @@ public extension TranscriptionStream.State {
   var segments: [TranscriptionSegment] {
     confirmedSegments + unconfirmedSegments
   }
-  
+
   var asCompleteTranscription: String {
     let confirmedText = confirmedSegments
       .map { "- \($0.text)" }

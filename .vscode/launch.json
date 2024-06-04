@@ -31,28 +31,13 @@
       "iosTarget": "4CD877BE-99FF-47FA-926D-63CAE7B65C84"
     },
     {
+      "name": "Launch and Debug",
       "type": "lldb",
       "request": "launch",
-      "sourceLanguages": [
-        "swift"
-      ],
-      "args": [],
-      "cwd": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-composable-architecture",
-      "name": "Debug swift-composable-architecture-benchmark (.build/checkouts/swift-composable-architecture)",
-      "program": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-composable-architecture/.build/debug/swift-composable-architecture-benchmark",
-      "preLaunchTask": "swift: Build Debug swift-composable-architecture-benchmark (.build/checkouts/swift-composable-architecture)"
-    },
-    {
-      "type": "lldb",
-      "request": "launch",
-      "sourceLanguages": [
-        "swift"
-      ],
-      "args": [],
-      "cwd": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-composable-architecture",
-      "name": "Release swift-composable-architecture-benchmark (.build/checkouts/swift-composable-architecture)",
-      "program": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-composable-architecture/.build/release/swift-composable-architecture-benchmark",
-      "preLaunchTask": "swift: Build Release swift-composable-architecture-benchmark (.build/checkouts/swift-composable-architecture)"
+      "program": "${workspaceFolder}/build/Debug-${command:ios-debug.targetSdk}/WhisperBoard.app",
+      "iosBundleId": "me.igortarasenko.Whisperboard",
+      "iosTarget": "select",
+      "preLaunchTask": "${defaultBuildTask}"
     }
   ]
 }

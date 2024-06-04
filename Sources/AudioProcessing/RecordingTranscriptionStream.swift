@@ -204,7 +204,7 @@ private final class RecordingTranscriptionStreamContainer {
         isDownloaded: state.localModels.contains(model),
         isSelected: state.selectedModel == model
       )
-    }
+    }.sorted(by: { $0.model < $1.model })
   }
 
   func loadModel(_ model: String) -> AsyncStream<ModelLoadingStage> {
@@ -216,21 +216,21 @@ private final class RecordingTranscriptionStreamContainer {
         guard let self else { return }
 
         while true {
-          let state = await self.transcriptionStream.state
+          let state = await transcriptionStream.state
           continuation.yield(.inProgress(Double(state.loadingProgressValue), state.modelState))
           try await Task.sleep(for: .seconds(0.3))
         }
       }
 
       do {
-        try await self.transcriptionStream.loadModel(model)
+        try await transcriptionStream.loadModel(model)
         task.cancel()
-        let state = await self.transcriptionStream.state
+        let state = await transcriptionStream.state
         continuation.yield(.success(state.modelState))
       } catch {
         logs.error("Failed to load model \(error)")
         task.cancel()
-        let state = await self.transcriptionStream.state
+        let state = await transcriptionStream.state
         continuation.yield(.failure(error.equatable, state.modelState))
       }
 
@@ -256,8 +256,8 @@ public enum ModelLoadingStage: Equatable {
 public extension ModelLoadingStage {
   var isSuccess: Bool {
     switch self {
-    case .success(_): return true
-    default: return false
+    case .success: true
+    default: false
     }
   }
 }

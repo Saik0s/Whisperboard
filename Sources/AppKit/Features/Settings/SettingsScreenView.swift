@@ -194,11 +194,13 @@ struct StorageSectionView: View {
             }
 
             GeometryReader { geometry in
-              HStack(spacing: 0) {
-                LinearGradient.easedGradient(colors: [.systemPurple, .systemOrange], startPoint: .bottomLeading, endPoint: .topTrailing)
-                  .frame(width: geometry.size.width * store.takenSpacePercentage)
+              WithPerceptionTracking {
+                HStack(spacing: 0) {
+                  LinearGradient.easedGradient(colors: [.systemPurple, .systemOrange], startPoint: .bottomLeading, endPoint: .topTrailing)
+                    .frame(width: geometry.size.width * store.takenSpacePercentage)
 
-                Color.DS.Background.tertiary
+                  Color.DS.Background.tertiary
+                }
               }
             }
             .frame(height: .grid(4)).continuousCornerRadius(.grid(1))
