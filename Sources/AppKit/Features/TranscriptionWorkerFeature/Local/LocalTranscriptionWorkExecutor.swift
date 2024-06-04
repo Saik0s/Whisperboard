@@ -1,7 +1,7 @@
+import AudioProcessing
 import Common
 import Dependencies
 import Foundation
-import AudioProcessing
 
 // MARK: - LocalTranscriptionError
 

@@ -1,9 +1,9 @@
 import AudioProcessing
 import Common
 import ComposableArchitecture
+import Dependencies
 import SwiftUI
 import WhisperKit
-import Dependencies
 
 // MARK: - Recording
 
@@ -90,7 +90,8 @@ struct Recording {
                 let transcriptionSegments: [Segment] = transcriptionState.segments.map(\.asSimpleSegment)
 
                 state.$recordingInfo.wrappedValue.transcription?.segments = transcriptionSegments
-                state.$liveTranscriptionModelState.wrappedValue = transcriptionState.modelState.asModelLoadingStage(progress: Double(transcriptionState.loadingProgressValue))
+                state.$liveTranscriptionModelState.wrappedValue = transcriptionState.modelState
+                  .asModelLoadingStage(progress: Double(transcriptionState.loadingProgressValue))
 
               case let .recording(recordingState):
                 state.$recordingInfo.wrappedValue.duration = recordingState.duration

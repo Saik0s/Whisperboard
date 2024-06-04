@@ -87,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kean/pulse.git",
       "state" : {
-        "revision" : "b7982a03165ebcc63f2e70236cc674d4e4dd3dc9",
-        "version" : "4.2.2"
+        "revision" : "2d37916b14718f7b654606d72f6cf23f299dc47a",
+        "version" : "4.2.3"
       }
     },
     {
@@ -222,8 +222,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-perception",
       "state" : {
-        "revision" : "9b77fbd07b9529312f7e9adb10f5131acd9e2363",
-        "version" : "1.2.0"
+        "revision" : "64f7f6c28c6a4d3c4b9da2ba02383e29ab48a8cf",
+        "version" : "1.2.2"
       }
     },
     {

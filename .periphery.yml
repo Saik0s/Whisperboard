@@ -4,10 +4,13 @@ targets:
   - WhisperBoardKit
   - WhisperBoard
   - ShareExtension
-verbose: true
+  - Common
+  - AudioProcessing
+verbose: false
 workspace: WhisperBoard.xcworkspace
 report_exclude:
   - App/Derived/*
   - Tuist/*
   - build/*
   - Sources/AppKit/Clients/Secrets.swift
+  - Derived/*

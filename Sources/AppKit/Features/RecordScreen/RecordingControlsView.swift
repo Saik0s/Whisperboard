@@ -159,8 +159,8 @@ struct RecordingControlsView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         } else {
           GeometryReader { geometry in
-            ScrollView(.horizontal) {
-              WithPerceptionTracking {
+            WithPerceptionTracking {
+              ScrollView(.horizontal) {
                 LazyHStack(spacing: 1) {
                   let startIndex = max(bufferEnergy.count - 300, 0)
                   ForEach(bufferEnergy[startIndex...], id: \.self) { energy in
@@ -169,12 +169,12 @@ struct RecordingControlsView: View {
                       .frame(width: 2, height: CGFloat(energy) * geometry.size.height)
                       .transition(.scale(scale: 0).combined(with: .opacity).animation(.bouncy))
                   }
-                }
-              }.id(1)
+                }.id(1)
+              }
+              .scrollAnchor(id: 1, valueToTrack: bufferEnergy.count, anchor: .trailing)
+              .frame(height: 24)
+              .scrollIndicators(.never)
             }
-            .scrollAnchor(id: 1, valueToTrack: bufferEnergy.count, anchor: .trailing)
-            .frame(height: 24)
-            .scrollIndicators(.never)
           }
           .frame(maxHeight: .infinity)
 //          WaveformLiveCanvas(samples: store.recording?.samples ?? [], configuration: Waveform.Configuration(

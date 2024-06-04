@@ -39,9 +39,9 @@ struct SettingsScreen {
     }
 
     init() {
-      let settings = Shared(wrappedValue: Settings(), .settings)
-      _settings = settings
-      modelSelector = ModelSelector.State(selectedModel: settings.selectedModel)
+      @Shared(.settings) var settings: Settings
+      self._settings = _settings
+      modelSelector = ModelSelector.State(selectedModel: _settings.selectedModel)
     }
   }
 

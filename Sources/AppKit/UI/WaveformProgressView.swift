@@ -1,9 +1,9 @@
+import Common
 import ComposableArchitecture
 import DSWaveformImage
 import DSWaveformImageViews
 import Inject
 import SwiftUI
-import Common
 
 // MARK: - WaveformProgressError
 
