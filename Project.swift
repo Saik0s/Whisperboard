@@ -103,10 +103,9 @@ func createAppTarget(suffix: String = "", scripts: [TargetScript] = [], dependen
     entitlements: "App/Support/app.entitlements",
     scripts: scripts,
 
-    dependencies: [
-      .target(name: "ShareExtension"),
-      .target(name: "WhisperBoardKit"),
-    ] + dependencies,
+    dependencies: [.target(name: "WhisperBoardKit")] 
+    + (suffix.isEmpty ? [.target(name: "ShareExtension")] : [])
+    + dependencies,
 
     settings: .settings(
       base: [
