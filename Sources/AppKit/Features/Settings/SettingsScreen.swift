@@ -13,8 +13,8 @@ import WhisperKit
 struct SettingsScreen {
   @ObservableState
   struct State: Equatable {
-    @Shared var settings: Settings
-    var modelSelector: ModelSelector.State
+    @Shared(.settings) var settings: Settings
+    var modelSelector: ModelSelector.State = .init()
     var subscriptionSection: SubscriptionSection.State = .init()
 
     let availableLanguages: [String] = Constants.languages.keys.sorted()
@@ -31,18 +31,12 @@ struct SettingsScreen {
 
     @Presents var alert: AlertState<Action.Alert>?
 
-    var selectedModelReadableName: String { modelSelector.selectedModel }
-
     var selectedLanguageIndex: Int {
       get { settings.voiceLanguage.flatMap { availableLanguages.firstIndex(of: $0) } ?? 0 }
       set { settings.voiceLanguage = availableLanguages[safe: newValue] }
     }
 
-    init() {
-      @Shared(.settings) var settings: Settings
-      self._settings = _settings
-      modelSelector = ModelSelector.State(selectedModel: _settings.selectedModel)
-    }
+    init() {}
   }
 
   enum Action: BindableAction {
@@ -111,7 +105,6 @@ struct SettingsScreen {
 
       case .updateInfo:
         updateInfo(state: &state)
-        state.modelSelector.modelRows = []
         return .send(.modelSelector(.reloadModels))
 
       case .openGitHub:
@@ -129,7 +122,7 @@ struct SettingsScreen {
         return .none
 
       case .alert(.presented(.deleteDialogConfirmed)):
-        state.settings.selectedModel = WhisperKit.recommendedModels().default
+        state.settings.selectedModelName = WhisperKit.recommendedModels().default
         return .run { send in
           try await storage.deleteStorage()
           await send(.updateInfo)

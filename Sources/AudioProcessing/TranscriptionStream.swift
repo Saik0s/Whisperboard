@@ -39,6 +39,7 @@ public actor TranscriptionStream {
     public var decoderComputeUnits: MLComputeUnits = .cpuAndNeuralEngine
 
     public var modelState: ModelState = .unloaded
+    public var remoteModels: [String] = []
     public var localModels: [String] = []
     public var localModelPath: String = ""
     public var availableModels: [String] = []
@@ -115,8 +116,8 @@ public actor TranscriptionStream {
       }
     }
 
-    let remoteModels = try await WhisperKit.fetchAvailableModels(from: state.repoName)
-    for model in remoteModels {
+    state.remoteModels = try await WhisperKit.fetchAvailableModels(from: state.repoName)
+    for model in state.remoteModels {
       if !state.availableModels.contains(model) {
         state.availableModels.append(model)
       }

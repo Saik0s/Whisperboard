@@ -155,8 +155,9 @@ struct RecordingControlsView: View {
     WithPerceptionTracking {
       VStack(spacing: .grid(3)) {
         if store.isLiveTranscriptionEnabled {
-          liveTranscriptionView()
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+          if let recording = store.recording {
+            liveTranscriptionView(recording)
+          }
         } else {
           GeometryReader { geometry in
             WithPerceptionTracking {
@@ -177,6 +178,7 @@ struct RecordingControlsView: View {
             }
           }
           .frame(maxHeight: .infinity)
+
 //          WaveformLiveCanvas(samples: store.recording?.samples ?? [], configuration: Waveform.Configuration(
 //            backgroundColor: .clear,
 //            style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
@@ -279,18 +281,16 @@ struct RecordingControlsView: View {
   }
 
   @ViewBuilder
-  private func liveTranscriptionView() -> some View {
+  private func liveTranscriptionView(_ recording: Recording.State) -> some View {
     VStack(spacing: .grid(2)) {
-      if let recording = store.recording {
-        let liveTranscriptionState = recording.liveTranscriptionState
-        let modelState = recording.liveTranscriptionModelState
-
+      switch recording.liveTranscriptionState {
+      case let .modelLoading(progress):
         LabeledContent {
-          Text("\(modelState)")
-            .foregroundColor(modelState.isSuccess ? .DS.Text.base : .DS.Text.accent)
+          Text("\(Int(progress * 100)) %")
+            .foregroundColor(.DS.Text.base)
             .textStyle(.body)
         } label: {
-          Label("Model State", systemImage: "info.circle")
+          Label("Model Loading", systemImage: "info.circle")
             .foregroundColor(.DS.Text.base)
             .textStyle(.body)
         }
@@ -298,49 +298,29 @@ struct RecordingControlsView: View {
         .cardStyle()
         .fixedSize(horizontal: true, vertical: true)
 
-        Picker("View Mode", selection: $store.transcriptionViewMode) {
-          Text("Simple").tag(RecordingControls.State.TranscriptionViewMode.simple)
-          Text("Technical").tag(RecordingControls.State.TranscriptionViewMode.technical)
-        }
-        .pickerStyle(SegmentedPickerStyle())
-        .padding(.grid(4))
+      case let .transcribing(text):
+        ScrollView(showsIndicators: false) {
+          Text(recording.recordingInfo.text)
+            .foregroundColor(.DS.Text.base)
+            .textStyle(.body)
+            .lineLimit(nil)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, .grid(2))
+            .padding(.horizontal, .grid(4))
 
-        if store.transcriptionViewMode == .simple {
-          ScrollView(showsIndicators: false) {
-            Text(recording.recordingInfo.text)
-              .foregroundColor(.DS.Text.base)
-              .textStyle(.body)
-              .lineLimit(nil)
-              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-              .padding(.vertical, .grid(2))
-              .padding(.horizontal, .grid(4))
-          }
-        } else {
-          if case let .loading(text) = liveTranscriptionState {
-            HStack {
-              ProgressView()
-                .progressViewStyle(.circular)
-
-              Text(text)
-                .foregroundColor(.DS.Text.subdued)
-                .textStyle(.body)
-            }
-          } else if case let .error(text) = liveTranscriptionState {
+          #if DEBUG
             Text(text)
-              .foregroundColor(.DS.Text.error)
-              .textStyle(.bodyBold)
-          } else if case let .transcribing(text) = liveTranscriptionState {
-            ScrollView(showsIndicators: false) {
-              Text(text)
-                .multilineTextAlignment(.leading)
-                .textStyle(.body)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-          }
+              .multilineTextAlignment(.leading)
+              .textStyle(.body)
+              .frame(maxWidth: .infinity, alignment: .leading)
+          #endif
         }
 
-        Spacer()
+      case .none:
+        EmptyView()
       }
+
+      Spacer()
     }
   }
 }

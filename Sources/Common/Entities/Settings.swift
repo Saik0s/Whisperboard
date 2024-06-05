@@ -4,7 +4,7 @@ import Foundation
 
 public struct Settings: Hashable {
   public var useMockedClients: Bool
-  public var selectedModel: String
+  public var selectedModelName: String
   public var parameters: TranscriptionParameters
   public var isICloudSyncEnabled: Bool
   public var shouldMixWithOtherAudio: Bool
@@ -19,7 +19,7 @@ public struct Settings: Hashable {
 
   public init(
     useMockedClients: Bool = false,
-    selectedModel: String = "tiny",
+    selectedModelName: String = "tiny",
     parameters: TranscriptionParameters = TranscriptionParameters(),
     isICloudSyncEnabled: Bool = false,
     shouldMixWithOtherAudio: Bool = false,
@@ -28,7 +28,7 @@ public struct Settings: Hashable {
     isVADEnabled: Bool = false
   ) {
     self.useMockedClients = useMockedClients
-    self.selectedModel = selectedModel
+    self.selectedModelName = selectedModelName
     self.parameters = parameters
     self.isICloudSyncEnabled = isICloudSyncEnabled
     self.shouldMixWithOtherAudio = shouldMixWithOtherAudio
@@ -43,7 +43,7 @@ public struct Settings: Hashable {
 extension Settings: Codable {
   enum CodingKeys: String, CodingKey {
     case useMockedClients
-    case selectedModel
+    case selectedModelName
     case parameters
     case isICloudSyncEnabled
     case shouldMixWithOtherAudio
@@ -55,7 +55,7 @@ extension Settings: Codable {
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     useMockedClients = (try? container.decode(Bool.self, forKey: .useMockedClients)) ?? false
-    selectedModel = (try? container.decode(String?.self, forKey: .selectedModel)) ?? "tiny"
+    selectedModelName = (try? container.decode(String.self, forKey: .selectedModelName)) ?? "tiny"
     parameters = (try? container.decode(TranscriptionParameters.self, forKey: .parameters)) ?? TranscriptionParameters()
     isICloudSyncEnabled = (try? container.decode(Bool.self, forKey: .isICloudSyncEnabled)) ?? false
     shouldMixWithOtherAudio = (try? container.decode(Bool.self, forKey: .shouldMixWithOtherAudio)) ?? false
