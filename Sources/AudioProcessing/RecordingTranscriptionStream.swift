@@ -11,20 +11,6 @@ public enum LiveTranscriptionUpdate {
   case recording(RecordingStream.State)
 }
 
-// MARK: - ModelStatus
-
-public struct ModelStatus {
-  public let model: String
-  public let isDownloaded: Bool
-  public let isSelected: Bool
-
-  public init(model: String, isDownloaded: Bool, isSelected: Bool) {
-    self.model = model
-    self.isDownloaded = isDownloaded
-    self.isSelected = isSelected
-  }
-}
-
 // MARK: - RecordingTranscriptionStream
 
 @DependencyClient
@@ -42,8 +28,8 @@ public struct RecordingTranscriptionStream: Sendable {
   public var pauseRecording: @Sendable () async -> Void = {}
   public var resumeRecording: @Sendable () async -> Void = {}
 
-  public var fetchModels: @Sendable () async throws -> [ModelStatus] = { [] }
-  public var loadModel: @Sendable (String) -> AsyncStream<ModelLoadingStage> = { _ in .finished }
+  public var fetchModels: @Sendable () async throws -> [Model] = { [] }
+  public var loadModel: @Sendable (String) -> AsyncThrowingStream<Double, Error> = { _ in .finished(throwing: nil) }
   public var deleteModel: @Sendable (String) async throws -> Void = { _ in }
 }
 
@@ -195,90 +181,48 @@ private final class RecordingTranscriptionStreamContainer {
     await recordingStream.resumeRecording()
   }
 
-  func fetchModels() async throws -> [ModelStatus] {
+  func fetchModels() async throws -> [Model] {
     try await transcriptionStream.fetchModels()
     let state = await transcriptionStream.state
     return state.availableModels.map { model in
-      ModelStatus(
-        model: model,
-        isDownloaded: state.localModels.contains(model),
-        isSelected: state.selectedModel == model
+      Model(
+        name: model,
+        description: "",
+        size: 0,
+        isRemote: state.remoteModels.contains(model),
+        isLocal: state.localModels.contains(model)
       )
-    }.sorted(by: { $0.model < $1.model })
+    }.sorted(by: { $0.name < $1.name })
   }
 
-  func loadModel(_ model: String) -> AsyncStream<ModelLoadingStage> {
-    let (stream, continuation) = AsyncStream<ModelLoadingStage>.makeStream()
-    Task { [weak self] in
-      guard let self else { return }
-
-      let task = Task { [weak self] in
-        guard let self else { return }
-
-        while true {
-          let state = await transcriptionStream.state
-          continuation.yield(.inProgress(Double(state.loadingProgressValue), state.modelState))
-          try await Task.sleep(for: .seconds(0.3))
+  func loadModel(_ model: String) -> AsyncThrowingStream<Double, Error> {
+    AsyncThrowingStream<Double, Error> { continuation in
+      let progressTask = Task {
+        while !Task.isCancelled {
+          let progress = await transcriptionStream.state.loadingProgressValue
+          continuation.yield(Double(progress))
+          try? await Task.sleep(for: .seconds(0.3))
         }
       }
 
-      do {
-        try await transcriptionStream.loadModel(model)
-        task.cancel()
-        let state = await transcriptionStream.state
-        continuation.yield(.success(state.modelState))
-      } catch {
-        logs.error("Failed to load model \(error)")
-        task.cancel()
-        let state = await transcriptionStream.state
-        continuation.yield(.failure(error.equatable, state.modelState))
+      let loadModelTask = Task {
+        do {
+          try await transcriptionStream.loadModel(model)
+          continuation.finish(throwing: nil)
+        } catch {
+          logs.error("Failed to load model \(error)")
+          continuation.finish(throwing: error)
+        }
       }
 
-      continuation.finish()
+      continuation.onTermination = { _ in
+        loadModelTask.cancel()
+        progressTask.cancel()
+      }
     }
-    return stream
   }
 
   func deleteModel(_ model: String) async throws {
     try await transcriptionStream.deleteModel(model)
-  }
-}
-
-// MARK: - ModelLoadingStage
-
-public enum ModelLoadingStage: Equatable {
-  case idle
-  case inProgress(Double, ModelState)
-  case success(ModelState)
-  case failure(EquatableError, ModelState)
-}
-
-public extension ModelLoadingStage {
-  var isSuccess: Bool {
-    switch self {
-    case .success: true
-    default: false
-    }
-  }
-}
-
-// MARK: - ModelLoadingStageError
-
-public enum ModelLoadingStageError: Error {
-  case modelNotLoaded
-}
-
-public extension ModelState {
-  func asModelLoadingStage(progress: Double) -> ModelLoadingStage {
-    switch self {
-    case .downloaded: .success(self)
-    case .downloading: .inProgress(progress, self)
-    case .loaded: .success(self)
-    case .loading: .inProgress(progress, self)
-    case .prewarmed: .success(self)
-    case .prewarming: .inProgress(progress, self)
-    case .unloaded: .failure(ModelLoadingStageError.modelNotLoaded.equatable, self)
-    case .unloading: .inProgress(progress, self)
-    }
   }
 }

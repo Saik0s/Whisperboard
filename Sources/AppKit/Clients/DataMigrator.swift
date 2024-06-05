@@ -138,11 +138,9 @@ struct SettingsMigration: Migration {
       .appendingPathComponent("settings.json")
 
     let oldSettings = try OldSettings.fromFile(path: settingsURL.path)
-    let selectedModelName = UserDefaults.standard.string(forKey: "selectedModelName") ?? WhisperKit.recommendedModels().default
 
     let newSettings = Settings(
       useMockedClients: false,
-      selectedModel: selectedModelName,
       parameters: TranscriptionParameters(language: oldSettings.voiceLanguage.code)
     )
     try newSettings.saveToFile(at: settingsURL)

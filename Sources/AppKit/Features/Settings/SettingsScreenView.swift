@@ -67,7 +67,7 @@ struct ModelSectionView: View {
         SettingsSheetButton(
           icon: .system(name: "square.and.arrow.down", background: .systemBlue.lighten(by: 0.1)),
           title: "Model",
-          trailingText: store.selectedModelReadableName
+          trailingText: store.modelSelector.selectedModelID ?? "Not Selected"
         ) {
           ModelSelectorView(store: store.scope(state: \.modelSelector, action: \.modelSelector))
         }

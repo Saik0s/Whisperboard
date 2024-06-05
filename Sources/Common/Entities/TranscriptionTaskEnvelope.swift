@@ -17,7 +17,7 @@ public struct TranscriptionTaskEnvelope {
   public var progress: Double { recording.progress }
 
   public var fileName: String { recording.fileName }
-  public var modelType: String { task.settings.selectedModel }
+  public var modelType: String { task.settings.selectedModelName }
   public var parameters: TranscriptionParameters { task.settings.parameters }
 
   public init(task: Shared<TranscriptionTask>, recording: Shared<RecordingInfo>) {
