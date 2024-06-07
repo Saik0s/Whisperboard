@@ -81,7 +81,6 @@ struct TabBarContainerView<T1: View, T2: View, T3: View>: View {
       .animation(.showHide(), value: selectedIndex)
     }
     .readSize { screenWidth = $0.width }
-    .enableInjection()
   }
 }
 

@@ -11,8 +11,6 @@ struct SettingsScreenView: View {
 
   @Environment(TabBarViewModel.self) var tabBarViewModel: TabBarViewModel
 
-  @ObserveInjection var inject
-
   var body: some View {
     WithPerceptionTracking {
       List {
@@ -44,7 +42,6 @@ struct SettingsScreenView: View {
       .onAppear { store.send(.updateInfo) }
       .applyTabBarContentInset()
     }
-    .enableInjection()
   }
 }
 
@@ -67,7 +64,7 @@ struct ModelSectionView: View {
         SettingsSheetButton(
           icon: .system(name: "square.and.arrow.down", background: .systemBlue.lighten(by: 0.1)),
           title: "Model",
-          trailingText: store.modelSelector.selectedModelID ?? "Not Selected"
+          trailingText: store.modelSelector.selectedModelLabel
         ) {
           ModelSelectorView(store: store.scope(state: \.modelSelector, action: \.modelSelector))
         }

@@ -82,6 +82,7 @@ struct Root {
 
     Scope(state: \.settingsScreen, action: \.settingsScreen) {
       SettingsScreen()
+        ._printChanges(.swiftLog(withStateChanges: true))
     }
     .onChange(of: \.settingsScreen.settings.isICloudSyncEnabled) { _, _ in
       Reduce { state, _ in

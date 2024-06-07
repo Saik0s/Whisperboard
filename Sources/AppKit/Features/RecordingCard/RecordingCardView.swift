@@ -7,8 +7,6 @@ import SwiftUI
 
 @MainActor
 struct RecordingCardView: View {
-  @ObserveInjection var inject
-
   @Perception.Bindable var store: StoreOf<RecordingCard>
 
   @State var showItem = false
@@ -68,7 +66,6 @@ struct RecordingCardView: View {
         showItem = true
       }
     }
-    .enableInjection()
   }
 }
 

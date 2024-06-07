@@ -93,8 +93,6 @@ struct MicSelector {
 // MARK: - MicSelectorView
 
 struct MicSelectorView: View {
-  @ObserveInjection var inject
-
   @Perception.Bindable var store: StoreOf<MicSelector>
 
   var body: some View {
@@ -126,7 +124,6 @@ struct MicSelectorView: View {
       .fixedSize(horizontal: true, vertical: false)
       .alert($store.scope(state: \.alert, action: \.alert))
     }
-    .enableInjection()
   }
 }
 

@@ -153,8 +153,6 @@ struct SubscriptionDetails {
 struct SubscriptionDetailsView: View {
   @Environment(\.dismiss) var dismiss
 
-  @ObserveInjection var inject
-
   @Perception.Bindable var store: StoreOf<SubscriptionDetails>
 
   var body: some View {
@@ -294,7 +292,6 @@ struct SubscriptionDetailsView: View {
       .alert($store.scope(state: \.alert, action: \.alert))
       .task { store.send(.onTask) }
     }
-    .enableInjection()
   }
 }
 

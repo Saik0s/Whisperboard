@@ -42,9 +42,11 @@ struct RootView: View {
       .accentColor(.white)
       .task {
         store.send(.task)
-        store.send(.recordingListScreen(.task))
-        store.send(.settingsScreen(.task))
-        store.send(.recordScreen(.micSelector(.task)))
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+          store.send(.recordingListScreen(.task))
+          store.send(.settingsScreen(.task))
+          store.send(.recordScreen(.micSelector(.task)))
+        }
       }
       .environment(tabBarViewModel)
       .environment(recordButtonModel)

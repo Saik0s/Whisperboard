@@ -162,15 +162,12 @@ struct RecordingListScreen {
 // MARK: - RecordingListScreenView
 
 struct RecordingListScreenView: View {
-  @ObserveInjection var inject
-
   @Perception.Bindable var store: StoreOf<RecordingListScreen>
 
   var body: some View {
     WithPerceptionTracking {
       content
     }
-    .enableInjection()
   }
 
   private var content: some View {
@@ -241,8 +238,6 @@ extension RecordingListScreenView {
 // MARK: - EmptyStateView
 
 struct EmptyStateView: View {
-  @ObserveInjection var inject
-
   @State private var isAnimating = false
 
   var body: some View {
@@ -265,7 +260,6 @@ struct EmptyStateView: View {
       }
     }
     .padding(.grid(4))
-    .enableInjection()
   }
 }
 

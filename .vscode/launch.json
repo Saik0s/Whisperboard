@@ -38,6 +38,15 @@
       "iosBundleId": "me.igortarasenko.Whisperboard",
       "iosTarget": "select",
       "preLaunchTask": "${defaultBuildTask}"
+    },
+    {
+      "name": "Launch and Debug Dev",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Debug-${command:ios-debug.targetSdk}/WhisperBoardDev.app",
+      "iosBundleId": "me.igortarasenko.WhisperboardDev",
+      "iosTarget": "select",
+      "preLaunchTask": "build_dev"
     }
   ]
 }

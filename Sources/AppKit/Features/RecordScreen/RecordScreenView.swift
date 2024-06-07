@@ -85,8 +85,6 @@ struct RecordScreen {
 // MARK: - RecordScreenView
 
 struct RecordScreenView: View {
-  @ObserveInjection var inject
-
   @Perception.Bindable var store: StoreOf<RecordScreen>
 
   var body: some View {
@@ -102,6 +100,5 @@ struct RecordScreenView: View {
       .ignoresSafeArea(edges: .bottom)
       .alert($store.scope(state: \.alert, action: \.alert))
     }
-    .enableInjection()
   }
 }
