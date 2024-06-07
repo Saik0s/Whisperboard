@@ -136,8 +136,6 @@ struct RecordingControls {
 // MARK: - RecordingControlsView
 
 struct RecordingControlsView: View {
-  @ObserveInjection var inject
-
   @Perception.Bindable var store: StoreOf<RecordingControls>
   @Environment(NamespaceContainer.self) var namespace
 
@@ -273,11 +271,9 @@ struct RecordingControlsView: View {
           }
           .padding(.grid(3))
           .cardStyle()
-          .enableInjection()
         }
       }
     }
-    .enableInjection()
   }
 
   @ViewBuilder

@@ -39,6 +39,22 @@
       }
     },
     {
+      "label": "build_dev",
+      "type": "shell",
+      "command": "make",
+      "options": {
+        "cwd": "${workspaceRoot}"
+      },
+      "args": [
+        "build_debug",
+      ],
+      "problemMatcher": ["$swiftc"],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
       "label": "build audio processing",
       "type": "shell",
       "command": "xcodebuild",

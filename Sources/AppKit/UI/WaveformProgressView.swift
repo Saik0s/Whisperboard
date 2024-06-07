@@ -87,8 +87,6 @@ struct WaveformProgress {
 
 @MainActor
 struct WaveformProgressView: View {
-  @ObserveInjection var inject
-
   @Perception.Bindable var store: StoreOf<WaveformProgress>
 
   @State var imageSize = CGSize.zero
@@ -129,7 +127,6 @@ struct WaveformProgressView: View {
       .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 20), value: store.isImageCreated)
       .task { await store.send(.onTask).finish() }
     }
-    .enableInjection()
   }
 
   private func shouldSendProgressUpdate(newProgress: Double) -> Bool {

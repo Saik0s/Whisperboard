@@ -40,8 +40,6 @@ struct SubscriptionSection {
 // MARK: - SubscriptionSectionView
 
 struct SubscriptionSectionView: View {
-  @ObserveInjection var inject
-
   @Perception.Bindable var store: StoreOf<SubscriptionSection>
 
   @State var sectionSize: CGSize = .zero
@@ -138,7 +136,6 @@ struct SubscriptionSectionView: View {
       .listRowBackground(Color.clear)
       .listRowSeparator(.hidden)
     }
-    .enableInjection()
   }
 
   private func sectionBackground() -> some View {

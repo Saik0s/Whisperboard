@@ -3,8 +3,6 @@ import Inject
 import SwiftUI
 
 struct RemoteTranscriptionImage: View {
-  @ObserveInjection var inject
-
   @State private var animating = false
 
   private let featureDescription = "Transcribe your recordings in the cloud super fast using the most capable"
@@ -45,6 +43,5 @@ struct RemoteTranscriptionImage: View {
       .padding([.leading, .bottom, .trailing], .grid(2))
     }
     .frame(maxWidth: .infinity)
-    .enableInjection()
   }
 }

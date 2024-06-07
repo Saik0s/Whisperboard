@@ -130,8 +130,8 @@ public actor TranscriptionStream {
     whisperKit = try await WhisperKit(
       computeOptions: getComputeOptions(),
       audioProcessor: audioProcessor,
-      verbose: true,
-      logLevel: .debug,
+      verbose: false,
+      logLevel: .info,
       prewarm: false,
       load: false,
       download: false
@@ -328,7 +328,6 @@ public actor TranscriptionStream {
 
     let mergedResult = mergeTranscriptionResults(state.eagerResults, confirmedWords: state.confirmedWords)
 
-    state.currentText = ""
     let segments = mergedResult.segments
 
     state.tokensPerSecond = transcription?.timings.tokensPerSecond ?? 0

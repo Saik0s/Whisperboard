@@ -131,8 +131,6 @@ extension View {
 // MARK: - CardStyle
 
 struct CardStyle: ViewModifier {
-  @ObserveInjection var inject
-
   var isPrimary: Bool
 
   func body(content: Content) -> some View {

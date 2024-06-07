@@ -80,7 +80,7 @@ struct Recording {
                 if transcriptionState.modelState != .loaded {
                   state.$liveTranscriptionState.wrappedValue = .modelLoading(Double(transcriptionState.loadingProgressValue))
                 } else {
-                  state.$liveTranscriptionState.wrappedValue = .transcribing(transcriptionState.asCompleteTranscription)
+                  state.$liveTranscriptionState.wrappedValue = .transcribing(transcriptionState.currentText)
                 }
 
                 if state.$recordingInfo.wrappedValue.transcription == nil {

@@ -15,7 +15,7 @@ let additionalCondition = isAppStore ? "APPSTORE" : isDev ? "DEV" : ""
 let isRevealSupported = FileManager.default.fileExists(atPath: "App/Support/Reveal/RevealServer.xcframework") && !isAppStore
 print("RevealServer.xcframework is \(isRevealSupported ? "supported" : "not supported")")
 let isEttraceSupported = FileManager.default.fileExists(atPath: "App/Support/ETTrace.xcframework") && !isAppStore
-print("RevealServer.xcframework is \(isEttraceSupported ? "supported" : "not supported")")
+print("ETTrace.xcframework is \(isEttraceSupported ? "supported" : "not supported")")
 
 var appInfoPlist: [String: Plist.Value] = [
   "CFBundleShortVersionString": Plist.Value(stringLiteral: version),
@@ -176,11 +176,11 @@ let project = Project(
               name: "Additional Checks",
               basedOnDependencyAnalysis: false
             ),
-            .post(
-              script: "periphery scan",
-              name: "Periphery",
-              basedOnDependencyAnalysis: false
-            ),
+            // .post(
+            //   script: "periphery scan",
+            //   name: "Periphery",
+            //   basedOnDependencyAnalysis: false
+            // ),
             .post(
               script: """
               export REVEAL_SERVER_FILENAME="RevealServer.xcframework"

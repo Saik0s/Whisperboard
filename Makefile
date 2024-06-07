@@ -25,14 +25,14 @@ appstore: secrets
 	TUIST_IS_APP_STORE=1 $(TUIST) generate --no-open
 
 project_cache_warmup:
-	$(TUIST) cache Common AudioProcessing --external-only
+	$(TUIST) cache Common AudioProcessing WhisperBoardKit --external-only
 	$(TUIST) generate -n
 
 build_debug:
-	$(TUIST) build --generate --configuration Debug --build-output-path .build/
+	TUIST_IS_DEV=1 $(TUIST) build --configuration Debug --build-output-path .build/ WhisperBoardDev
 
 build_release:
-	$(TUIST) build --generate --configuration Release --build-output-path .build/
+	$(TUIST) build --configuration Release --build-output-path .build/ WhisperBoardDev
 
 format:
 	$(MISE) x swiftlint -- swiftlint lint --force-exclude --fix .
@@ -42,7 +42,7 @@ secrets:
 	sh ./ci_scripts/secrets.sh
 
 build_server:
-	xcode-build-server config -workspace WhisperBoard.xcworkspace -scheme WhisperBoard || echo "consult https://github.com/SolaWing/xcode-build-server for vscode support"
+	xcode-build-server config -workspace WhisperBoard.xcworkspace -scheme WhisperBoardDev || echo "consult https://github.com/SolaWing/xcode-build-server for vscode support"
 
 analyze:
 	sh ./ci_scripts/cpd_run.sh && echo "CPD done"

@@ -98,8 +98,6 @@ struct RecordingDetailsView: View {
     case title, text
   }
 
-  @ObserveInjection var inject
-
   @FocusState private var focusedField: Field?
 
   @Perception.Bindable var store: StoreOf<RecordingDetails>
@@ -195,7 +193,6 @@ struct RecordingDetailsView: View {
       .alert($store.scope(state: \.alert, action: \.alert))
       .background(Color.DS.Background.primary)
     }
-    .enableInjection()
   }
 
   var transcriptionView: some View {

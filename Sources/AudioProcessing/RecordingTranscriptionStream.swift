@@ -31,6 +31,7 @@ public struct RecordingTranscriptionStream: Sendable {
   public var fetchModels: @Sendable () async throws -> [Model] = { [] }
   public var loadModel: @Sendable (String) -> AsyncThrowingStream<Double, Error> = { _ in .finished(throwing: nil) }
   public var deleteModel: @Sendable (String) async throws -> Void = { _ in }
+  public var recommendedModels: @Sendable () -> (default: String, disabled: [String]) = { (default: "", disabled: []) }
 }
 
 // MARK: DependencyKey
@@ -66,6 +67,9 @@ extension RecordingTranscriptionStream: DependencyKey {
       },
       deleteModel: { model in
         try await container.deleteModel(model)
+      },
+      recommendedModels: {
+        WhisperKit.recommendedModels()
       }
     )
   }()
@@ -183,16 +187,7 @@ private final class RecordingTranscriptionStreamContainer {
 
   func fetchModels() async throws -> [Model] {
     try await transcriptionStream.fetchModels()
-    let state = await transcriptionStream.state
-    return state.availableModels.map { model in
-      Model(
-        name: model,
-        description: "",
-        size: 0,
-        isRemote: state.remoteModels.contains(model),
-        isLocal: state.localModels.contains(model)
-      )
-    }.sorted(by: { $0.name < $1.name })
+    return await getModelInfos()
   }
 
   func loadModel(_ model: String) -> AsyncThrowingStream<Double, Error> {
@@ -224,5 +219,18 @@ private final class RecordingTranscriptionStreamContainer {
 
   func deleteModel(_ model: String) async throws {
     try await transcriptionStream.deleteModel(model)
+  }
+
+  private func getModelInfos() async -> [Model] {
+    let state = await transcriptionStream.state
+    let (defaultModel, disabledModels) = WhisperKit.recommendedModels()
+    return state.availableModels.map { name in
+      Model(
+        name: name,
+        isLocal: state.localModels.contains(name),
+        isDefault: name == defaultModel,
+        isDisabled: disabledModels.contains(name)
+      )
+    }
   }
 }

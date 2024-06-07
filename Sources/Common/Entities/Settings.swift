@@ -10,6 +10,7 @@ public struct Settings: Hashable {
   public var shouldMixWithOtherAudio: Bool
   public var isAutoTranscriptionEnabled: Bool
   public var isUsingGPU: Bool
+  public var isUsingNeuralEngine: Bool
   public var isVADEnabled: Bool
 
   public var voiceLanguage: String? {
@@ -25,6 +26,7 @@ public struct Settings: Hashable {
     shouldMixWithOtherAudio: Bool = false,
     isAutoTranscriptionEnabled: Bool = false,
     isUsingGPU: Bool = false,
+    isUsingNeuralEngine: Bool = true,
     isVADEnabled: Bool = false
   ) {
     self.useMockedClients = useMockedClients
@@ -34,6 +36,7 @@ public struct Settings: Hashable {
     self.shouldMixWithOtherAudio = shouldMixWithOtherAudio
     self.isAutoTranscriptionEnabled = isAutoTranscriptionEnabled
     self.isUsingGPU = isUsingGPU
+    self.isUsingNeuralEngine = isUsingNeuralEngine
     self.isVADEnabled = isVADEnabled
   }
 }
@@ -49,6 +52,7 @@ extension Settings: Codable {
     case shouldMixWithOtherAudio
     case isAutoTranscriptionEnabled
     case isUsingGPU
+    case isUsingNeuralEngine
     case isVADEnabled
   }
 
@@ -61,6 +65,7 @@ extension Settings: Codable {
     shouldMixWithOtherAudio = (try? container.decode(Bool.self, forKey: .shouldMixWithOtherAudio)) ?? false
     isAutoTranscriptionEnabled = (try? container.decode(Bool.self, forKey: .isAutoTranscriptionEnabled)) ?? false
     isUsingGPU = (try? container.decode(Bool.self, forKey: .isUsingGPU)) ?? false
+    isUsingNeuralEngine = (try? container.decode(Bool.self, forKey: .isUsingNeuralEngine)) ?? true
     isVADEnabled = (try? container.decode(Bool.self, forKey: .isVADEnabled)) ?? false
   }
 }
