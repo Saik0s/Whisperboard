@@ -12,15 +12,13 @@ public struct RecordingInfo: Identifiable, Hashable, Then {
   public var editedText: String?
   public var transcription: Transcription?
 
-  public var text: String { editedText ?? transcription?.text ?? "" }
+  public var text: String { /* editedText ?? */ transcription?.text ?? "" }
   public var isTranscribed: Bool { transcription?.status.isDone == true }
   public var isTranscribing: Bool { transcription?.status.isLoadingOrProgress == true }
-  public var isPaused: Bool { transcription?.status.isPaused == true }
-  public var transcriptionErrorMessage: String? { transcription?.status.errorMessage }
 
-  public var segments: [Segment] { transcription?.segments ?? [] }
-  public var offset: Int64 { segments.last?.endTime ?? 0 }
-  public var progress: Double { Double(offset) / Double(duration * 1000) }
+  public var offsetSeconds: TimeInterval {
+    transcription.map { $0.progress * duration } ?? 0
+  }
 
   public init(
     fileName: String,

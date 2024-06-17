@@ -5,37 +5,47 @@ import SwiftUI
 extension Font {
   enum DS {
     static var action: Font {
-        WhisperBoardKitFontFamily.Poppins.semiBold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .body).pointSize)
+      WhisperBoardKitFontFamily.Poppins.semiBold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .body).pointSize)
     }
+
     static var actionSecondary: Font {
-        WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .body).pointSize)
+      WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .body).pointSize)
     }
+
     static var body: Font {
-        WhisperBoardKitFontFamily.Karla.regular.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .body).pointSize)
+      WhisperBoardKitFontFamily.Karla.regular.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .body).pointSize)
     }
+
     static var bodyBold: Font {
-        WhisperBoardKitFontFamily.Karla.bold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .body).pointSize)
+      WhisperBoardKitFontFamily.Karla.bold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .body).pointSize)
     }
+
     static var caption: Font {
-        WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .caption1).pointSize)
+      WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .caption1).pointSize)
     }
+
     static var captionBold: Font {
-        WhisperBoardKitFontFamily.Poppins.bold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .caption1).pointSize)
+      WhisperBoardKitFontFamily.Poppins.bold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .caption1).pointSize)
     }
+
     static var footnote: Font {
-        WhisperBoardKitFontFamily.Poppins.regular.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .footnote).pointSize)
+      WhisperBoardKitFontFamily.Poppins.regular.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .footnote).pointSize)
     }
+
     static var badge: Font {
-        WhisperBoardKitFontFamily.Poppins.semiBold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .caption2).pointSize)
+      WhisperBoardKitFontFamily.Poppins.semiBold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .caption2).pointSize)
     }
+
     static var title: Font {
-        WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .title1).pointSize)
+      WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .title1).pointSize)
     }
+
     static var titleSmall: Font {
-        WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .title2).pointSize)
+      WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .title2).pointSize)
     }
+
     static var titleBold: Font {
-        WhisperBoardKitFontFamily.Poppins.bold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .title1).pointSize)
+      WhisperBoardKitFontFamily.Poppins.bold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .title1).pointSize)
     }
   }
 }

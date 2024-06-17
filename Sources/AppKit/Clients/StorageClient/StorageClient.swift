@@ -134,8 +134,13 @@ extension StorageClient: DependencyKey {
     }
 
     @Shared(.recordings) var recordings: [RecordingInfo]
-    recordings.removeAll()
-    recordings = try await storage.sync(recordings: recordings)
+    _recordings.withLock { value in
+      value.removeAll()
+    }
+    let newRecordings = try await storage.sync(recordings: [])
+    _recordings.withLock { value in
+      value = newRecordings
+    }
   }
 }
 

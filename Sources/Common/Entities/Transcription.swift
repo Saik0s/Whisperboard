@@ -11,9 +11,19 @@ public struct Transcription: Codable, Hashable, Identifiable {
   public var parameters: TranscriptionParameters
   public var model: String
   public var status: Status = .notStarted
+  public var words: [WordData]
+  public var text: String
 
-  public var text: String {
-    segments.map(\.text).joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+  public var progress: Double {
+    if case let .progress(progress, _) = status {
+      return progress
+    } else if case let .paused(_, progress: progress) = status {
+      return progress
+    } else if case .done = status {
+      return 1
+    }
+
+    return 0
   }
 
   public init(
@@ -23,7 +33,9 @@ public struct Transcription: Codable, Hashable, Identifiable {
     segments: [Segment] = [],
     parameters: TranscriptionParameters,
     model: String,
-    status: Status = .notStarted
+    status: Status = .notStarted,
+    words: [WordData] = [],
+    text: String = ""
   ) {
     self.id = id
     self.fileName = fileName
@@ -32,6 +44,8 @@ public struct Transcription: Codable, Hashable, Identifiable {
     self.parameters = parameters
     self.model = model
     self.status = status
+    self.words = words
+    self.text = text
   }
 }
 
@@ -44,7 +58,7 @@ public extension Transcription {
     case loading
     case uploading(Double)
     case error(message: String)
-    case progress(Double)
+    case progress(Double, text: String)
     case done(Date)
     case canceled
     case paused(TranscriptionTask, progress: Double)
@@ -112,6 +126,27 @@ public struct TokenData: Codable, Hashable, Identifiable {
     self.id = id
     self.tid = tid
     self.logProbability = logProbability
+  }
+}
+
+// MARK: - WordData
+
+public struct WordData: Codable, Hashable {
+  public let word: String
+  public let startTime: TimeInterval
+  public let endTime: TimeInterval
+  public let probability: Double
+
+  public init(
+    word: String,
+    startTime: TimeInterval,
+    endTime: TimeInterval,
+    probability: Double
+  ) {
+    self.word = word
+    self.startTime = startTime
+    self.endTime = endTime
+    self.probability = probability
   }
 }
 
@@ -198,7 +233,7 @@ public extension Transcription.Status {
 
   var progressValue: Double? {
     switch self {
-    case let .progress(progress):
+    case let .progress(progress, _):
       progress
 
     default:

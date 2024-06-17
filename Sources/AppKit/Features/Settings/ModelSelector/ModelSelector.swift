@@ -49,7 +49,8 @@ struct ModelSelector {
         $0.isMultilingual ? "" : " En",
         $0.isDistilled ? " Distilled" : "",
         $0.isTurbo ? " Turbo" : "",
-      ].joined() } ?? "None"
+      ].joined()
+      } ?? "None"
     }
 
     var noLocalModels: Bool {
@@ -168,7 +169,7 @@ struct ModelSelector {
     state.loadingProgress = State.LoadingProgress(id: id, progress: 0)
     return .run { [loadingProgress = state.$loadingProgress] send in
       await send(.downloadTask(id: id, TaskResult {
-        for try await progress in transcriptionStream.loadModel(id) {
+        try await transcriptionStream.loadModel(id) { progress in
           loadingProgress.wrappedValue?.progress = progress
         }
         logs.debug("Loaded model \(id) isCancelled: \(Task.isCancelled)")

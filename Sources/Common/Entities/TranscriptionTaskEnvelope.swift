@@ -11,10 +11,10 @@ public struct TranscriptionTaskEnvelope {
 
   public var isPaused: Bool { recording.transcription?.status.isPaused == true }
 
-  public var segments: [Segment] { recording.segments }
-  public var duration: Int64 { Int64(recording.duration) }
-  public var offset: Int64 { recording.offset }
-  public var progress: Double { recording.progress }
+  public var segments: [Segment] { recording.transcription?.segments ?? [] }
+  public var duration: TimeInterval { recording.duration }
+  public var offset: TimeInterval { recording.offsetSeconds }
+  public var progress: Double { recording.transcription?.progress ?? 0 }
 
   public var fileName: String { recording.fileName }
   public var modelType: String { task.settings.selectedModelName }

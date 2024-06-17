@@ -29,7 +29,7 @@ public struct RecordingTranscriptionStream: Sendable {
   public var resumeRecording: @Sendable () async -> Void = {}
 
   public var fetchModels: @Sendable () async throws -> [Model] = { [] }
-  public var loadModel: @Sendable (String) -> AsyncThrowingStream<Double, Error> = { _ in .finished(throwing: nil) }
+  public var loadModel: @Sendable (String, @escaping (Double) -> Void) async throws -> Void = { _, _ in }
   public var deleteModel: @Sendable (String) async throws -> Void = { _ in }
   public var recommendedModels: @Sendable () -> (default: String, disabled: [String]) = { (default: "", disabled: []) }
 }
@@ -48,7 +48,7 @@ extension RecordingTranscriptionStream: DependencyKey {
         try await container.startRecordingWithoutTranscription(fileURL)
       },
       startFileTranscription: { fileURL in
-        try await container.startFileTranscription(fileURL)
+        container.startFileTranscription(fileURL)
       },
       stopRecording: {
         await container.stopRecording()
@@ -62,8 +62,8 @@ extension RecordingTranscriptionStream: DependencyKey {
       fetchModels: {
         try await container.fetchModels()
       },
-      loadModel: { model in
-        container.loadModel(model)
+      loadModel: { model, progressCallback in
+        try await container.loadModel(model, progressCallback: progressCallback)
       },
       deleteModel: { model in
         try await container.deleteModel(model)
@@ -145,13 +145,18 @@ private final class RecordingTranscriptionStreamContainer {
     }
   }
 
-  func startFileTranscription(_ fileURL: URL) async throws -> AsyncThrowingStream<TranscriptionStream.State, Error> {
+  func startFileTranscription(_ fileURL: URL) -> AsyncThrowingStream<TranscriptionStream.State, Error> {
     AsyncThrowingStream { continuation in
-      let task = Task { [weak self, audioProcessor] in
+      let task = Task {
         do {
+          logs.debug("Starting file transcription for URL: \(fileURL)")
+
           let audioBuffer = try await AudioProcessor.loadAudio(at: [fileURL.path()]).first.require().get()
+          logs.debug("Loaded audio buffer from file: \(fileURL), buffer size: \(audioBuffer.count) samples")
+
           audioProcessor.processBuffer(audioBuffer)
-          try await self?.transcriptionStream.startRealtimeLoop(shouldStopWhenNoSamplesLeft: true) { state in
+
+          try await transcriptionStream.transcribeCurrentBufferVADChunked { state in
             continuation.yield(state)
           }
           continuation.finish(throwing: nil)
@@ -159,14 +164,14 @@ private final class RecordingTranscriptionStreamContainer {
           logs.error("Failed to start file transcription \(error)")
           continuation.finish(throwing: error)
         }
-
-        await self?.transcriptionStream.stopRealtimeLoop()
       }
 
-      continuation.onTermination = { _ in
+      continuation.onTermination = { reason in
+        if case .cancelled = reason {
+          task.cancel()
+        }
         Task { [weak self] in
           await self?.transcriptionStream.stopRealtimeLoop()
-          task.cancel()
         }
       }
     }
@@ -190,31 +195,20 @@ private final class RecordingTranscriptionStreamContainer {
     return await getModelInfos()
   }
 
-  func loadModel(_ model: String) -> AsyncThrowingStream<Double, Error> {
-    AsyncThrowingStream<Double, Error> { continuation in
-      let progressTask = Task {
-        while !Task.isCancelled {
-          let progress = await transcriptionStream.state.loadingProgressValue
-          continuation.yield(Double(progress))
-          try? await Task.sleep(for: .seconds(0.3))
-        }
-      }
+  func loadModel(_ model: String, progressCallback: @escaping (Double) -> Void) async throws {
+    logs.debug("Starting to load model: \(model)")
+    async let loadModelTask: Void = transcriptionStream.loadModel(model)
 
-      let loadModelTask = Task {
-        do {
-          try await transcriptionStream.loadModel(model)
-          continuation.finish(throwing: nil)
-        } catch {
-          logs.error("Failed to load model \(error)")
-          continuation.finish(throwing: error)
-        }
-      }
-
-      continuation.onTermination = { _ in
-        loadModelTask.cancel()
-        progressTask.cancel()
-      }
+    while await transcriptionStream.state.modelState != .loaded {
+      let progress = await transcriptionStream.state.loadingProgressValue
+      let state = await transcriptionStream.state.modelState
+      logs.debug("Model loading progress: \(progress * 100)% state: \(state)")
+      progressCallback(Double(progress))
+      try? await Task.sleep(for: .seconds(0.3))
     }
+
+    logs.debug("Model \(model) loaded successfully")
+    try await loadModelTask
   }
 
   func deleteModel(_ model: String) async throws {

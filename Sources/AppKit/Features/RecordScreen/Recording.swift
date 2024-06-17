@@ -77,10 +77,12 @@ struct Recording {
             for try await liveState in try await transcriptionStream.startLiveTranscription(fileURL) {
               switch liveState {
               case let .transcription(transcriptionState):
-                if transcriptionState.modelState != .loaded {
-                  state.$liveTranscriptionState.wrappedValue = .modelLoading(Double(transcriptionState.loadingProgressValue))
-                } else {
-                  state.$liveTranscriptionState.wrappedValue = .transcribing(transcriptionState.currentText)
+                state.$liveTranscriptionState.withLock { liveTranscriptionState in
+                  if transcriptionState.modelState != .loaded {
+                    liveTranscriptionState = .modelLoading(Double(transcriptionState.loadingProgressValue))
+                  } else {
+                    liveTranscriptionState = .transcribing(transcriptionState.currentText)
+                  }
                 }
 
                 if state.$recordingInfo.wrappedValue.transcription == nil {
@@ -93,18 +95,27 @@ struct Recording {
                 }
 
                 let transcriptionSegments: [Segment] = transcriptionState.segments.map(\.asSimpleSegment)
-
-                state.$recordingInfo.wrappedValue.transcription?.segments = transcriptionSegments
+                state.$recordingInfo.withLock { recordingInfo in
+                  recordingInfo.transcription?.segments = transcriptionSegments
+                }
 
               case let .recording(recordingState):
-                state.$recordingInfo.wrappedValue.duration = recordingState.duration
-                state.$samples.wrappedValue = recordingState.waveSamples
+                state.$recordingInfo.withLock { recordingInfo in
+                  recordingInfo.duration = recordingState.duration
+                }
+                state.$samples.withLock { samples in
+                  samples = recordingState.waveSamples
+                }
               }
             }
           } else {
             for try await recordingState in try await transcriptionStream.startRecordingWithoutTranscription(fileURL) {
-              state.$recordingInfo.wrappedValue.duration = recordingState.duration
-              state.$samples.wrappedValue = recordingState.waveSamples
+              state.$recordingInfo.withLock { recordingInfo in
+                recordingInfo.duration = recordingState.duration
+              }
+              state.$samples.withLock { samples in
+                samples = recordingState.waveSamples
+              }
             }
           }
         } catch: { error, send in
@@ -164,7 +175,7 @@ extension TranscriptionSegment {
     Segment(
       startTime: Int64(start),
       endTime: Int64(end),
-      text: text,
+      text: text.trimmingCharacters(in: .whitespacesAndNewlines),
       tokens: tokens.enumerated().map { index, tokenID in
         Token(
           id: tokenID,

@@ -20,8 +20,6 @@ public let logs: Logging.Logger = {
 public enum ExtraLogHandler {
   public static var isLoggingAllowed = true
 
-  public static var sessionLogs: [String] = []
-
   public static var closure: ((
     _ level: Logging.Logger.Level,
     _ message: Logging.Logger.Message,
@@ -70,8 +68,6 @@ class UnifiedLogHandler: LogHandler {
 
     let combinedMetadata = metadata.map { self.metadata.merging($0, uniquingKeysWith: { _, new in new }) } ?? self.metadata
     let formattedMessage = formatMessage(level: level, message: message, metadata: combinedMetadata, file: file, line: line)
-
-    ExtraLogHandler.sessionLogs.append(formattedMessage)
 
     // Log to Pulse
     pulseLogger.log(level: level, message: "\(formattedMessage)", metadata: metadata, file: file, function: function, line: line)
