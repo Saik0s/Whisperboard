@@ -165,10 +165,12 @@ struct RecordingDetailsView: View {
               .textStyle(.error)
               .foregroundColor(.DS.Text.error)
           }
-
-          transcriptionView
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .padding(.horizontal, .grid(4))
+
+        transcriptionView
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
         WaveformProgressView(
           store: store.scope(
@@ -176,12 +178,14 @@ struct RecordingDetailsView: View {
             action: \.recordingCard.playerControls.view.waveform
           )
         )
+        .padding(.horizontal, .grid(4))
 
         PlayButton(isPlaying: store.recordingCard.playerControls.isPlaying) {
           store.send(.recordingCard(.playerControls(.view(.playButtonTapped))), animation: .spring())
         }
+        .padding(.horizontal, .grid(4))
       }
-      .padding(.grid(4))
+      .padding(.vertical, .grid(4))
       .toolbar {
         ToolbarItem(placement: .keyboard) {
           Button("Done") {
@@ -203,8 +207,10 @@ struct RecordingDetailsView: View {
           .foregroundColor(store.recordingCard.recording.isTranscribing ? .DS.Text.subdued : .DS.Text.base)
           .textStyle(.body)
           .lineLimit(nil)
+          .textSelection(.enabled)
           .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
           .padding(.vertical, .grid(2))
+          .padding(.horizontal, .grid(4))
           .id(1)
 
       case .timeline:
@@ -221,17 +227,18 @@ struct RecordingDetailsView: View {
                 .foregroundColor(.DS.Text.base)
                 .textStyle(.body)
                 .lineLimit(nil)
+                .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .multilineTextAlignment(.leading)
             .padding(.vertical, .grid(2))
           }
         }
+        .padding(.horizontal, .grid(4))
         .id(1)
       }
     }
-    .scrollAnchor(id: 1, valueToTrack: store.recordingCard.transcription, anchor: .bottom)
-    .textSelection(.enabled)
+    .scrollAnchor(id: 1, valueToTrack: store.recordingCard.transcription, anchor: store.recordingCard.recording.isTranscribing ? .bottom : .zero)
     .mask {
       LinearGradient(
         stops: [
@@ -263,7 +270,7 @@ struct RecordingDetailsView: View {
           store.send(.recordingCard(.cancelTranscriptionButtonTapped))
         }.tertiaryButtonStyle()
       }
-    } else if store.recordingCard.recording.isPaused {
+    } else if store.recordingCard.recording.transcription?.status.isPaused == true {
       VStack(spacing: .grid(1)) {
         Text(store.recordingCard.recording.transcription?.status.message ?? "")
           .textStyle(.body)

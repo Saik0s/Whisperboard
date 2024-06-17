@@ -63,7 +63,7 @@ var appInfoPlist: [String: Plist.Value] = [
   ],
 ]
 
-if isDev {
+if !isAppStore {
   appInfoPlist["NSLocalNetworkUsageDescription"] = Plist.Value.string("Network usage required for debugging purposes")
   appInfoPlist["NSBonjourServices"] = [Plist.Value.string("_pulse._tcp")]
 }
@@ -312,6 +312,7 @@ let project = Project(
       infoPlist: .default,
       sources: "Sources/AudioProcessing/**",
       dependencies: [
+        .external(name: "AsyncAlgorithms"),
         .external(name: "AudioKit"),
         .external(name: "WhisperKit"),
         .external(name: "Perception"),
@@ -341,6 +342,7 @@ let project = Project(
       infoPlist: .default,
       sources: "Sources/Common/**",
       dependencies: [
+        .external(name: "AsyncAlgorithms"),
         .external(name: "PulseLogHandler"),
         .external(name: "Pulse"),
         .external(name: "ComposableArchitecture"),

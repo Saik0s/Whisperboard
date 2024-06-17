@@ -1,7 +1,9 @@
+import AsyncAlgorithms
 import AudioProcessing
 import Common
 import Dependencies
 import Foundation
+import WhisperKit
 
 // MARK: - LocalTranscriptionError
 
@@ -24,83 +26,88 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
 
   init() {}
 
-  fileprivate func whisperKitProcess(_: TranscriptionTaskEnvelope) async throws {
-    // for try await action in context.fullTranscribe(audioFileURL: fileURL, params: parameters) {
-    //   logs.debug("Received WhisperAction: \(action)")
-    //   switch action {
-    //   case let .newSegment(segment):
-    //     if await segment.startTime >= (task.recording.transcription?.segments.last?.endTime ?? 0) {
-    //       logs.debug("Segment start time is not after the last segment end time")
-    //     }
-    //     await MainActor.run {
-    //       task.recording.transcription?.segments.append(segment)
-    //       task.recording.transcription?.status = .progress(task.progress)
-    //     }
-
-    //   case let .progress(progress):
-    //     logs.debug("Progress: \(progress)")
-
-    //   case let .error(error):
-    //     await MainActor.run {
-    //       task.recording.transcription?.status = .error(message: error.localizedDescription)
-    //     }
-
-    //   case .canceled:
-    //     await MainActor.run {
-    //       task.recording.transcription?.status = .canceled
-    //     }
-
-    //   case .finished:
-    //     await MainActor.run {
-    //       task.recording.transcription?.status = .done(Date())
-    //     }
-    //   }
-    // }
-  }
-
   func process(task: TranscriptionTaskEnvelope) async {
-    currentTaskID = await task.id
-    defer { currentTaskID = nil }
+    let taskId = await MainActor.run { task.id }
+    logs.debug("Starting transcription process for task ID: \(taskId)")
+    currentTaskID = taskId
+    defer {
+      logs.debug("Ending transcription process for task ID: \(taskId)")
+      currentTaskID = nil
+    }
 
-    await MainActor.run {
-      if task.recording.transcription?.id != task.id {
-        task.recording.transcription = Transcription(id: task.id, fileName: task.fileName, parameters: task.parameters, model: task.modelType)
+    DispatchQueue.main.async {
+      if task.recording.transcription?.id != taskId {
+        logs.debug("Initializing new transcription for task ID: \(taskId)")
+        task.recording.transcription = Transcription(id: taskId, fileName: task.fileName, parameters: task.parameters, model: task.modelType)
       }
     }
 
     do {
-      await MainActor.run {
+      DispatchQueue.main.async {
+        logs.debug("Setting transcription status to loading for task ID: \(taskId)")
         task.recording.transcription?.status = .loading
       }
 
-      for try await modelState in await transcriptionStream.loadModel(task.modelType) {
-        logs.debug("Model state: \(modelState)")
+      try await transcriptionStream.loadModel(task.modelType) { progress in
+        logs.debug("Model load progress for task ID \(taskId): \(progress * 100)%")
       }
 
-      await MainActor.run {
-        task.recording.transcription?.status = .progress(task.progress)
+      DispatchQueue.main.async {
+        logs.debug("Setting transcription status to progress for task ID: \(taskId)")
+        task.recording.transcription?.status = .progress(task.progress, text: "")
       }
 
       let fileURL = await task.recording.fileURL
+      logs.debug("File URL for task ID \(taskId): \(fileURL)")
 
       // // TODO: add support for resuming
       // var parameters = await task.parameters
       // parameters.offsetMilliseconds = await Int(task.offset)
+      //       self.confirmedSegments = segments.map { segment in
+      //     var adjustedSegment = segment
+      //     adjustedSegment.start += initialSkipDuration
+      //     adjustedSegment.end += initialSkipDuration
+      //     return adjustedSegment
+      // }
 
-      // loop through transcription updates
+      for try await transcriptionState in try await transcriptionStream.startFileTranscription(fileURL)._throttle(for: .seconds(0.1)) {
+        DispatchQueue.main.async {
+          let simpleSegments = transcriptionState.segments.map(\.asSimpleSegment)
+          let progress = transcriptionState.transcriptionProgressFraction
+          task.recording.transcription?.segments = simpleSegments
+          task.recording.transcription?.status = .progress(progress, text: transcriptionState.currentText)
+//          var mainTexts = simpleSegments.map(\.text)
+//          mainTexts.append(transcriptionState.currentText)
+//          let mainText = mainTexts.reduce("") { result, text in
+//            if result.hasSuffix(".") || result.hasSuffix("!") || result.hasSuffix("?") {
+//              result + "\n" + text
+//            } else {
+//              result + " " + text
+//            }
+//          }
+          task.recording.transcription?.text = transcriptionState.currentText // mainText.trimmingCharacters(in: .whitespacesAndNewlines)
+          task.recording.transcription?.words = transcriptionState.confirmedWords.map { (word: WordTiming) in
+            WordData(
+              word: word.word,
+              startTime: Double(word.start),
+              endTime: Double(word.end),
+              probability: Double(word.probability)
+            )
+          }
 
-      for try await transcriptionState in try await transcriptionStream.startFileTranscription(fileURL) {
-        await MainActor.run {
-          task.recording.transcription?.segments = transcriptionState.segments.map(\.asSimpleSegment)
-          task.recording.transcription?.status = .progress(task.progress)
+          logs
+            .debug(
+              "Transcription update for task ID \(taskId): segments \(simpleSegments.count), progress \(task.progress), duration \(task.recording.duration * progress)"
+            )
         }
       }
-      await MainActor.run {
+      DispatchQueue.main.async {
+        logs.debug("Setting transcription status to done for task ID: \(taskId)")
         task.recording.transcription?.status = .done(Date())
       }
     } catch {
-      await MainActor.run {
-        // Check if it was just canceled
+      DispatchQueue.main.async {
+        logs.error("Error during transcription for task ID \(taskId): \(error.localizedDescription)")
         task.recording.transcription?.status = .error(message: error.localizedDescription)
       }
     }
