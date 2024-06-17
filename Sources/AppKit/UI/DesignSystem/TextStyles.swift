@@ -5,11 +5,11 @@ import SwiftUI
 extension Font {
   enum DS {
     static var action: Font {
-      WhisperBoardKitFontFamily.Poppins.semiBold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .body).pointSize)
+      WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .body).pointSize)
     }
 
     static var actionSecondary: Font {
-      WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .body).pointSize)
+      WhisperBoardKitFontFamily.Poppins.regular.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .body).pointSize)
     }
 
     static var body: Font {
@@ -21,11 +21,11 @@ extension Font {
     }
 
     static var caption: Font {
-      WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .caption1).pointSize)
+      WhisperBoardKitFontFamily.Poppins.regular.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .caption1).pointSize)
     }
 
     static var captionBold: Font {
-      WhisperBoardKitFontFamily.Poppins.bold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .caption1).pointSize)
+      WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .caption1).pointSize)
     }
 
     static var footnote: Font {
@@ -37,15 +37,15 @@ extension Font {
     }
 
     static var title: Font {
-      WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .title1).pointSize)
+      WhisperBoardKitFontFamily.Poppins.regular.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .title1).pointSize)
     }
 
     static var titleSmall: Font {
-      WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .title2).pointSize)
+      WhisperBoardKitFontFamily.Poppins.regular.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .title2).pointSize)
     }
 
     static var titleBold: Font {
-      WhisperBoardKitFontFamily.Poppins.bold.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .title1).pointSize)
+      WhisperBoardKitFontFamily.Poppins.medium.swiftUIFont(size: UIFont.preferredFont(forTextStyle: .title1).pointSize)
     }
   }
 }

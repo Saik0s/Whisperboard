@@ -31,6 +31,7 @@ struct ModelSelector {
     var localModels: IdentifiedArrayOf<ModelInfo> = []
     var availableModels: IdentifiedArrayOf<ModelInfo> = []
     var disabledModels: IdentifiedArrayOf<ModelInfo> = []
+    var hasAnythingInModelsDir = false
 
     var loadQueue: Set<Model.ID> = []
     @Shared var loadingProgress: LoadingProgress?
@@ -71,7 +72,9 @@ struct ModelSelector {
     case modelsResponse(TaskResult<[State.ModelInfo]>)
     case cancelDownloadButtonTapped(Model.ID)
     case deleteModelButtonTapped(Model.ID)
+    case deleteAllModelsButtonTapped
     case selectModelButtonTapped(Model.ID)
+    case setModelsDirNotEmpty
 
     case alert(PresentationAction<Alert>)
 
@@ -142,8 +145,18 @@ struct ModelSelector {
           await send(.reloadModels)
         }
 
+      case .deleteAllModelsButtonTapped:
+        return .run { send in
+          try await transcriptionStream.deleteAllModels()
+          await send(.reloadModels)
+        }
+
       case let .selectModelButtonTapped(id):
         state.selectedModelID = id
+        return .none
+
+      case .setModelsDirNotEmpty:
+        state.hasAnythingInModelsDir = true
         return .none
 
       case .alert:
@@ -181,6 +194,9 @@ struct ModelSelector {
   private func fetchModels() -> Effect<Action> {
     .run { send in
       await send(.modelsResponse(TaskResult { try await transcriptionStream.fetchModels().map(modelAttributes(for:)) }))
+      if directoryExistsAndNotEmptyAtPath(TranscriptionStream.modelDirURL.path()) {
+        await send(.setModelsDirNotEmpty)
+      }
     }
   }
 }
@@ -194,105 +210,128 @@ struct ModelSelectorView: View {
     WithPerceptionTracking {
       NavigationView {
         List {
-          Section(header: Text("Downloaded")) {
-            ForEach(store.localModels) { model in
-              WithPerceptionTracking {
-                VStack {
-                  HStack {
-                    ModelInfoView(model: model)
-
-                    Spacer()
-
-                    Button(store.selectedModelID == model.id ? "Active" : "Select") {
-                      store.send(.selectModelButtonTapped(model.id))
-                    }
-                    .activeButtonStyle(isActive: store.selectedModelID == model.id)
-                  }
-
-                  Text(model.info)
-                    .textStyle(.subheadline)
-                    .lineLimit(3)
-                    .allowsTightening(true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                  if let progress = store.loadingProgress, progress.id == model.id {
-                    ProgressView(value: progress.progress)
-                  } else if store.loadQueue.contains(model.id) {
-                    ProgressView()
-                  }
-                }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                  Button(role: .destructive) {
-                    store.send(.deleteModelButtonTapped(model.id))
-                  } label: {
-                    Image(systemName: "trash")
-                  }
-                }
-                .contentShape(Rectangle())
-                // .onTapGesture { store.send(.selectModelButtonTapped(model.id)) }
-                .contextMenu(contextMenuBuilder(id: model.id))
-              }
-            }
-          }
-
-          Section(header: Text("Available")) {
-            ForEach(store.availableModels) { model in
-              WithPerceptionTracking {
-                VStack(alignment: .leading) {
-                  HStack {
-                    ModelInfoView(model: model)
-                      .frame(maxWidth: .infinity, alignment: .leading)
-
-                    if store.loadingProgress?.id != model.id, !store.loadQueue.contains(model.id) {
-                      Button("Download") {
-                        store.send(.downloadButtonTapped(model.id))
-                      }
-                      .secondaryButtonStyle()
-                      // TODO: Fix cancelling
-//                    } else if store.loadingProgress?.id == model.id || store.loadQueue.contains(model.id) {
-//                      Button("Cancel") {
-//                        store.send(.cancelDownloadButtonTapped(model.id))
-//                      }
-//                      .tertiaryButtonStyle()
-                    }
-                  }
-
-                  Text(model.info)
-                    .textStyle(.subheadline)
-                    .lineLimit(3)
-                    .allowsTightening(true)
-
-                  if let progress = store.loadingProgress, progress.id == model.id {
-                    ProgressView(value: progress.progress)
-                  } else if store.loadQueue.contains(model.id) {
-                    ProgressView()
-                  }
-                }
-                .contentShape(Rectangle())
-                // .onTapGesture { store.send(.selectModelButtonTapped(model.id)) }
-              }
-            }
-          }
-
-          Section(header: Text("Not Supported")) {
-            ForEach(store.disabledModels) { model in
-              WithPerceptionTracking {
-                VStack(alignment: .leading) {
-                  ModelInfoView(model: model)
-
-                  Text(model.info)
-                    .textStyle(.subheadline)
-                    .lineLimit(3)
-                    .allowsTightening(true)
-                }
-              }
-            }
-          }
+          DownloadedSection(store: store)
+          AvailableSection(store: store)
+          NotSupportedSection(store: store)
         }
         .onAppear { store.send(.reloadModels) }
         .alert($store.scope(state: \.alert, action: \.alert))
         .navigationTitle("Models")
       }
+    }
+  }
+}
+
+// MARK: - DownloadedSection
+
+private struct DownloadedSection: View {
+  @Perception.Bindable var store: Store<ModelSelector.State, ModelSelector.Action>
+
+  var body: some View {
+    WithPerceptionTracking {
+      Section(header: Text("Downloaded")) {
+        ForEach(store.localModels) { model in
+          ModelRow(store: store, model: model, isDownloaded: true)
+        }
+        if !store.localModels.isEmpty {
+          Button("Delete All") {
+            store.send(.deleteAllModelsButtonTapped)
+          }
+          .foregroundColor(.red)
+        }
+      }
+    }
+  }
+}
+
+// MARK: - AvailableSection
+
+private struct AvailableSection: View {
+  @Perception.Bindable var store: Store<ModelSelector.State, ModelSelector.Action>
+
+  var body: some View {
+    WithPerceptionTracking {
+      Section(header: Text("Available")) {
+        ForEach(store.availableModels) { model in
+          ModelRow(store: store, model: model, isDownloaded: false)
+        }
+      }
+    }
+  }
+}
+
+// MARK: - NotSupportedSection
+
+private struct NotSupportedSection: View {
+  @Perception.Bindable var store: Store<ModelSelector.State, ModelSelector.Action>
+
+  var body: some View {
+    WithPerceptionTracking {
+      Section(header: Text("Not Supported")) {
+        ForEach(store.disabledModels) { model in
+          WithPerceptionTracking {
+            VStack(alignment: .leading) {
+              ModelInfoView(model: model)
+              Text(model.info)
+                .textStyle(.subheadline)
+                .lineLimit(3)
+                .allowsTightening(true)
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// MARK: - ModelRow
+
+private struct ModelRow: View {
+  @Perception.Bindable var store: Store<ModelSelector.State, ModelSelector.Action>
+  let model: ModelSelector.State.ModelInfo
+  let isDownloaded: Bool
+
+  var body: some View {
+    WithPerceptionTracking {
+      VStack {
+        HStack {
+          ModelInfoView(model: model)
+          Spacer()
+          if isDownloaded {
+            Button(store.selectedModelID == model.id ? "Active" : "Select") {
+              store.send(.selectModelButtonTapped(model.id))
+            }
+            .activeButtonStyle(isActive: store.selectedModelID == model.id)
+          } else {
+            if store.loadingProgress?.id != model.id, !store.loadQueue.contains(model.id) {
+              Button("Download") {
+                store.send(.downloadButtonTapped(model.id))
+              }
+              .secondaryButtonStyle()
+            }
+          }
+        }
+        Text(model.info)
+          .textStyle(.captionBase)
+          .lineLimit(3)
+          .allowsTightening(true)
+          .frame(maxWidth: .infinity, alignment: .leading)
+
+        if let progress = store.loadingProgress, progress.id == model.id {
+          ProgressView(value: progress.progress)
+        } else if store.loadQueue.contains(model.id) {
+          ProgressView()
+        }
+      }
+      .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+        Button(role: .destructive) {
+          store.send(.deleteModelButtonTapped(model.id))
+        } label: {
+          Image(systemName: "trash")
+        }
+      }
+      .contentShape(Rectangle())
+      .contextMenu(contextMenuBuilder(id: model.id))
     }
   }
 
@@ -320,30 +359,32 @@ struct ModelInfoView: View {
 
         Text(model.isMultilingual ? "Multilingual" : "English")
           .font(.DS.footnote)
-          .foregroundStyle(model.isMultilingual ? Color.DS.code01 : Color.DS.code02)
-          .opacity(0.7)
+          .foregroundStyle(Color.DS.neutral01100)
+          .opacity(0.8)
           .padding(.horizontal, 2)
           .padding(.vertical, 1)
           .background(
             RoundedRectangle(cornerRadius: 2)
-              .stroke(model.isMultilingual ? Color.DS.code01 : Color.DS.code02, lineWidth: 1)
-              .shadow(color: model.isMultilingual ? Color.DS.code01.opacity(0.7) : Color.DS.code02.opacity(0.7), radius: 3, x: 0, y: 0)
+              .stroke(model.isMultilingual ? Color.DS.primary02 : Color.DS.code02, lineWidth: 1)
+              .shadow(color: model.isMultilingual ? Color.DS.code05.opacity(0.8) : Color.DS.code02.opacity(0.8), radius: 4, x: 0, y: 0)
           )
+          .scaleEffect(0.9)
 
         if model.isTurbo {
           Text("Turbo")
             .font(.DS.footnote)
             .allowsTightening(true)
             .foregroundStyle(Color.DS.code03)
-            .opacity(0.7)
+            .opacity(0.8)
             .padding(.horizontal, 2)
             .padding(.vertical, 1)
             .background(
               RoundedRectangle(cornerRadius: 2)
                 .stroke(Color.DS.code03, lineWidth: 1)
-                .shadow(color: Color.DS.code03.opacity(0.7), radius: 3, x: 0, y: 0)
+                .shadow(color: Color.DS.code03.opacity(0.8), radius: 4, x: 0, y: 0)
             )
             .minimumScaleFactor(0.5)
+            .scaleEffect(0.9)
         }
 
         if model.isDistilled {
@@ -351,15 +392,16 @@ struct ModelInfoView: View {
             .font(.DS.footnote)
             .allowsTightening(true)
             .foregroundStyle(Color.DS.code04)
-            .opacity(0.7)
+            .opacity(0.8)
             .padding(.horizontal, 2)
             .padding(.vertical, 1)
             .background(
               RoundedRectangle(cornerRadius: 2)
                 .stroke(Color.DS.code04, lineWidth: 1)
-                .shadow(color: Color.DS.code04.opacity(0.7), radius: 3, x: 0, y: 0)
+                .shadow(color: Color.DS.code04.opacity(0.8), radius: 4, x: 0, y: 0)
             )
             .minimumScaleFactor(0.5)
+            .scaleEffect(0.9)
         }
       }
     }
@@ -493,4 +535,16 @@ private func modelAttributes(for model: Model) -> ModelSelector.State.ModelInfo 
     size: size ?? "75 MB",
     position: position
   )
+}
+
+private func directoryExistsAndNotEmptyAtPath(_ path: String) -> Bool {
+  var isDirectory = ObjCBool(true)
+  let exists = FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory)
+  guard exists && isDirectory.boolValue else { return false }
+  do {
+    return try FileManager.default.contentsOfDirectory(atPath: path).isNotEmpty
+  } catch {
+    logs.error("Failed to check if directory exists and is not empty: \(error)")
+    return false
+  }
 }

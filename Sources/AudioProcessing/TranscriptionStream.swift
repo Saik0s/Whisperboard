@@ -10,6 +10,8 @@ import WhisperKit
 // MARK: - TranscriptionStream
 
 public actor TranscriptionStream {
+  public static let modelDirURL: URL = .documentsDirectory.appendingPathComponent("huggingface/models/argmaxinc/whisperkit-coreml")
+
   public struct State {
     public var currentFallbacks: Int = 0
     public var lastBufferSize: Int = 0
@@ -99,23 +101,21 @@ public actor TranscriptionStream {
     state.availableModels = [state.selectedModel]
     logs.debug("Initial available models: \(state.availableModels)")
 
-    if let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-      let modelPath = documents.appendingPathComponent("huggingface/models/argmaxinc/whisperkit-coreml").path
-      logs.debug("Model path: \(modelPath)")
+    let modelPath = TranscriptionStream.modelDirURL.path
+    logs.debug("Model path: \(modelPath)")
 
-      if FileManager.default.fileExists(atPath: modelPath) {
-        state.localModelPath = modelPath
-        logs.debug("Local model path exists: \(modelPath)")
-        do {
-          let downloadedModels = try FileManager.default.contentsOfDirectory(atPath: modelPath)
-          logs.debug("Downloaded models: \(downloadedModels)")
-          for model in downloadedModels where !state.localModels.contains(model) {
-            self.state.localModels.append(model)
-            logs.debug("Added local model: \(model)")
-          }
-        } catch {
-          logs.error("Error enumerating files at \(modelPath): \(error.localizedDescription)")
+    if FileManager.default.fileExists(atPath: modelPath) {
+      state.localModelPath = modelPath
+      logs.debug("Local model path exists: \(modelPath)")
+      do {
+        let downloadedModels = try FileManager.default.contentsOfDirectory(atPath: modelPath)
+        logs.debug("Downloaded models: \(downloadedModels)")
+        for model in downloadedModels where !state.localModels.contains(model) {
+          self.state.localModels.append(model)
+          logs.debug("Added local model: \(model)")
         }
+      } catch {
+        logs.error("Error enumerating files at \(modelPath): \(error.localizedDescription)")
       }
     }
 
