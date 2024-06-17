@@ -73,7 +73,7 @@ func createAppTarget(suffix: String = "", scripts: [TargetScript] = [], dependen
     name: "WhisperBoard" + suffix,
     destinations: appDestinations,
     product: .app,
-    bundleId: "me.igortarasenko.Whisperboard" + suffix,
+    bundleId: "me.igortarasenko.Whisperboard",
     deploymentTargets: appDeploymentTargets,
     infoPlist: .extendingDefault(with: appInfoPlist),
     sources: "App/Sources/**",

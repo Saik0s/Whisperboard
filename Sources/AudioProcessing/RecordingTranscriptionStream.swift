@@ -32,6 +32,7 @@ public struct RecordingTranscriptionStream: Sendable {
   public var loadModel: @Sendable (String, @escaping (Double) -> Void) async throws -> Void = { _, _ in }
   public var deleteModel: @Sendable (String) async throws -> Void = { _ in }
   public var recommendedModels: @Sendable () -> (default: String, disabled: [String]) = { (default: "", disabled: []) }
+  public var deleteAllModels: @Sendable () async throws -> Void = {}
 }
 
 // MARK: DependencyKey
@@ -70,6 +71,9 @@ extension RecordingTranscriptionStream: DependencyKey {
       },
       recommendedModels: {
         WhisperKit.recommendedModels()
+      },
+      deleteAllModels: {
+        try await container.deleteAllModels()
       }
     )
   }()
@@ -213,6 +217,11 @@ private final class RecordingTranscriptionStreamContainer {
 
   func deleteModel(_ model: String) async throws {
     try await transcriptionStream.deleteModel(model)
+  }
+
+  func deleteAllModels() async throws {
+    let modelDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent("models")
+    try FileManager.default.removeItem(at: modelDirectoryURL)
   }
 
   private func getModelInfos() async -> [Model] {

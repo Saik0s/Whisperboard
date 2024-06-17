@@ -158,6 +158,7 @@ struct RecordingDetailsView: View {
       switch store.displayMode {
       case .text:
         textTranscriptionView
+
       case .timeline:
         timelineTranscriptionView
       }
@@ -205,6 +206,8 @@ struct RecordingDetailsView: View {
   }
 }
 
+// MARK: - RecordingDetailsHeaderView
+
 struct RecordingDetailsHeaderView: View {
   @Perception.Bindable var store: StoreOf<RecordingDetails>
   @FocusState var focusedField: RecordingDetailsView.Field?
@@ -220,34 +223,34 @@ struct RecordingDetailsHeaderView: View {
         .focused($focusedField, equals: .title)
         .textStyle(.headline)
         .foregroundColor(.DS.Text.base)
-        
+
         Text("Created: \(store.recordingCard.recording.date.formatted(date: .abbreviated, time: .shortened))")
           .textStyle(.caption)
           .frame(maxWidth: .infinity, alignment: .leading)
-        
+
         HStack(spacing: .grid(2)) {
           CopyButton(store.recordingCard.transcription) {
             Image(systemName: "doc.on.clipboard")
           }
-          
+
           ShareLink(item: store.recordingCard.transcription) {
             Image(systemName: "paperplane")
           }
-          
+
           Button { store.send(.recordingCard(.transcribeButtonTapped)) } label: {
             Image(systemName: "arrow.clockwise")
           }.disabled(store.recordingCard.recording.isTranscribing)
-          
+
           ShareLink(item: store.shareAudioFileURL) {
             Image(systemName: "square.and.arrow.up")
           }
-          
+
           Button { store.send(.delete) } label: {
             Image(systemName: "trash")
           }
-          
+
           Spacer()
-          
+
           Picker(
             "",
             selection: $store.displayMode
@@ -260,7 +263,7 @@ struct RecordingDetailsHeaderView: View {
           .pickerStyle(.segmented)
           .colorMultiply(.DS.Text.accent)
         }.iconButtonStyle()
-        
+
         if store.recordingCard.recording.isTranscribing || store.recordingCard.queueInfo != nil || !store.recordingCard.recording.isTranscribed {
           TranscriptionControlsView(store: store.scope(state: \.recordingCard, action: \.recordingCard))
         } else if let error = store.recordingCard.recording.transcription?.status.errorMessage {
@@ -278,7 +281,7 @@ struct RecordingDetailsHeaderView: View {
 
 private extension View {
   func applyVerticalEdgeSofteningMask() -> some View {
-    self.mask {
+    mask {
       LinearGradient(
         stops: [
           .init(color: .clear, location: 0),

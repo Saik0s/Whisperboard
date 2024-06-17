@@ -42,6 +42,7 @@ extension Color {
     static let code02 = Color(red: 0.699, green: 0.908, blue: 0.601, opacity: 1)
     static let code03 = Color(red: 0.982, green: 0.410, blue: 0.165, opacity: 1)
     static let code04 = Color(red: 1, green: 0.593, blue: 0.910, opacity: 1)
+    static let code05 = Color(hexString: "1C7ED6")
 
     enum Background {
       static var primary = Color.DS.neutral07100
