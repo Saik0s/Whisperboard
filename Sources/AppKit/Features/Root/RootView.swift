@@ -87,6 +87,13 @@ struct RootView: View {
         .cardStyle()
       }
       .bind($store.isGoToNewRecordingPopupPresented, to: $isGoToNewRecordingPopupPresented)
+      .onChange(of: isGoToNewRecordingPopupPresented) { isPresented in
+        if isPresented {
+          withAnimation(.spring.delay(5)) {
+            isGoToNewRecordingPopupPresented = false
+          }
+        }
+      }
     }
   }
 }
