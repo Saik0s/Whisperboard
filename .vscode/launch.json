@@ -71,6 +71,30 @@
       "name": "Release swift-composable-architecture-benchmark (.build/checkouts/swift-composable-architecture)",
       "program": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-composable-architecture/.build/release/swift-composable-architecture-benchmark",
       "preLaunchTask": "swift: Build Release swift-composable-architecture-benchmark (.build/checkouts/swift-composable-architecture)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "sourceLanguages": [
+        "swift"
+      ],
+      "args": [],
+      "cwd": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-case-paths",
+      "name": "Debug swift-case-paths-benchmark (.build/checkouts/swift-case-paths)",
+      "program": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-case-paths/.build/debug/swift-case-paths-benchmark",
+      "preLaunchTask": "swift: Build Debug swift-case-paths-benchmark (.build/checkouts/swift-case-paths)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "sourceLanguages": [
+        "swift"
+      ],
+      "args": [],
+      "cwd": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-case-paths",
+      "name": "Release swift-case-paths-benchmark (.build/checkouts/swift-case-paths)",
+      "program": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-case-paths/.build/release/swift-case-paths-benchmark",
+      "preLaunchTask": "swift: Build Release swift-case-paths-benchmark (.build/checkouts/swift-case-paths)"
     }
   ]
 }
