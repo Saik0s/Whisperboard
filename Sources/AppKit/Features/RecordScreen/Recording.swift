@@ -73,6 +73,7 @@ struct Recording {
           let fileURL = state.recordingInfo.fileURL
 
           generateImpact()
+
           if withLiveTranscription {
             for try await liveState in try await transcriptionStream.startLiveTranscription(fileURL) {
               switch liveState {

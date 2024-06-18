@@ -33,14 +33,17 @@ public actor RecordingStream {
     stateChangeCallback = callback
 
     guard !state.isRecording else {
+      logs.error("Attempted to start recording, but a recording is already in progress.")
       throw NSError(domain: "TranscriptionStream", code: 1, userInfo: [NSLocalizedDescriptionKey: "Recording is already in progress."])
     }
 
     guard await AudioProcessor.requestRecordPermission() else {
+      logs.error("Microphone access was not granted.")
       throw NSError(domain: "TranscriptionStream", code: 1, userInfo: [NSLocalizedDescriptionKey: "Microphone access was not granted."])
     }
 
     state.fileURL = fileURL
+    logs.info("Starting recording at file URL: \(fileURL)")
 
     let converter = try audioProcessor.startFileRecording { [weak self] buffer, _ in
       Task { [weak self] in
@@ -49,9 +52,11 @@ public actor RecordingStream {
     }
 
     audioFile = try AVAudioFile(forWriting: fileURL, settings: converter.inputFormat.settings)
+    logs.info("Audio file created for writing at URL: \(fileURL)")
 
     state.isRecording = true
     state.isPaused = false
+    logs.info("Recording started successfully.")
   }
 
   public func stopRecording() {
@@ -61,6 +66,7 @@ public actor RecordingStream {
     state.isRecording = false
     state.isPaused = false
     stateChangeCallback = nil
+    logs.info("Recording state reset and callback cleared.")
   }
 
   public func pauseRecording() {
@@ -83,16 +89,20 @@ public actor RecordingStream {
 
   private func onAudioBufferCallback(_ buffer: AVAudioPCMBuffer) {
     state.waveSamples = audioProcessor.relativeEnergy
+    logs.debug("Audio buffer received with relative energy: \(audioProcessor.relativeEnergy)")
 
     // Write buffer to audio file
     do {
       try audioFile?.write(from: buffer)
+      logs.debug("Audio buffer written to file.")
       if let audioFile {
         let frameCount = audioFile.length
         let sampleRate = audioFile.fileFormat.sampleRate
         state.duration = Double(frameCount) / sampleRate
+        logs.debug("Updated recording duration: \(state.duration) seconds.")
       } else {
         state.duration = 0
+        logs.debug("Audio file is nil, duration reset to 0.")
       }
     } catch {
       logs.error("Failed to write audio buffer to file: \(error.localizedDescription)")
