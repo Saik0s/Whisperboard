@@ -28,7 +28,6 @@ struct RecordingControls {
     var alert: AlertState<Action>?
     var recording: Recording.State?
     var audioRecorderPermission = RecorderPermission.undetermined
-    var isGoToNewRecordingPopupPresented = false
     var isLiveTranscriptionEnabled = false
     var transcriptionViewMode = TranscriptionViewMode.simple
   }
@@ -39,7 +38,6 @@ struct RecordingControls {
     case recordPermissionResponse(Bool)
     case recordButtonTapped
     case openSettingsButtonTapped
-    case goToNewRecordingButtonTapped
   }
 
   @Dependency(\.audioSession.requestRecordPermission) var requestRecordPermission
@@ -98,16 +96,6 @@ struct RecordingControls {
         return .run { _ in
           await openSettings()
         }
-
-      case .binding(.set(\.isGoToNewRecordingPopupPresented, true)):
-        return .run { send in
-          try await clock.sleep(for: .seconds(5))
-          await send(.binding(.set(\.isGoToNewRecordingPopupPresented, false)))
-        }
-
-      case .goToNewRecordingButtonTapped:
-        state.isGoToNewRecordingPopupPresented = false
-        return .none
 
       case .binding:
         return .none
@@ -248,30 +236,6 @@ struct RecordingControlsView: View {
           }
         }
         .padding(.horizontal, .grid(3))
-        .popover(
-          present: $store.isGoToNewRecordingPopupPresented,
-          attributes: {
-            $0.position = .absolute(originAnchor: .top, popoverAnchor: .bottom)
-            $0.presentation = .init(animation: .hardShowHide(), transition: .move(edge: .bottom).combined(with: .opacity))
-            $0.dismissal = .init(
-              animation: .hardShowHide(),
-              transition: .move(edge: .bottom).combined(with: .opacity),
-              mode: [.dragDown, .tapOutside]
-            )
-          }
-        ) {
-          VStack(spacing: .grid(4)) {
-            Text("View the new recording?")
-              .textStyle(.label)
-              .foregroundColor(.DS.Text.base)
-
-            Button("View Recording") {
-              store.send(.goToNewRecordingButtonTapped)
-            }.secondaryButtonStyle()
-          }
-          .padding(.grid(3))
-          .cardStyle()
-        }
       }
     }
   }

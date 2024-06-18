@@ -383,7 +383,6 @@ struct ModelInfoView: View {
                 .stroke(Color.DS.code03, lineWidth: 1)
                 .shadow(color: Color.DS.code03.opacity(0.8), radius: 4, x: 0, y: 0)
             )
-            .minimumScaleFactor(0.5)
             .scaleEffect(0.9)
         }
 
@@ -400,7 +399,6 @@ struct ModelInfoView: View {
                 .stroke(Color.DS.code04, lineWidth: 1)
                 .shadow(color: Color.DS.code04.opacity(0.8), radius: 4, x: 0, y: 0)
             )
-            .minimumScaleFactor(0.5)
             .scaleEffect(0.9)
         }
       }
