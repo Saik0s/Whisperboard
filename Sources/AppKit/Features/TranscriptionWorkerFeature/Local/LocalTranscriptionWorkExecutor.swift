@@ -70,7 +70,7 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
       //     return adjustedSegment
       // }
 
-      for try await transcriptionState in try await transcriptionStream.startFileTranscription(fileURL)._throttle(for: .seconds(0.1)) {
+      for try await transcriptionState in await transcriptionStream.startBufferTranscription()._throttle(for: .seconds(0.1)) {
         DispatchQueue.main.async {
           let simpleSegments = transcriptionState.segments.map(\.asSimpleSegment)
           let progress = transcriptionState.transcriptionProgressFraction

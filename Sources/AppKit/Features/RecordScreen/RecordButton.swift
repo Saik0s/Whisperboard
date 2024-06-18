@@ -26,7 +26,7 @@ struct RecordButton: View {
   var body: some View {
     WithPerceptionTracking {
       ZStack {
-        if model.isExpanded {
+        if model.isExpanded, permission != .denied {
           Button(action: action) {
             Circle()
               .fill(RadialGradient.accent)

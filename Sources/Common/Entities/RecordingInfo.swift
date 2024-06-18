@@ -6,7 +6,7 @@ public struct RecordingInfo: Identifiable, Hashable, Then {
   public var id: String { fileName }
 
   public var fileName: String
-  public var title = ""
+  public var title: String
   public var date: Date
   public var duration: TimeInterval
   public var editedText: String?
@@ -16,24 +16,24 @@ public struct RecordingInfo: Identifiable, Hashable, Then {
   public var isTranscribed: Bool { transcription?.status.isDone == true }
   public var isTranscribing: Bool { transcription?.status.isLoadingOrProgress == true }
 
-  public var offsetSeconds: TimeInterval {
-    transcription.map { $0.progress * duration } ?? 0
-  }
-
   public init(
     fileName: String,
-    title: String = "",
+    title: String? = nil,
     date: Date,
-    duration: TimeInterval,
+    duration: TimeInterval = 0,
     editedText: String? = nil,
     transcription: Transcription? = nil
   ) {
     self.fileName = fileName
-    self.title = title
+    self.title = title ?? date.formatted(Date.ISO8601FormatStyle().dateSeparator(.dash))
     self.date = date
     self.duration = duration
     self.editedText = editedText
     self.transcription = transcription
+  }
+
+  public init(id: String, title: String? = nil, date: Date, duration: TimeInterval = 0) {
+    self.init(fileName: "\(id).wav", title: title, date: date, duration: duration)
   }
 }
 
@@ -79,22 +79,6 @@ public extension RecordingInfo {
 
   var waveformImageURL: URL {
     Configs.recordingsDirectoryURL.appending(path: fileName + ".waveform.png")
-  }
-}
-
-public extension RecordingInfo {
-  init(id: String, title: String, date: Date, duration: TimeInterval) {
-    fileName = "\(id).wav"
-    self.title = title
-    self.date = date
-    self.duration = duration
-  }
-
-  init(fileName: String, title: String, date: Date, duration: TimeInterval) {
-    self.fileName = fileName
-    self.title = title
-    self.date = date
-    self.duration = duration
   }
 }
 

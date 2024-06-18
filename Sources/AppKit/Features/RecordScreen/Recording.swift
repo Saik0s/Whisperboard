@@ -77,34 +77,33 @@ struct Recording {
       case .startRecording:
         state.mode = .recording
 
-        return .run { [state] _ in
-          let fileURL = state.recordingInfo.fileURL
-
+        return .run { [liveTranscriptionState = state.$liveTranscriptionState, recordingInfo = state.$recordingInfo, state] _ in
           generateImpact()
 
-          for try await transcriptionState in try await transcriptionStream.startLiveTranscription(fileURL) {
-              state.$liveTranscriptionState.withLock { liveTranscriptionState in
-                if transcriptionState.modelState != .loaded {
-                  liveTranscriptionState = .modelLoading(Double(transcriptionState.loadingProgressValue))
-                } else {
-                  liveTranscriptionState = .transcribing(transcriptionState.currentText)
-                }
-
+          for try await transcriptionState in await transcriptionStream.startLiveTranscription() {
+            liveTranscriptionState.withLock { liveTranscriptionState in
+              if transcriptionState.modelState != .loaded {
+                liveTranscriptionState = .modelLoading(Double(transcriptionState.loadingProgressValue))
+              } else {
+                liveTranscriptionState = .transcribing(transcriptionState.currentText)
               }
+            }
 
-              if state.$recordingInfo.wrappedValue.transcription == nil {
+            if recordingInfo.wrappedValue.transcription == nil {
+              recordingInfo.withLock { recordingInfo in
                 @Shared(.settings) var settings: Settings
-                state.$recordingInfo.wrappedValue.transcription = Transcription(
-                  fileName: state.$recordingInfo.wrappedValue.fileName,
+                recordingInfo.transcription = Transcription(
+                  fileName: recordingInfo.fileName,
                   parameters: settings.parameters,
                   model: settings.selectedModelName
                 )
               }
+            }
 
-              let transcriptionSegments: [Segment] = transcriptionState.segments.map(\.asSimpleSegment)
-              state.$recordingInfo.withLock { recordingInfo in
-                recordingInfo.transcription?.segments = transcriptionSegments
-              }
+            let transcriptionSegments: [Segment] = transcriptionState.segments.map(\.asSimpleSegment)
+            state.$recordingInfo.withLock { recordingInfo in
+              recordingInfo.transcription?.segments = transcriptionSegments
+            }
           }
         } catch: { error, send in
           logs.error("Error while starting recording: \(error)")
