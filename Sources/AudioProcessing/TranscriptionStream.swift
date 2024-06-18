@@ -324,7 +324,6 @@ public actor TranscriptionStream {
 
   private func transcribeCurrentBuffer() async throws {
     logs.debug("Starting transcription of current buffer")
-    defer { logs.debug("Transcription of current buffer completed") }
 
     // Retrieve the current audio buffer from the audio processor
     let currentBuffer = audioProcessor.audioSamples

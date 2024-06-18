@@ -57,6 +57,10 @@ public actor RecordingStream {
     state.isRecording = true
     state.isPaused = false
     logs.info("Recording started successfully.")
+
+    while state.isRecording {
+       try? await Task.sleep(seconds: 0.3)
+    }
   }
 
   public func stopRecording() {
