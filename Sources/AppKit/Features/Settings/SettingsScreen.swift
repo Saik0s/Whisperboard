@@ -25,7 +25,7 @@ struct SettingsScreen {
     var takenSpacePercentage: Double = 0
     var isSubscribed = false
 
-    var isICloudSyncInProgress = false
+    @Shared(.isICloudSyncInProgress) var isICloudSyncInProgress: Bool
     var isDebugLogPresented = false
     var isModelSelectorPresented = false
 

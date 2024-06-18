@@ -12,6 +12,7 @@ struct RootView: View {
   @Perception.Bindable var store: StoreOf<Root>
   @Perception.Bindable private var tabBarViewModel: TabBarViewModel
   @Perception.Bindable private var recordButtonModel: RecordButtonModel
+  @State var isGoToNewRecordingPopupPresented = false
 
   @Namespace private var namespace
 
@@ -51,7 +52,7 @@ struct RootView: View {
       .environment(tabBarViewModel)
       .environment(recordButtonModel)
       .environment(NamespaceContainer(namespace: namespace))
-      .animation(.easeInOut(duration: 0.2), value: tabBarViewModel.isVisible)
+      .animation(.easeInOut(duration: 0.1), value: tabBarViewModel.isVisible)
       .onAppear {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
           tabBarViewModel.isVisible = true
@@ -61,6 +62,31 @@ struct RootView: View {
         // Don't show tab bar if not on the root screen
         tabBarViewModel.isVisible = isEmpty
       }
+      .popover(
+        present: $isGoToNewRecordingPopupPresented,
+        attributes: {
+          $0.position = .absolute(originAnchor: .top, popoverAnchor: .bottom)
+          $0.presentation = .init(animation: .hardShowHide(), transition: .move(edge: .bottom).combined(with: .opacity))
+          $0.dismissal = .init(
+            animation: .hardShowHide(),
+            transition: .move(edge: .bottom).combined(with: .opacity),
+            mode: [.dragDown, .tapOutside]
+          )
+        }
+      ) {
+        VStack(spacing: .grid(4)) {
+          Text("View the new recording?")
+            .textStyle(.label)
+            .foregroundColor(.DS.Text.base)
+
+          Button("View Recording") {
+            store.send(.goToNewRecordingButtonTapped)
+          }.secondaryButtonStyle()
+        }
+        .padding(.grid(3))
+        .cardStyle()
+      }
+      .bind($store.isGoToNewRecordingPopupPresented, to: $isGoToNewRecordingPopupPresented)
     }
   }
 }

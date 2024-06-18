@@ -17,3 +17,9 @@ public extension PersistenceReaderKey where Self == PersistenceKeyDefault<FileSt
     PersistenceKeyDefault(.fileStorage(.documentsDirectory.appending(component: "settings.json")), .init())
   }
 }
+
+public extension PersistenceReaderKey where Self == PersistenceKeyDefault<InMemoryKey<Bool>> {
+  static var isICloudSyncInProgress: Self {
+    PersistenceKeyDefault(.inMemory("isICloudSyncInProgress"), false)
+  }
+}

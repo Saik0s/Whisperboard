@@ -26,7 +26,6 @@ struct RecordScreen {
 
     enum Delegate: Equatable {
       case newRecordingCreated(RecordingInfo)
-      case goToNewRecordingTapped
     }
   }
 
@@ -44,11 +43,11 @@ struct RecordScreen {
     Reduce<State, Action> { state, action in
       switch action {
       case let .recordingControls(.recording(.delegate(.didFinish(.success(recording))))):
+        // In case it was transcribed during the recording, we want to mark it as done
+        var recordingInfo = recording.recordingInfo
+        recordingInfo.transcription?.status = .done(Date())
 
-        return .run { send in
-          await send(.delegate(.newRecordingCreated(recording.recordingInfo)))
-          await send(.recordingControls(.binding(.set(\.isGoToNewRecordingPopupPresented, true))))
-        }
+        return .send(.delegate(.newRecordingCreated(recordingInfo)))
 
       case let .recordingControls(.recording(.delegate(.didFinish(.failure(error))))):
         state.alert = AlertState(
@@ -56,11 +55,6 @@ struct RecordScreen {
           message: TextState(error.localizedDescription)
         )
         return .none
-
-      case .recordingControls(.goToNewRecordingButtonTapped):
-        return .run { send in
-          await send(.delegate(.goToNewRecordingTapped))
-        }
 
       case .delegate:
         return .none

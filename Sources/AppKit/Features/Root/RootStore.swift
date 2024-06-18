@@ -24,6 +24,7 @@ struct Root {
     var settingsScreen = SettingsScreen.State()
     var path = StackState<Path.State>()
     var selectedTab: Tab = .record
+    var isGoToNewRecordingPopupPresented = false
 
     @Presents var alert: AlertState<Action.Alert>?
 
@@ -41,8 +42,9 @@ struct Root {
     case settingsScreen(SettingsScreen.Action)
     case path(StackActionOf<Path>)
     case alert(PresentationAction<Alert>)
-    case failedICloudSync(EquatableError)
+    case didCompleteICloudSync(TaskResult<Void>)
     case registerForBGProcessingTasks(BGProcessingTask)
+    case goToNewRecordingButtonTapped
 
     enum Alert: Equatable {}
   }
@@ -83,11 +85,6 @@ struct Root {
     Scope(state: \.settingsScreen, action: \.settingsScreen) {
       SettingsScreen()
     }
-    .onChange(of: \.settingsScreen.settings.isICloudSyncEnabled) { _, _ in
-      Reduce { state, _ in
-        uploadNewRecordingsToICloud(state)
-      }
-    }
 
     Reduce { state, action in
       switch action {
@@ -103,7 +100,7 @@ struct Root {
             //   state.recordingListScreen.recordings[id: recording.id]?.transcription?.status = .paused(task, progress: transcription.progress)
             // } else {
             logs.debug("Marking \(recording.fileName) transcription as failed")
-            state.recordingListScreen.recordings[id: recording.id]?.transcription?.status = .error(message: "Transcription failed")
+            state.recordingListScreen.recordings[id: recording.id]?.transcription?.status = .error(message: "Transcription failed, please try again.")
             // }
             state.transcriptionWorker.taskQueue[id: transcription.id] = nil
           }
@@ -113,22 +110,28 @@ struct Root {
           await send(.transcriptionWorker(.task))
         }
 
-      case .settingsScreen(.binding(.set(\.settings.isICloudSyncEnabled, true))):
-        return uploadNewRecordingsToICloud(state)
+      case .recordingListScreen(.didFinishImportingFiles),
+           .settingsScreen(.binding(.set(\.settings.isICloudSyncEnabled, true))):
+        return .run { send in
+          await send(.didCompleteICloudSync(TaskResult { try await uploadNewRecordingsToICloudIfNeeded() }))
+        }
 
       // Inserts a new recording into the recording list and enqueues a transcription task if auto-transcription is enabled
       case let .recordScreen(.delegate(.newRecordingCreated(recordingInfo))):
-        // In case it was transcribed during the recording, we want to mark it as done
-        var recordingInfo = recordingInfo
-        recordingInfo.transcription?.status = .done(Date())
         state.recordingListScreen.recordings.insert(recordingInfo, at: 0)
+        state.isGoToNewRecordingPopupPresented = true
 
-        return .run { [state, recordingInfo] send in
-          try await Task.sleep(for: .seconds(1))
-          if state.settingsScreen.settings.isAutoTranscriptionEnabled && recordingInfo.transcription == nil {
-            await send(.transcriptionWorker(.enqueueTaskForRecordingID(recordingInfo.id, state.settingsScreen.settings)))
+        return .run { [recordingInfo] send in
+          async let iCloudUploadTask: () = send(.didCompleteICloudSync(TaskResult { try await uploadNewRecordingsToICloudIfNeeded() }))
+
+          @Shared(.settings) var settings: Settings
+          try? await Task.sleep(for: .seconds(1))
+          if settings.isAutoTranscriptionEnabled && recordingInfo.transcription == nil {
+            await send(.transcriptionWorker(.enqueueTaskForRecordingID(recordingInfo.id, settings)))
           }
-        }.merge(with: uploadNewRecordingsToICloud(state))
+
+          await iCloudUploadTask
+        }
 
       case .path(.element(_, .details(.delegate(.deleteDialogConfirmed)))):
         guard let id = state.path.last?.details?.recordingCard.id else { return .none }
@@ -136,21 +139,14 @@ struct Root {
         state.path.removeLast()
         return .none
 
-      case .recordScreen(.delegate(.goToNewRecordingTapped)):
-        if let recordingCard = state.recordingListScreen.recordingCards.first {
-          state.selectedTab = .list
-          state.path.append(.details(RecordingDetails.State(recordingCard: recordingCard)))
-        }
-        return .none
-
       case .settingsScreen(.alert(.presented(.deleteDialogConfirmed))):
         state.path.removeAll()
         return .none
 
-      case .recordingListScreen(.didFinishImportingFiles):
-        return uploadNewRecordingsToICloud(state)
+      case .didCompleteICloudSync(.success):
+        return .none
 
-      case let .failedICloudSync(error):
+      case let .didCompleteICloudSync(.failure(error)):
         logs.error("Failed to sync with iCloud: \(error)")
         state.alert = .init(
           title: .init("Failed to sync with iCloud"),
@@ -182,6 +178,13 @@ struct Root {
           await send(.transcriptionWorker(.resumeTask(task)))
         }
 
+      case .goToNewRecordingButtonTapped:
+        if let recordingCard = state.recordingListScreen.recordingCards.first {
+          state.selectedTab = .list
+          state.path.append(.details(RecordingDetails.State(recordingCard: recordingCard)))
+        }
+        return .none
+
       default:
         return .none
       }
@@ -190,16 +193,15 @@ struct Root {
     .forEach(\.path, action: \.path)
   }
 
-  func uploadNewRecordingsToICloud(_ state: State) -> Effect<Action> {
-    .run { send in
-      if state.settingsScreen.settings.isICloudSyncEnabled {
-        await send(.settingsScreen(.set(\.isICloudSyncInProgress, true)))
-        try await storage.uploadRecordingsToICloud(false, state.recordingListScreen.recordings)
-        await send(.settingsScreen(.set(\.isICloudSyncInProgress, false)))
-      }
-    } catch: { error, send in
-      await send(.settingsScreen(.set(\.isICloudSyncInProgress, false)))
-      await send(.failedICloudSync(error.equatable))
+  func uploadNewRecordingsToICloudIfNeeded() async throws {
+    @Shared(.settings) var settings: Settings
+    @Shared(.recordings) var recordings: [RecordingInfo]
+    @Shared(.isICloudSyncInProgress) var isICloudSyncInProgress: Bool
+
+    if settings.isICloudSyncEnabled {
+      $isICloudSyncInProgress.withLock { $0 = true }
+      defer { $isICloudSyncInProgress.withLock { $0 = false } }
+      try await storage.uploadRecordingsToICloud(reset: false, recordings: recordings)
     }
   }
 }
