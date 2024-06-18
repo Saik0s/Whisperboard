@@ -72,6 +72,7 @@ struct Root {
 
     Scope(state: \.transcriptionWorker, action: \.transcriptionWorker) {
       TranscriptionWorker()
+        ._printChanges(.swiftLog(withStateChanges: true))
     }
 
     Scope(state: \.recordingListScreen, action: \.recordingListScreen) {
@@ -80,6 +81,7 @@ struct Root {
 
     Scope(state: \.recordScreen, action: \.recordScreen) {
       RecordScreen()
+        ._printChanges(.swiftLog(withStateChanges: true))
     }
 
     Scope(state: \.settingsScreen, action: \.settingsScreen) {
@@ -89,8 +91,6 @@ struct Root {
     Reduce { state, action in
       switch action {
       case .task:
-        subscriptionClient.configure(keychainClient.userID)
-
         // Pausing unfinished transcription on app launch
         // Note: Disabled transcription resume logic for now
         for recording in state.recordingListScreen.recordings {
@@ -107,6 +107,7 @@ struct Root {
         }
 
         return .run { send in
+          subscriptionClient.configure(keychainClient.userID)
           await send(.transcriptionWorker(.task))
         }
 

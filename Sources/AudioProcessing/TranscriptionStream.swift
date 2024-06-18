@@ -328,16 +328,13 @@ public actor TranscriptionStream {
 
     // Retrieve the current audio buffer from the audio processor
     let currentBuffer = audioProcessor.audioSamples
-    logs.debug("Retrieved current buffer with size: \(currentBuffer.count)")
 
     // Calculate the size and duration of the next buffer segment
     let nextBufferSize = currentBuffer.count - state.lastBufferSize
     let nextBufferSeconds = Float(nextBufferSize) / Float(WhisperKit.sampleRate)
-    logs.debug("Next buffer size: \(nextBufferSize), duration in seconds: \(nextBufferSeconds)")
 
     // Only run the transcribe if the next buffer has at least 1 second of audio
     guard nextBufferSeconds > 1 else {
-      logs.debug("Next buffer has less than 1 second of audio, sleeping for 100ms")
       return try await Task.sleep(nanoseconds: 100_000_000) // sleep for 100ms for next buffer
     }
 

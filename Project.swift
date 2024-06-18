@@ -9,8 +9,7 @@ public let appDestinations: Destinations = [.iPhone, .iPad]
 public let devTeam = "8A76N862C8"
 
 let isAppStore = Environment.isAppStore.getBoolean(default: false)
-let isDev = Environment.isDev.getBoolean(default: false) && !isAppStore
-let additionalCondition = isAppStore ? "APPSTORE" : isDev ? "DEV" : ""
+let additionalCondition = isAppStore ? "APPSTORE" : ""
 
 let isRevealSupported = FileManager.default.fileExists(atPath: "App/Support/Reveal/RevealServer.xcframework") && !isAppStore
 print("RevealServer.xcframework is \(isRevealSupported ? "supported" : "not supported")")
@@ -68,7 +67,7 @@ if !isAppStore {
   appInfoPlist["NSBonjourServices"] = [Plist.Value.string("_pulse._tcp")]
 }
 
-func createAppTarget(suffix: String = "", scripts: [TargetScript] = [], dependencies: [TargetDependency] = []) -> Target {
+func createAppTarget(suffix: String = "", isDev: Bool = false, scripts: [TargetScript] = [], dependencies: [TargetDependency] = []) -> Target {
   .target(
     name: "WhisperBoard" + suffix,
     destinations: appDestinations,
@@ -115,6 +114,18 @@ func createAppTarget(suffix: String = "", scripts: [TargetScript] = [], dependen
         "MARKETING_VERSION": SettingValue(stringLiteral: version),
         "CODE_SIGN_IDENTITY": "iPhone Developer",
         "CODE_SIGNING_REQUIRED": "YES",
+      ],
+      debug: isDev
+        ? [
+          "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -debug-time-expression-type-checking -Xfrontend -enable-actor-data-race-checks",
+          "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
+          "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition) DEV DEBUG",
+        ]
+        : [
+          "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition) DEBUG",
+        ],
+      release: [
+        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition) \(isDev ? "DEV" : "")",
       ]
     )
   )
@@ -131,8 +142,7 @@ let project = Project(
     )
   ),
 
-  packages: [
-  ] + (isAppStore ? [.package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0")] : []),
+  packages: isAppStore ? [.package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0")] : [],
 
   settings: .settings(
     base: [
@@ -144,31 +154,22 @@ let project = Project(
       "CODE_SIGN_IDENTITY": "",
       "CODE_SIGNING_REQUIRED": "NO",
       "DEVELOPMENT_TEAM": SettingValue(stringLiteral: devTeam),
-    ],
-    debug: isDev
-      ? [
-        "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -debug-time-expression-type-checking -Xfrontend -enable-actor-data-race-checks",
-        "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
-        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition) DEBUG",
-      ]
-      : [
-        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition)",
-      ]
+    ]
   ),
 
   targets:
 
   // MARK: - App
 
-  (isAppStore
-    ? [
-      createAppTarget(suffix: "", scripts: [], dependencies: []),
-    ]
-    : isDev
-      ? [
-        createAppTarget(suffix: "", scripts: [], dependencies: []),
+  // Main Target
+  [createAppTarget()]
+    + (isAppStore
+      ? []
+      : [
+        // Additional Dev target with various extra scripts and debug settings
         createAppTarget(
           suffix: "Dev",
+          isDev: true,
           scripts:
           [
             .post(
@@ -201,166 +202,165 @@ let project = Project(
             + (isRevealSupported ? [.xcframework(path: "//App/Support/Reveal/RevealServer.xcframework", status: .optional)] : [])
             + (isEttraceSupported ? [.xcframework(path: "//App/Support/ETTrace.xcframework", status: .optional)] : [])
         ),
-      ]
-      : [
-        createAppTarget(suffix: "", scripts: [], dependencies: []),
-      ]) + [
-    // MARK: - ShareExtension
+      ])
 
-    .target(
-      name: "ShareExtension",
-      destinations: appDestinations,
-      product: .appExtension,
-      bundleId: "me.igortarasenko.Whisperboard.ShareExtension",
-      infoPlist: .extendingDefault(with: [
-        "CFBundleDisplayName": "$(PRODUCT_NAME)",
-        "CFBundleShortVersionString": Plist.Value(stringLiteral: version),
-        "NSExtension": [
-          "NSExtensionPointIdentifier": "com.apple.share-services",
-          "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).ShareViewController",
-          "NSExtensionAttributes": [
-            "NSExtensionActivationRule": """
-            SUBQUERY (
-                extensionItems,
-                $extensionItem,
-                SUBQUERY (
-                    $extensionItem.attachments,
-                    $attachment,
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.audio" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.mpeg-4-audio" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.mp3" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.microsoft.windows-media-wma" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.aifc-audio" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.aiff-audio" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.midi-audio" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.ac3-audio" ||
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.microsoft.waveform-audio"
-                ).@count == $extensionItem.attachments.@count
-            ).@count == 1
-            """,
+    + [
+      // MARK: - ShareExtension
+
+      .target(
+        name: "ShareExtension",
+        destinations: appDestinations,
+        product: .appExtension,
+        bundleId: "me.igortarasenko.Whisperboard.ShareExtension",
+        infoPlist: .extendingDefault(with: [
+          "CFBundleDisplayName": "$(PRODUCT_NAME)",
+          "CFBundleShortVersionString": Plist.Value(stringLiteral: version),
+          "NSExtension": [
+            "NSExtensionPointIdentifier": "com.apple.share-services",
+            "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).ShareViewController",
+            "NSExtensionAttributes": [
+              "NSExtensionActivationRule": """
+              SUBQUERY (
+                  extensionItems,
+                  $extensionItem,
+                  SUBQUERY (
+                      $extensionItem.attachments,
+                      $attachment,
+                      ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.audio" ||
+                      ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.mpeg-4-audio" ||
+                      ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.mp3" ||
+                      ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.microsoft.windows-media-wma" ||
+                      ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.aifc-audio" ||
+                      ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.aiff-audio" ||
+                      ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.midi-audio" ||
+                      ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.ac3-audio" ||
+                      ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.microsoft.waveform-audio"
+                  ).@count == $extensionItem.attachments.@count
+              ).@count == 1
+              """,
+            ],
           ],
-        ],
-      ]),
-      sources: "App/ShareExtension/ShareViewController.swift",
-      entitlements: "App/Support/ShareExtension.entitlements",
-      dependencies: [
-        .external(name: "AudioKit"),
-      ]
-    ),
-
-    // MARK: - AppKit
-
-    .target(
-      name: "WhisperBoardKit",
-      destinations: appDestinations,
-      product: .staticFramework,
-      bundleId: "me.igortarasenko.WhisperboardKit",
-      deploymentTargets: appDeploymentTargets,
-      infoPlist: .extendingDefault(with: [:]),
-      sources: "Sources/AppKit/**",
-      resources: "Resources/AppKit/**",
-      dependencies: [
-        .external(name: "AsyncAlgorithms"),
-        .external(name: "AudioKit"),
-        .external(name: "ComposableArchitecture"),
-        .external(name: "DependenciesAdditions"),
-        .external(name: "DSWaveformImage"),
-        .external(name: "DSWaveformImageViews"),
-        .external(name: "DynamicColor"),
-        .external(name: "FluidGradient"),
-        .external(name: "Inject"),
-        .external(name: "KeychainAccess"),
-        .external(name: "Logging"),
-        .external(name: "Lottie"),
-        .external(name: "NavigationTransitions"),
-        .external(name: "OrderedCollections"),
-        .external(name: "Popovers"),
-        .external(name: "PulseLogHandler"),
-        .external(name: "PulseUI"),
-        .external(name: "SwiftUIIntrospect"),
-        .external(name: "VariableBlurView"),
-        .external(name: "WhisperKit"),
-        // .external(name: "RevenueCat"),
-
-        .target(name: "Common"),
-        .target(name: "AudioProcessing"),
-      ] + (isAppStore ? [.package(product: "RollbarNotifier")] : []),
-      settings: .settings(
-        base: [
-          "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Support/AppKit/Bridging.h",
+        ]),
+        sources: "App/ShareExtension/ShareViewController.swift",
+        entitlements: "App/Support/ShareExtension.entitlements",
+        dependencies: [
+          .external(name: "AudioKit"),
         ]
-      )
-    ),
-    .target(
-      name: "WhisperBoardKitTests",
-      destinations: appDestinations,
-      product: .unitTests,
-      bundleId: "me.igortarasenko.WhisperboardKitTests",
-      infoPlist: .default,
-      sources: "Tests/AppKit/**",
-      dependencies: [
-        .target(name: "WhisperBoardKit"),
-        .external(name: "SnapshotTesting"),
-      ]
-    ),
+      ),
 
-    .target(
-      name: "AudioProcessing",
-      destinations: appDestinations,
-      product: .staticFramework,
-      bundleId: "me.igortarasenko.WhisperboardKit.AudioProcessing",
-      infoPlist: .default,
-      sources: "Sources/AudioProcessing/**",
-      dependencies: [
-        .external(name: "AsyncAlgorithms"),
-        .external(name: "AudioKit"),
-        .external(name: "WhisperKit"),
-        .external(name: "Perception"),
-        .external(name: "Dependencies"),
-        .external(name: "ComposableArchitecture"),
-        .target(name: "Common"),
-      ]
-    ),
-    .target(
-      name: "AudioProcessingTests",
-      destinations: appDestinations,
-      product: .unitTests,
-      bundleId: "me.igortarasenko.WhisperboardKit.AudioProcessingTests",
-      infoPlist: .default,
-      sources: "Tests/AudioProcessing/**",
-      resources: "TestResources/AudioProcessing/**",
-      dependencies: [
-        .target(name: "AudioProcessing"),
-        .external(name: "SnapshotTesting"),
-      ]
-    ),
-    .target(
-      name: "Common",
-      destinations: appDestinations,
-      product: .staticFramework,
-      bundleId: "me.igortarasenko.WhisperboardKit.Common",
-      infoPlist: .default,
-      sources: "Sources/Common/**",
-      dependencies: [
-        .external(name: "AsyncAlgorithms"),
-        .external(name: "PulseLogHandler"),
-        .external(name: "Pulse"),
-        .external(name: "ComposableArchitecture"),
-      ]
-    ),
-    .target(
-      name: "CommonTests",
-      destinations: appDestinations,
-      product: .unitTests,
-      bundleId: "me.igortarasenko.WhisperboardKit.CommonTests",
-      infoPlist: .default,
-      sources: "Tests/Common/**",
-      dependencies: [
-        .target(name: "Common"),
-        .external(name: "SnapshotTesting"),
-      ]
-    ),
-  ],
+      // MARK: - AppKit
+
+      .target(
+        name: "WhisperBoardKit",
+        destinations: appDestinations,
+        product: .staticFramework,
+        bundleId: "me.igortarasenko.WhisperboardKit",
+        deploymentTargets: appDeploymentTargets,
+        infoPlist: .extendingDefault(with: [:]),
+        sources: "Sources/AppKit/**",
+        resources: "Resources/AppKit/**",
+        dependencies: [
+          .external(name: "AsyncAlgorithms"),
+          .external(name: "AudioKit"),
+          .external(name: "ComposableArchitecture"),
+          .external(name: "DependenciesAdditions"),
+          .external(name: "DSWaveformImage"),
+          .external(name: "DSWaveformImageViews"),
+          .external(name: "DynamicColor"),
+          .external(name: "FluidGradient"),
+          .external(name: "Inject"),
+          .external(name: "KeychainAccess"),
+          .external(name: "Logging"),
+          .external(name: "Lottie"),
+          .external(name: "NavigationTransitions"),
+          .external(name: "OrderedCollections"),
+          .external(name: "Popovers"),
+          .external(name: "PulseLogHandler"),
+          .external(name: "PulseUI"),
+          .external(name: "SwiftUIIntrospect"),
+          .external(name: "VariableBlurView"),
+          .external(name: "WhisperKit"),
+          // .external(name: "RevenueCat"),
+
+          .target(name: "Common"),
+          .target(name: "AudioProcessing"),
+        ] + (isAppStore ? [.package(product: "RollbarNotifier")] : []),
+        settings: .settings(
+          base: [
+            "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Support/AppKit/Bridging.h",
+          ]
+        )
+      ),
+      .target(
+        name: "WhisperBoardKitTests",
+        destinations: appDestinations,
+        product: .unitTests,
+        bundleId: "me.igortarasenko.WhisperboardKitTests",
+        infoPlist: .default,
+        sources: "Tests/AppKit/**",
+        dependencies: [
+          .target(name: "WhisperBoardKit"),
+          .external(name: "SnapshotTesting"),
+        ]
+      ),
+
+      .target(
+        name: "AudioProcessing",
+        destinations: appDestinations,
+        product: .staticFramework,
+        bundleId: "me.igortarasenko.WhisperboardKit.AudioProcessing",
+        infoPlist: .default,
+        sources: "Sources/AudioProcessing/**",
+        dependencies: [
+          .external(name: "AsyncAlgorithms"),
+          .external(name: "AudioKit"),
+          .external(name: "WhisperKit"),
+          .external(name: "Perception"),
+          .external(name: "Dependencies"),
+          .external(name: "ComposableArchitecture"),
+          .target(name: "Common"),
+        ]
+      ),
+      .target(
+        name: "AudioProcessingTests",
+        destinations: appDestinations,
+        product: .unitTests,
+        bundleId: "me.igortarasenko.WhisperboardKit.AudioProcessingTests",
+        infoPlist: .default,
+        sources: "Tests/AudioProcessing/**",
+        resources: "TestResources/AudioProcessing/**",
+        dependencies: [
+          .target(name: "AudioProcessing"),
+          .external(name: "SnapshotTesting"),
+        ]
+      ),
+      .target(
+        name: "Common",
+        destinations: appDestinations,
+        product: .staticFramework,
+        bundleId: "me.igortarasenko.WhisperboardKit.Common",
+        infoPlist: .default,
+        sources: "Sources/Common/**",
+        dependencies: [
+          .external(name: "AsyncAlgorithms"),
+          .external(name: "PulseLogHandler"),
+          .external(name: "Pulse"),
+          .external(name: "ComposableArchitecture"),
+        ]
+      ),
+      .target(
+        name: "CommonTests",
+        destinations: appDestinations,
+        product: .unitTests,
+        bundleId: "me.igortarasenko.WhisperboardKit.CommonTests",
+        infoPlist: .default,
+        sources: "Tests/Common/**",
+        dependencies: [
+          .target(name: "Common"),
+          .external(name: "SnapshotTesting"),
+        ]
+      ),
+    ],
 
   resourceSynthesizers: [
     .files(extensions: ["bin"]),

@@ -22,7 +22,6 @@ struct RecordingListScreen {
     @Presents var alert: AlertState<Action.Alert>?
   }
 
-
   enum Action: BindableAction, Equatable {
     case binding(BindingAction<State>)
     case task
