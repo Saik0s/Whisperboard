@@ -4,19 +4,12 @@ import Dependencies
 import Foundation
 import WhisperKit
 
-// MARK: - LiveTranscriptionUpdate
-
-public enum LiveTranscriptionUpdate {
-  case transcription(TranscriptionStream.State)
-  case recording(RecordingStream.State)
-}
-
 // MARK: - RecordingTranscriptionStream
 
 @DependencyClient
 public struct RecordingTranscriptionStream: Sendable {
   public var startLiveTranscription: @Sendable (_ fileURL: URL) async throws
-    -> AsyncThrowingStream<LiveTranscriptionUpdate, Error> = { _ in .finished(throwing: nil) }
+  -> AsyncThrowingStream<TranscriptionStream.State, Error> = { _ in .finished(throwing: nil) }
 
   public var startRecordingWithoutTranscription: @Sendable (_ fileURL: URL) async throws
     -> AsyncThrowingStream<RecordingStream.State, Error> = { _ in .finished(throwing: nil) }
@@ -83,55 +76,33 @@ extension RecordingTranscriptionStream: DependencyKey {
 
 private final class RecordingTranscriptionStreamContainer {
   let audioProcessor: AudioProcessor = .init()
-  lazy var recordingStream: RecordingStream = .init(audioProcessor: audioProcessor)
-  lazy var transcriptionStream: TranscriptionStream = .init(audioProcessor: audioProcessor)
 
-  func startLiveTranscription(_ fileURL: URL) async throws -> AsyncThrowingStream<LiveTranscriptionUpdate, Error> {
+  func startTranscriptionLoop() -> AsyncThrowingStream<TranscriptionStream.State, Error> {
     AsyncThrowingStream { continuation in
-      let task = Task { [weak self] in
-        guard let self else { return }
-
+      Task {
         do {
-          async let recordingResult: Void = recordingStream.startRecording(at: fileURL) { state in
-            continuation.yield(LiveTranscriptionUpdate.recording(state))
-          }
-          async let transcriptionResult: Void = transcriptionStream.startRealtimeLoop(callback: { state in
-            continuation.yield(LiveTranscriptionUpdate.transcription(state))
+          let transcriptionStream = TranscriptionStream(audioProcessor: audioProcessor)
+          try await transcriptionStream.startRealtimeLoop(callback: { state in
+            continuation.yield(state)
           })
-
-          try await recordingResult
-          try await transcriptionResult
-
-          continuation.finish(throwing: nil)
+          continuation.finish()
         } catch {
           logs.error("Failed to start live transcription \(error)")
           continuation.finish(throwing: error)
-        }
-
-        await recordingStream.stopRecording()
-        await transcriptionStream.stopRealtimeLoop()
-        await transcriptionStream.resetState()
-      }
-
-      continuation.onTermination = { _ in
-        Task { [weak self] in
-          await self?.recordingStream.stopRecording()
-          await self?.transcriptionStream.stopRealtimeLoop()
-          await self?.transcriptionStream.resetState()
-          task.cancel()
         }
       }
     }
   }
 
-  func startRecordingWithoutTranscription(_ fileURL: URL) async throws -> AsyncThrowingStream<RecordingStream.State, Error> {
+  func startRecording(_ fileURL: URL) -> AsyncThrowingStream<RecordingStream.State, Error> {
     AsyncThrowingStream { continuation in
-      let task = Task { [weak self] in
+      Task {
         do {
+          let recordingStream = RecordingStream(audioProcessor: audioProcessor)
           try await self?.recordingStream.startRecording(at: fileURL) { state in
             continuation.yield(state)
           }
-          continuation.finish(throwing: nil)
+          continuation.finish()
         } catch {
           logs.error("Failed to start recording without transcription \(error)")
           continuation.finish(throwing: error)

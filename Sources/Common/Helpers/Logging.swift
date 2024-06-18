@@ -70,7 +70,7 @@ class UnifiedLogHandler: LogHandler {
     let formattedMessage = formatMessage(level: level, message: message, metadata: combinedMetadata, file: file, line: line)
 
     // Log to Pulse
-    pulseLogger.log(level: level, message: "\(formattedMessage)", metadata: metadata, file: file, function: function, line: line)
+    pulseLogger.log(level: level, message: "\(message)", metadata: metadata, file: file, function: function, line: line)
 
     // Log to os.Logger
     osLogger.log(level: OSLogType.from(loggerLevel: level), "\(formattedMessage)")

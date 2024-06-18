@@ -17,16 +17,27 @@ struct Recording {
 
     enum LiveTranscriptionState: Equatable {
       case modelLoading(Double), transcribing(String)
+
+      var modelProgress: Double? {
+        if case let .modelLoading(progress) = self {
+          return progress
+        }
+        return nil
+      }
+
+      var currentText: String? {
+        if case let .transcribing(text) = self {
+          return text
+        }
+        return nil
+      }
     }
 
     var mode: Mode = .recording
-    var isLiveTranscription = false
 
     @Shared var recordingInfo: RecordingInfo
     @Shared var samples: [Float]
     @Shared var liveTranscriptionState: LiveTranscriptionState?
-
-    @Presents var alert: AlertState<Action.Alert>?
 
     init(recordingInfo: RecordingInfo) {
       _recordingInfo = Shared(recordingInfo)
@@ -38,19 +49,16 @@ struct Recording {
   enum Action: Equatable, BindableAction {
     case binding(BindingAction<State>)
     case delegate(Delegate)
-    case startRecording(withLiveTranscription: Bool)
+    case startRecording
     case saveButtonTapped
     case pauseButtonTapped
     case continueButtonTapped
     case deleteButtonTapped
-    case alert(PresentationAction<Alert>)
 
     enum Delegate: Equatable {
       case didFinish(TaskResult<State>)
       case didCancel
     }
-
-    enum Alert: Hashable {}
   }
 
   @Dependency(RecordingTranscriptionStream.self) var transcriptionStream: RecordingTranscriptionStream
@@ -66,7 +74,7 @@ struct Recording {
       case .delegate:
         return .none
 
-      case let .startRecording(withLiveTranscription):
+      case .startRecording:
         state.mode = .recording
 
         return .run { [state] _ in
@@ -74,50 +82,29 @@ struct Recording {
 
           generateImpact()
 
-          if withLiveTranscription {
-            for try await liveState in try await transcriptionStream.startLiveTranscription(fileURL) {
-              switch liveState {
-              case let .transcription(transcriptionState):
-                state.$liveTranscriptionState.withLock { liveTranscriptionState in
-                  if transcriptionState.modelState != .loaded {
-                    liveTranscriptionState = .modelLoading(Double(transcriptionState.loadingProgressValue))
-                  } else {
-                    liveTranscriptionState = .transcribing(transcriptionState.currentText)
-                  }
+          for try await transcriptionState in try await transcriptionStream.startLiveTranscription(fileURL) {
+              state.$liveTranscriptionState.withLock { liveTranscriptionState in
+                if transcriptionState.modelState != .loaded {
+                  liveTranscriptionState = .modelLoading(Double(transcriptionState.loadingProgressValue))
+                } else {
+                  liveTranscriptionState = .transcribing(transcriptionState.currentText)
                 }
 
-                if state.$recordingInfo.wrappedValue.transcription == nil {
-                  @Shared(.settings) var settings: Settings
-                  state.$recordingInfo.wrappedValue.transcription = Transcription(
-                    fileName: state.$recordingInfo.wrappedValue.fileName,
-                    parameters: settings.parameters,
-                    model: settings.selectedModelName
-                  )
-                }
-
-                let transcriptionSegments: [Segment] = transcriptionState.segments.map(\.asSimpleSegment)
-                state.$recordingInfo.withLock { recordingInfo in
-                  recordingInfo.transcription?.segments = transcriptionSegments
-                }
-
-              case let .recording(recordingState):
-                state.$recordingInfo.withLock { recordingInfo in
-                  recordingInfo.duration = recordingState.duration
-                }
-                state.$samples.withLock { samples in
-                  samples = recordingState.waveSamples
-                }
               }
-            }
-          } else {
-            for try await recordingState in try await transcriptionStream.startRecordingWithoutTranscription(fileURL) {
+
+              if state.$recordingInfo.wrappedValue.transcription == nil {
+                @Shared(.settings) var settings: Settings
+                state.$recordingInfo.wrappedValue.transcription = Transcription(
+                  fileName: state.$recordingInfo.wrappedValue.fileName,
+                  parameters: settings.parameters,
+                  model: settings.selectedModelName
+                )
+              }
+
+              let transcriptionSegments: [Segment] = transcriptionState.segments.map(\.asSimpleSegment)
               state.$recordingInfo.withLock { recordingInfo in
-                recordingInfo.duration = recordingState.duration
+                recordingInfo.transcription?.segments = transcriptionSegments
               }
-              state.$samples.withLock { samples in
-                samples = recordingState.waveSamples
-              }
-            }
           }
         } catch: { error, send in
           logs.error("Error while starting recording: \(error)")
@@ -158,12 +145,8 @@ struct Recording {
           try? FileManager.default.removeItem(at: state.recordingInfo.fileURL)
           await send(.delegate(.didCancel))
         }
-
-      case .alert:
-        return .none
       }
     }
-    .ifLet(\.$alert, action: \.alert)
   }
 
   func generateImpact() {
