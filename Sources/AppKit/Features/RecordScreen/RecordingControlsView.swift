@@ -16,12 +16,6 @@ struct RecordingControls {
   /// The state of the recording controls.
   @ObservableState
   struct State: Equatable {
-    /// Modes for the transcription view.
-    enum TranscriptionViewMode {
-      case simple
-      case technical
-    }
-
     /// Permissions for the recorder.
     enum RecorderPermission {
       case allowed
@@ -32,7 +26,6 @@ struct RecordingControls {
     var alert: AlertState<Action>?
     var recording: Recording.State?
     var audioRecorderPermission = RecorderPermission.undetermined
-    var transcriptionViewMode = TranscriptionViewMode.simple
     var isModelLoadingInfoPresented = false
   }
 
@@ -40,7 +33,6 @@ struct RecordingControls {
   enum Action: Equatable, BindableAction {
     case binding(BindingAction<State>)
     case recording(Recording.Action)
-    case recordPermissionResponse(Bool)
     case recordButtonTapped
     case openSettingsButtonTapped
     case toggleModelLoadingInfo
@@ -61,20 +53,22 @@ struct RecordingControls {
 
     Reduce<State, Action> { state, action in
       switch action {
-      case .recordButtonTapped:
-        switch state.audioRecorderPermission {
-        case .undetermined:
-          return .run { send in
-            await send(.recordPermissionResponse(requestRecordPermission()))
+      case .recordButtonTapped where state.audioRecorderPermission == .undetermined:
+        return .run { send in
+          let permission = await requestRecordPermission()
+          await send(.set(\.audioRecorderPermission, permission ? .allowed : .denied))
+          if permission {
+            await send(.set(\.recording, createNewRecording()))
           }
-
-        case .denied:
-          state.alert = micPermissionAlert
-          return .none
-
-        case .allowed:
-          return startRecording(&state)
         }
+
+      case .recordButtonTapped where state.audioRecorderPermission == .allowed:
+        state.recording = createNewRecording()
+        return .none
+
+      case .recordButtonTapped:
+        assertionFailure("Can't press record button when permission is denied")
+        return .none
 
       case .recording(.delegate(.didCancel)):
         state.recording = nil
@@ -90,15 +84,6 @@ struct RecordingControls {
 
       case .recording:
         return .none
-
-      case let .recordPermissionResponse(permission):
-        state.audioRecorderPermission = permission ? .allowed : .denied
-        if permission {
-          return startRecording(&state)
-        } else {
-          state.alert = micPermissionAlert
-          return .none
-        }
 
       case .openSettingsButtonTapped:
         return .run { _ in
@@ -116,15 +101,9 @@ struct RecordingControls {
     .ifLet(\.recording, action: \.recording) { Recording() }
   }
 
-  /// Starts a new recording session.
-  ///
-  /// - Parameter state: The current state of the recording controls.
-  /// - Returns: An effect that starts the recording session.
-  private func startRecording(_ state: inout State) -> Effect<Action> {
-    state.recording = Recording.State(recordingInfo: RecordingInfo(id: uuid().uuidString, title: "New Recording", date: date.now, duration: 0))
-    return .run { send in
-      await send(.recording(.startRecording))
-    }.cancellable(id: CancelID.recording, cancelInFlight: true)
+  private func createNewRecording() -> Recording.State {
+    let newInfo = RecordingInfo(id: uuid().uuidString, date: date.now)
+    return Recording.State(recordingInfo: newInfo)
   }
 
   /// An alert state for microphone permission denial.
@@ -150,11 +129,6 @@ struct RecordingControlsView: View {
     (store.recording?.recordingInfo.duration).flatMap {
       dateComponentsFormatter.string(from: $0)
     } ?? ""
-  }
-
-  /// The buffer energy levels of the recording.
-  var bufferEnergy: [Float] {
-    store.recording?.samples ?? []
   }
 
   var body: some View {
@@ -241,8 +215,8 @@ struct RecordingControlsView: View {
   @ViewBuilder
   private func liveTranscriptionView(_ recording: Recording.State) -> some View {
     VStack(spacing: .grid(2)) {
-      modelLoadingView(progress: recording.liveTranscriptionState?.liveTranscriptionProgress ?? 0.0)
-      transcribingView(recording: recording, text: recording.liveTranscriptionState?.liveTranscriptionText ?? "")
+      modelLoadingView(progress: recording.liveTranscriptionState?.modelProgress ?? 0.0)
+      transcribingView(recording: recording, text: recording.liveTranscriptionState?.currentText ?? "")
 
       Spacer()
     }

@@ -13,7 +13,6 @@ public struct TranscriptionTaskEnvelope {
 
   public var segments: [Segment] { recording.transcription?.segments ?? [] }
   public var duration: TimeInterval { recording.duration }
-  public var offset: TimeInterval { recording.offsetSeconds }
   public var progress: Double { recording.transcription?.progress ?? 0 }
 
   public var fileName: String { recording.fileName }
