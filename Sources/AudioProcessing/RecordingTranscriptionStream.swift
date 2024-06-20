@@ -72,11 +72,10 @@ extension RecordingTranscriptionStream: DependencyKey {
 }
 
 // MARK: - RecordingTranscriptionStreamContainer
-
 private actor RecordingTranscriptionStreamContainer {
   let audioProcessor: AudioProcessor = .init()
-  var recordingStream: RecordingStream?
-  var transcriptionStream: TranscriptionStream?
+  lazy var recordingStream: RecordingStream = RecordingStream(audioProcessor: audioProcessor)
+  lazy var transcriptionStream: TranscriptionStream = TranscriptionStream(audioProcessor: audioProcessor)
 
   func startRecording(_ fileURL: URL) -> AsyncThrowingStream<RecordingStream.State, Error> {
     AsyncThrowingStream { [weak self] continuation in
@@ -84,15 +83,13 @@ private actor RecordingTranscriptionStreamContainer {
         guard let self else { return }
 
         do {
-          let recordingStream = RecordingStream(audioProcessor: audioProcessor)
-          await setRecordingStream(recordingStream)
-          continuation.onTermination = { _ in
-            Task {
-              await recordingStream.stopRecording()
-              await self.setRecordingStream(nil)
+          await self.recordingStream.resetState()
+          continuation.onTermination = { [weak self] _ in
+            Task { [weak self] in
+              await self?.recordingStream.stopRecording()
             }
           }
-          try await recordingStream.startRecording(at: fileURL) { state in
+          try await self.recordingStream.startRecording(at: fileURL) { state in
             continuation.yield(state)
           }
           continuation.finish()
@@ -117,15 +114,13 @@ private actor RecordingTranscriptionStreamContainer {
         guard let self else { return }
 
         do {
-          let transcriptionStream = TranscriptionStream(audioProcessor: audioProcessor)
-          await setTranscriptionStream(transcriptionStream)
-          continuation.onTermination = { [self] _ in
-            Task {
-              await transcriptionStream.stopRealtimeLoop()
-              await self.setTranscriptionStream(nil)
+          await self.transcriptionStream.resetState()
+          continuation.onTermination = { [weak self] _ in
+            Task { [weak self] in
+              await self?.transcriptionStream.stopRealtimeLoop()
             }
           }
-          try await transcriptionStream.startRealtimeLoop { state in
+          try await self.transcriptionStream.startRealtimeLoop { state in
             continuation.yield(state)
           }
           continuation.finish()
@@ -143,16 +138,14 @@ private actor RecordingTranscriptionStreamContainer {
         guard let self else { return }
 
         do {
-          let transcriptionStream = TranscriptionStream(audioProcessor: audioProcessor)
-          await setTranscriptionStream(transcriptionStream)
-          continuation.onTermination = { _ in
-            Task {
-              await transcriptionStream.stopRealtimeLoop()
-              await self.setTranscriptionStream(nil)
+          await self.transcriptionStream.resetState()
+          continuation.onTermination = { [weak self] _ in
+            Task { [weak self] in
+              await self?.transcriptionStream.stopRealtimeLoop()
             }
           }
 
-          try await transcriptionStream.transcribeCurrentBufferVADChunked { state in
+          try await self.transcriptionStream.transcribeCurrentBufferVADChunked { state in
             continuation.yield(state)
           }
           continuation.finish()
@@ -165,29 +158,25 @@ private actor RecordingTranscriptionStreamContainer {
   }
 
   func stopRecording() async {
-    await recordingStream?.stopRecording()
-    await transcriptionStream?.stopRealtimeLoop()
+    await recordingStream.stopRecording()
+    await transcriptionStream.stopRealtimeLoop()
   }
 
   func pauseRecording() async {
-    await recordingStream?.pauseRecording()
+    await recordingStream.pauseRecording()
   }
 
   func resumeRecording() async {
-    await recordingStream?.resumeRecording()
+    await recordingStream.resumeRecording()
   }
 
   func fetchModels() async throws -> [Model] {
-    let transcriptionStream = transcriptionStream ?? TranscriptionStream(audioProcessor: audioProcessor)
-    self.transcriptionStream = transcriptionStream
     try await transcriptionStream.fetchModels()
     return await getModelInfos()
   }
 
   func loadModel(_ model: String, progressCallback: @escaping (Double) -> Void) async throws {
     logs.debug("Starting to load model: \(model)")
-    let transcriptionStream = transcriptionStream ?? TranscriptionStream(audioProcessor: audioProcessor)
-    self.transcriptionStream = transcriptionStream
     async let loadModelTask: Void = transcriptionStream.loadModel(model)
 
     while await transcriptionStream.state.modelState != .loaded {
@@ -203,8 +192,6 @@ private actor RecordingTranscriptionStreamContainer {
   }
 
   func deleteModel(_ model: String) async throws {
-    let transcriptionStream = transcriptionStream ?? TranscriptionStream(audioProcessor: audioProcessor)
-    self.transcriptionStream = transcriptionStream
     try await transcriptionStream.deleteModel(model)
   }
 
@@ -214,8 +201,6 @@ private actor RecordingTranscriptionStreamContainer {
   }
 
   private func getModelInfos() async -> [Model] {
-    let transcriptionStream = transcriptionStream ?? TranscriptionStream(audioProcessor: audioProcessor)
-    self.transcriptionStream = transcriptionStream
     let state = await transcriptionStream.state
     let (defaultModel, disabledModels) = WhisperKit.recommendedModels()
     return state.availableModels.map { name in
@@ -226,13 +211,5 @@ private actor RecordingTranscriptionStreamContainer {
         isDisabled: disabledModels.contains(name)
       )
     }
-  }
-
-  private func setRecordingStream(_ recordingStream: RecordingStream?) {
-    self.recordingStream = recordingStream
-  }
-
-  private func setTranscriptionStream(_ transcriptionStream: TranscriptionStream?) {
-    self.transcriptionStream = transcriptionStream
   }
 }

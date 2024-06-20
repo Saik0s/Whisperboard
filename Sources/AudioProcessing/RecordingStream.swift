@@ -29,6 +29,10 @@ public actor RecordingStream {
     self.audioProcessor = audioProcessor
   }
 
+  public func resetState() {
+    state = .init()
+  }
+
   public func startRecording(at fileURL: URL, callback: @escaping (State) -> Void) async throws {
     stateChangeCallback = callback
 
@@ -59,7 +63,7 @@ public actor RecordingStream {
     logs.info("Recording started successfully.")
 
     while state.isRecording {
-       try? await Task.sleep(seconds: 0.3)
+      try? await Task.sleep(seconds: 0.3)
     }
   }
 
@@ -80,9 +84,8 @@ public actor RecordingStream {
   }
 
   public func resumeRecording() {
-    // TODO: replace with new resumeRecording method
     do {
-      try audioProcessor.audioEngine?.start()
+      try audioProcessor.resumeRecordingLive()
       logs.info("Recording has been resumed")
       state.isPaused = false
     } catch {

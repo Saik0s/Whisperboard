@@ -48,9 +48,13 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
         task.recording.transcription?.status = .loading
       }
 
-      try await transcriptionStream.loadModel(task.modelType) { progress in
+      let model = await task.modelType
+
+      try await transcriptionStream.loadModel(model) { progress in
         logs.debug("Model load progress for task ID \(taskId): \(progress * 100)%")
       }
+
+      logs.debug("Model (\(model)) loaded for task ID \(taskId)")
 
       DispatchQueue.main.async {
         logs.debug("Setting transcription status to progress for task ID: \(taskId)")
