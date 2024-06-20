@@ -105,7 +105,15 @@ private actor RecordingTranscriptionStreamContainer {
     let audioBuffer = try await AudioProcessor.loadAudio(at: [fileURL.path()]).first.require().get()
     logs.debug("Loaded audio buffer from file: \(fileURL), buffer size: \(audioBuffer.count) samples")
 
-    audioProcessor.processBuffer(audioBuffer)
+    let chunkSize = 16000
+    logs.debug("Starting to process audio buffer \(audioBuffer.count) in chunks")
+    for i in stride(from: 0, to: audioBuffer.count, by: chunkSize) {
+        let endIndex = min(i + chunkSize, audioBuffer.count)
+        let chunk = Array(audioBuffer[i..<endIndex])
+        logs.debug("Processing chunk from index \(i) to \(endIndex)")
+        audioProcessor.processBuffer(chunk)
+    }
+    logs.debug("Finished processing audio buffer")
   }
 
   func startTranscriptionLoop() -> AsyncThrowingStream<TranscriptionStream.State, Error> {
@@ -132,7 +140,7 @@ private actor RecordingTranscriptionStreamContainer {
     }
   }
 
-  func startBufferTranscription() -> AsyncThrowingStream<TranscriptionStream.State, Error> {
+  func startBufferTranscription(isVADChunked: Bool = false) -> AsyncThrowingStream<TranscriptionStream.State, Error> {
     AsyncThrowingStream { [weak self] continuation in
       Task { [weak self] in
         guard let self else { return }
@@ -145,8 +153,14 @@ private actor RecordingTranscriptionStreamContainer {
             }
           }
 
-          try await self.transcriptionStream.transcribeCurrentBufferVADChunked { state in
-            continuation.yield(state)
+          if isVADChunked {
+            try await self.transcriptionStream.transcribeCurrentBufferVADChunked { state in
+              continuation.yield(state)
+            }
+          } else {
+            try await self.transcriptionStream.transcribeCurrentBuffer { state in
+              continuation.yield(state)
+            }
           }
           continuation.finish()
         } catch {

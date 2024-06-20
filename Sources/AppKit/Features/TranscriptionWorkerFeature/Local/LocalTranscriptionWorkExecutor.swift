@@ -74,22 +74,35 @@ final class LocalTranscriptionWorkExecutor: TranscriptionWorkExecutor {
       //     return adjustedSegment
       // }
 
-      for try await transcriptionState in await transcriptionStream.startBufferTranscription()._throttle(for: .seconds(0.1)) {
+      try await transcriptionStream.readAndProcessAudioFile(fileURL: fileURL)
+      for try await transcriptionState in await transcriptionStream.startBufferTranscription() {
         DispatchQueue.main.async {
           let simpleSegments = transcriptionState.segments.map(\.asSimpleSegment)
           let progress = transcriptionState.transcriptionProgressFraction
           task.recording.transcription?.segments = simpleSegments
-          task.recording.transcription?.status = .progress(progress, text: transcriptionState.currentText)
-//          var mainTexts = simpleSegments.map(\.text)
-//          mainTexts.append(transcriptionState.currentText)
-//          let mainText = mainTexts.reduce("") { result, text in
-//            if result.hasSuffix(".") || result.hasSuffix("!") || result.hasSuffix("?") {
-//              result + "\n" + text
-//            } else {
-//              result + " " + text
-//            }
-//          }
-          task.recording.transcription?.text = transcriptionState.currentText // mainText.trimmingCharacters(in: .whitespacesAndNewlines)
+          // var mainTexts = simpleSegments.map(\.text)
+          // mainTexts.append(transcriptionState.currentText)
+          // let mainText = mainTexts.reduce("") { result, text in
+          //   if result.hasSuffix(".") || result.hasSuffix("!") || result.hasSuffix("?") {
+          //     result + "\n" + text
+          //   } else {
+          //     result + " " + text
+          //   }
+          // }
+          // let text =  mainText.trimmingCharacters(in: .whitespacesAndNewlines)
+          let text = """
+          simpleSegments:
+          \(simpleSegments.map(\.text).joined(separator: " "))
+          currentText:
+          \(transcriptionState.currentText)
+          confirmedWords:
+          \(transcriptionState.confirmedWords.map(\.word).joined(separator: " "))
+          hypothesisWords:
+          \(transcriptionState.hypothesisWords.map(\.word).joined(separator: " "))
+          """
+          task.recording.transcription?.status = .progress(progress, text: text)
+          task.recording.transcription?.text = text
+          // task.recording.transcription?.text = transcriptionState.currentText // mainText.trimmingCharacters(in: .whitespacesAndNewlines)
           task.recording.transcription?.words = transcriptionState.confirmedWords.map { (word: WordTiming) in
             WordData(
               word: word.word,
