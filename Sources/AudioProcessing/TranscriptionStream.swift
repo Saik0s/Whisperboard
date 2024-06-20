@@ -267,10 +267,9 @@ public actor TranscriptionStream {
   public func startRealtimeLoop(callback: @escaping (State) -> Void) async throws {
     logs.debug("Starting real-time loop")
     state.isWorking = true
-    stateChangeCallback = callback
 
     while state.isWorking {
-      try await transcribeCurrentBuffer()
+      try await transcribeCurrentBuffer(callback: callback)
     }
 
     logs.debug("Real-time loop ended")
@@ -322,8 +321,10 @@ public actor TranscriptionStream {
     logs.debug("VAD chunked transcription completed")
   }
 
-  private func transcribeCurrentBuffer() async throws {
+  public func transcribeCurrentBuffer(callback: @escaping (State) -> Void) async throws {
     logs.debug("Starting transcription of current buffer")
+    stateChangeCallback = callback
+    state.isWorking = true
 
     // Retrieve the current audio buffer from the audio processor
     let currentBuffer = audioProcessor.audioSamples
