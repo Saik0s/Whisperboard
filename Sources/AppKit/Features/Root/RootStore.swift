@@ -92,16 +92,10 @@ struct Root {
       switch action {
       case .task:
         // Pausing unfinished transcription on app launch
-        // Note: Disabled transcription resume logic for now
         for recording in state.recordingListScreen.recordings {
           if let transcription = recording.transcription, transcription.status.isLoadingOrProgress {
-            // if let task = state.transcriptionWorker.taskQueue[id: transcription.id] {
-            //   logs.debug("Marking \(recording.fileName) transcription as paused")
-            //   state.recordingListScreen.recordings[id: recording.id]?.transcription?.status = .paused(task, progress: transcription.progress)
-            // } else {
             logs.debug("Marking \(recording.fileName) transcription as failed")
             state.recordingListScreen.recordings[id: recording.id]?.transcription?.status = .error(message: "Transcription failed, please try again.")
-            // }
             state.transcriptionWorker.taskQueue[id: transcription.id] = nil
           }
         }

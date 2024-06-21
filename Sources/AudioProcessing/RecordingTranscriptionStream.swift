@@ -72,10 +72,11 @@ extension RecordingTranscriptionStream: DependencyKey {
 }
 
 // MARK: - RecordingTranscriptionStreamContainer
+
 private actor RecordingTranscriptionStreamContainer {
   let audioProcessor: AudioProcessor = .init()
-  lazy var recordingStream: RecordingStream = RecordingStream(audioProcessor: audioProcessor)
-  lazy var transcriptionStream: TranscriptionStream = TranscriptionStream(audioProcessor: audioProcessor)
+  lazy var recordingStream = RecordingStream(audioProcessor: audioProcessor)
+  lazy var transcriptionStream = TranscriptionStream(audioProcessor: audioProcessor)
 
   func startRecording(_ fileURL: URL) -> AsyncThrowingStream<RecordingStream.State, Error> {
     AsyncThrowingStream { [weak self] continuation in
@@ -83,13 +84,13 @@ private actor RecordingTranscriptionStreamContainer {
         guard let self else { return }
 
         do {
-          await self.recordingStream.resetState()
+          await recordingStream.resetState()
           continuation.onTermination = { [weak self] _ in
             Task { [weak self] in
               await self?.recordingStream.stopRecording()
             }
           }
-          try await self.recordingStream.startRecording(at: fileURL) { state in
+          try await recordingStream.startRecording(at: fileURL) { state in
             continuation.yield(state)
           }
           continuation.finish()
@@ -108,10 +109,10 @@ private actor RecordingTranscriptionStreamContainer {
     let chunkSize = 16000
     logs.debug("Starting to process audio buffer \(audioBuffer.count) in chunks")
     for i in stride(from: 0, to: audioBuffer.count, by: chunkSize) {
-        let endIndex = min(i + chunkSize, audioBuffer.count)
-        let chunk = Array(audioBuffer[i..<endIndex])
-        logs.debug("Processing chunk from index \(i) to \(endIndex)")
-        audioProcessor.processBuffer(chunk)
+      let endIndex = min(i + chunkSize, audioBuffer.count)
+      let chunk = Array(audioBuffer[i ..< endIndex])
+      logs.debug("Processing chunk from index \(i) to \(endIndex)")
+      audioProcessor.processBuffer(chunk)
     }
     logs.debug("Finished processing audio buffer")
   }
@@ -122,13 +123,13 @@ private actor RecordingTranscriptionStreamContainer {
         guard let self else { return }
 
         do {
-          await self.transcriptionStream.resetState()
+          await transcriptionStream.resetState()
           continuation.onTermination = { [weak self] _ in
             Task { [weak self] in
               await self?.transcriptionStream.stopRealtimeLoop()
             }
           }
-          try await self.transcriptionStream.startRealtimeLoop { state in
+          try await transcriptionStream.startRealtimeLoop { state in
             continuation.yield(state)
           }
           continuation.finish()
@@ -146,7 +147,7 @@ private actor RecordingTranscriptionStreamContainer {
         guard let self else { return }
 
         do {
-          await self.transcriptionStream.resetState()
+          await transcriptionStream.resetState()
           continuation.onTermination = { [weak self] _ in
             Task { [weak self] in
               await self?.transcriptionStream.stopRealtimeLoop()
@@ -154,11 +155,11 @@ private actor RecordingTranscriptionStreamContainer {
           }
 
           if isVADChunked {
-            try await self.transcriptionStream.transcribeCurrentBufferVADChunked { state in
+            try await transcriptionStream.transcribeCurrentBufferVADChunked { state in
               continuation.yield(state)
             }
           } else {
-            try await self.transcriptionStream.transcribeCurrentBuffer { state in
+            try await transcriptionStream.transcribeCurrentBuffer { state in
               continuation.yield(state)
             }
           }
