@@ -32,11 +32,10 @@ struct RecordingCard {
   enum Action: BindableAction, Equatable {
     case binding(BindingAction<State>)
     case playerControls(PlayerControls.Action)
+    case delegate(DelegateAction)
     case transcribeButtonTapped
     case cancelTranscriptionButtonTapped
-    case recordingSelected
-    case didTapResumeTranscription
-    case delegate(DelegateAction)
+    case resumeTranscriptionButtonTapped
 
     enum DelegateAction: Equatable {
       case enqueueTaskForRecordingID(String)
@@ -60,9 +59,6 @@ struct RecordingCard {
       case .playerControls:
         return .none
 
-      case .recordingSelected:
-        return .none
-
       case .delegate:
         return .none
 
@@ -74,7 +70,7 @@ struct RecordingCard {
         state.recording.transcription?.status = .canceled
         return .send(.delegate(.cancelTaskForRecordingID(state.recording.id)))
 
-      case .didTapResumeTranscription:
+      case .resumeTranscriptionButtonTapped:
         if let transcription = state.recording.transcription, case let .paused(task, _) = transcription.status {
           return .send(.delegate(.resumeTask(task)))
         }

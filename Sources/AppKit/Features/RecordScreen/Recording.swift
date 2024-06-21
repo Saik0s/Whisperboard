@@ -122,7 +122,7 @@ struct Recording {
 
             group.addTask {
               for try await recordingState in await transcriptionStream.startRecording(recordingInfo.wrappedValue.fileURL) {
-                samples.withLock  { samples in
+                samples.withLock { samples in
                   samples = recordingState.waveSamples
                 }
               }

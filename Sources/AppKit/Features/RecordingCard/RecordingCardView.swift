@@ -93,15 +93,9 @@ struct TranscriptionControlsView: View {
       Text(store.recording.transcription?.status.message ?? "")
         .textStyle(.body)
 
-      HStack {
-        Button("Resume") {
-          store.send(.didTapResumeTranscription)
-        }.tertiaryButtonStyle()
-
-        Button("Start Over") {
-          store.send(.transcribeButtonTapped)
-        }.tertiaryButtonStyle()
-      }
+      Button("Start Over") {
+        store.send(.transcribeButtonTapped)
+      }.tertiaryButtonStyle()
     }
     .padding(.grid(2))
   }
