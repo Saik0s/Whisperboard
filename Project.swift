@@ -154,6 +154,7 @@ let project = Project(
       "CODE_SIGN_IDENTITY": "",
       "CODE_SIGNING_REQUIRED": "NO",
       "DEVELOPMENT_TEAM": SettingValue(stringLiteral: devTeam),
+      "MTL_FAST_MATH": "YES",
     ]
   ),
 
