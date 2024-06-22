@@ -37,6 +37,64 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "build_dev",
+      "type": "shell",
+      "command": "make",
+      "options": {
+        "cwd": "${workspaceRoot}"
+      },
+      "args": [
+        "build_debug",
+      ],
+      "problemMatcher": ["$swiftc"],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "build audio processing",
+      "type": "shell",
+      "command": "xcodebuild",
+      "options": {
+        "cwd": "${workspaceRoot}"
+      },
+      "args": [
+        "-workspace",
+        "WhisperBoard.xcworkspace",
+        "-scheme",
+        "AudioProcessing",
+        "-configuration",
+        "Debug"
+      ],
+      "problemMatcher": ["$swiftc"],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "build kit",
+      "type": "shell",
+      "command": "xcodebuild",
+      "options": {
+        "cwd": "${workspaceRoot}"
+      },
+      "args": [
+        "-workspace",
+        "WhisperBoard.xcworkspace",
+        "-scheme",
+        "WhisperBoardKit",
+        "-configuration",
+        "Debug"
+      ],
+      "problemMatcher": ["$swiftc"],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
     }
   ]
 }

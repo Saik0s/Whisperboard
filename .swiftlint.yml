@@ -13,6 +13,7 @@ excluded:
   - "**/SwifterSwift"
   - "**/Derived"
   - "**/.build"
+  - ".vscode"
 
 disabled_rules:
   - todo

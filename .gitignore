@@ -125,7 +125,8 @@ Tuist/Dependencies/graph.json
 Derived/
 analyzer.py
 .env
-AppKit/Sources/Clients/Secrets.swift
+Sources/AppKit/Clients/Secrets.swift
+Secrets.swift
 ci_scripts/__pycache__/
 ci_scripts/gyb
 ci_scripts/gyb.py
@@ -137,3 +138,7 @@ cpd-output.xml
 build/
 TuistCache/
 Tuist/.build
+
+buildServer.json
+.aider*
+App/Support/Reveal/
