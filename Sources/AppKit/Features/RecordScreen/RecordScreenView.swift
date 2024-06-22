@@ -43,7 +43,11 @@ struct RecordScreen {
     Reduce<State, Action> { state, action in
       switch action {
       case let .recordingControls(.recording(.delegate(.didFinish(.success(recording))))):
-        return .send(.delegate(.newRecordingCreated(recording.recordingInfo)))
+        // In case recording process has finished successfully, we want to mark transcription as done
+        var recordingInfo = recording.recordingInfo
+        recordingInfo.transcription?.status = .done(Date())
+
+        return .send(.delegate(.newRecordingCreated(recordingInfo)))
 
       case let .recordingControls(.recording(.delegate(.didFinish(.failure(error))))):
         state.alert = AlertState(

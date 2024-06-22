@@ -13,6 +13,7 @@ public struct Transcription: Codable, Hashable, Identifiable {
   public var status: Status = .notStarted
   public var words: [WordData]
   public var text: String
+  public var timings: Timings
 
   public var progress: Double {
     if case let .progress(progress, _) = status {
@@ -35,7 +36,8 @@ public struct Transcription: Codable, Hashable, Identifiable {
     model: String,
     status: Status = .notStarted,
     words: [WordData] = [],
-    text: String = ""
+    text: String = "",
+    timings: Timings = .init()
   ) {
     self.id = id
     self.fileName = fileName
@@ -46,6 +48,7 @@ public struct Transcription: Codable, Hashable, Identifiable {
     self.status = status
     self.words = words
     self.text = text
+    self.timings = timings
   }
 }
 
@@ -71,7 +74,7 @@ public extension Transcription {
     case uploading(Double)
     case error(message: String)
     case progress(Double, text: String)
-    case done(Date, Timings)
+    case done(Date)
     case canceled
     case paused(TranscriptionTask, progress: Double)
   }
@@ -300,7 +303,8 @@ public extension Transcription.Status {
       ],
       parameters: TranscriptionParameters(),
       model: "tiny",
-      status: .done(Date(), Timings())
+      status: .done(Date()),
+      timings: Timings(tokensPerSecond: 1, fullPipeline: 1)
     )
 
     static let mock2 = Transcription(
@@ -325,7 +329,8 @@ public extension Transcription.Status {
       ],
       parameters: TranscriptionParameters(),
       model: "tiny",
-      status: .done(Date(), Timings())
+      status: .done(Date()),
+      timings: Timings(tokensPerSecond: 1, fullPipeline: 1)
     )
 
     static let mock3 = Transcription(
@@ -350,7 +355,8 @@ public extension Transcription.Status {
       ],
       parameters: TranscriptionParameters(),
       model: "tiny",
-      status: .done(Date(), Timings())
+      status: .done(Date()),
+      timings: Timings(tokensPerSecond: 1, fullPipeline: 1)
     )
   }
 #endif
