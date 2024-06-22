@@ -78,32 +78,6 @@ struct ModelSectionView: View {
         """)
       }
       .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
-
-      Section {
-        SettingsToggleButton(
-          icon: .system(name: "mic.fill", background: .systemRed),
-          title: "Auto-Transcribe Recordings",
-          isOn: $store.settings.isAutoTranscriptionEnabled
-        )
-      } footer: {
-        Text(
-          "Enable this option to automatically transcribe audio recordings as soon as you stop recording. When disabled, you'll need to manually initiate the transcription process for each recording."
-        )
-      }
-      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
-
-      Section {
-        SettingsToggleButton(
-          icon: .system(name: "cpu", background: .systemGreen),
-          title: "Use GPU (Experimental)",
-          isOn: $store.settings.isUsingGPU
-        )
-      } footer: {
-        Text(
-          "Enable this option to use the GPU for transcription. This option is experimental and might not work on all devices."
-        )
-      }
-      .listRowBackground(Color.DS.Background.secondary).listRowSeparator(.hidden)
     }
   }
 }
@@ -214,8 +188,11 @@ struct StorageSectionView: View {
         .overlay(store.isICloudSyncInProgress ? ProgressView().progressViewStyle(.circular) : nil)
         .animation(.easeInOut, value: store.isICloudSyncInProgress)
 
-        SettingsButton(icon: .system(name: "trash", background: .systemYellow.darken(by: 0.1)), title: "Delete Storage") {
+        SettingsButton(icon: .system(name: "trash", background: .systemYellow.darken(by: 0.1)), title: "Delete All Recordings") {
           store.send(.deleteStorageTapped)
+        }
+        SettingsButton(icon: .system(name: "trash", background: .systemPurple.darken(by: 0.1)), title: "Delete All Models") {
+          store.send(.deleteAllModelsTapped)
         }
       } header: {
         Text("Storage")

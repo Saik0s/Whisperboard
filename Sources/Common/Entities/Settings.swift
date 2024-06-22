@@ -8,7 +8,6 @@ public struct Settings: Hashable {
   public var parameters: TranscriptionParameters
   public var isICloudSyncEnabled: Bool
   public var shouldMixWithOtherAudio: Bool
-  public var isAutoTranscriptionEnabled: Bool
   public var isUsingGPU: Bool
   public var isUsingNeuralEngine: Bool
   public var isVADEnabled: Bool
@@ -24,7 +23,6 @@ public struct Settings: Hashable {
     parameters: TranscriptionParameters = TranscriptionParameters(),
     isICloudSyncEnabled: Bool = false,
     shouldMixWithOtherAudio: Bool = false,
-    isAutoTranscriptionEnabled: Bool = false,
     isUsingGPU: Bool = false,
     isUsingNeuralEngine: Bool = true,
     isVADEnabled: Bool = false
@@ -34,7 +32,6 @@ public struct Settings: Hashable {
     self.parameters = parameters
     self.isICloudSyncEnabled = isICloudSyncEnabled
     self.shouldMixWithOtherAudio = shouldMixWithOtherAudio
-    self.isAutoTranscriptionEnabled = isAutoTranscriptionEnabled
     self.isUsingGPU = isUsingGPU
     self.isUsingNeuralEngine = isUsingNeuralEngine
     self.isVADEnabled = isVADEnabled
@@ -50,7 +47,6 @@ extension Settings: Codable {
     case parameters
     case isICloudSyncEnabled
     case shouldMixWithOtherAudio
-    case isAutoTranscriptionEnabled
     case isUsingGPU
     case isUsingNeuralEngine
     case isVADEnabled
@@ -63,7 +59,6 @@ extension Settings: Codable {
     parameters = (try? container.decode(TranscriptionParameters.self, forKey: .parameters)) ?? TranscriptionParameters()
     isICloudSyncEnabled = (try? container.decode(Bool.self, forKey: .isICloudSyncEnabled)) ?? false
     shouldMixWithOtherAudio = (try? container.decode(Bool.self, forKey: .shouldMixWithOtherAudio)) ?? false
-    isAutoTranscriptionEnabled = (try? container.decode(Bool.self, forKey: .isAutoTranscriptionEnabled)) ?? false
     isUsingGPU = (try? container.decode(Bool.self, forKey: .isUsingGPU)) ?? false
     isUsingNeuralEngine = (try? container.decode(Bool.self, forKey: .isUsingNeuralEngine)) ?? true
     isVADEnabled = (try? container.decode(Bool.self, forKey: .isVADEnabled)) ?? false

@@ -48,6 +48,7 @@ struct SettingsScreen {
     case subscriptionSection(SubscriptionSection.Action)
 
     case deleteStorageTapped
+    case deleteAllModelsTapped
     case openGitHub
     case openPersonalWebsite
     case rateAppTapped
@@ -58,7 +59,8 @@ struct SettingsScreen {
     case updateIsSubscribed(Bool)
 
     enum Alert: Equatable {
-      case deleteDialogConfirmed
+      case deleteStorageDialogConfirmed
+      case deleteAllModelsDialogConfirmed
     }
   }
 
@@ -118,14 +120,29 @@ struct SettingsScreen {
         }
 
       case .deleteStorageTapped:
-        createDeleteConfirmationDialog(state: &state)
+        state.alert = .deleteStorage
         return .none
 
-      case .alert(.presented(.deleteDialogConfirmed)):
+      case .deleteAllModelsTapped:
+        state.alert = .deleteAllModels
+        return .none
+
+      case .alert(.presented(.deleteStorageDialogConfirmed)):
         state.settings.selectedModelName = WhisperKit.recommendedModels().default
         return .run { send in
           try await storage.deleteStorage()
           await send(.updateInfo)
+        } catch: { error, send in
+          await send(.showError(error.equatable))
+        }
+
+      case .alert(.presented(.deleteAllModelsDialogConfirmed)):
+        state.settings.selectedModelName = WhisperKit.recommendedModels().default
+        return .run { send in
+          try? FileManager.default.removeItem(at: TranscriptionStream.modelDirURL)
+          try? FileManager.default.removeItem(at: .documentsDirectory.appendingPathComponent("models"))
+          await send(.updateInfo)
+          await send(.modelSelector(.reloadModels))
         } catch: { error, send in
           await send(.showError(error.equatable))
         }
@@ -166,19 +183,36 @@ struct SettingsScreen {
     state.takenSpace = storage.takenSpace().readableString
     state.takenSpacePercentage = min(1, max(0, 1 - Double(storage.freeSpace()) / Double(storage.freeSpace() + storage.takenSpace())))
   }
+}
 
-  private func createDeleteConfirmationDialog(state: inout State) {
-    state.alert = AlertState {
+extension AlertState where Action == SettingsScreen.Action.Alert {
+  static var deleteStorage: AlertState {
+    AlertState {
       TextState("Confirmation")
     } actions: {
       ButtonState(role: .cancel) {
         TextState("Cancel")
       }
-      ButtonState(role: .destructive, action: .deleteDialogConfirmed) {
+      ButtonState(role: .destructive, action: .deleteStorageDialogConfirmed) {
         TextState("Delete")
       }
     } message: {
-      TextState("Are you sure you want to delete all recordings and all downloaded models?")
+      TextState("Are you sure you want to delete all recordings?")
+    }
+  }
+
+  static var deleteAllModels: AlertState {
+    AlertState {
+      TextState("Confirmation")
+    } actions: {
+      ButtonState(role: .cancel) {
+        TextState("Cancel")
+      }
+      ButtonState(role: .destructive, action: .deleteAllModelsDialogConfirmed) {
+        TextState("Delete")
+      }
+    } message: {
+      TextState("Are you sure you want to delete all downloaded models?")
     }
   }
 }

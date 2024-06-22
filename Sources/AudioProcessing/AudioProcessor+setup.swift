@@ -8,9 +8,6 @@ extension AudioProcessor {
     audioSamples = []
     audioEnergy = []
 
-    @Dependency(\.audioSession) var audioSession: AudioSessionClient
-    try audioSession.enable(.record, true)
-
     let audioEngine = AVAudioEngine()
     let inputNode = audioEngine.inputNode
 

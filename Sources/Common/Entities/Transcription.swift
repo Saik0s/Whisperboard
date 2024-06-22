@@ -49,6 +49,18 @@ public struct Transcription: Codable, Hashable, Identifiable {
   }
 }
 
+public extension Transcription {
+  struct Timings: Codable, Hashable {
+    public var tokensPerSecond: Double = 0
+    public var fullPipeline: TimeInterval = 0
+
+    public init(tokensPerSecond: Double = 0, fullPipeline: TimeInterval = 0) {
+      self.tokensPerSecond = tokensPerSecond
+      self.fullPipeline = fullPipeline
+    }
+  }
+}
+
 // MARK: Transcription.Status
 
 public extension Transcription {
@@ -59,7 +71,7 @@ public extension Transcription {
     case uploading(Double)
     case error(message: String)
     case progress(Double, text: String)
-    case done(Date)
+    case done(Date, Timings)
     case canceled
     case paused(TranscriptionTask, progress: Double)
   }
@@ -95,37 +107,19 @@ public struct Segment: Codable, Hashable, Identifiable {
 public struct Token: Codable, Hashable, Identifiable {
   public let id: Int
   public let index: Int
-  public let data: TokenData
+  public let logProbability: Float
   public let speaker: String?
 
   public init(
     id: Int,
     index: Int,
-    data: TokenData,
+    logProbability: Float,
     speaker: String? = nil
   ) {
     self.id = id
     self.index = index
-    self.data = data
-    self.speaker = speaker
-  }
-}
-
-// MARK: - TokenData
-
-public struct TokenData: Codable, Hashable, Identifiable {
-  public let id: Int
-  public let tid: Int
-  public let logProbability: Float
-
-  public init(
-    id: Int,
-    tid: Int,
-    logProbability: Float
-  ) {
-    self.id = id
-    self.tid = tid
     self.logProbability = logProbability
+    self.speaker = speaker
   }
 }
 
@@ -297,11 +291,7 @@ public extension Transcription.Status {
             Token(
               id: 0,
               index: 0,
-              data: TokenData(
-                id: 0,
-                tid: 0,
-                logProbability: 0.1
-              ),
+              logProbability: 0.1,
               speaker: nil
             ),
           ],
@@ -310,7 +300,7 @@ public extension Transcription.Status {
       ],
       parameters: TranscriptionParameters(),
       model: "tiny",
-      status: .done(Date())
+      status: .done(Date(), Timings())
     )
 
     static let mock2 = Transcription(
@@ -326,11 +316,7 @@ public extension Transcription.Status {
             Token(
               id: 0,
               index: 0,
-              data: TokenData(
-                id: 0,
-                tid: 0,
-                logProbability: 0.1
-              ),
+              logProbability: 0.1,
               speaker: nil
             ),
           ],
@@ -339,7 +325,7 @@ public extension Transcription.Status {
       ],
       parameters: TranscriptionParameters(),
       model: "tiny",
-      status: .done(Date())
+      status: .done(Date(), Timings())
     )
 
     static let mock3 = Transcription(
@@ -355,11 +341,7 @@ public extension Transcription.Status {
             Token(
               id: 0,
               index: 0,
-              data: TokenData(
-                id: 0,
-                tid: 0,
-                logProbability: 0.1
-              ),
+              logProbability: 0.1,
               speaker: nil
             ),
           ],
@@ -368,7 +350,7 @@ public extension Transcription.Status {
       ],
       parameters: TranscriptionParameters(),
       model: "tiny",
-      status: .done(Date())
+      status: .done(Date(), Timings())
     )
   }
 #endif
