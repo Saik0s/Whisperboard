@@ -114,7 +114,7 @@ struct Recording {
                   let transcriptionSegments: [Segment] = transcriptionState.segments.map(\.asSimpleSegment)
                   recordingInfo.withLock { recordingInfo in
                     recordingInfo.transcription?.segments = transcriptionSegments
-                    recordingInfo.transcription?.text = transcriptionSegments.map(\.text).joined(separator: " ") + transcriptionState.currentText
+                    recordingInfo.transcription?.text = transcriptionSegments.map(\.text).joined(separator: " ")
                   }
                 }
               }
@@ -123,9 +123,9 @@ struct Recording {
             group.addTask {
               for try await recordingState in await transcriptionStream.startRecording(recordingInfo.wrappedValue.fileURL) {
                 DispatchQueue.main.async {
-                  samples.withLock { samples in
-                    samples = recordingState.waveSamples
-                  }
+                  // samples.withLock { samples in
+                  //   samples = recordingState.waveSamples
+                  // }
                   recordingInfo.withLock { recordingInfo in
                     recordingInfo.duration = recordingState.duration
                   }
@@ -225,15 +225,15 @@ struct RecordingView: View {
       VStack(spacing: .grid(3)) {
         liveTranscriptionView()
 
-        WaveformLiveCanvas(samples: store.state.samples, configuration: Waveform.Configuration(
-          backgroundColor: .clear,
-          style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
-          damping: .init(percentage: 0.125, sides: .both),
-          scale: DSScreen.scale,
-          verticalScalingFactor: 0.95,
-          shouldAntialias: true
-        ))
-        .frame(maxWidth: .infinity)
+        // WaveformLiveCanvas(samples: store.state.samples, configuration: Waveform.Configuration(
+        //   backgroundColor: .clear,
+        //   style: .striped(.init(color: UIColor(Color.DS.Text.base), width: 2, spacing: 4, lineCap: .round)),
+        //   damping: .init(percentage: 0.125, sides: .both),
+        //   scale: DSScreen.scale,
+        //   verticalScalingFactor: 0.95,
+        //   shouldAntialias: true
+        // ))
+        // .frame(maxWidth: .infinity)
 
         Text(currentTime)
           .foregroundColor(.DS.Text.accent)
