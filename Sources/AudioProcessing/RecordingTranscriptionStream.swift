@@ -10,6 +10,9 @@ import WhisperKit
 public struct RecordingTranscriptionStream: Sendable {
   public var startRecording: @Sendable (_ fileURL: URL) async -> AsyncThrowingStream<RecordingStream.State, Error> = { _ in .finished() }
   public var startLiveTranscription: @Sendable () async -> AsyncThrowingStream<TranscriptionStream.State, Error> = { .finished() }
+  public var transcribeAudioFile: @Sendable (URL, @escaping (TranscriptionProgress, Double) -> Bool?) async throws -> TranscriptionResult = { _, _ in
+    throw NSError(domain: "RecordingTranscriptionStream", code: 0, userInfo: nil)
+  }
 
   public var stopRecording: @Sendable () async -> Void = {}
   public var pauseRecording: @Sendable () async -> Void = {}
@@ -34,6 +37,9 @@ extension RecordingTranscriptionStream: DependencyKey {
       },
       startLiveTranscription: {
         await container.startTranscriptionLoop()
+      },
+      transcribeAudioFile: { fileURL, callback in
+        try await container.transcribeAudioFile(fileURL, callback: callback)
       },
       stopRecording: {
         await container.stopRecording()
@@ -118,6 +124,10 @@ private actor RecordingTranscriptionStreamContainer {
     }
   }
 
+  func transcribeAudioFile(_ fileURL: URL, callback: @escaping (TranscriptionProgress, Double) -> Bool?) async throws -> TranscriptionResult {
+    try await transcriptionStream.transcribeAudioFile(fileURL, callback: callback)
+  }
+
   func stopRecording() async {
     await recordingStream.stopRecording()
     await transcriptionStream.stopRealtimeLoop()
@@ -140,13 +150,13 @@ private actor RecordingTranscriptionStreamContainer {
     logs.debug("Starting to load model: \(model)")
     async let loadModelTask: Void = transcriptionStream.loadModel(model)
 
-    while await transcriptionStream.state.modelState != .loaded {
+    repeat {
       let progress = await transcriptionStream.state.loadingProgressValue
       let state = await transcriptionStream.state.modelState
       logs.debug("Model loading progress: \(progress * 100)% state: \(state)")
       progressCallback(Double(progress))
       try? await Task.sleep(for: .seconds(0.3))
-    }
+    } while await transcriptionStream.state.modelState != .loaded
 
     logs.debug("Model \(model) loaded successfully")
     try await loadModelTask

@@ -1,3 +1,4 @@
+import AudioProcessing
 import AsyncAlgorithms
 import BackgroundTasks
 import Combine
@@ -45,6 +46,8 @@ struct TranscriptionWorker: Reducer {
   static let backgroundTaskIdentifier = "me.igortarasenko.Whisperboard"
 
   enum CancelID: Hashable { case processing }
+
+  @Dependency(RecordingTranscriptionStream.self) var transcriptionStream: RecordingTranscriptionStream
 
   var body: some Reducer<State, Action> {
     Reduce { state, action in
@@ -200,8 +203,7 @@ struct TranscriptionWorker: Reducer {
 
       // MARK: Load model
 
-      let computeOptions = ModelComputeOptions(audioEncoderCompute: .cpuAndNeuralEngine, textDecoderCompute: .cpuAndNeuralEngine)
-      let whisperKit = try await WhisperKit(model: model, computeOptions: computeOptions, load: true)
+      try await transcriptionStream.loadModel(model) { _ in }
 
       logs.debug("Model (\(model)) loaded for task ID \(task.id)")
 
@@ -209,25 +211,18 @@ struct TranscriptionWorker: Reducer {
 
       updateClosure { $0.status = .progress(0, text: "") }
 
-      let options = DecodingOptions(task: .transcribe, skipSpecialTokens: true, wordTimestamps: false, suppressBlank: true)
-
-      let results: [TranscriptionResult] = try await whisperKit.transcribe(
-        audioPath: fileURL.path(),
-        decodeOptions: options,
-        callback: { progress in
-          updateClosure { transcription in
-            transcription.status = .progress(whisperKit.progress.fractionCompleted, text: progress.text)
-          }
-          return true
+      let result = try await transcriptionStream.transcribeAudioFile(fileURL) { progress, fraction in
+        updateClosure { transcription in
+          transcription.status = .progress(fraction, text: progress.text)
         }
-      )
-
-      let mergedResult = mergeTranscriptionResults(results)
+        return true
+      }
 
       logs.debug("Setting transcription status to done for task ID: \(task.id)")
+
       updateClosure { transcription in
-        transcription.segments = mergedResult.segments.map(\.asSimpleSegment)
-        transcription.text = mergedResult.text
+        transcription.segments = result.segments.map(\.asSimpleSegment)
+        transcription.text = result.text
         transcription.status = .done(Date())
       }
     } catch {
