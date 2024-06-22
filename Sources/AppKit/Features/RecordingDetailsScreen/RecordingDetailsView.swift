@@ -264,6 +264,15 @@ struct RecordingDetailsHeaderView: View {
           .colorMultiply(.DS.Text.accent)
         }.iconButtonStyle()
 
+        if let tokensPerSecond = store.recordingCard.recording.transcription?.timings.tokensPerSecond {
+          LabeledContent {
+            Text(String(format: "%.2f", tokensPerSecond))
+          } label: {
+            Label("Tokens/Second", systemImage: "speedometer")
+          }
+          .textStyle(.footnote)
+        }
+
         if store.recordingCard.recording.isTranscribing || store.recordingCard.queueInfo != nil || !store.recordingCard.recording.isTranscribed {
           TranscriptionControlsView(store: store.scope(state: \.recordingCard, action: \.recordingCard))
         } else if let error = store.recordingCard.recording.transcription?.status.errorMessage {

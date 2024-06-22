@@ -114,6 +114,7 @@ struct Recording {
                   recordingInfo.withLock { recordingInfo in
                     recordingInfo.transcription?.segments = transcriptionSegments
                     recordingInfo.transcription?.text = transcriptionSegments.map(\.text).joined(separator: " ")
+                    recordingInfo.transcription?.timings = .init(tokensPerSecond: transcriptionState.tokensPerSecond)
                   }
                 }
               }
@@ -234,6 +235,15 @@ struct RecordingView: View {
           .foregroundColor(.DS.Text.accent)
           .textStyle(.navigationTitle)
           .monospaced()
+
+        if let tokensPerSecond = store.recordingInfo.transcription?.timings.tokensPerSecond {
+          LabeledContent {
+            Text(String(format: "%.2f", tokensPerSecond))
+          } label: {
+            Label("Tokens/Second", systemImage: "speedometer")
+          }
+          .textStyle(.footnote)
+        }
       }
     }
     .task {

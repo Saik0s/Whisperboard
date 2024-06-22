@@ -100,7 +100,7 @@ struct RecordingInfoMigration: Migration {
             ],
             parameters: TranscriptionParameters(),
             model: "tiny",
-            status: .done(Date(), .init())
+            status: .done(Date())
           )
           : nil
       )

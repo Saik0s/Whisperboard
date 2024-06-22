@@ -223,7 +223,8 @@ struct TranscriptionWorker: Reducer {
       updateClosure { transcription in
         transcription.segments = result.segments.map(\.asSimpleSegment)
         transcription.text = result.text
-        transcription.status = .done(Date(), Transcription.Timings(tokensPerSecond: result.timings.tokensPerSecond, fullPipeline: result.timings.fullPipeline))
+        transcription.status = .done(Date())
+        transcription.timings = Transcription.Timings(tokensPerSecond: result.timings.tokensPerSecond, fullPipeline: result.timings.fullPipeline)
       }
     } catch {
       logs.error("Error during transcription for task ID \(task.id): \(error.localizedDescription)")

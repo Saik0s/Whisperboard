@@ -22,6 +22,8 @@ public actor TranscriptionStream {
     public var unconfirmedSegments: [TranscriptionSegment] = []
     public var unconfirmedText: [String] = []
 
+    public var tokensPerSecond: Double = 0
+
     public var isWorking = false
     public var transcriptionProgressFraction: Double = 0
     public let requiredSegmentsForConfirmation: Int = 2
@@ -353,7 +355,28 @@ public actor TranscriptionStream {
       throw NSError(domain: "WhisperKit not initialized", code: 1)
     }
     
-    let options = DecodingOptions(task: .transcribe, skipSpecialTokens: true, wordTimestamps: false, suppressBlank: true)
+    options = DecodingOptions(
+      verbose: false,
+      task: state.task,
+      language: Constants.languages[state.selectedLanguage, default: Constants.defaultLanguageCode],
+      temperature: Float(state.temperatureStart),
+      temperatureIncrementOnFallback: 0.2,
+      temperatureFallbackCount: Int(state.fallbackCount),
+      sampleLength: Int(state.sampleLength),
+      topK: 5,
+      usePrefillPrompt: state.enablePromptPrefill,
+      usePrefillCache: state.enableCachePrefill,
+      skipSpecialTokens: state.skipSpecialTokens,
+      withoutTimestamps: false,
+      wordTimestamps: true,
+      suppressBlank: true,
+      supressTokens: nil,
+      compressionRatioThreshold: 2.4,
+      logProbThreshold: -1.0,
+      firstTokenLogProbThreshold: -1.5,
+      noSpeechThreshold: 0.3,
+      concurrentWorkerCount: 0
+    )
 
     let results: [TranscriptionResult] = try await whisperKit.transcribe(audioPath: fileURL.path(), decodeOptions: options) { progress in
       return callback(progress, whisperKit.progress.fractionCompleted)
@@ -401,6 +424,7 @@ public actor TranscriptionStream {
     state.currentFallbacks = fallbacks
     state.currentText = progress.text.trimmingCharacters(in: .whitespacesAndNewlines)
     state.transcriptionProgressFraction = whisperKit?.progress.fractionCompleted ?? 0.0
+    state.tokensPerSecond = progress.timings.tokensPerSecond
 
     logs.debug("Progress callback: fallbacks=\(fallbacks), text=\(progress.text), avgLogprob=\(String(describing: progress.avgLogprob))")
   }
