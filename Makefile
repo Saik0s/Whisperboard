@@ -40,6 +40,9 @@ secrets:
 build_dev_server:
 	xcode-build-server config -workspace WhisperBoard.xcworkspace -scheme WhisperBoardDev || echo "consult https://github.com/SolaWing/xcode-build-server for vscode support"
 
+build_server:
+	xcode-build-server config -workspace WhisperBoard.xcworkspace -scheme WhisperBoard || echo "consult https://github.com/SolaWing/xcode-build-server for vscode support"
+
 analyze:
 	sh ./ci_scripts/cpd_run.sh && echo "CPD done"
 	periphery scan > periphery.log && echo "Periphery done"
