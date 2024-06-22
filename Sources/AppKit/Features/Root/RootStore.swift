@@ -100,9 +100,8 @@ struct Root {
           }
         }
 
-        return .run { send in
+        return .run { _ in
           subscriptionClient.configure(keychainClient.userID)
-          await send(.transcriptionWorker(.task))
         }
 
       case .recordingListScreen(.didFinishImportingFiles),

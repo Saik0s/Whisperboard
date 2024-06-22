@@ -96,7 +96,6 @@ public actor RecordingStream {
 
   private func onAudioBufferCallback(_ buffer: AVAudioPCMBuffer) {
     state.waveSamples = audioProcessor.relativeEnergy
-    logs.debug("Audio buffer received with relative energy: \(audioProcessor.relativeEnergy)")
 
     // Write buffer to audio file
     do {
@@ -106,7 +105,6 @@ public actor RecordingStream {
         let frameCount = audioFile.length
         let sampleRate = audioFile.fileFormat.sampleRate
         state.duration = Double(frameCount) / sampleRate
-        logs.debug("Updated recording duration: \(state.duration) seconds.")
       } else {
         state.duration = 0
         logs.debug("Audio file is nil, duration reset to 0.")

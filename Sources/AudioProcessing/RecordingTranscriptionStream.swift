@@ -9,9 +9,7 @@ import WhisperKit
 @DependencyClient
 public struct RecordingTranscriptionStream: Sendable {
   public var startRecording: @Sendable (_ fileURL: URL) async -> AsyncThrowingStream<RecordingStream.State, Error> = { _ in .finished() }
-  public var readAndProcessAudioFile: @Sendable (_ fileURL: URL) async throws -> Void = { _ in }
   public var startLiveTranscription: @Sendable () async -> AsyncThrowingStream<TranscriptionStream.State, Error> = { .finished() }
-  public var startBufferTranscription: @Sendable () async -> AsyncThrowingStream<TranscriptionStream.State, Error> = { .finished() }
 
   public var stopRecording: @Sendable () async -> Void = {}
   public var pauseRecording: @Sendable () async -> Void = {}
@@ -34,14 +32,8 @@ extension RecordingTranscriptionStream: DependencyKey {
       startRecording: { fileURL in
         await container.startRecording(fileURL)
       },
-      readAndProcessAudioFile: { fileURL in
-        try await container.readAndProcessAudioFile(fileURL)
-      },
       startLiveTranscription: {
         await container.startTranscriptionLoop()
-      },
-      startBufferTranscription: {
-        await container.startBufferTranscription()
       },
       stopRecording: {
         await container.stopRecording()
@@ -102,21 +94,6 @@ private actor RecordingTranscriptionStreamContainer {
     }
   }
 
-  func readAndProcessAudioFile(_ fileURL: URL) async throws {
-    let audioBuffer = try await AudioProcessor.loadAudio(at: [fileURL.path()]).first.require().get()
-    logs.debug("Loaded audio buffer from file: \(fileURL), buffer size: \(audioBuffer.count) samples")
-
-    let chunkSize = 16000
-    logs.debug("Starting to process audio buffer \(audioBuffer.count) in chunks")
-    for i in stride(from: 0, to: audioBuffer.count, by: chunkSize) {
-      let endIndex = min(i + chunkSize, audioBuffer.count)
-      let chunk = Array(audioBuffer[i ..< endIndex])
-      logs.debug("Processing chunk from index \(i) to \(endIndex)")
-      audioProcessor.processBuffer(chunk)
-    }
-    logs.debug("Finished processing audio buffer")
-  }
-
   func startTranscriptionLoop() -> AsyncThrowingStream<TranscriptionStream.State, Error> {
     AsyncThrowingStream { [weak self] continuation in
       Task { [weak self] in
@@ -135,37 +112,6 @@ private actor RecordingTranscriptionStreamContainer {
           continuation.finish()
         } catch {
           logs.error("Failed to perform transcription \(error)")
-          continuation.finish(throwing: error)
-        }
-      }
-    }
-  }
-
-  func startBufferTranscription(isVADChunked: Bool = false) -> AsyncThrowingStream<TranscriptionStream.State, Error> {
-    AsyncThrowingStream { [weak self] continuation in
-      Task { [weak self] in
-        guard let self else { return }
-
-        do {
-          await transcriptionStream.resetState()
-          continuation.onTermination = { [weak self] _ in
-            Task { [weak self] in
-              await self?.transcriptionStream.stopRealtimeLoop()
-            }
-          }
-
-          if isVADChunked {
-            try await transcriptionStream.transcribeCurrentBufferVADChunked { state in
-              continuation.yield(state)
-            }
-          } else {
-            try await transcriptionStream.transcribeCurrentBuffer { state in
-              continuation.yield(state)
-            }
-          }
-          continuation.finish()
-        } catch {
-          logs.error("Failed to start file transcription \(error)")
           continuation.finish(throwing: error)
         }
       }

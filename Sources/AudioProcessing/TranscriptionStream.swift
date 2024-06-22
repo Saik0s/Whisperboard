@@ -16,28 +16,27 @@ public actor TranscriptionStream {
     public var currentFallbacks: Int = 0
     public var lastBufferSize: Int = 0
     public var lastConfirmedSegmentEndSeconds: Float = 0
+    public var currentText: String = ""
     public var confirmedSegments: [TranscriptionSegment] = []
     public var unconfirmedSegments: [TranscriptionSegment] = []
+    public var unconfirmedText: [String] = []
+
     public var isWorking = false
-    public var transcriptionProgress: TranscriptionProgress?
     public var transcriptionProgressFraction: Double = 0
+    public let requiredSegmentsForConfirmation: Int = 2
 
     public var selectedModel: String = WhisperKit.recommendedModels().default
     public var repoName: String = "argmaxinc/whisperkit-coreml"
     public var selectedLanguage: String = "english"
-    public var enableTimestamps = true
     public var enablePromptPrefill = true
     public var enableCachePrefill = true
     public var skipSpecialTokens = true
-    public var enableEagerDecoding = false
     public var temperatureStart: Double = 0
     public var fallbackCount: Double = 5
     public var compressionCheckWindow: Int = 60
     public var sampleLength: Double = 224
     public var silenceThreshold: Double = 0.3
     public var useVAD = true
-    public var tokenConfirmationsNeeded: Double = 2
-    public var chunkingStrategy: ChunkingStrategy = .none
     public var encoderComputeUnits: MLComputeUnits = .cpuAndNeuralEngine
     public var decoderComputeUnits: MLComputeUnits = .cpuAndNeuralEngine
 
@@ -49,33 +48,8 @@ public actor TranscriptionStream {
     public var availableLanguages: [String] = []
     public var loadingProgressValue: Float = 0.0
     public var specializationProgressRatio: Float = 0.7
-    public var currentText: String = ""
-    public var currentChunks: [Int: (chunkText: [String], fallbacks: Int)] = [:]
-
-    public var prevWords: [WordTiming] = []
-    public var lastAgreedWords: [WordTiming] = []
-    public var confirmedWords: [WordTiming] = []
-    public var confirmedText: String = ""
-    public var hypothesisWords: [WordTiming] = []
-    public var hypothesisText: String = ""
-
-    public var eagerResults: [TranscriptionResult?] = []
-    public var lastAgreedSeconds: Float = 0.0
-
-    public var totalInferenceTime: TimeInterval = 0
-    public var tokensPerSecond: TimeInterval = 0
-    public var effectiveRealTimeFactor: TimeInterval = 0
-    public var effectiveSpeedFactor: TimeInterval = 0
-    public var currentEncodingLoops: Int = 0
-    public var currentLag: TimeInterval = 0
-
-    public let requiredSegmentsForConfirmation: Int = 2
 
     public let task: DecodingTask = .transcribe
-
-    fileprivate var firstTokenTime: TimeInterval = 0
-    fileprivate var pipelineStart: TimeInterval = 0
-    fileprivate var prevResult: TranscriptionResult? = nil
   }
 
   public var state: TranscriptionStream.State = .init() {
@@ -91,6 +65,7 @@ public actor TranscriptionStream {
 
   private var whisperKit: WhisperKit?
   private let audioProcessor: AudioProcessor
+  private var options: DecodingOptions = .init()
 
   public init(audioProcessor: AudioProcessor) {
     self.audioProcessor = audioProcessor
@@ -266,6 +241,28 @@ public actor TranscriptionStream {
 
   public func startRealtimeLoop(callback: @escaping (State) -> Void) async throws {
     logs.debug("Starting real-time loop")
+    options = DecodingOptions(
+      verbose: false,
+      task: state.task,
+      language: Constants.languages[state.selectedLanguage, default: Constants.defaultLanguageCode],
+      temperature: Float(state.temperatureStart),
+      temperatureIncrementOnFallback: 0.2,
+      temperatureFallbackCount: Int(state.fallbackCount),
+      sampleLength: Int(state.sampleLength),
+      topK: 5,
+      usePrefillPrompt: state.enablePromptPrefill,
+      usePrefillCache: state.enableCachePrefill,
+      skipSpecialTokens: state.skipSpecialTokens,
+      withoutTimestamps: false,
+      wordTimestamps: true,
+      suppressBlank: true,
+      supressTokens: nil,
+      compressionRatioThreshold: 2.4,
+      logProbThreshold: -1.0,
+      firstTokenLogProbThreshold: -1.5,
+      noSpeechThreshold: 0.3,
+      concurrentWorkerCount: 0
+    )
     state.isWorking = true
 
     while state.isWorking {
@@ -282,43 +279,6 @@ public actor TranscriptionStream {
 
   public func resetState() {
     state = .init()
-  }
-
-  public func transcribeCurrentBufferVADChunked(callback: @escaping (State) -> Void) async throws {
-    logs.debug("Start VAD chunked transcription")
-    stateChangeCallback = callback
-    state.isWorking = true
-    state.useVAD = false
-
-    logs.debug("Starting VAD chunked transcription")
-    let buffer = Array(audioProcessor.audioSamples)
-    logs.debug("Audio buffer size: \(buffer.count)")
-
-    logs.debug("Transcribing audio samples with VAD chunking")
-    let transcriptionResults = try await transcribeAudioSamples(buffer, useVADChunking: true)
-    logs.debug("Merging transcription results")
-    let transcription = mergeTranscriptionResults(transcriptionResults)
-    logs.debug("Transcription completed")
-
-    state.confirmedSegments = transcription.segments
-    state.currentText = transcription.text
-    state.confirmedText = transcription.text
-    state.transcriptionProgressFraction = 1
-    state.isWorking = false
-
-    state.tokensPerSecond = transcription.timings.tokensPerSecond
-    state.firstTokenTime = transcription.timings.firstTokenTime
-    state.pipelineStart = transcription.timings.pipelineStart
-    state.currentLag = transcription.timings.decodingLoop
-    state.currentEncodingLoops += Int(transcription.timings.totalEncodingRuns)
-    let totalAudio = Double(buffer.count) / Double(WhisperKit.sampleRate)
-    state.totalInferenceTime += transcription.timings.fullPipeline
-    state.effectiveRealTimeFactor = Double(state.totalInferenceTime) / totalAudio
-    state.effectiveSpeedFactor = totalAudio / Double(state.totalInferenceTime)
-    state.confirmedWords = transcription.allWords
-    logs.debug("Updated state with transcription timings and factors")
-
-    logs.debug("VAD chunked transcription completed")
   }
 
   public func transcribeCurrentBuffer(callback: @escaping (State) -> Void) async throws {
@@ -359,65 +319,12 @@ public actor TranscriptionStream {
     state.lastBufferSize = currentBuffer.count
     logs.debug("Running transcription on current buffer")
 
-    let transcriptions = try await transcribeAudioSamples(Array(currentBuffer))
-    logs.debug("Transcription completed with results: \(transcriptions)")
+    let transcription = try await transcribeAudioSamples(Array(currentBuffer))
+    logs.debug("Transcription completed with text: \(transcription.text)")
 
-    var skipAppend = false
-    let transcription = transcriptions.first
-    if let result = transcription {
-      state.hypothesisWords = result.allWords.filter { $0.start >= state.lastAgreedSeconds }
-      logs.debug("Hypothesis words updated: \(state.hypothesisWords)")
-
-      if let prevResult = state.prevResult {
-        state.prevWords = prevResult.allWords.filter { $0.start >= state.lastAgreedSeconds }
-        let commonPrefix = findLongestCommonPrefix(state.prevWords, state.hypothesisWords)
-        logs.info("[EagerMode] Prev \"\((state.prevWords.map(\.word)).joined())\"")
-        logs.info("[EagerMode] Next \"\((state.hypothesisWords.map(\.word)).joined())\"")
-        logs.info("[EagerMode] Found common prefix \"\((commonPrefix.map(\.word)).joined())\"")
-
-        if commonPrefix.count >= Int(state.tokenConfirmationsNeeded) {
-          state.lastAgreedWords = commonPrefix.suffix(Int(state.tokenConfirmationsNeeded))
-          state.lastAgreedSeconds = state.lastAgreedWords.first!.start
-          logs.info("[EagerMode] Found new last agreed word \"\(state.lastAgreedWords.first!.word)\" at \(state.lastAgreedSeconds) seconds")
-
-          state.confirmedWords.append(contentsOf: commonPrefix.prefix(commonPrefix.count - Int(state.tokenConfirmationsNeeded)))
-          let currentWords = state.confirmedWords.map(\.word).joined()
-          logs.info("[EagerMode] Current:  \(state.lastAgreedSeconds) -> \(Double(audioProcessor.audioSamples.count) / 16000.0) \(currentWords)")
-        } else {
-          logs.info("[EagerMode] Using same last agreed time \(state.lastAgreedSeconds)")
-          skipAppend = true
-        }
-      }
-      state.prevResult = result
-    }
-
-    if !skipAppend {
-      state.eagerResults.append(transcription)
-      logs.debug("Appended transcription to eagerResults")
-    }
-
-    let finalWords = state.confirmedWords.map(\.word).joined()
-    state.confirmedText = finalWords
-    logs.debug("Updated confirmed text: \(finalWords)")
-
-    let lastHypothesis = state.lastAgreedWords + findLongestDifferentSuffix(state.prevWords, state.hypothesisWords)
-    state.hypothesisText = lastHypothesis.map(\.word).joined()
-    logs.debug("Updated hypothesis text: \(state.hypothesisText)")
-
-    let mergedResult = mergeTranscriptionResults(state.eagerResults, confirmedWords: state.confirmedWords)
-    let segments = mergedResult.segments
-    logs.debug("Merged transcription results into segments: \(segments.count)")
-
-    state.tokensPerSecond = transcription?.timings.tokensPerSecond ?? 0
-    state.firstTokenTime = transcription?.timings.firstTokenTime ?? 0
-    state.pipelineStart = transcription?.timings.pipelineStart ?? 0
-    state.currentLag = transcription?.timings.decodingLoop ?? 0
-    state.currentEncodingLoops += Int(transcription?.timings.totalEncodingRuns ?? 0)
-    let totalAudio = Double(currentBuffer.count) / Double(WhisperKit.sampleRate)
-    state.totalInferenceTime += transcription?.timings.fullPipeline ?? 0
-    state.effectiveRealTimeFactor = Double(state.totalInferenceTime) / totalAudio
-    state.effectiveSpeedFactor = totalAudio / Double(state.totalInferenceTime)
-    logs.debug("Updated state with transcription timings and factors")
+    state.currentText = ""
+    state.unconfirmedText = []
+    let segments = transcription.segments
 
     if segments.count > state.requiredSegmentsForConfirmation {
       let numberOfSegmentsToConfirm = segments.count - state.requiredSegmentsForConfirmation
@@ -439,49 +346,19 @@ public actor TranscriptionStream {
     logs.debug("Updated unconfirmed segments: \(state.unconfirmedSegments.count)")
   }
 
-  private func transcribeAudioSamples(_ samples: [Float], useVADChunking: Bool = false) async throws -> [TranscriptionResult] {
+  private func transcribeAudioSamples(_ samples: [Float]) async throws -> TranscriptionResult {
     guard let whisperKit else {
       logs.error("WhisperKit not initialized")
       throw NSError(domain: "WhisperKit not initialized", code: 1)
     }
 
     logs.debug("Starting transcription with \(samples.count) audio samples")
-
-    var options = DecodingOptions(
-      verbose: false,
-      task: state.task,
-      language: Constants.languages[state.selectedLanguage, default: Constants.defaultLanguageCode],
-      temperature: Float(state.temperatureStart),
-      temperatureIncrementOnFallback: 0.2,
-      temperatureFallbackCount: Int(state.fallbackCount),
-      sampleLength: Int(state.sampleLength),
-      topK: 5,
-      usePrefillPrompt: state.enablePromptPrefill,
-      usePrefillCache: state.enableCachePrefill,
-      skipSpecialTokens: state.skipSpecialTokens,
-      withoutTimestamps: false,
-      wordTimestamps: true,
-      suppressBlank: true,
-      supressTokens: nil,
-      compressionRatioThreshold: 2.4,
-      logProbThreshold: -1.0,
-      firstTokenLogProbThreshold: -1.5,
-      noSpeechThreshold: 0.3,
-      concurrentWorkerCount: 0,
-      chunkingStrategy: useVADChunking ? .vad : ChunkingStrategy.none
-    )
     options.clipTimestamps = [state.lastConfirmedSegmentEndSeconds]
-    let lastAgreedTokens = state.lastAgreedWords.flatMap(\.tokens)
-    options.prefixTokens = lastAgreedTokens
-
     let checkWindow = state.compressionCheckWindow
 
-    logs.debug("Decoding options set: \(options)")
-
-    return try await whisperKit.transcribe(audioArray: samples, decodeOptions: options) { [weak self, state] progress in
+    let results = try await whisperKit.transcribe(audioArray: samples, decodeOptions: options) { [weak self, state, options] progress in
       Task { [weak self] in
-        guard let self else { return }
-        await onProgressCallback(progress, isChunked: useVADChunking)
+        await self?.onProgressCallback(progress)
       }
 
       guard state.isWorking else {
@@ -491,53 +368,23 @@ public actor TranscriptionStream {
 
       return TranscriptionStream.shouldStopEarly(progress: progress, options: options, compressionCheckWindow: checkWindow)
     }
+
+    return mergeTranscriptionResults(results)
   }
 
-  private func onProgressCallback(_ progress: TranscriptionProgress, isChunked: Bool = false) {
+  private func onProgressCallback(_ progress: TranscriptionProgress) {
     let fallbacks = Int(progress.timings.totalDecodingFallbacks)
-    if isChunked {
-      logs.debug("Progress windowId: \(progress.windowId) total windows: \(state.currentChunks.keys.count)")
-      let fallbacks = Int(progress.timings.totalDecodingFallbacks)
-      let chunkId = progress.windowId
-
-      // First check if this is a new window for the same chunk, append if so
-      var updatedChunk = (chunkText: [progress.text], fallbacks: fallbacks)
-      if var currentChunk = state.currentChunks[chunkId], let previousChunkText = currentChunk.chunkText.last {
-        if progress.text.count >= previousChunkText.count {
-          // This is the same window of an existing chunk, so we just update the last value
-          currentChunk.chunkText[currentChunk.chunkText.endIndex - 1] = progress.text
-          updatedChunk = currentChunk
-        } else {
-          // This is either a new window or a fallback (only in streaming mode)
-          if fallbacks == currentChunk.fallbacks {
-            // New window (since fallbacks haven't changed)
-            updatedChunk.chunkText = currentChunk.chunkText + [progress.text]
-          } else {
-            // Fallback, overwrite the previous bad text
-            updatedChunk.chunkText[currentChunk.chunkText.endIndex - 1] = progress.text
-            updatedChunk.fallbacks = fallbacks
-            logs.debug("Fallback occurred: \(fallbacks)")
-          }
-        }
+    if progress.text.count < state.currentText.count {
+      if fallbacks == state.currentFallbacks {
+        state.unconfirmedText.append(state.currentText)
+      } else {
+        logs.info("Fallback occured: \(fallbacks)")
       }
-
-      // Set the new text for the chunk
-      state.currentChunks[chunkId] = updatedChunk
-      let joinedChunks = state.currentChunks
-        .sorted { $0.key < $1.key }
-        .flatMap(\.value.chunkText)
-        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-        .joined(separator: "\n")
-
-      state.currentText = joinedChunks
-      state.currentFallbacks = fallbacks
-      state.transcriptionProgressFraction = whisperKit?.progress.fractionCompleted ?? 0.0
-    } else {
-      state.currentFallbacks = fallbacks
-      state.transcriptionProgress = progress
-      state.currentText = progress.text.trimmingCharacters(in: .whitespacesAndNewlines)
-      state.transcriptionProgressFraction = whisperKit?.progress.fractionCompleted ?? 0.0
     }
+
+    state.currentFallbacks = fallbacks
+    state.currentText = progress.text.trimmingCharacters(in: .whitespacesAndNewlines)
+    state.transcriptionProgressFraction = whisperKit?.progress.fractionCompleted ?? 0.0
 
     logs.debug("Progress callback: fallbacks=\(fallbacks), text=\(progress.text), avgLogprob=\(String(describing: progress.avgLogprob))")
   }

@@ -21,18 +21,11 @@ struct Recording {
     }
 
     enum LiveTranscriptionState: Equatable {
-      case modelLoading(Double), transcribing(String)
+      case modelLoading(Double), transcribing
 
       var modelProgress: Double? {
         if case let .modelLoading(progress) = self {
           return progress
-        }
-        return nil
-      }
-
-      var currentText: String? {
-        if case let .transcribing(text) = self {
-          return text
         }
         return nil
       }
@@ -93,37 +86,49 @@ struct Recording {
 
           try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
+              @Shared(.settings) var settings: Settings
+              let transcription = Transcription(
+                fileName: recordingInfo.wrappedValue.fileName,
+                parameters: settings.parameters,
+                model: settings.selectedModelName
+              )
+
+              try await transcriptionStream.loadModel(settings.selectedModelName) { progress in
+                DispatchQueue.main.async {
+                  liveTranscriptionState.withLock { liveTranscriptionState in
+                    liveTranscriptionState = .modelLoading(progress)
+                  }
+                }
+              }
+
+              recordingInfo.withLock { recordingInfo in
+                recordingInfo.transcription = transcription
+              }
+
               for try await transcriptionState in await transcriptionStream.startLiveTranscription() {
-                liveTranscriptionState.withLock { liveTranscriptionState in
-                  if transcriptionState.modelState != .loaded {
-                    liveTranscriptionState = .modelLoading(Double(transcriptionState.loadingProgressValue))
-                  } else {
-                    liveTranscriptionState = .transcribing(transcriptionState.currentText)
+                DispatchQueue.main.async {
+                  liveTranscriptionState.withLock { liveTranscriptionState in
+                    liveTranscriptionState = .transcribing
                   }
-                }
 
-                if recordingInfo.wrappedValue.transcription == nil {
+                  let transcriptionSegments: [Segment] = transcriptionState.segments.map(\.asSimpleSegment)
                   recordingInfo.withLock { recordingInfo in
-                    @Shared(.settings) var settings: Settings
-                    recordingInfo.transcription = Transcription(
-                      fileName: recordingInfo.fileName,
-                      parameters: settings.parameters,
-                      model: settings.selectedModelName
-                    )
+                    recordingInfo.transcription?.segments = transcriptionSegments
+                    recordingInfo.transcription?.text = transcriptionSegments.map(\.text).joined(separator: " ") + transcriptionState.currentText
                   }
-                }
-
-                let transcriptionSegments: [Segment] = transcriptionState.segments.map(\.asSimpleSegment)
-                recordingInfo.withLock { recordingInfo in
-                  recordingInfo.transcription?.segments = transcriptionSegments
                 }
               }
             }
 
             group.addTask {
               for try await recordingState in await transcriptionStream.startRecording(recordingInfo.wrappedValue.fileURL) {
-                samples.withLock { samples in
-                  samples = recordingState.waveSamples
+                DispatchQueue.main.async {
+                  samples.withLock { samples in
+                    samples = recordingState.waveSamples
+                  }
+                  recordingInfo.withLock { recordingInfo in
+                    recordingInfo.duration = recordingState.duration
+                  }
                 }
               }
             }
@@ -247,8 +252,8 @@ struct RecordingView: View {
   @ViewBuilder
   private func liveTranscriptionView() -> some View {
     VStack(spacing: .grid(2)) {
-      modelLoadingView(progress: store.liveTranscriptionState?.modelProgress ?? 0.0)
-      transcribingView(recording: store.state, text: store.liveTranscriptionState?.currentText ?? "")
+      modelLoadingView(progress: store.liveTranscriptionState?.modelProgress ?? 1.0)
+      transcribingView(recording: store.state)
 
       Spacer()
     }
@@ -292,7 +297,7 @@ struct RecordingView: View {
   ///   - recording: The current recording state.
   ///   - text: The transcribed text.
   @ViewBuilder
-  private func transcribingView(recording: Recording.State, text: String) -> some View {
+  private func transcribingView(recording: Recording.State) -> some View {
     ScrollView(showsIndicators: false) {
       Text(recording.recordingInfo.text)
         .textStyle(.body)
@@ -300,12 +305,6 @@ struct RecordingView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, .grid(2))
         .padding(.horizontal, .grid(4))
-
-      Text(text)
-        .multilineTextAlignment(.leading)
-        .textStyle(.body)
-        .opacity(0.6)
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
   }
 }
