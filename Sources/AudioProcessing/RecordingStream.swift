@@ -2,6 +2,7 @@ import AVFoundation
 import Common
 import Foundation
 import WhisperKit
+import Dependencies
 
 // MARK: - RecordingStream
 
@@ -48,6 +49,10 @@ public actor RecordingStream {
 
     state.fileURL = fileURL
     logs.info("Starting recording at file URL: \(fileURL)")
+
+    @Dependency(\.audioSession) var audioSession: AudioSessionClient
+    try audioSession.enable(.record, true)
+    defer { try? audioSession.enable(.record, false) }
 
     let converter = try audioProcessor.startFileRecording { [weak self] buffer, _ in
       Task { [weak self] in

@@ -38,7 +38,7 @@ public actor TranscriptionStream {
     public var sampleLength: Double = 224
     public var silenceThreshold: Double = 0.3
     public var useVAD = true
-    public var encoderComputeUnits: MLComputeUnits = .cpuAndNeuralEngine
+    public var encoderComputeUnits: MLComputeUnits = .cpuAndGPU
     public var decoderComputeUnits: MLComputeUnits = .cpuAndNeuralEngine
 
     public var modelState: ModelState = .unloaded

@@ -115,16 +115,8 @@ struct Root {
         state.recordingListScreen.recordings.insert(recordingInfo, at: 0)
         state.isGoToNewRecordingPopupPresented = true
 
-        return .run { [recordingInfo] send in
-          async let iCloudUploadTask: () = send(.didCompleteICloudSync(TaskResult { try await uploadNewRecordingsToICloudIfNeeded() }))
-
-          @Shared(.settings) var settings: Settings
-          try? await Task.sleep(for: .seconds(1))
-          if settings.isAutoTranscriptionEnabled && recordingInfo.transcription == nil {
-            await send(.transcriptionWorker(.enqueueTaskForRecordingID(recordingInfo.id, settings)))
-          }
-
-          await iCloudUploadTask
+        return .run { send in
+          await send(.didCompleteICloudSync(TaskResult { try await uploadNewRecordingsToICloudIfNeeded() }))
         }
 
       case .path(.element(_, .details(.delegate(.deleteDialogConfirmed)))):
@@ -133,7 +125,7 @@ struct Root {
         state.path.removeLast()
         return .none
 
-      case .settingsScreen(.alert(.presented(.deleteDialogConfirmed))):
+      case .settingsScreen(.alert(.presented(.deleteStorageDialogConfirmed))):
         state.path.removeAll()
         return .none
 

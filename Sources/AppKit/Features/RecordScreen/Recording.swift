@@ -79,8 +79,7 @@ struct Recording {
 
         return .run { [
           liveTranscriptionState = state.$liveTranscriptionState,
-          recordingInfo = state.$recordingInfo,
-          samples = state.$samples
+          recordingInfo = state.$recordingInfo
         ] _ in
           generateImpact()
 
@@ -197,11 +196,7 @@ extension TranscriptionSegment {
         Token(
           id: tokenID,
           index: index,
-          data: TokenData(
-            id: tokenID,
-            tid: index,
-            logProbability: tokenLogProbs.first?[tokenID] ?? 0
-          ),
+          logProbability: tokenLogProbs.first?[tokenID] ?? 0,
           speaker: nil
         )
       },
