@@ -16,6 +16,7 @@ public actor TranscriptionStream {
     public var currentFallbacks: Int = 0
     public var lastBufferSize: Int = 0
     public var lastConfirmedSegmentEndSeconds: Float = 0
+
     public var currentText: String = ""
     public var confirmedSegments: [TranscriptionSegment] = []
     public var unconfirmedSegments: [TranscriptionSegment] = []
@@ -344,6 +345,21 @@ public actor TranscriptionStream {
       state.unconfirmedSegments = segments
     }
     logs.debug("Updated unconfirmed segments: \(state.unconfirmedSegments.count)")
+  }
+
+  public func transcribeAudioFile(_ fileURL: URL, callback: @escaping (TranscriptionProgress, Double) -> Bool?) async throws -> TranscriptionResult {
+    guard let whisperKit else {
+      logs.error("WhisperKit not initialized")
+      throw NSError(domain: "WhisperKit not initialized", code: 1)
+    }
+    
+    let options = DecodingOptions(task: .transcribe, skipSpecialTokens: true, wordTimestamps: false, suppressBlank: true)
+
+    let results: [TranscriptionResult] = try await whisperKit.transcribe(audioPath: fileURL.path(), decodeOptions: options) { progress in
+      return callback(progress, whisperKit.progress.fractionCompleted)
+    }
+
+    return mergeTranscriptionResults(results)
   }
 
   private func transcribeAudioSamples(_ samples: [Float]) async throws -> TranscriptionResult {
