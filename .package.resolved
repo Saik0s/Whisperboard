@@ -1,40 +1,13 @@
 {
-  "originHash" : "028392f7585092e007c4b459e910d825f1dbdb42e396eaffa25dc79ba86361d0",
+  "originHash" : "439b837a1ac384e9d1e8fc6431308c00b47f1978dafcef482f21e9629026fb89",
   "pins" : [
     {
-      "identity" : "cocoalumberjack",
+      "identity" : "glur",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/CocoaLumberjack/CocoaLumberjack.git",
+      "location" : "https://github.com/joogps/Glur.git",
       "state" : {
-        "revision" : "4b8714a7fb84d42393314ce897127b3939885ec3",
-        "version" : "3.8.5"
-      }
-    },
-    {
-      "identity" : "rollbar-apple",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/rollbar/rollbar-apple",
-      "state" : {
-        "revision" : "2dce6849ca1ecb2154578eed87c48709edd502ff",
-        "version" : "3.3.0"
-      }
-    },
-    {
-      "identity" : "swift-log",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-log",
-      "state" : {
-        "revision" : "e97a6fcb1ab07462881ac165fdbb37f067e205d5",
-        "version" : "1.5.4"
-      }
-    },
-    {
-      "identity" : "whisper.cpp",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ggerganov/whisper.cpp.git",
-      "state" : {
-        "branch" : "master",
-        "revision" : "8fac6455ffeb0a0950a84e790ddb74f7290d33c4"
+        "revision" : "9e00ff79da318f2c78b749b1027e54a9d4de2e33",
+        "version" : "1.0.4"
       }
     }
   ],

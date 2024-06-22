@@ -29,6 +29,72 @@
       "cwd": "${workspaceFolder}",
       "iosBundleId": "me.igortarasenko.Whisperboard",
       "iosTarget": "4CD877BE-99FF-47FA-926D-63CAE7B65C84"
+    },
+    {
+      "name": "Launch and Debug",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Debug-${command:ios-debug.targetSdk}/WhisperBoard.app",
+      "iosBundleId": "me.igortarasenko.Whisperboard",
+      "iosTarget": "select",
+      "preLaunchTask": "${defaultBuildTask}"
+    },
+    {
+      "name": "Launch and Debug Dev",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Debug-${command:ios-debug.targetSdk}/WhisperBoardDev.app",
+      "iosBundleId": "me.igortarasenko.WhisperboardDev",
+      "iosTarget": "select",
+      "preLaunchTask": "build_dev"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "sourceLanguages": [
+        "swift"
+      ],
+      "args": [],
+      "cwd": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-composable-architecture",
+      "name": "Debug swift-composable-architecture-benchmark (.build/checkouts/swift-composable-architecture)",
+      "program": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-composable-architecture/.build/debug/swift-composable-architecture-benchmark",
+      "preLaunchTask": "swift: Build Debug swift-composable-architecture-benchmark (.build/checkouts/swift-composable-architecture)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "sourceLanguages": [
+        "swift"
+      ],
+      "args": [],
+      "cwd": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-composable-architecture",
+      "name": "Release swift-composable-architecture-benchmark (.build/checkouts/swift-composable-architecture)",
+      "program": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-composable-architecture/.build/release/swift-composable-architecture-benchmark",
+      "preLaunchTask": "swift: Build Release swift-composable-architecture-benchmark (.build/checkouts/swift-composable-architecture)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "sourceLanguages": [
+        "swift"
+      ],
+      "args": [],
+      "cwd": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-case-paths",
+      "name": "Debug swift-case-paths-benchmark (.build/checkouts/swift-case-paths)",
+      "program": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-case-paths/.build/debug/swift-case-paths-benchmark",
+      "preLaunchTask": "swift: Build Debug swift-case-paths-benchmark (.build/checkouts/swift-case-paths)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "sourceLanguages": [
+        "swift"
+      ],
+      "args": [],
+      "cwd": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-case-paths",
+      "name": "Release swift-case-paths-benchmark (.build/checkouts/swift-case-paths)",
+      "program": "${workspaceFolder:whisperboard_ios}/.build/checkouts/swift-case-paths/.build/release/swift-case-paths-benchmark",
+      "preLaunchTask": "swift: Build Release swift-case-paths-benchmark (.build/checkouts/swift-case-paths)"
     }
   ]
 }

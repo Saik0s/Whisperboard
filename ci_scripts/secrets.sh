@@ -13,5 +13,5 @@ if [ ! -f "gyb" ]; then
 fi
 
 # Generate secrets swift file using gyb from gyb file
-./gyb --line-directive '' -o "../AppKit/Sources/Clients/Secrets.swift" "Secrets.swift.gyb"
+./gyb --line-directive '' -o "../Sources/AppKit/Clients/Secrets.swift" "Secrets.swift.gyb"
 
