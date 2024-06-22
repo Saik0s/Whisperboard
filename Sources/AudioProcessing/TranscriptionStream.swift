@@ -360,22 +360,13 @@ public actor TranscriptionStream {
       task: state.task,
       language: Constants.languages[state.selectedLanguage, default: Constants.defaultLanguageCode],
       temperature: Float(state.temperatureStart),
-      temperatureIncrementOnFallback: 0.2,
       temperatureFallbackCount: Int(state.fallbackCount),
       sampleLength: Int(state.sampleLength),
-      topK: 5,
       usePrefillPrompt: state.enablePromptPrefill,
       usePrefillCache: state.enableCachePrefill,
       skipSpecialTokens: state.skipSpecialTokens,
       withoutTimestamps: false,
-      wordTimestamps: true,
-      suppressBlank: true,
-      supressTokens: nil,
-      compressionRatioThreshold: 2.4,
-      logProbThreshold: -1.0,
-      firstTokenLogProbThreshold: -1.5,
-      noSpeechThreshold: 0.3,
-      concurrentWorkerCount: 0
+      clipTimestamps: []
     )
 
     let results: [TranscriptionResult] = try await whisperKit.transcribe(audioPath: fileURL.path(), decodeOptions: options) { progress in
