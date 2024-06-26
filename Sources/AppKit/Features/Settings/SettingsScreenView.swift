@@ -137,6 +137,10 @@ struct SpeechSectionView: View {
               ConsoleView(store: .shared)
             }
           }
+
+          SettingsSheetButton(icon: .system(name: "chart", background: .systemBlue), title: "Show system stats") {
+            StatisticsView()
+          }
         } header: {
           Text("Debug")
         }
