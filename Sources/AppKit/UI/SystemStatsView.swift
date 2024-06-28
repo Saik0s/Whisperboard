@@ -1,10 +1,3 @@
-//
-//  StatisticsView.swift
-//  SystemStats
-//
-//  Created by Zach Nagengast on 11/9/23.
-//
-
 // Taken from https://github.com/argmaxinc/swift-system-stats/blob/main/SystemStats/StatisticsView.swift
 
 import Charts
@@ -291,6 +284,7 @@ struct StatisticsView: View {
       colorForCategory = .blue
     case "Active":
       colorForCategory = .teal
+
     default:
       colorForCategory = .green
     }

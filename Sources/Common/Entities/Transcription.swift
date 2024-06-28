@@ -52,6 +52,8 @@ public struct Transcription: Codable, Hashable, Identifiable {
   }
 }
 
+// MARK: Transcription.Timings
+
 public extension Transcription {
   struct Timings: Codable, Hashable {
     public var tokensPerSecond: Double = 0

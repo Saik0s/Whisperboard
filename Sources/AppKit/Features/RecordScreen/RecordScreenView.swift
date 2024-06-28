@@ -17,7 +17,7 @@ struct RecordScreen {
 
     @Shared var selectedModelName: String
     @Shared(.isLiveTranscriptionSupported) var isLiveTranscriptionSupported: Bool
-    
+
     init() {
       @Shared(.settings) var settings
       _selectedModelName = $settings.selectedModelName
@@ -99,14 +99,16 @@ struct RecordScreenView: View {
     WithPerceptionTracking {
       VStack(spacing: 0) {
         MicSelectorView(store: store.scope(state: \.micSelector, action: \.micSelector))
-        ModelSelectorDropdown(
+
+        LiveTranscriptionSelector(
           selectedModel: $store.selectedModelName,
           availableModels: store.availableModels,
-          isEnabled: store.isLiveTranscriptionSupported
+          isFeaturePurchased: store.isLiveTranscriptionSupported
         )
         .padding(.top, .grid(2))
 
         Spacer()
+
         RecordingControlsView(store: store.scope(state: \.recordingControls, action: \.recordingControls))
       }
       .padding(.top, .grid(4))

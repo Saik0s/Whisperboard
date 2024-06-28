@@ -1,8 +1,8 @@
 import AVFoundation
 import Common
+import Dependencies
 import Foundation
 import WhisperKit
-import Dependencies
 
 // MARK: - RecordingStream
 
