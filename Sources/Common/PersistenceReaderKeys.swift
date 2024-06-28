@@ -20,6 +20,11 @@ public extension PersistenceReaderKey where Self == PersistenceKeyDefault<FileSt
 
 public extension PersistenceReaderKey where Self == PersistenceKeyDefault<InMemoryKey<Bool>> {
   static var isICloudSyncInProgress: Self {
-    PersistenceKeyDefault(.inMemory("isICloudSyncInProgress"), false)
+    PersistenceKeyDefault(.inMemory(#function), false)
+  }
+
+  static var isLiveTranscriptionSupported: Self {
+    PersistenceKeyDefault(.inMemory(#function), false)
   }
 }
+
