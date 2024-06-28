@@ -13,6 +13,15 @@ struct RecordScreen {
     @Presents var alert: AlertState<Action.Alert>?
     var micSelector = MicSelector.State()
     var recordingControls = RecordingControls.State()
+    var availableModels: [Model] = []
+
+    @Shared var selectedModelName: String
+    @Shared(.isLiveTranscriptionSupported) var isLiveTranscriptionSupported: Bool
+    
+    init() {
+      @Shared(.settings) var settings
+      _selectedModelName = $settings.selectedModelName
+    }
   }
 
   enum Action: Equatable, BindableAction {
@@ -20,6 +29,7 @@ struct RecordScreen {
     case micSelector(MicSelector.Action)
     case recordingControls(RecordingControls.Action)
     case alert(PresentationAction<Alert>)
+    case modelSelected(Model.ID)
     case delegate(Delegate)
 
     enum Alert: Equatable {}
@@ -56,13 +66,17 @@ struct RecordScreen {
         )
         return .none
 
-      case .delegate:
-        return .none
-
       case .recordingControls:
         return .none
 
       case .micSelector:
+        return .none
+
+      case let .modelSelected(modelID):
+        state.selectedModelName = modelID
+        return .none
+
+      case .delegate:
         return .none
 
       case .binding:
@@ -85,6 +99,13 @@ struct RecordScreenView: View {
     WithPerceptionTracking {
       VStack(spacing: 0) {
         MicSelectorView(store: store.scope(state: \.micSelector, action: \.micSelector))
+        ModelSelectorDropdown(
+          selectedModel: $store.selectedModelName,
+          availableModels: store.availableModels,
+          isEnabled: store.isLiveTranscriptionSupported
+        )
+        .padding(.top, .grid(2))
+
         Spacer()
         RecordingControlsView(store: store.scope(state: \.recordingControls, action: \.recordingControls))
       }

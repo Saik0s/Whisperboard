@@ -25,6 +25,7 @@ struct SettingsScreen {
     var takenSpacePercentage: Double = 0
     var isSubscribed = false
 
+    @Shared(.isLiveTranscriptionSupported) var isLiveTranscriptionSupported: Bool
     @Shared(.isICloudSyncInProgress) var isICloudSyncInProgress: Bool
     var isDebugLogPresented = false
     var isModelSelectorPresented = false
