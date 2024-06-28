@@ -235,15 +235,6 @@ struct RecordingView: View {
           .foregroundColor(.DS.Text.accent)
           .textStyle(.navigationTitle)
           .monospaced()
-
-        if let tokensPerSecond = store.recordingInfo.transcription?.timings.tokensPerSecond {
-          LabeledContent {
-            Text(String(format: "%.2f", tokensPerSecond))
-          } label: {
-            Label("Tokens/Second", systemImage: "speedometer")
-          }
-          .textStyle(.footnote)
-        }
       }
     }
     .task {
@@ -274,20 +265,30 @@ struct RecordingView: View {
         .foregroundColor(.DS.Text.base)
         .textStyle(.body)
     } label: {
-      HStack {
-        Label("Model Loading", systemImage: "info.circle")
-          .foregroundColor(.DS.Text.base)
-          .textStyle(.body)
+      VStack {
+        HStack {
+          Label("Model Loading", systemImage: "info.circle")
+            .foregroundColor(.DS.Text.base)
+            .textStyle(.body)
 
-        Button(action: {
-          store.send(.toggleModelLoadingInfo)
-        }) {
-          Image(systemName: "exclamationmark.circle.fill")
-            .foregroundColor(.blue)
+          Button(action: {
+            store.send(.toggleModelLoadingInfo)
+          }) {
+            Image(systemName: "exclamationmark.circle.fill")
+              .foregroundColor(.blue)
+          }
+          .popover(isPresented: $store.isModelLoadingInfoPresented, attachmentAnchor: .point(.top), arrowEdge: .bottom) {
+            Text("The model is currently loading. This process may take a few moments.")
+          }
         }
-        .popover(isPresented: $store.isModelLoadingInfoPresented) {
-          Text("The model is currently loading. This process may take a few moments.")
-            .padding()
+
+        if let tokensPerSecond = store.recordingInfo.transcription?.timings.tokensPerSecond {
+          LabeledContent {
+            Text(String(format: "%.2f", tokensPerSecond))
+          } label: {
+            Label("Tokens/Second", systemImage: "speedometer")
+          }
+          .textStyle(.footnote)
         }
       }
     }

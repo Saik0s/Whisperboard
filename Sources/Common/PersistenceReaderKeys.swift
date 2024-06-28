@@ -27,4 +27,3 @@ public extension PersistenceReaderKey where Self == PersistenceKeyDefault<InMemo
     PersistenceKeyDefault(.inMemory(#function), false)
   }
 }
-

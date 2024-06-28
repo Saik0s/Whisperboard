@@ -354,7 +354,7 @@ public actor TranscriptionStream {
       logs.error("WhisperKit not initialized")
       throw NSError(domain: "WhisperKit not initialized", code: 1)
     }
-    
+
     options = DecodingOptions(
       verbose: false,
       task: state.task,
@@ -370,7 +370,7 @@ public actor TranscriptionStream {
     )
 
     let results: [TranscriptionResult] = try await whisperKit.transcribe(audioPath: fileURL.path(), decodeOptions: options) { progress in
-      return callback(progress, whisperKit.progress.fractionCompleted)
+      callback(progress, whisperKit.progress.fractionCompleted)
     }
 
     return mergeTranscriptionResults(results)
