@@ -59,6 +59,7 @@ struct RecordingCardView: View {
     .multilineTextAlignment(.leading)
     .padding(.grid(2))
     .cardStyle(isPrimary: store.playerControls.isPlaying)
+    .changeEffect(.glow(color: .DS.Background.accent, radius: 30), value: store.recording.text)
     .offset(y: showItem ? 0 : 200)
     .opacity(showItem ? 1 : 0)
     .onAppear {
