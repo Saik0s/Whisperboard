@@ -13,6 +13,7 @@ struct LiveTranscriptionSelector: View {
   @State private var showInfoPopup = false
   @State var isPressed: Bool = false
   @State var shine: Bool = false
+  @State var isFeatureModalPresented: Bool = false
 
   @ObserveInjection private var injection
 
@@ -56,7 +57,7 @@ struct LiveTranscriptionSelector: View {
         ._onButtonGesture {
           isPressed = $0
         } perform: {
-          
+          isFeatureModalPresented = true
         }
         .overlay(alignment: .topTrailing) {
           Button(action: { showInfoPopup.toggle() }) {
@@ -88,6 +89,9 @@ struct LiveTranscriptionSelector: View {
       InfoPopupView()
     } background: {
       Rectangle().fill(.ultraThinMaterial)
+    }
+    .sheet(isPresented: $isFeatureModalPresented) {
+      PremiumFeatureModalView()
     }
     .enableInjection()
   }
