@@ -1,5 +1,5 @@
 {
-  "originHash" : "d42e323bbcdb48a91a69d70f70c205fc90d2d0d358e4e93192acfc3e613f204d",
+  "originHash" : "4e95f9a38d793c11532a9fb0a39001c543008253752726eebc4100d74204904e",
   "pins" : [
     {
       "identity" : "audiokit",
@@ -80,6 +80,15 @@
       "state" : {
         "revision" : "de44c4dd7271ec6413fe350f7efadb14e5e18dce",
         "version" : "1.3.2"
+      }
+    },
+    {
+      "identity" : "pow",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/EmergeTools/Pow.git",
+      "state" : {
+        "revision" : "f0d0f3e72d42beaf2b01f1cb798e1b55902814eb",
+        "version" : "1.0.4"
       }
     },
     {

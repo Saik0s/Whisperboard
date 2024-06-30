@@ -281,6 +281,7 @@ let project = Project(
           .external(name: "SwiftUIIntrospect"),
           .external(name: "VariableBlurView"),
           .external(name: "WhisperKit"),
+          .external(name: "Pow"),
           // .external(name: "RevenueCat"),
 
           .target(name: "Common"),

@@ -9,7 +9,7 @@ import SwiftUI
 @Reducer
 struct RecordScreen {
   @ObservableState
-  struct State: Equatable {
+  struct State: Equatable, Then {
     @Presents var alert: AlertState<Action.Alert>?
     var micSelector = MicSelector.State()
     var recordingControls = RecordingControls.State()
@@ -116,6 +116,25 @@ struct RecordScreenView: View {
       .padding(.bottom, .grid(8))
       .ignoresSafeArea(edges: .bottom)
       .alert($store.scope(state: \.alert, action: \.alert))
+    }
+  }
+}
+
+// MARK: - RecordScreenView_Previews
+
+struct RecordScreenView_Previews: PreviewProvider {
+  static var previews: some View {
+    NavigationStack {
+      RecordScreenView(
+        store: Store(
+          initialState: RecordScreen.State().with {
+            $0.micSelector = .init()
+            $0.selectedModelName = Model.mockModels[0].name
+            $0.availableModels = Model.mockModels
+            $0.isLiveTranscriptionSupported = true
+          }
+        ) { RecordScreen() }
+      )
     }
   }
 }

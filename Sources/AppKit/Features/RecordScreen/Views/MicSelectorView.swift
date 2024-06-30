@@ -3,6 +3,7 @@ import AVFoundation
 import Common
 import ComposableArchitecture
 import Inject
+import Pow
 import SwiftUI
 
 // MARK: - MicSelector
@@ -114,6 +115,7 @@ struct MicSelectorView: View {
               }
               .padding(.grid(2))
             }
+            .transition(.movingParts.blur.combined(with: .opacity))
 
             if mic.id != store.mics.last?.id {
               Divider()
@@ -123,6 +125,7 @@ struct MicSelectorView: View {
       }
       .fixedSize(horizontal: true, vertical: false)
       .alert($store.scope(state: \.alert, action: \.alert))
+      .animation(.smooth, value: store.mics)
     }
   }
 }

@@ -5,7 +5,6 @@ import SwiftUI
 @testable import WhisperBoardKit
 import XCTest
 
-@MainActor
 class SettingsScreenViewSnapshotTests: XCTestCase {
   override class func setUp() {
     super.setUp()
@@ -14,14 +13,20 @@ class SettingsScreenViewSnapshotTests: XCTestCase {
   }
 
   func testSettingsScreenView() {
-    let store: StoreOf<SettingsScreen> = Store(initialState: .init()) { SettingsScreen() } withDependencies: {
-      $0.modelDownload = .previewValue
+    let store: StoreOf<SettingsScreen> = Store(initialState: SettingsScreen.State()) {
+      SettingsScreen()
+    } withDependencies: {
+      $0.build.version = { "1.0.0" }
+      $0.build.buildNumber = { "100" }
+      $0[StorageClient.self].freeSpace = { @Sendable in 1_000_000_000 }
+      $0[StorageClient.self].takenSpace = { @Sendable in 500_000_000 }
+      $0.subscriptionClient.checkIfSubscribed = { true }
     }
 
     let view = SettingsScreenView(store: store)
       .background(Color.DS.Background.primary)
       .environment(\.colorScheme, .dark)
-      .environmentObject(TabBarViewModel())
+      .environment(TabBarViewModel())
 
     assertSnapshots(
       matching: view,

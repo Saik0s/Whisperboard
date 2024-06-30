@@ -74,7 +74,7 @@ extension TextStyle {
   static let navigationTitle = TextStyle(font: Font.DS.title, lineSpacing: 11, foregroundColor: Color.DS.Text.base, kerning: 0)
   static let primaryButton = TextStyle(font: Font.DS.action, lineSpacing: 7, foregroundColor: Color.DS.Text.overAccent, kerning: 0)
   static let secondaryButton = TextStyle(font: Font.DS.actionSecondary, lineSpacing: 6, foregroundColor: Color.DS.Text.base, kerning: 0)
-  static let subheadline = TextStyle(font: Font.DS.body, lineSpacing: 3, foregroundColor: Color.DS.Text.subdued, kerning: 0)
+  static let subheadline = TextStyle(font: Font.DS.body, lineSpacing: 3, foregroundColor: Color.DS.Text.base, kerning: 0)
 }
 
 extension TextStyle {

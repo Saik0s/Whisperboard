@@ -1,6 +1,8 @@
 import Common
-import Injection
+import Inject
+import Pow
 import SwiftUI
+import Popovers
 
 // MARK: - LiveTranscriptionSelector
 
@@ -9,6 +11,10 @@ struct LiveTranscriptionSelector: View {
   let availableModels: [Model]
   let isFeaturePurchased: Bool
   @State private var showInfoPopup = false
+  @State var isPressed: Bool = false
+  @State var shine: Bool = false
+
+  @ObserveInjection private var injection
 
   var body: some View {
     ZStack {
@@ -29,30 +35,61 @@ struct LiveTranscriptionSelector: View {
         HStack {
           Image(systemName: "lock.fill")
             .font(.title)
-            .foregroundColor(.DS.code03)
-            .shadow(color: .DS.Background.accent.opacity(0.3), radius: 4, x: 0, y: 0)
+            .foregroundColor(Color(.systemYellow))
+            .shadow(color: Color(.systemYellow).opacity(0.5), radius: 8, x: 0, y: 0)
 
-          Text("Unlock Live Transcription to access this premium feature!")
-            .font(.subheadline)
-            .foregroundColor(.DS.Text.subdued)
+          Text("Hey there! Wanna try Live Transcription? It's a cool feature you can unlock by upgrading.")
+            .textStyle(.subheadline)
+            .foregroundColor(.DS.Text.base)
             .padding(.leading, .grid(1))
             .padding(.trailing, .grid(7))
         }
         .padding()
-        .cardStyle()
+        .background(
+          RoundedRectangle(cornerRadius: 16)
+            .fill(.ultraThinMaterial)
+        )
+        .overlay(
+          RoundedRectangle(cornerRadius: 16)
+            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+        )
+        ._onButtonGesture {
+          isPressed = $0
+        } perform: {
+          
+        }
         .overlay(alignment: .topTrailing) {
-          Button(action: {}) {
+          Button(action: { showInfoPopup.toggle() }) {
             Image(systemName: "info.circle")
               .foregroundColor(.DS.Text.base)
               .font(.body)
               .padding(8)
           }
         }
+        .conditionalEffect(.pushDown, condition: isPressed)
+        .compositingGroup()
+        .changeEffect(.shine.delay(1), value: shine, isEnabled: !shine)
+        .onAppear { _ = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in withAnimation { shine.toggle() } } }
       }
     }
-    .sheet(isPresented: $showInfoPopup) {
+    .popover(
+      present: $showInfoPopup,
+      attributes: {
+      //  $0.position = .relativeClosestAnchor(.top)
+        $0.presentation = .init(animation: .bouncy, transition: .movingParts.swoosh.combined(with: .opacity))
+        $0.dismissal = .init(
+          animation: .bouncy,
+          transition: .movingParts.swoosh.combined(with: .opacity),
+          mode: [.dragDown, .dragUp]
+        )
+        $0.blocksBackgroundTouches = true
+      }
+    ) {
       InfoPopupView()
+    } background: {
+      Rectangle().fill(.ultraThinMaterial)
     }
+    .enableInjection()
   }
 }
 
@@ -66,25 +103,36 @@ struct InfoPopupView: View {
         .fontWeight(.bold)
 
       Text(
-        "Live Transcription allows you to convert speech to text in real-time. Choose from various models to optimize accuracy for your specific needs."
+        "Live Transcription converts speech to text in real-time as you speak. It uses advanced AI models to process audio and generate accurate transcripts instantly."
       )
       .font(.body)
 
-      Text("Premium Feature:")
+      Text("How to use:")
         .font(.headline)
-        .padding(.top)
+        .padding(.top, 8)
 
-      Text("• Real-time speech-to-text conversion\n• Multiple language support\n• High accuracy with customizable models")
-        .font(.body)
-
-      Spacer()
-
-      Button("Close") {
-        // Dismiss the sheet
+      VStack(alignment: .leading, spacing: 8) {
+        Text("1. Select a transcription model")
+        Text("2. Start recording your audio")
+        Text("3. Watch as text appears in real-time")
+        Text("4. Edit or export your transcript when finished")
       }
-      .frame(maxWidth: .infinity)
+      .font(.body)
+
+      Text("Benefits:")
+        .font(.headline)
+        .padding(.top, 8)
+
+      VStack(alignment: .leading, spacing: 8) {
+        Text("• Instant feedback on your speech")
+        Text("• Easily capture and review spoken content")
+        Text("• Save time on manual transcription")
+        Text("• Support for multiple languages")
+      }
+      .font(.body)
     }
-    .padding()
+    .padding(.grid(4))
+    .cardStyle()
   }
 }
 
