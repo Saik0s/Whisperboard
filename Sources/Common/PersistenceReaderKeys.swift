@@ -12,18 +12,22 @@ public extension PersistenceReaderKey where Self == PersistenceKeyDefault<FileSt
   }
 }
 
-public extension PersistenceReaderKey where Self == PersistenceKeyDefault<FileStorageKey<Settings>> {
-  static var settings: Self {
-    PersistenceKeyDefault(.fileStorage(.documentsDirectory.appending(component: "settings.json")), .init())
-  }
-}
-
 public extension PersistenceReaderKey where Self == PersistenceKeyDefault<InMemoryKey<Bool>> {
   static var isICloudSyncInProgress: Self {
     PersistenceKeyDefault(.inMemory(#function), false)
   }
+}
 
-  static var isLiveTranscriptionSupported: Self {
-    PersistenceKeyDefault(.inMemory(#function), false)
+// MARK: - Purchases
+
+public extension PersistenceReaderKey where Self == PersistenceKeyDefault<InMemoryKey<Bool?>> {
+  static var isLiveTranscriptionPurchased: Self {
+    PersistenceKeyDefault(.inMemory(#function), nil)
+  }
+}
+
+public extension PersistenceReaderKey where Self == FileStorageKey<Settings> {
+  static var settings: Self {
+    .fileStorage(.documentsDirectory.appending(component: "settings.json"))
   }
 }

@@ -9,19 +9,11 @@ import SwiftUI
 @Reducer
 struct RecordScreen {
   @ObservableState
-  struct State: Equatable, Then {
+  struct State: Then {
     @Presents var alert: AlertState<Action.Alert>?
     var micSelector = MicSelector.State()
     var recordingControls = RecordingControls.State()
-    var availableModels: [Model] = []
-
-    @Shared var selectedModelName: String
-    @Shared(.isLiveTranscriptionSupported) var isLiveTranscriptionSupported: Bool
-
-    init() {
-      @Shared(.settings) var settings
-      _selectedModelName = $settings.selectedModelName
-    }
+    var liveTranscriptionSelector = LiveTranscriptionModelSelector.State()
   }
 
   enum Action: Equatable, BindableAction {
@@ -29,8 +21,8 @@ struct RecordScreen {
     case micSelector(MicSelector.Action)
     case recordingControls(RecordingControls.Action)
     case alert(PresentationAction<Alert>)
-    case modelSelected(Model.ID)
     case delegate(Delegate)
+    case liveTranscriptionSelector(LiveTranscriptionModelSelector.Action)
 
     enum Alert: Equatable {}
 
@@ -48,6 +40,10 @@ struct RecordScreen {
 
     Scope(state: \.recordingControls, action: /Action.recordingControls) {
       RecordingControls()
+    }
+
+    Scope(state: \.liveTranscriptionSelector, action: /Action.liveTranscriptionSelector) {
+      LiveTranscriptionModelSelector()
     }
 
     Reduce<State, Action> { state, action in
@@ -72,10 +68,6 @@ struct RecordScreen {
       case .micSelector:
         return .none
 
-      case let .modelSelected(modelID):
-        state.selectedModelName = modelID
-        return .none
-
       case .delegate:
         return .none
 
@@ -83,6 +75,9 @@ struct RecordScreen {
         return .none
 
       case .alert:
+        return .none
+
+      case .liveTranscriptionSelector:
         return .none
       }
     }
@@ -100,12 +95,8 @@ struct RecordScreenView: View {
       VStack(spacing: 0) {
         MicSelectorView(store: store.scope(state: \.micSelector, action: \.micSelector))
 
-        LiveTranscriptionSelector(
-          selectedModel: $store.selectedModelName,
-          availableModels: store.availableModels,
-          isFeaturePurchased: store.isLiveTranscriptionSupported
-        )
-        .padding(.top, .grid(2))
+        LiveTranscriptionModelSelectorView(store: store.scope(state: \.liveTranscriptionSelector, action: \.liveTranscriptionSelector))
+          .padding(.top, .grid(2))
 
         Spacer()
 
@@ -116,25 +107,6 @@ struct RecordScreenView: View {
       .padding(.bottom, .grid(8))
       .ignoresSafeArea(edges: .bottom)
       .alert($store.scope(state: \.alert, action: \.alert))
-    }
-  }
-}
-
-// MARK: - RecordScreenView_Previews
-
-struct RecordScreenView_Previews: PreviewProvider {
-  static var previews: some View {
-    NavigationStack {
-      RecordScreenView(
-        store: Store(
-          initialState: RecordScreen.State().with {
-            $0.micSelector = .init()
-            $0.selectedModelName = Model.mockModels[0].name
-            $0.availableModels = Model.mockModels
-            $0.isLiveTranscriptionSupported = true
-          }
-        ) { RecordScreen() }
-      )
     }
   }
 }

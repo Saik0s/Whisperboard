@@ -37,11 +37,13 @@ struct Recording {
     @Shared var recordingInfo: RecordingInfo
     @Shared var samples: [Float]
     @Shared var liveTranscriptionState: LiveTranscriptionState?
+    var isLiveTranscriptionEnabled: Bool
 
-    init(recordingInfo: RecordingInfo) {
+    init(recordingInfo: RecordingInfo, isLiveTranscriptionEnabled: Bool) {
       _recordingInfo = Shared(recordingInfo)
       _samples = Shared([])
       _liveTranscriptionState = Shared(nil)
+      self.isLiveTranscriptionEnabled = isLiveTranscriptionEnabled
     }
   }
 
@@ -79,42 +81,46 @@ struct Recording {
 
         return .run { [
           liveTranscriptionState = state.$liveTranscriptionState,
-          recordingInfo = state.$recordingInfo
+          recordingInfo = state.$recordingInfo,
+          isLiveTranscriptionEnabled = state.isLiveTranscriptionEnabled
         ] _ in
           generateImpact()
 
-          try await withThrowingTaskGroup(of: Void.self) { group in
-            group.addTask {
-              @Shared(.settings) var settings: Settings
-              let transcription = Transcription(
-                fileName: recordingInfo.wrappedValue.fileName,
-                parameters: settings.parameters,
-                model: settings.selectedModelName
-              )
+          @Shared(.settings) var settings: Settings
 
-              try await transcriptionStream.loadModel(settings.selectedModelName) { progress in
-                DispatchQueue.main.async {
-                  liveTranscriptionState.withLock { liveTranscriptionState in
-                    liveTranscriptionState = .modelLoading(progress)
+          let transcription = Transcription(
+            fileName: recordingInfo.wrappedValue.fileName,
+            parameters: settings.parameters,
+            model: settings.selectedModelName
+          )
+
+          recordingInfo.withLock { recordingInfo in
+            recordingInfo.transcription = transcription
+          }
+
+          try await withThrowingTaskGroup(of: Void.self) { [selectedModelName = settings.selectedModelName] group in
+            if isLiveTranscriptionEnabled {
+              group.addTask {
+                try await transcriptionStream.loadModel(selectedModelName) { progress in
+                  DispatchQueue.main.async {
+                    liveTranscriptionState.withLock { liveTranscriptionState in
+                      liveTranscriptionState = .modelLoading(progress)
+                    }
                   }
                 }
-              }
 
-              recordingInfo.withLock { recordingInfo in
-                recordingInfo.transcription = transcription
-              }
+                for try await transcriptionState in await transcriptionStream.startLiveTranscription() {
+                  DispatchQueue.main.async {
+                    liveTranscriptionState.withLock { liveTranscriptionState in
+                      liveTranscriptionState = .transcribing
+                    }
 
-              for try await transcriptionState in await transcriptionStream.startLiveTranscription() {
-                DispatchQueue.main.async {
-                  liveTranscriptionState.withLock { liveTranscriptionState in
-                    liveTranscriptionState = .transcribing
-                  }
-
-                  let transcriptionSegments: [Segment] = transcriptionState.segments.map(\.asSimpleSegment)
-                  recordingInfo.withLock { recordingInfo in
-                    recordingInfo.transcription?.segments = transcriptionSegments
-                    recordingInfo.transcription?.text = transcriptionSegments.map(\.text).joined(separator: " ")
-                    recordingInfo.transcription?.timings = .init(tokensPerSecond: transcriptionState.tokensPerSecond)
+                    let transcriptionSegments: [Segment] = transcriptionState.segments.map(\.asSimpleSegment)
+                    recordingInfo.withLock { recordingInfo in
+                      recordingInfo.transcription?.segments = transcriptionSegments
+                      recordingInfo.transcription?.text = transcriptionSegments.map(\.text).joined(separator: " ")
+                      recordingInfo.transcription?.timings = .init(tokensPerSecond: transcriptionState.tokensPerSecond)
+                    }
                   }
                 }
               }

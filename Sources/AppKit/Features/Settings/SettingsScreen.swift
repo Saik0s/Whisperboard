@@ -14,6 +14,7 @@ struct SettingsScreen {
   @ObservableState
   struct State: Equatable {
     @Shared(.settings) var settings: Settings
+
     var modelSelector: ModelSelector.State = .init()
     var subscriptionSection: SubscriptionSection.State = .init()
 
@@ -25,7 +26,6 @@ struct SettingsScreen {
     var takenSpacePercentage: Double = 0
     var isSubscribed = false
 
-    @Shared(.isLiveTranscriptionSupported) var isLiveTranscriptionSupported: Bool
     @Shared(.isICloudSyncInProgress) var isICloudSyncInProgress: Bool
     var isDebugLogPresented = false
     var isModelSelectorPresented = false
@@ -215,5 +215,11 @@ extension AlertState where Action == SettingsScreen.Action.Alert {
     } message: {
       TextState("Are you sure you want to delete all downloaded models?")
     }
+  }
+}
+
+public extension PersistenceReaderKey where Self == PersistenceKeyDefault<FileStorageKey<Settings>> {
+  static var settings: Self {
+    PersistenceKeyDefault(FileStorageKey<Settings>.settings, .init(selectedModelName: WhisperKit.recommendedModels().default))
   }
 }

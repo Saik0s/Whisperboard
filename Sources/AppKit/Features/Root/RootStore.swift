@@ -17,7 +17,7 @@ struct Root {
   }
 
   @ObservableState
-  struct State: Equatable {
+  struct State {
     var transcriptionWorker = TranscriptionWorker.State()
     var recordingListScreen = RecordingListScreen.State()
     var recordScreen = RecordScreen.State()
