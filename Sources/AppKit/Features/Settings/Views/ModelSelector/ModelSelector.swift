@@ -4,6 +4,7 @@ import ComposableArchitecture
 import Foundation
 import Inject
 import SwiftUI
+import WhisperKit
 
 // MARK: - ModelSelector
 
@@ -117,6 +118,8 @@ struct ModelSelector {
         return fetchModels()
 
       case let .modelsResponse(.success(models)):
+        @Shared(.availableModels) var _models
+        _models = models.map(\.model)
         state.localModels = models.filter { $0.model.isLocal && !$0.model.isDisabled }.identifiedArray
         state.availableModels = models.filter { !$0.model.isLocal && !$0.model.isDisabled }.identifiedArray
         state.disabledModels = models.filter(\.model.isDisabled).identifiedArray
@@ -544,5 +547,11 @@ private func directoryExistsAndNotEmptyAtPath(_ path: String) -> Bool {
   } catch {
     logs.error("Failed to check if directory exists and is not empty: \(error)")
     return false
+  }
+}
+
+public extension PersistenceReaderKey where Self == PersistenceKeyDefault<InMemoryKey<[Model]>> {
+  static var availableModels: Self {
+    PersistenceKeyDefault(.inMemory("availableModels"), [])
   }
 }

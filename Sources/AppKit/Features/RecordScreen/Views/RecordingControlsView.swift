@@ -97,7 +97,12 @@ struct RecordingControls {
 
   private func createNewRecording() -> Recording.State {
     let newInfo = RecordingInfo(id: uuid().uuidString, date: date.now)
-    return Recording.State(recordingInfo: newInfo)
+
+    @Shared(.settings) var settings
+    @Shared(.premiumFeatures) var premiumFeatures
+    let isLiveTranscriptionEnabled = premiumFeatures.liveTranscriptionIsPurchased == true && settings.isLiveTranscriptionEnabled
+
+    return Recording.State(recordingInfo: newInfo, isLiveTranscriptionEnabled: isLiveTranscriptionEnabled)
   }
 
   /// An alert state for microphone permission denial.
