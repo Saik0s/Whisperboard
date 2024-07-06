@@ -34,20 +34,20 @@ struct PurchaseLiveTranscriptionModal {
         case unverifiedTransaction
         case userCancelled
         case transactionPending
-        case unknown
-        
+        case unknownError
+
         var errorDescription: String? {
             switch self {
             case .productNotFound:
-                return "The product could not be found. Please try again later."
+                "The product could not be found. Please try again later."
             case .unverifiedTransaction:
-                return "The transaction could not be verified. Please contact support."
+                "The transaction could not be verified. Please contact support."
             case .userCancelled:
-                return "The purchase was cancelled."
+                "The purchase was cancelled."
             case .transactionPending:
-                return "The transaction is pending. Please check your payment method and try again."
-            case .unknown:
-                return "An unknown error occurred. Please try again later."
+                "The transaction is pending. Please check your payment method and try again."
+            case .unknownError:
+                "An unknown error occurred. Please try again later."
             }
         }
     }
@@ -112,10 +112,13 @@ struct PurchaseLiveTranscriptionModal {
             throw PurchaseError.productNotFound
         }
 
+        logs.info("Attempting to purchase product: \(product.id)")
         let result = try await product.purchase()
+        logs.info("Purchase result: \(result)")
 
         switch result {
         case let .success(verification):
+            logs.info("Purchase successful, verification: \(verification)")
             switch verification {
             case let .verified(transaction):
                 await transaction.finish()
@@ -126,17 +129,14 @@ struct PurchaseLiveTranscriptionModal {
             }
 
         case .userCancelled:
-            throw PurchaseError.userCancelled
+            return false
 
         case .pending:
             throw PurchaseError.transactionPending
 
         @unknown default:
-            // throw PurchaseError.unknown
-            break
+            throw PurchaseError.unknownError
         }
-      
-      return false
     }
 }
 
@@ -147,9 +147,10 @@ struct PurchaseLiveTranscriptionModalView: View {
 
     var body: some View {
         WithPerceptionTracking {
-            VStack(spacing: 20) {
+            VStack(spacing: .grid(8)) {
                 HeaderView()
                 FeatureListView()
+
                 if store.isLoading {
                     ProgressView()
                 } else if let errorMessage = store.errorMessage {

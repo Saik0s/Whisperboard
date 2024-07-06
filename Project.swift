@@ -67,6 +67,22 @@ if !isAppStore {
   appInfoPlist["NSBonjourServices"] = [Plist.Value.string("_pulse._tcp")]
 }
 
+let storeKitScheme: Scheme = .scheme(
+  name: "WhisperBoard",
+  shared: true,
+  buildAction: .buildAction(targets: ["WhisperBoard"]),
+  runAction: .runAction(
+    configuration: "Debug",
+    executable: "WhisperBoard",
+    options: .options(
+      storeKitConfigurationPath: "App/Support/Whisperboard.storekit"
+    )
+  ),
+  archiveAction: .archiveAction(configuration: "Release"),
+  profileAction: .profileAction(configuration: "Release", executable: "WhisperBoard"),
+  analyzeAction: .analyzeAction(configuration: "Debug")
+)
+
 func createAppTarget(suffix: String = "", isDev: Bool = false, scripts: [TargetScript] = [], dependencies: [TargetDependency] = []) -> Target {
   .target(
     name: "WhisperBoard" + suffix,
@@ -364,6 +380,7 @@ let project = Project(
       ),
     ],
 
+  schemes: [storeKitScheme],
   resourceSynthesizers: [
     .files(extensions: ["bin"]),
     .assets(),

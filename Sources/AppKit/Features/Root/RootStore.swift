@@ -72,7 +72,6 @@ struct Root {
 
     Scope(state: \.transcriptionWorker, action: \.transcriptionWorker) {
       TranscriptionWorker()
-        ._printChanges(.swiftLog(withStateChanges: true))
     }
 
     Scope(state: \.recordingListScreen, action: \.recordingListScreen) {
@@ -86,6 +85,7 @@ struct Root {
 
     Scope(state: \.settingsScreen, action: \.settingsScreen) {
       SettingsScreen()
+        ._printChanges(.swiftLog(withStateChanges: true))
     }
 
     Reduce { state, action in
