@@ -107,24 +107,47 @@ struct RecordingDetails {
         return .send(.recordingCard(.transcribeButtonTapped))
 
       case .actionSheet(.presented(.exportText)):
-        // Implement export text functionality
-        return .none
+        return .run { [text = state.recordingCard.transcription] _ in
+          let activityVC = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+          if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+             let window = windowScene.windows.first {
+            window.rootViewController?.present(activityVC, animated: true, completion: nil)
+          }
+        }
 
       case .actionSheet(.presented(.exportVTT)):
-        // Implement export VTT functionality
-        return .none
+        return .run { [recording = state.recordingCard.recording] _ in
+          let vtt = VTTExporter.export(recording)
+          let activityVC = UIActivityViewController(activityItems: [vtt], applicationActivities: nil)
+          if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+             let window = windowScene.windows.first {
+            window.rootViewController?.present(activityVC, animated: true, completion: nil)
+          }
+        }
 
       case .actionSheet(.presented(.exportSRT)):
-        // Implement export SRT functionality
-        return .none
+        return .run { [recording = state.recordingCard.recording] _ in
+          let srt = SRTExporter.export(recording)
+          let activityVC = UIActivityViewController(activityItems: [srt], applicationActivities: nil)
+          if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+             let window = windowScene.windows.first {
+            window.rootViewController?.present(activityVC, animated: true, completion: nil)
+          }
+        }
 
       case .actionSheet(.presented(.shareAudio)):
-        // Implement share audio functionality
-        return .none
+        return .run { [url = state.shareAudioFileURL] _ in
+          let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+          if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+             let window = windowScene.windows.first {
+            window.rootViewController?.present(activityVC, animated: true, completion: nil)
+          }
+        }
 
       case .actionSheet(.presented(.copyText)):
-        // Implement copy text functionality
-        return .none
+        return .run { [text = state.recordingCard.transcription] _ in
+          UIPasteboard.general.string = text
+        }
 
       case .actionSheet:
         return .none
