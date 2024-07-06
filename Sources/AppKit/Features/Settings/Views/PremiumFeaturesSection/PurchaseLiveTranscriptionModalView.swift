@@ -15,6 +15,8 @@ struct PurchaseLiveTranscriptionModal {
     }
 
     enum Action: Equatable {
+        case onTask
+        case didFetchProduct
         case purchaseButtonTapped
         case purchaseResult(TaskResult<Bool>)
         case delegate(Delegate)
@@ -52,6 +54,11 @@ struct PurchaseLiveTranscriptionModal {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .onTask:
+                return .run { send in
+                    await send(.purchaseResult(TaskResult { try await fetchPrice() }))
+                }
+
             case .purchaseButtonTapped:
                 state.isPurchasing = true
                 state.errorMessage = nil
@@ -76,16 +83,21 @@ struct PurchaseLiveTranscriptionModal {
         }
     }
 
-    func purchase() async throws -> Bool {
-        let productID = "me.igortarasenko.Whisperboard.liveTranscription"
+    let productID = "me.igortarasenko.Whisperboard.liveTranscription"
 
+    func fetchPrice() async throws -> String {
         let products = try await Product.products(for: [productID])
         guard let product = products.first else {
             throw PurchaseError.productNotFound
         }
+        return product.displayPrice
+    }
 
-        // Store the product price
-        self.state.productPrice = product.displayPrice
+    func purchase() async throws -> Bool {
+        let products = try await Product.products(for: [productID])
+        guard let product = products.first else {
+            throw PurchaseError.productNotFound
+        }
 
         let result = try await product.purchase()
 
