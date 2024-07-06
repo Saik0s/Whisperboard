@@ -109,7 +109,7 @@ struct LiveTranscriptionModelSelectorView: View {
                 Picker("", selection: $store.settings.selectedModelName) {
                   ForEach(store.state.availableModels) { model in
                     (Text(model.title).foregroundColor(.DS.Text.base) +
-                      Text(" (\(model.size))\(!model.isMultilingual || model.isDistilled ? " English" : "")").foregroundColor(.DS.Text.subdued))
+                      Text("\(!model.isMultilingual || model.isDistilled ? " English" : "") (\(model.size))").foregroundColor(.DS.Text.subdued))
                       .font(.DS.body)
                       .tag(model.id)
                   }
