@@ -40,8 +40,21 @@ struct PremiumFeaturesSection {
           let productID = "me.igortarasenko.Whisperboard.liveTranscription"
           let products = try await Product.products(for: [productID])
           guard let product = products.first else { return }
+          
+          // Check initial purchase status
           let isPurchased = await product.currentEntitlement != nil
           await send(.checkPurchaseStatus(isPurchased))
+          
+          // Subscribe to transaction updates
+          for await result in Transaction.updates {
+            if case .verified(let transaction) = result {
+              if transaction.productID == productID {
+                let isPurchased = transaction.revocationDate == nil
+                await send(.checkPurchaseStatus(isPurchased))
+                await transaction.finish()
+              }
+            }
+          }
         }
       case let .checkPurchaseStatus(isPurchased):
         state.premiumFeatures.liveTranscriptionIsPurchased = isPurchased
@@ -76,7 +89,7 @@ struct PremiumFeaturesSectionView: View {
         }
       }
       .sheet(
-        store: store.scope(state: \.$purchaseModal, action: \.purchaseModal)
+        item: $store.scope(state: \.purchaseModal, action: \.purchaseModal)
       ) { store in
         PurchaseLiveTranscriptionModalView(store: store)
       }
