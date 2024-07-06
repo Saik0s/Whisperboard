@@ -2,6 +2,7 @@ import AudioProcessing
 import Common
 import ComposableArchitecture
 import Inject
+import Pow
 import SwiftUI
 
 // MARK: - RecordScreen
@@ -92,11 +93,13 @@ struct RecordScreenView: View {
 
   var body: some View {
     WithPerceptionTracking {
-      VStack(spacing: 0) {
+      VStack(spacing: .grid(2)) {
         MicSelectorView(store: store.scope(state: \.micSelector, action: \.micSelector))
 
-        LiveTranscriptionModelSelectorView(store: store.scope(state: \.liveTranscriptionSelector, action: \.liveTranscriptionSelector))
-          .padding(.top, .grid(2))
+        if store.state.recordingControls.recording == nil {
+          LiveTranscriptionModelSelectorView(store: store.scope(state: \.liveTranscriptionSelector, action: \.liveTranscriptionSelector))
+            .transition(.movingParts.blur)
+        }
 
         Spacer()
 

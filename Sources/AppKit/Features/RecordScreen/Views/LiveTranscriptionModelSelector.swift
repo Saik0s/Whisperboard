@@ -18,7 +18,7 @@ struct LiveTranscriptionModelSelector {
 
     @Presents var purchaseLiveTranscriptionModal: PurchaseLiveTranscriptionModal.State?
 
-    var showInfoPopup: Bool = false
+    var showInfoPopup = false
 
     var currentModelInfo: ModelSelector.State.ModelInfo? {
       availableModels.first { $0.id == settings.selectedModelName }
@@ -77,33 +77,87 @@ struct LiveTranscriptionModelSelectorView: View {
             onUpgradeTap: { store.send(.upgradeButtonTapped) }
           )
         } else {
-          GroupBox(
-            label: Text("Live Transcription"),
-            content: {
-              Picker("Model", selection: $store.settings.selectedModelName) {
-                ForEach(store.state.availableModels) { model in
-                  Text(model.title).tag(model.id)
-                }
-              }
-              .pickerStyle(MenuPickerStyle())
+          VStack {
+            HStack {
+              #if APPSTORE
+                LottieView(animation: AnimationAsset.wiredOutline2474SparklesGlitter.animation)
+                  .playing(loopMode: .autoReverse)
+                  .animationSpeed(0.3)
+                  .resizable()
+                  .frame(width: 24, height: 24)
+              #endif
 
-              if let currentModelInfo = store.state.currentModelInfo {
-                LabeledContent {
-                  Text(currentModelInfo.title)
-                } label: {
-                  Label("Model", systemImage: "waveform")
-                }
+              Text("Live Transcription")
+                .textStyle(.body)
+
+              Spacer()
+
+              Button(action: { store.send(.set(\.showInfoPopup, true)) }) {
+                Image(systemName: "info.circle")
+                  .foregroundColor(.DS.Text.base)
+                  .font(.body)
               }
             }
-          )
-          .overlay(alignment: .topTrailing) {
-            Button(action: { store.send(.set(\.showInfoPopup, true)) }) {
-              Image(systemName: "info.circle")
-                .foregroundColor(.DS.Text.base)
-                .font(.body)
+
+            VStack(alignment: .leading, spacing: .grid(2)) {
+              Toggle(isOn: $store.settings.isLiveTranscriptionEnabled) {
+                Label("Enable Live Transcription", systemImage: "text.viewfinder")
+                  .textStyle(.label)
+              }
+
+              LabeledContent {
+                Picker("", selection: $store.settings.selectedModelName) {
+                  ForEach(store.state.availableModels) { model in
+                    (Text(model.title).foregroundColor(.DS.Text.base) +
+                      Text(" (\(model.size))\(!model.isMultilingual || model.isDistilled ? " English" : "")").foregroundColor(.DS.Text.subdued))
+                      .font(.DS.body)
+                      .tag(model.id)
+                  }
+                }
+                .foregroundColor(.DS.Text.subdued)
+              } label: {
+                Label("Selected model", systemImage: "brain")
+                  .textStyle(.label)
+              }
+              .disabled(store.settings.isLiveTranscriptionEnabled == false)
+
+//            Divider()
+//
+//            if let currentModelInfo = store.state.currentModelInfo {
+//              LabeledContent {
+//                Text(currentModelInfo.size)
+//              } label: {
+//                Label("Model Size", systemImage: "arrow.down.circle")
+//                  .textStyle(.label)
+//              }
+//
+//              LabeledContent {
+//                Text(currentModelInfo.isDistilled ? "Yes" : "No")
+//              } label: {
+//                Label("Distilled", systemImage: "bolt")
+//                  .textStyle(.label)
+//              }
+//
+//              LabeledContent {
+//                Text(currentModelInfo.isMultilingual ? "Yes" : "No")
+//              } label: {
+//                Label("Multilingual", systemImage: "globe")
+//                  .textStyle(.label)
+//              }
+//
+//              LabeledContent {
+//                Text(currentModelInfo.isTurbo ? "Yes" : "No")
+//              } label: {
+//                Label("Turbo", systemImage: "speedometer")
+//                  .textStyle(.label)
+//              }
+//            }
             }
-            .padding(.leading, .grid(2))
+            .labelStyle(.titleOnly)
+            .padding(.grid(4))
+            .cardStyle()
           }
+          .padding(.horizontal, .grid(4))
         }
       }
       .popover(
@@ -142,8 +196,8 @@ struct LockedFeatureView: View {
   let onInfoTap: () -> Void
   let onUpgradeTap: () -> Void
 
-  @State private var isPressed: Bool = false
-  @State private var shine: Bool = false
+  @State private var isPressed = false
+  @State private var shine = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: .grid(1)) {

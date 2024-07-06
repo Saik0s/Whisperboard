@@ -5,8 +5,8 @@ import WhisperKit
 import XCTest
 
 class AudioProcessingTests: XCTestCase {
-  var transcriptionStream: TranscriptionStream!
-  var recordingTranscriptionStream: RecordingTranscriptionStream!
+  private var transcriptionStream: TranscriptionStream!
+  private var recordingTranscriptionStream: RecordingTranscriptionStream!
 
   override func setUp() {
     super.setUp()

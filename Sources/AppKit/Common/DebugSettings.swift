@@ -3,8 +3,8 @@ import ComposableArchitecture
 // MARK: - DebugSettings
 
 public struct DebugSettings: Codable, Hashable {
-  public var shouldOverridePurchaseStatus: Bool = false
-  public var liveTranscriptionIsPurchasedOverride: Bool = false
+  public var shouldOverridePurchaseStatus = false
+  public var liveTranscriptionIsPurchasedOverride = false
 }
 
 public extension PersistenceReaderKey where Self == PersistenceKeyDefault<FileStorageKey<DebugSettings>> {

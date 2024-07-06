@@ -1,8 +1,8 @@
-import ComposableArchitecture
-import SwiftUI
-import Inject
 import Common
+import ComposableArchitecture
+import Inject
 import StoreKit
+import SwiftUI
 
 // MARK: - PremiumFeaturesSection
 
@@ -29,26 +29,28 @@ struct PremiumFeaturesSection {
       case .buyLiveTranscriptionTapped:
         state.purchaseModal = PurchaseLiveTranscriptionModal.State()
         return .none
+
       case .purchaseModal(.presented(.delegate(.didFinishTransaction))):
         state.purchaseModal = nil
         state.premiumFeatures.liveTranscriptionIsPurchased = true
         return .none
+
       case .binding, .purchaseModal:
         return .none
+
       case .onTask:
         return .run { send in
-          let productID = "me.igortarasenko.Whisperboard.liveTranscription"
-          let products = try await Product.products(for: [productID])
-          let product = products.first 
-          
+          let products = try await Product.products(for: [PremiumFeaturesProductID.liveTranscription])
+          let product = products.first
+
           // Check initial purchase status
           let isPurchased = await product?.currentEntitlement != nil
           await send(.checkPurchaseStatus(isPurchased))
-          
+
           // Subscribe to transaction updates
           for await result in Transaction.updates {
-            if case .verified(let transaction) = result {
-              if transaction.productID == productID {
+            if case let .verified(transaction) = result {
+              if transaction.productID == PremiumFeaturesProductID.liveTranscription {
                 let isPurchased = transaction.revocationDate == nil
                 await send(.checkPurchaseStatus(isPurchased))
                 await transaction.finish()
@@ -56,6 +58,7 @@ struct PremiumFeaturesSection {
             }
           }
         }
+
       case let .checkPurchaseStatus(isPurchased):
         state.premiumFeatures.liveTranscriptionIsPurchased = isPurchased
         return .none
