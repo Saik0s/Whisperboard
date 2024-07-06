@@ -14,14 +14,14 @@ struct SettingsScreenView: View {
   var body: some View {
     WithPerceptionTracking {
       List {
-        #if APPSTORE && DEBUG
-          if !store.isSubscribed {
-            SubscriptionSectionView(store: store.scope(state: \.subscriptionSection, action: \.subscriptionSection))
-              .introspect(.listCell, on: .iOS(.v16, .v17)) {
-                $0.clipsToBounds = false
-              }
-          }
-        #endif
+        // #if APPSTORE && DEBUG
+        //   if !store.isSubscribed {
+        //     SubscriptionSectionView(store: store.scope(state: \.subscriptionSection, action: \.subscriptionSection))
+        //       .introspect(.listCell, on: .iOS(.v16, .v17)) {
+        //         $0.clipsToBounds = false
+        //       }
+        //   }
+        // #endif
 
         ModelSectionView(store: store)
         PremiumFeaturesSectionView(store: store.scope(state: \.premiumFeaturesSection, action: \.premiumFeaturesSection))
