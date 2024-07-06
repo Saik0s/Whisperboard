@@ -10,7 +10,7 @@ import StoreKit
 struct PremiumFeaturesSection {
   @ObservableState
   struct State: Equatable {
-    var isLiveTranscriptionPurchased: Bool
+    @Shared(.premiumFeatures) var premiumFeatures
     @Presents var purchaseModal: PurchaseLiveTranscriptionModal.State?
   }
 
@@ -31,7 +31,7 @@ struct PremiumFeaturesSection {
         return .none
       case .purchaseModal(.presented(.delegate(.didFinishTransaction))):
         state.purchaseModal = nil
-        state.isLiveTranscriptionPurchased = true
+        state.premiumFeatures.liveTranscriptionIsPurchased = true
         return .none
       case .binding, .purchaseModal:
         return .none
@@ -44,7 +44,7 @@ struct PremiumFeaturesSection {
           await send(.checkPurchaseStatus(isPurchased))
         }
       case let .checkPurchaseStatus(isPurchased):
-        state.isLiveTranscriptionPurchased = isPurchased
+        state.premiumFeatures.liveTranscriptionIsPurchased = isPurchased
         return .none
       }
     }
@@ -67,10 +67,10 @@ struct PremiumFeaturesSectionView: View {
         SettingsButton(
           icon: .system(name: "waveform", background: Color.DS.Background.accent),
           title: "Live Transcription",
-          trailingText: store.isLiveTranscriptionPurchased ? "Purchased" : "Not Purchased",
-          indicator: store.isLiveTranscriptionPurchased ? nil : .chevron
+          trailingText: store.premiumFeatures.liveTranscriptionIsPurchased ?? false ? "Purchased" : "Not Purchased",
+          indicator: store.premiumFeatures.liveTranscriptionIsPurchased ?? false ? nil : .chevron
         ) {
-          if !store.isLiveTranscriptionPurchased {
+          if !(store.premiumFeatures.liveTranscriptionIsPurchased ?? false) {
             store.send(.buyLiveTranscriptionTapped)
           }
         }
