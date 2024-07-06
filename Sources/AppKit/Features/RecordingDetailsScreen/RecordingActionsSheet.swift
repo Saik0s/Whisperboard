@@ -23,15 +23,20 @@ struct RecordingActionsSheet {
     case restartTranscription
   }
 
+  @Dependency(\.hapticEngine) var hapticEngine
+
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
       case .toggleDisplayMode:
         state.displayMode = state.displayMode == .text ? .timeline : .text
-        return .none
+        return .run { _ in
+          await hapticEngine.feedback(.selection)
+        }
       case .copyText, .delete, .exportSRT, .exportText, .exportVTT, .restartTranscription, .shareAudio:
-        // These actions will be handled in the parent reducer
-        return .none
+        return .run { _ in
+          await hapticEngine.feedback(.selection)
+        }
       }
     }
   }
@@ -51,10 +56,9 @@ struct RecordingActionsSheetView: View {
         Divider()
         otherActions
       }
-      .padding()
+      .padding(.horizontal, .grid(4))
+      .padding(.vertical, .grid(3))
       .background(Color.DS.Background.secondary)
-      .cornerRadius(16)
-      .padding()
     }
   }
 
@@ -64,31 +68,21 @@ struct RecordingActionsSheetView: View {
     }) {
       Text("Timeline View")
     }
+    .toggleStyle(SwitchToggleStyle(tint: .DS.Text.accent))
   }
 
   private var exportOptions: some View {
     VStack(alignment: .leading, spacing: .grid(2)) {
       Text("Export")
         .font(.headline)
+        .foregroundColor(.DS.Text.base)
 
-      Button(action: { store.send(.exportText) }) {
-        Label("Export Text", systemImage: "doc.text")
-      }
-
-      Button(action: { store.send(.exportVTT) }) {
-        Label("Export VTT", systemImage: "doc.plaintext")
-      }
-
-      Button(action: { store.send(.exportSRT) }) {
-        Label("Export SRT", systemImage: "doc.plaintext")
-      }
-
-      Button(action: { store.send(.shareAudio) }) {
-        Label("Share Audio", systemImage: "square.and.arrow.up")
-      }
-
-      Button(action: { store.send(.copyText) }) {
-        Label("Copy Text", systemImage: "doc.on.doc")
+      Group {
+        actionButton(title: "Export Text", systemImage: "doc.text", action: .exportText)
+        actionButton(title: "Export VTT", systemImage: "doc.plaintext", action: .exportVTT)
+        actionButton(title: "Export SRT", systemImage: "doc.plaintext", action: .exportSRT)
+        actionButton(title: "Share Audio", systemImage: "square.and.arrow.up", action: .shareAudio)
+        actionButton(title: "Copy Text", systemImage: "doc.on.doc", action: .copyText)
       }
     }
   }
@@ -101,10 +95,15 @@ struct RecordingActionsSheetView: View {
       }
 
       if store.isTranscribing {
-        Button(action: { store.send(.restartTranscription) }) {
-          Label("Restart Transcription", systemImage: "arrow.clockwise")
-        }
+        actionButton(title: "Restart Transcription", systemImage: "arrow.clockwise", action: .restartTranscription)
       }
+    }
+  }
+
+  private func actionButton(title: String, systemImage: String, action: RecordingActionsSheet.Action) -> some View {
+    Button(action: { store.send(action) }) {
+      Label(title, systemImage: systemImage)
+        .foregroundColor(.DS.Text.base)
     }
   }
 }
