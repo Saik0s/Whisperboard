@@ -2,6 +2,7 @@ import Common
 import ComposableArchitecture
 import Inject
 import SwiftUI
+import WhisperKit
 
 // MARK: - RecordingDetails
 
@@ -92,7 +93,8 @@ struct RecordingDetails {
       case .presentActionSheet:
         state.actionSheet = RecordingActionsSheet.State(
           displayMode: state.displayMode,
-          isTranscribing: state.recordingCard.recording.isTranscribing
+          isTranscribing: state.recordingCard.recording.isTranscribing,
+          audioFileURL: state.recordingCard.recording.fileURL
         )
         return .none
 
@@ -105,44 +107,6 @@ struct RecordingDetails {
 
       case .actionSheet(.presented(.restartTranscription)):
         return .send(.recordingCard(.transcribeButtonTapped))
-
-      case .actionSheet(.presented(.exportText)):
-        return .run { [text = state.recordingCard.transcription] _ in
-          let activityVC = UIActivityViewController(activityItems: [text], applicationActivities: nil)
-          if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-             let window = windowScene.windows.first {
-            window.rootViewController?.present(activityVC, animated: true, completion: nil)
-          }
-        }
-
-      case .actionSheet(.presented(.exportVTT)):
-        return .run { [recording = state.recordingCard.recording] _ in
-          let vtt = VTTExporter.export(recording)
-          let activityVC = UIActivityViewController(activityItems: [vtt], applicationActivities: nil)
-          if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-             let window = windowScene.windows.first {
-            window.rootViewController?.present(activityVC, animated: true, completion: nil)
-          }
-        }
-
-      case .actionSheet(.presented(.exportSRT)):
-        return .run { [recording = state.recordingCard.recording] _ in
-          let srt = SRTExporter.export(recording)
-          let activityVC = UIActivityViewController(activityItems: [srt], applicationActivities: nil)
-          if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-             let window = windowScene.windows.first {
-            window.rootViewController?.present(activityVC, animated: true, completion: nil)
-          }
-        }
-
-      case .actionSheet(.presented(.shareAudio)):
-        return .run { [url = state.shareAudioFileURL] _ in
-          let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-          if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-             let window = windowScene.windows.first {
-            window.rootViewController?.present(activityVC, animated: true, completion: nil)
-          }
-        }
 
       case .actionSheet(.presented(.copyText)):
         return .run { [text = state.recordingCard.transcription] _ in
@@ -179,6 +143,7 @@ struct RecordingDetailsView: View {
         playButtonView
       }
       .padding(.vertical, .grid(4))
+      .background(Color.DS.Background.primary)
       .toolbar {
         ToolbarItem(placement: .keyboard) {
           doneButton
@@ -187,13 +152,13 @@ struct RecordingDetailsView: View {
           actionSheetButton
         }
       }
-      
+
       .alert($store.scope(state: \.alert, action: \.alert))
       .sheet(item: $store.scope(state: \.actionSheet, action: \.actionSheet)) { store in
         RecordingActionsSheetView(store: store)
-          .presentationDetents([.medium])
+          .presentationDetents([.medium, .large])
+          .presentationDragIndicator(.visible)
       }
-      .background(Color.DS.Background.primary)
     }
   }
 

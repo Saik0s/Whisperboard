@@ -1,6 +1,7 @@
 import Common
 import ComposableArchitecture
 import Foundation
+import WhisperKit
 
 // MARK: - RecordingCard
 
