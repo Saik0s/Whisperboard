@@ -24,6 +24,7 @@ struct RecordingDetails {
     var displayMode: DisplayMode = .text
 
     @Presents var alert: AlertState<Action.Alert>?
+    @Presents var actionSheet: RecordingActionsSheet.State?
 
     var timeline: [TimelineItem] {
       recordingCard.recording.transcription?.segments.map {
@@ -40,6 +41,8 @@ struct RecordingDetails {
     case delete
     case alert(PresentationAction<Alert>)
     case delegate(Delegate)
+    case actionSheet(PresentationAction<RecordingActionsSheet.Action>)
+    case presentActionSheet
 
     enum Alert: Hashable {
       case deleteDialogConfirmed
@@ -53,7 +56,7 @@ struct RecordingDetails {
   var body: some Reducer<State, Action> {
     BindingReducer()
 
-    Scope(state: \.recordingCard, action: /Action.recordingCard) {
+    Scope(state: \.recordingCard, action: \.recordingCard) {
       RecordingCard()
     }
 
@@ -85,9 +88,32 @@ struct RecordingDetails {
 
       case .delegate:
         return .none
+
+      case .presentActionSheet:
+        state.actionSheet = RecordingActionsSheet.State(
+          displayMode: state.displayMode,
+          isTranscribing: state.recordingCard.recording.isTranscribing
+        )
+        return .none
+
+      case .actionSheet(.presented(.toggleDisplayMode)):
+        state.displayMode = state.displayMode == .text ? .timeline : .text
+        return .none
+
+      case .actionSheet(.presented(.delete)):
+        return .send(.delete)
+
+      case .actionSheet(.presented(.restartTranscription)):
+        return .send(.recordingCard(.transcribeButtonTapped))
+
+      case .actionSheet:
+        return .none
       }
     }
-    .ifLet(\.$alert, action: /Action.alert)
+    .ifLet(\.$alert, action: \.alert)
+    .ifLet(\.$actionSheet, action: \.actionSheet) {
+      RecordingActionsSheet()
+    }
   }
 }
 
@@ -114,8 +140,16 @@ struct RecordingDetailsView: View {
         ToolbarItem(placement: .keyboard) {
           doneButton
         }
+        ToolbarItem(placement: .bottomBar) {
+          actionSheetButton
+        }
       }
+      
       .alert($store.scope(state: \.alert, action: \.alert))
+      .sheet(item: $store.scope(state: \.actionSheet, action: \.actionSheet)) { store in
+        RecordingActionsSheetView(store: store)
+          .presentationDetents([.medium])
+      }
       .background(Color.DS.Background.primary)
     }
   }
@@ -136,7 +170,8 @@ struct RecordingDetailsView: View {
         action: \.recordingCard.playerControls.view.waveform
       )
     )
-    .padding(.horizontal, .grid(4))
+    .padding(.horizontal, .grid(8))
+    .padding(.vertical, .grid(4))
   }
 
   private var playButtonView: some View {
@@ -204,6 +239,14 @@ struct RecordingDetailsView: View {
     .padding(.horizontal, .grid(4))
     .id(1)
   }
+
+  private var actionSheetButton: some View {
+    Button(action: { store.send(.presentActionSheet) }) {
+      Image(systemName: "ellipsis.circle")
+        .foregroundColor(.DS.Text.base)
+    }
+    .frame(maxWidth: .infinity, alignment: .trailing)
+  }
 }
 
 // MARK: - RecordingDetailsHeaderView
@@ -224,51 +267,23 @@ struct RecordingDetailsHeaderView: View {
         .textStyle(.headline)
         .foregroundColor(.DS.Text.base)
 
-        Text("Created: \(store.recordingCard.recording.date.formatted(date: .abbreviated, time: .shortened))")
+        Text(store.recordingCard.recording.date.formatted(date: .abbreviated, time: .shortened))
           .textStyle(.caption)
           .frame(maxWidth: .infinity, alignment: .leading)
 
-        HStack(spacing: .grid(2)) {
-          CopyButton(store.recordingCard.transcription) {
-            Image(systemName: "doc.on.clipboard")
-          }
+        if let timings = store.recordingCard.recording.transcription?.timings {
+          VStack(alignment: .leading, spacing: .grid(1)) {
+            LabeledContent {
+              Text(String(format: "%.2f", timings.tokensPerSecond))
+            } label: {
+              Label("Tokens/Second", systemImage: "speedometer")
+            }
 
-          ShareLink(item: store.recordingCard.transcription) {
-            Image(systemName: "paperplane")
-          }
-
-          Button { store.send(.recordingCard(.transcribeButtonTapped)) } label: {
-            Image(systemName: "arrow.clockwise")
-          }.disabled(store.recordingCard.recording.isTranscribing)
-
-          ShareLink(item: store.shareAudioFileURL) {
-            Image(systemName: "square.and.arrow.up")
-          }
-
-          Button { store.send(.delete) } label: {
-            Image(systemName: "trash")
-          }
-
-          Spacer()
-
-          Picker(
-            "",
-            selection: $store.displayMode
-          ) {
-            Image(systemName: "text.alignleft")
-              .tag(RecordingDetails.DisplayMode.text)
-            Image(systemName: "list.bullet")
-              .tag(RecordingDetails.DisplayMode.timeline)
-          }
-          .pickerStyle(.segmented)
-          .colorMultiply(.DS.Text.accent)
-        }.iconButtonStyle()
-
-        if let tokensPerSecond = store.recordingCard.recording.transcription?.timings.tokensPerSecond {
-          LabeledContent {
-            Text(String(format: "%.2f", tokensPerSecond))
-          } label: {
-            Label("Tokens/Second", systemImage: "speedometer")
+            LabeledContent {
+              Text(String(format: "%.2f", timings.fullPipeline))
+            } label: {
+              Label("Full Pipeline (s)", systemImage: "clock")
+            }
           }
           .textStyle(.footnote)
         }
@@ -284,23 +299,7 @@ struct RecordingDetailsHeaderView: View {
             .foregroundColor(.DS.Text.error)
         }
       }
-    }
-  }
-}
-
-private extension View {
-  func applyVerticalEdgeSofteningMask() -> some View {
-    mask {
-      LinearGradient(
-        stops: [
-          .init(color: .clear, location: 0),
-          .init(color: .black, location: 0.02),
-          .init(color: .black, location: 0.98),
-          .init(color: .clear, location: 1),
-        ],
-        startPoint: .top,
-        endPoint: .bottom
-      )
+      .padding(.horizontal, .grid(4))
     }
   }
 }
