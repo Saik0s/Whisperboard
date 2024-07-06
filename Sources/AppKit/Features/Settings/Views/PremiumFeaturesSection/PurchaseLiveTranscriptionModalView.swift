@@ -125,15 +125,15 @@ struct PurchaseLiveTranscriptionModalView: View {
 
 struct HeaderView: View {
     var body: some View {
-        VStack(spacing: 10) {
-            Text("Speak, See, Succeed!")
+        VStack(spacing: 12) {
+            Text("Talk. Type. Transform.")
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
 
-            Text("Your words, instantly visible.")
+            Text("Instant speech-to-text magic!")
                 .font(.title2)
-                .fontWeight(.medium)
+                .fontWeight(.semibold)
 
             HStack(spacing: 2) {
                 ForEach(0 ..< 5) { _ in
@@ -142,12 +142,12 @@ struct HeaderView: View {
                 }
             }
 
-            Text("Boost your productivity, make communication a breeze, and never miss a word. Welcome to the future of speech-to-text!")
+            Text("Supercharge your productivity. Simplify communication. Capture every word. Experience the future of voice-to-text!")
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            Text("Join the speech revolution!")
+            Text("Ready to revolutionize your speech?")
                 .font(.headline)
                 .foregroundColor(.blue)
         }
@@ -159,14 +159,14 @@ struct HeaderView: View {
 struct FeatureListView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
-            FeatureItemView(icon: "waveform", text: "Instant voice-to-text magic")
-            FeatureItemView(icon: "globe", text: "Speak in multiple languages")
-            FeatureItemView(icon: "brain", text: "AI-powered accuracy")
-            FeatureItemView(icon: "bolt.fill", text: "Lightning-fast processing")
-            FeatureItemView(icon: "person.2.fill", text: "Smart speaker identification")
-            FeatureItemView(icon: "doc.text.fill", text: "Edit transcripts on the fly")
-            FeatureItemView(icon: "icloud.fill", text: "Sync across all your devices")
-            FeatureItemView(icon: "lock.shield.fill", text: "Your words stay private")
+            FeatureItemView(icon: "waveform", text: "Instant speech-to-text")
+            FeatureItemView(icon: "globe", text: "Multilingual support")
+            FeatureItemView(icon: "brain", text: "AI-driven precision")
+            FeatureItemView(icon: "bolt.fill", text: "Rapid processing")
+            FeatureItemView(icon: "person.2.fill", text: "Smart voice recognition")
+            FeatureItemView(icon: "doc.text.fill", text: "Real-time editing")
+            FeatureItemView(icon: "icloud.fill", text: "Cross-device sync")
+            FeatureItemView(icon: "lock.shield.fill", text: "Privacy guaranteed")
         }
     }
 }
@@ -199,7 +199,7 @@ struct PurchaseButton: View {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
             } else {
-                Text("Start Speaking, Start Seeing!")
+                Text("Unleash Your Voice Now!")
                     .font(.headline)
                     .foregroundColor(.white)
             }

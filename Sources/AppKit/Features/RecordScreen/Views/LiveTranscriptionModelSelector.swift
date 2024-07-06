@@ -174,32 +174,34 @@ struct InfoPopupView: View {
         .font(.title)
         .fontWeight(.bold)
 
-      Text(
-        "Speak, and watch your words appear instantly! Our AI turns your voice into text in real-time."
-      )
-      .font(.body)
-      .fontWeight(.medium)
+      Text("Your words, visible in real-time!")
+        .font(.headline)
+        .fontWeight(.bold)
 
-      Text("It's as easy as 1-2-3:")
+      Text("Speak and see the magic unfold.")
+        .font(.body)
+        .fontWeight(.medium)
+
+      Text("Quick Start:")
         .font(.headline)
         .padding(.top, 8)
 
       VStack(alignment: .leading, spacing: 8) {
-        Text("1. Pick your model")
-        Text("2. Hit record")
-        Text("3. Watch the magic happen")
+        Text("1. Choose model")
+        Text("2. Tap record")
+        Text("3. Speak freely")
       }
       .font(.body)
 
-      Text("Why you'll love it:")
+      Text("Benefits at a glance:")
         .font(.headline)
         .padding(.top, 8)
 
       VStack(alignment: .leading, spacing: 8) {
-        Text("• See your speech, instantly")
-        Text("• Capture ideas effortlessly")
-        Text("• Save hours on transcription")
-        Text("• Speak in multiple languages")
+        Text("• Instant text conversion")
+        Text("• Effortless idea capture")
+        Text("• Massive time savings")
+        Text("• Multilingual support")
       }
       .font(.body)
     }
