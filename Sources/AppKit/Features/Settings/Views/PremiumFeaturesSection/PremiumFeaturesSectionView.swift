@@ -2,6 +2,7 @@ import ComposableArchitecture
 import SwiftUI
 import Inject
 import Common
+import StoreKit
 
 // MARK: - PremiumFeaturesSection
 
@@ -17,6 +18,8 @@ struct PremiumFeaturesSection {
     case binding(BindingAction<State>)
     case buyLiveTranscriptionTapped
     case purchaseModal(PresentationAction<PurchaseLiveTranscriptionModal.Action>)
+    case onTask
+    case checkPurchaseStatus(Bool)
   }
 
   var body: some ReducerOf<Self> {
@@ -31,6 +34,17 @@ struct PremiumFeaturesSection {
         state.isLiveTranscriptionPurchased = true
         return .none
       case .binding, .purchaseModal:
+        return .none
+      case .onTask:
+        return .run { send in
+          let productID = "me.igortarasenko.Whisperboard.liveTranscription"
+          let products = try await Product.products(for: [productID])
+          guard let product = products.first else { return }
+          let isPurchased = await product.currentEntitlement != nil
+          await send(.checkPurchaseStatus(isPurchased))
+        }
+      case let .checkPurchaseStatus(isPurchased):
+        state.isLiveTranscriptionPurchased = isPurchased
         return .none
       }
     }
@@ -82,6 +96,7 @@ struct PremiumFeaturesSectionView: View {
       .listRowBackground(Color.DS.Background.secondary)
       .listRowSeparator(.hidden)
       .enableInjection()
+      .task { await store.send(.onTask).finish() }
     }
   }
 }
