@@ -30,7 +30,7 @@ struct RecordingActionsSheet {
         state.displayMode = state.displayMode == .text ? .timeline : .text
         return .none
       case .copyText, .delete, .exportSRT, .exportText, .exportVTT, .restartTranscription, .shareAudio:
-        // Implement these actions in the parent reducer
+        // These actions will be handled in the parent reducer
         return .none
       }
     }
