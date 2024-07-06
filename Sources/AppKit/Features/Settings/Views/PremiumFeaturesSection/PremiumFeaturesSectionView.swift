@@ -15,7 +15,7 @@ struct PremiumFeaturesSection {
 
   enum Action: BindableAction {
     case binding(BindingAction<State>)
-    case liveTranscriptionToggled
+    case buyLiveTranscriptionTapped
     case purchaseModal(PresentationAction<PurchaseLiveTranscriptionModal.Action>)
   }
 
@@ -23,14 +23,12 @@ struct PremiumFeaturesSection {
     BindingReducer()
     Reduce { state, action in
       switch action {
-      case .liveTranscriptionToggled:
-        if !state.isLiveTranscriptionPurchased {
-          state.purchaseModal = PurchaseLiveTranscriptionModal.State()
-          return .none
-        }
+      case .buyLiveTranscriptionTapped:
+        state.purchaseModal = PurchaseLiveTranscriptionModal.State()
         return .none
       case .purchaseModal(.presented(.delegate(.didFinishTransaction))):
         state.purchaseModal = nil
+        state.isLiveTranscriptionPurchased = true
         return .none
       case .binding, .purchaseModal:
         return .none
@@ -52,12 +50,28 @@ struct PremiumFeaturesSectionView: View {
   var body: some View {
     WithPerceptionTracking {
       Section("Premium Features") {
-        SettingsToggleButton(
-          icon: .system(name: "waveform", background: .DS.Background.accent),
-          title: "Live Transcription",
-          isOn: $store.isLiveTranscriptionPurchased
-        ) {
-          store.send(.liveTranscriptionToggled)
+        HStack {
+          Label {
+            Text("Live Transcription")
+          } icon: {
+            Image(systemName: "waveform")
+              .foregroundColor(.white)
+              .padding(6)
+              .background(Color.DS.Background.accent)
+              .clipShape(Circle())
+          }
+          
+          Spacer()
+          
+          if store.isLiveTranscriptionPurchased {
+            Image(systemName: "checkmark.circle.fill")
+              .foregroundColor(.green)
+          } else {
+            Button("Buy") {
+              store.send(.buyLiveTranscriptionTapped)
+            }
+            .buttonStyle(.borderedProminent)
+          }
         }
       }
       .sheet(
