@@ -17,11 +17,9 @@ struct SettingsScreen {
 
     var modelSelector: ModelSelector.State = .init()
     var subscriptionSection: SubscriptionSection.State = .init()
-    var premiumFeaturesSection: PremiumFeaturesSection.State = .init(isLiveTranscriptionPurchased: false)
+    var premiumFeaturesSection: PremiumFeaturesSection.State = .init()
 
-    @Shared(.premiumFeatures) var premiumFeatures: PremiumFeaturesStatus
-
-    let availableLanguages: [String] = Constants.languages.keys.sorted()
+    let availableLanguages: [String] = ["Auto"] + Constants.languages.keys.sorted()
     var appVersion: String = ""
     var buildNumber: String = ""
     var freeSpace: String = ""
@@ -37,7 +35,7 @@ struct SettingsScreen {
 
     var selectedLanguageIndex: Int {
       get { settings.voiceLanguage.flatMap { availableLanguages.firstIndex(of: $0) } ?? 0 }
-      set { settings.voiceLanguage = availableLanguages[safe: newValue] }
+      set { settings.voiceLanguage = newValue == 0 ? nil : availableLanguages[safe: newValue] }
     }
 
     init() {}
@@ -77,16 +75,16 @@ struct SettingsScreen {
   var body: some Reducer<State, Action> {
     BindingReducer()
 
-    Scope(state: \.subscriptionSection, action: /Action.subscriptionSection) {
+    Scope(state: \.subscriptionSection, action: \.subscriptionSection) {
       SubscriptionSection()
     }
 
-    Scope(state: \.modelSelector, action: /Action.modelSelector) {
+    Scope(state: \.modelSelector, action: \.modelSelector) {
       ModelSelector()
     }
 
-    Scope(state: \.premiumFeaturesSection, action: /Action.premiumFeaturesSection) {
-      ModelSelector()
+    Scope(state: \.premiumFeaturesSection, action: \.premiumFeaturesSection) {
+      PremiumFeaturesSection()
     }
 
     Reduce<State, Action> { state, action in
@@ -98,6 +96,9 @@ struct SettingsScreen {
         return .none
 
       case .subscriptionSection:
+        return .none
+
+      case .premiumFeaturesSection:
         return .none
 
       case .task:
@@ -182,7 +183,7 @@ struct SettingsScreen {
       case .alert:
         return .none
       }
-    }.ifLet(\.$alert, action: /Action.alert)
+    }.ifLet(\.$alert, action: \.alert)
   }
 
   private func updateInfo(state: inout State) {
