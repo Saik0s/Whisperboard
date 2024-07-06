@@ -12,11 +12,12 @@ struct PurchaseLiveTranscriptionModal {
         var isPurchasing = false
         var errorMessage: String?
         var productPrice: String?
+        var isLoading = true
     }
 
     enum Action: Equatable {
         case onTask
-        case didFetchProduct
+        case didFetchProduct(TaskResult<String>)
         case purchaseButtonTapped
         case purchaseResult(TaskResult<Bool>)
         case delegate(Delegate)
@@ -55,9 +56,21 @@ struct PurchaseLiveTranscriptionModal {
         Reduce { state, action in
             switch action {
             case .onTask:
+                state.isLoading = true
+                state.errorMessage = nil
                 return .run { send in
-                    await send(.purchaseResult(TaskResult { try await fetchPrice() }))
+                    await send(.didFetchProduct(TaskResult { try await fetchPrice() }))
                 }
+
+            case let .didFetchProduct(.success(price)):
+                state.isLoading = false
+                state.productPrice = price
+                return .none
+
+            case let .didFetchProduct(.failure(error)):
+                state.isLoading = false
+                state.errorMessage = error.localizedDescription
+                return .none
 
             case .purchaseButtonTapped:
                 state.isPurchasing = true
@@ -137,18 +150,22 @@ struct PurchaseLiveTranscriptionModalView: View {
             VStack(spacing: 20) {
                 HeaderView()
                 FeatureListView()
-                PurchaseButton(
-                    isPurchasing: store.isPurchasing,
-                    productPrice: store.productPrice,
-                    action: { store.send(.purchaseButtonTapped) }
-                )
-                if let errorMessage = store.errorMessage {
+                if store.isLoading {
+                    ProgressView()
+                } else if let errorMessage = store.errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
                         .font(.caption)
+                } else if let productPrice = store.productPrice {
+                    PurchaseButton(
+                        isPurchasing: store.isPurchasing,
+                        productPrice: productPrice,
+                        action: { store.send(.purchaseButtonTapped) }
+                    )
                 }
             }
             .padding()
+            .task { await store.send(.onTask).finish() }
         }
     }
 }
