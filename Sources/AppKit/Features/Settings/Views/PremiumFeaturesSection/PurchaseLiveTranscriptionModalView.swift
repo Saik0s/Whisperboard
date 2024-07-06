@@ -11,6 +11,7 @@ struct PurchaseLiveTranscriptionModal {
         @Shared(.premiumFeatures) var premiumFeatures
         var isPurchasing = false
         var errorMessage: String?
+        var productPrice: String?
     }
 
     enum Action: Equatable {
@@ -83,6 +84,9 @@ struct PurchaseLiveTranscriptionModal {
             throw PurchaseError.productNotFound
         }
 
+        // Store the product price
+        self.state.productPrice = product.displayPrice
+
         let result = try await product.purchase()
 
         switch result {
@@ -123,6 +127,7 @@ struct PurchaseLiveTranscriptionModalView: View {
                 FeatureListView()
                 PurchaseButton(
                     isPurchasing: store.isPurchasing,
+                    productPrice: store.productPrice,
                     action: { store.send(.purchaseButtonTapped) }
                 )
                 if let errorMessage = store.errorMessage {
@@ -206,6 +211,7 @@ struct FeatureItemView: View {
 
 struct PurchaseButton: View {
     let isPurchasing: Bool
+    let productPrice: String?
     let action: () -> Void
 
     var body: some View {
@@ -214,7 +220,7 @@ struct PurchaseButton: View {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
             } else {
-                Text("Unleash Your Voice Now!")
+                Text(productPrice.map { "Unleash Your Voice Now! (\($0))" } ?? "Unleash Your Voice Now!")
                     .font(.headline)
                     .foregroundColor(.white)
             }
