@@ -54,14 +54,6 @@ struct ModelSectionView: View {
   var body: some View {
     WithPerceptionTracking {
       Section {
-        #if APPSTORE && DEBUG
-          SettingsToggleButton(
-            icon: .system(name: "wand.and.stars", background: .DS.Background.accent),
-            title: "Cloud Transcription",
-            isOn: $store.settings.isRemoteTranscriptionEnabled
-          )
-        #endif
-
         SettingsSheetButton(
           icon: .system(name: "square.and.arrow.down", background: .systemBlue.lighten(by: 0.1)),
           title: "Model",

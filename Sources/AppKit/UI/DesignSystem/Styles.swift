@@ -8,16 +8,16 @@ struct PrimaryButtonStyle: ButtonStyle {
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
       .textStyle(.primaryButton)
-      .padding(.grid(2))
+      .padding(.vertical, .grid(1))
       .padding(.horizontal, .grid(2))
       .background {
         LinearGradient.easedGradient(colors: [
-          Color.DS.Background.accent.lighten(by: 0.22),
-          Color.DS.Background.accent.lighten(by: 0.15),
+          Color.DS.Background.accent.lighten(by: 0.07),
           Color.DS.Background.accent,
+          Color.DS.Background.accent.darken(by: 0.1),
         ], startPoint: .topLeading, endPoint: .bottomTrailing)
-          .continuousCornerRadius(.grid(2))
-          .shadow(color: Color.DS.Background.accent.opacity(configuration.isPressed ? 0 : 1), radius: 4, x: 0, y: 0)
+          .continuousCornerRadius(.grid(1))
+          .shadow(color: Color.DS.Background.accent.opacity(configuration.isPressed ? 0 : 0.7), radius: 8, x: 0, y: 0)
       }
       .scaleEffect(configuration.isPressed ? 0.95 : 1)
       .animation(.gentleBounce(), value: configuration.isPressed)

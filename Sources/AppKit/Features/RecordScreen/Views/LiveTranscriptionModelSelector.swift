@@ -1,6 +1,7 @@
 import Common
 import ComposableArchitecture
 import Inject
+import Lottie
 import Popovers
 import Pow
 import SwiftUI
@@ -11,13 +12,17 @@ import SwiftUI
 struct LiveTranscriptionModelSelector {
   @ObservableState
   struct State: Equatable {
-    @Shared(.availableModels) var availableModels: [Model]
+    @Shared(.availableModels) var availableModels: [ModelSelector.State.ModelInfo]
     @Shared(.premiumFeatures) var premiumFeatures: PremiumFeaturesStatus
     @Shared(.settings) var settings
 
     @Presents var purchaseLiveTranscriptionModal: PurchaseLiveTranscriptionModal.State?
 
     var showInfoPopup: Bool = false
+
+    var currentModelInfo: ModelSelector.State.ModelInfo? {
+      availableModels.first { $0.id == settings.selectedModelName }
+    }
   }
 
   enum Action: BindableAction, Equatable {
@@ -67,37 +72,54 @@ struct LiveTranscriptionModelSelectorView: View {
         } else if store.state.premiumFeatures.liveTranscriptionIsPurchased == false {
           LockedFeatureView(
             title: "Live Transcription",
-            description: "Experience real-time speech-to-text with our advanced Live Transcription feature. Unlock it now to revolutionize your recording experience!",
+            description: "Live Transcription: Real-time speech-to-text. Unlock now. Transform recording.",
             onInfoTap: { store.send(.set(\.showInfoPopup, !store.state.showInfoPopup)) },
             onUpgradeTap: { store.send(.upgradeButtonTapped) }
           )
         } else {
-          LabeledContent("Live Transcription", content: {
-            Picker("Model", selection: $store.settings.selectedModelName) {
-              ForEach(store.state.availableModels) { model in
-                Text(model.name).tag(model.id)
+          GroupBox(
+            label: Text("Live Transcription"),
+            content: {
+              Picker("Model", selection: $store.settings.selectedModelName) {
+                ForEach(store.state.availableModels) { model in
+                  Text(model.title).tag(model.id)
+                }
+              }
+              .pickerStyle(MenuPickerStyle())
+
+              if let currentModelInfo = store.state.currentModelInfo {
+                LabeledContent {
+                  Text(currentModelInfo.title)
+                } label: {
+                  Label("Model", systemImage: "waveform")
+                }
               }
             }
-            .pickerStyle(MenuPickerStyle())
-
+          )
+          .overlay(alignment: .topTrailing) {
             Button(action: { store.send(.set(\.showInfoPopup, true)) }) {
               Image(systemName: "info.circle")
-                .foregroundColor(.blue)
+                .foregroundColor(.DS.Text.base)
+                .font(.body)
             }
             .padding(.leading, .grid(2))
-          })
+          }
         }
       }
       .popover(
         present: $store.state.showInfoPopup,
         attributes: {
-          $0.presentation = .init(animation: .bouncy, transition: .movingParts.swoosh.combined(with: .opacity))
-          $0.dismissal = .init(
-            animation: .bouncy,
-            transition: .movingParts.swoosh.combined(with: .opacity),
-            mode: [.dragDown, .dragUp]
+          $0.position = .relative(
+            popoverAnchors: [
+              .center,
+            ]
           )
-          $0.blocksBackgroundTouches = true
+          $0.presentation = .init(animation: .snappy, transition: .movingParts.blur.combined(with: .opacity))
+          $0.dismissal = .init(
+            animation: .snappy,
+            transition: .movingParts.blur.combined(with: .opacity),
+            mode: [.dragDown, .dragUp, .tapOutside]
+          )
         }
       ) {
         InfoPopupView()
@@ -124,17 +146,29 @@ struct LockedFeatureView: View {
   @State private var shine: Bool = false
 
   var body: some View {
-    HStack {
-      Image(systemName: "lock.fill")
-        .font(.title)
-        .foregroundColor(Color(.systemYellow))
-        .shadow(color: Color(.systemYellow).opacity(0.5), radius: 8, x: 0, y: 0)
+    VStack(alignment: .leading, spacing: .grid(1)) {
+      HStack(spacing: .grid(1)) {
+        #if APPSTORE
+          LottieView(animation: AnimationAsset.wiredOutline2474SparklesGlitter.animation)
+            .playing(loopMode: .autoReverse)
+            .animationSpeed(0.3)
+            .resizable()
+            .frame(width: 24, height: 24)
+        #endif
+
+        Text(title)
+          .textStyle(.headline)
+          .multilineTextAlignment(.leading)
+          .frame(maxWidth: .infinity, alignment: .leading)
+      }
 
       Text(description)
-        .textStyle(.subheadline)
-        .foregroundColor(.DS.Text.base)
-        .padding(.leading, .grid(1))
-        .padding(.trailing, .grid(7))
+        .textStyle(.body)
+        .multilineTextAlignment(.leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+      Button("Enable Live Transcription") { onUpgradeTap() }
+        .underlinedArrowButtonStyle()
     }
     .padding()
     .background(
@@ -155,13 +189,40 @@ struct LockedFeatureView: View {
         Image(systemName: "info.circle")
           .foregroundColor(.DS.Text.base)
           .font(.body)
-          .padding(8)
+          .padding(.grid(4))
       }
     }
     .conditionalEffect(.pushDown, condition: isPressed)
     .compositingGroup()
     .changeEffect(.shine.delay(1), value: shine, isEnabled: !shine)
     .onAppear { _ = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in withAnimation { shine.toggle() } } }
+  }
+}
+
+// MARK: - UnderlinedArrowButtonStyle
+
+struct UnderlinedArrowButtonStyle: ButtonStyle {
+  func makeBody(configuration: Configuration) -> some View {
+    HStack {
+      configuration.label
+
+      Image(systemName: "arrow.right")
+    }
+    .foregroundColor(.DS.code02)
+    .textStyle(.label)
+    .padding(.bottom, .grid(1))
+    .background(alignment: .bottom) {
+      Rectangle()
+        .fill(Color.DS.code02)
+        .frame(height: 1)
+    }
+    .opacity(configuration.isPressed ? 0.7 : 1.0)
+  }
+}
+
+extension View {
+  func underlinedArrowButtonStyle() -> some View {
+    buttonStyle(UnderlinedArrowButtonStyle())
   }
 }
 
@@ -174,36 +235,47 @@ struct InfoPopupView: View {
         .font(.title)
         .fontWeight(.bold)
 
-      Text("Your words, visible in real-time!")
+      Text("Real-time speech-to-text, locally on your device!")
         .font(.headline)
         .fontWeight(.bold)
 
-      Text("Speak and see the magic unfold.")
+      Text("Experience the power of on-device transcription with total privacy.")
         .font(.body)
         .fontWeight(.medium)
 
-      Text("Quick Start:")
+      Text("Key Features:")
         .font(.headline)
         .padding(.top, 8)
 
       VStack(alignment: .leading, spacing: 8) {
-        Text("1. Choose model")
-        Text("2. Tap record")
-        Text("3. Speak freely")
+        Text("• Select from multiple transcription models")
+        Text("• 100% local processing")
+        Text("• No internet connection required")
+        Text("• Performance varies based on device capabilities")
       }
       .font(.body)
 
-      Text("Benefits at a glance:")
+      Text("How it works:")
         .font(.headline)
         .padding(.top, 8)
 
       VStack(alignment: .leading, spacing: 8) {
-        Text("• Instant text conversion")
-        Text("• Effortless idea capture")
-        Text("• Massive time savings")
-        Text("• Multilingual support")
+        Text("1. Choose your preferred model")
+        Text("2. Tap record to start transcribing")
+        Text("3. Speak clearly for best results")
+        Text("4. Watch your words appear in real-time")
       }
       .font(.body)
+
+      Text("Note:")
+        .font(.headline)
+        .padding(.top, 8)
+
+      Text(
+        "If the selected model isn't downloaded, it will automatically download when you start recording. This may take a moment depending on your connection speed."
+      )
+      .font(.body)
+      .fontWeight(.medium)
     }
     .padding(.grid(4))
     .cardStyle()
