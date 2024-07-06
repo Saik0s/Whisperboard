@@ -67,7 +67,7 @@ struct LiveTranscriptionModelSelectorView: View {
         } else if store.state.premiumFeatures.liveTranscriptionIsPurchased == false {
           LockedFeatureView(
             title: "Live Transcription",
-            description: "Hey there! Wanna try Live Transcription? It's a cool feature you can unlock by upgrading.",
+            description: "Experience real-time speech-to-text with our advanced Live Transcription feature. Unlock it now to revolutionize your recording experience!",
             onInfoTap: { store.send(.set(\.showInfoPopup, !store.state.showInfoPopup)) },
             onUpgradeTap: { store.send(.upgradeButtonTapped) }
           )
