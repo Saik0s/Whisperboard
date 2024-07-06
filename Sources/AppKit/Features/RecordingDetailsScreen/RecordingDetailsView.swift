@@ -106,6 +106,26 @@ struct RecordingDetails {
       case .actionSheet(.presented(.restartTranscription)):
         return .send(.recordingCard(.transcribeButtonTapped))
 
+      case .actionSheet(.presented(.exportText)):
+        // Implement export text functionality
+        return .none
+
+      case .actionSheet(.presented(.exportVTT)):
+        // Implement export VTT functionality
+        return .none
+
+      case .actionSheet(.presented(.exportSRT)):
+        // Implement export SRT functionality
+        return .none
+
+      case .actionSheet(.presented(.shareAudio)):
+        // Implement share audio functionality
+        return .none
+
+      case .actionSheet(.presented(.copyText)):
+        // Implement copy text functionality
+        return .none
+
       case .actionSheet:
         return .none
       }
