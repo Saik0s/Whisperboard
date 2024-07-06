@@ -126,12 +126,12 @@ struct PurchaseLiveTranscriptionModalView: View {
 struct HeaderView: View {
     var body: some View {
         VStack(spacing: 10) {
-            Text("Transform Your Audio Experience with Live Transcription")
+            Text("Speak, See, Succeed!")
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
 
-            Text("Instant. Accurate. Revolutionary.")
+            Text("Your words, instantly visible.")
                 .font(.title2)
                 .fontWeight(.medium)
 
@@ -142,14 +142,14 @@ struct HeaderView: View {
                 }
             }
 
-            Text("Elevate your productivity, enhance accessibility, and unlock new possibilities in communication. Experience the future of audio transcription today.")
+            Text("Boost your productivity, make communication a breeze, and never miss a word. Welcome to the future of speech-to-text!")
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            Text("Join thousands of satisfied users!")
-                .font(.footnote)
-                .foregroundColor(.gray)
+            Text("Join the speech revolution!")
+                .font(.headline)
+                .foregroundColor(.blue)
         }
     }
 }
@@ -159,14 +159,14 @@ struct HeaderView: View {
 struct FeatureListView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
-            FeatureItemView(icon: "waveform", text: "Instant Speech-to-Text Conversion")
-            FeatureItemView(icon: "globe", text: "Support for Multiple Languages")
-            FeatureItemView(icon: "brain", text: "Advanced AI-driven Accuracy")
-            FeatureItemView(icon: "bolt.fill", text: "Ultra-fast Processing Speed")
-            FeatureItemView(icon: "person.2.fill", text: "Intelligent Speaker Recognition")
-            FeatureItemView(icon: "doc.text.fill", text: "Real-time Editable Transcripts")
-            FeatureItemView(icon: "icloud.fill", text: "Effortless Cloud Synchronization")
-            FeatureItemView(icon: "lock.shield.fill", text: "Robust Privacy Protection")
+            FeatureItemView(icon: "waveform", text: "Instant voice-to-text magic")
+            FeatureItemView(icon: "globe", text: "Speak in multiple languages")
+            FeatureItemView(icon: "brain", text: "AI-powered accuracy")
+            FeatureItemView(icon: "bolt.fill", text: "Lightning-fast processing")
+            FeatureItemView(icon: "person.2.fill", text: "Smart speaker identification")
+            FeatureItemView(icon: "doc.text.fill", text: "Edit transcripts on the fly")
+            FeatureItemView(icon: "icloud.fill", text: "Sync across all your devices")
+            FeatureItemView(icon: "lock.shield.fill", text: "Your words stay private")
         }
     }
 }
@@ -199,7 +199,7 @@ struct PurchaseButton: View {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
             } else {
-                Text("Unlock Live Transcription")
+                Text("Start Speaking, Start Seeing!")
                     .font(.headline)
                     .foregroundColor(.white)
             }
