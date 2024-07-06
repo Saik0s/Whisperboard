@@ -25,12 +25,27 @@ struct PurchaseLiveTranscriptionModal {
 
     // MARK: - PurchaseError
 
-    enum PurchaseError: Error {
+    enum PurchaseError: Error, LocalizedError {
         case productNotFound
         case unverifiedTransaction
         case userCancelled
         case transactionPending
         case unknown
+        
+        var errorDescription: String? {
+            switch self {
+            case .productNotFound:
+                return "The product could not be found. Please try again later."
+            case .unverifiedTransaction:
+                return "The transaction could not be verified. Please contact support."
+            case .userCancelled:
+                return "The purchase was cancelled."
+            case .transactionPending:
+                return "The transaction is pending. Please check your payment method and try again."
+            case .unknown:
+                return "An unknown error occurred. Please try again later."
+            }
+        }
     }
 
     var body: some ReducerOf<Self> {
