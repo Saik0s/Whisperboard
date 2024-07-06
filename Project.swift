@@ -131,15 +131,11 @@ func createAppTarget(suffix: String = "", isDev: Bool = false, scripts: [TargetS
         "CODE_SIGN_IDENTITY": "iPhone Developer",
         "CODE_SIGNING_REQUIRED": "YES",
       ],
-      debug: isDev
-        ? [
-          "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -debug-time-expression-type-checking -Xfrontend -enable-actor-data-race-checks",
-          "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
-          "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition) DEV DEBUG",
-        ]
-        : [
-          "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition) DEBUG",
-        ],
+      debug: [
+        "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -debug-time-expression-type-checking -Xfrontend -enable-actor-data-race-checks",
+        "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
+        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition) \(isDev ? "DEV" : "") DEBUG",
+      ],
       release: [
         "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition) \(isDev ? "DEV" : "")",
       ]
@@ -171,6 +167,14 @@ let project = Project(
       "CODE_SIGNING_REQUIRED": "NO",
       "DEVELOPMENT_TEAM": SettingValue(stringLiteral: devTeam),
       "MTL_FAST_MATH": "YES",
+    ],
+    debug: [
+      "OTHER_SWIFT_FLAGS": "-D DEBUG $(inherited) -Xfrontend -warn-long-function-bodies=500 -Xfrontend -warn-long-expression-type-checking=500 -Xfrontend -debug-time-function-bodies -Xfrontend -debug-time-expression-type-checking -Xfrontend -enable-actor-data-race-checks",
+      "OTHER_LDFLAGS": "-Xlinker -interposable $(inherited)",
+      "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition) DEBUG",
+    ],
+    release: [
+      "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "\(additionalCondition)",
     ]
   ),
 
@@ -381,6 +385,7 @@ let project = Project(
     ],
 
   schemes: [storeKitScheme],
+
   resourceSynthesizers: [
     .files(extensions: ["bin"]),
     .assets(),

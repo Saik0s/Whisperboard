@@ -119,7 +119,7 @@ struct ModelSelector {
 
       case let .modelsResponse(.success(models)):
         @Shared(.availableModels) var _models
-        _models = models.map(\.model)
+        _models = models
         state.localModels = models.filter { $0.model.isLocal && !$0.model.isDisabled }.identifiedArray
         state.availableModels = models.filter { !$0.model.isLocal && !$0.model.isDisabled }.identifiedArray
         state.disabledModels = models.filter(\.model.isDisabled).identifiedArray
@@ -550,7 +550,7 @@ private func directoryExistsAndNotEmptyAtPath(_ path: String) -> Bool {
   }
 }
 
-public extension PersistenceReaderKey where Self == PersistenceKeyDefault<InMemoryKey<[Model]>> {
+extension PersistenceReaderKey where Self == PersistenceKeyDefault<InMemoryKey<[ModelSelector.State.ModelInfo]>> {
   static var availableModels: Self {
     PersistenceKeyDefault(.inMemory("availableModels"), [])
   }

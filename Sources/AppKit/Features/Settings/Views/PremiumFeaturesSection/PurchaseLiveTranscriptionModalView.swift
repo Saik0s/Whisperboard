@@ -96,7 +96,7 @@ struct PurchaseLiveTranscriptionModal {
         }
     }
 
-    let productID = "me.igortarasenko.Whisperboard.liveTranscription"
+    let productID = "me.igortarasenko.Whisperboard.LiveTranscription"
 
     func fetchPrice() async throws -> String {
         let products = try await Product.products(for: [productID])
@@ -165,7 +165,7 @@ struct PurchaseLiveTranscriptionModalView: View {
                     )
                 }
             }
-            .padding()
+            .padding(.grid(6))
             .task { await store.send(.onTask).finish() }
         }
     }
@@ -175,13 +175,13 @@ struct PurchaseLiveTranscriptionModalView: View {
 
 struct HeaderView: View {
     var body: some View {
-        VStack(spacing: 12) {
-            Text("Talk. Type. Transform.")
+        VStack(spacing: 16) {
+            Text("Speak, and Watch Your Words Appear")
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
 
-            Text("Instant speech-to-text magic!")
+            Text("Instant, Accurate Speech-to-Text")
                 .font(.title2)
                 .fontWeight(.semibold)
 
@@ -192,14 +192,15 @@ struct HeaderView: View {
                 }
             }
 
-            Text("Supercharge your productivity. Simplify communication. Capture every word. Experience the future of voice-to-text!")
+            Text("Transform meetings, lectures, and ideas into text instantly. Never miss a word, thought, or brilliant idea again.")
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            Text("Ready to revolutionize your speech?")
+            Text("Ready to 10x Your Productivity?")
                 .font(.headline)
-                .foregroundColor(.blue)
+                .foregroundColor(.DS.Text.accentAlt)
+                .shadow(color: .DS.Text.accentAlt.opacity(0.5), radius: 10, x: 0, y: 0)
         }
     }
 }
@@ -209,30 +210,49 @@ struct HeaderView: View {
 struct FeatureListView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
-            FeatureItemView(icon: "waveform", text: "Instant speech-to-text")
-            FeatureItemView(icon: "globe", text: "Multilingual support")
-            FeatureItemView(icon: "brain", text: "AI-driven precision")
-            FeatureItemView(icon: "bolt.fill", text: "Rapid processing")
-            FeatureItemView(icon: "person.2.fill", text: "Smart voice recognition")
-            FeatureItemView(icon: "doc.text.fill", text: "Real-time editing")
-            FeatureItemView(icon: "icloud.fill", text: "Cross-device sync")
-            FeatureItemView(icon: "lock.shield.fill", text: "Privacy guaranteed")
-        }
-    }
-}
+            Label {
+                VStack(alignment: .leading) {
+                    Text("Instant Transcription")
+                    Text("See your words as you speak")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } icon: {
+                Image(systemName: "waveform")
+            }
 
-// MARK: - FeatureItemView
+            Label {
+                VStack(alignment: .leading) {
+                    Text("Multiple Languages")
+                    Text("Switch between languages effortlessly")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } icon: {
+                Image(systemName: "globe")
+            }
 
-struct FeatureItemView: View {
-    let icon: String
-    let text: String
+            Label {
+                VStack(alignment: .leading) {
+                    Text("AI-Powered Accuracy")
+                    Text("Enjoy precise transcriptions, even with accents")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } icon: {
+                Image(systemName: "brain")
+            }
 
-    var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(.blue)
-            Text(text)
-                .font(.body)
+            Label {
+                VStack(alignment: .leading) {
+                    Text("100% Private")
+                    Text("Your words stay on your device, always")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } icon: {
+                Image(systemName: "lock.shield.fill")
+            }
         }
     }
 }
@@ -249,16 +269,21 @@ struct PurchaseButton: View {
             if isPurchasing {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .frame(width: 50, height: 50)
             } else {
-                Text(productPrice.map { "Unleash Your Voice Now! (\($0))" } ?? "Unleash Your Voice Now!")
+                Text(productPrice.map { "Start Transcribing Now - Just \($0)" } ?? "Start Transcribing Now")
                     .font(.headline)
                     .foregroundColor(.white)
+                    .frame(height: 50)
+                    .frame(maxWidth: .infinity)
             }
         }
-        .frame(height: 50)
-        .frame(maxWidth: .infinity)
-        .background(Color.blue)
-        .cornerRadius(10)
+        .background {
+            Color.DS.Background.accent
+                .cornerRadius(10)
+                .shadow(color: .DS.Background.accent.opacity(0.5), radius: 10, x: 0, y: 0)
+        }
         .disabled(isPurchasing)
     }
 }
+

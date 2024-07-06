@@ -64,7 +64,7 @@ extension Color {
       static var success = Color.DS.accents03
       static var warning = Color.DS.accents05
       static var link = Color.DS.accents01
-      static var overAccent = Color.DS.neutral07100
+      static var overAccent = Color.DS.neutral01100
     }
 
     enum Stroke {

@@ -27,13 +27,17 @@
       "3" : 6
     },
     "_developerTeamID" : "8A76N862C8",
+    "_disableDialogs" : true,
     "_failTransactionsEnabled" : false,
     "_lastSynchronizedDate" : 741954366.51209795,
     "_locale" : "en_US",
     "_storefront" : "USA",
     "_storeKitErrors" : [
       {
-        "current" : null,
+        "current" : {
+          "index" : 2,
+          "type" : "generic"
+        },
         "enabled" : false,
         "name" : "Load Products"
       },
