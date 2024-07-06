@@ -18,6 +18,8 @@ struct SettingsScreen {
     var modelSelector: ModelSelector.State = .init()
     var subscriptionSection: SubscriptionSection.State = .init()
 
+    @Shared(.premiumFeatures) var premiumFeatures: PremiumFeaturesStatus
+
     let availableLanguages: [String] = Constants.languages.keys.sorted()
     var appVersion: String = ""
     var buildNumber: String = ""
