@@ -4,17 +4,31 @@
 
   ],
   "products" : [
-
+    {
+      "displayPrice" : "7.99",
+      "familyShareable" : true,
+      "internalID" : "6517353511",
+      "localizations" : [
+        {
+          "description" : "Real-time transcription as you speak",
+          "displayName" : "Live Transcription",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "me.igortarasenko.Whisperboard.LiveTranscription",
+      "referenceName" : "Live Transcription",
+      "type" : "NonConsumable"
+    }
   ],
   "settings" : {
     "_applicationInternalID" : "1661442906",
     "_billingGracePeriodEnabled" : false,
     "_compatibilityTimeRate" : {
-      "3" : 3
+      "3" : 6
     },
     "_developerTeamID" : "8A76N862C8",
     "_failTransactionsEnabled" : false,
-    "_lastSynchronizedDate" : 718750596.95476305,
+    "_lastSynchronizedDate" : 741954366.51209795,
     "_locale" : "en_US",
     "_storefront" : "USA",
     "_storeKitErrors" : [
@@ -64,48 +78,10 @@
         "name" : "Offer Code Redeem Sheet"
       }
     ],
-    "_timeRate" : 10
+    "_timeRate" : 13
   },
   "subscriptionGroups" : [
-    {
-      "id" : "21372288",
-      "localizations" : [
 
-      ],
-      "name" : "Premium",
-      "subscriptions" : [
-        {
-          "adHocOffers" : [
-
-          ],
-          "codeOffers" : [
-
-          ],
-          "displayPrice" : "3.99",
-          "familyShareable" : true,
-          "groupNumber" : 1,
-          "internalID" : "6461014269",
-          "introductoryOffer" : {
-            "internalID" : "D6C5B084",
-            "numberOfPeriods" : 1,
-            "paymentMode" : "free",
-            "subscriptionPeriod" : "P3D"
-          },
-          "localizations" : [
-            {
-              "description" : "Access to advanced cloud transcription",
-              "displayName" : "Premium",
-              "locale" : "en_US"
-            }
-          ],
-          "productID" : "sub_monthly",
-          "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "Monthly Subscription",
-          "subscriptionGroupID" : "21372288",
-          "type" : "RecurringSubscription"
-        }
-      ]
-    }
   ],
   "version" : {
     "major" : 3,

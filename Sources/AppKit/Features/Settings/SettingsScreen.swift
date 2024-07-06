@@ -103,17 +103,18 @@ struct SettingsScreen {
 
       case .task:
         updateInfo(state: &state)
-        return .run { send in
-          do {
-            let isSubscribed = try await subscriptionClient.checkIfSubscribed()
-            await send(.updateIsSubscribed(isSubscribed))
-          } catch {
-            await send(.showError(error.equatable))
-          }
-          for await isSubscribed in subscriptionClient.isSubscribedStream() {
-            await send(.updateIsSubscribed(isSubscribed))
-          }
-        }
+        return .none
+        // return .run { send in
+        //   do {
+        //     let isSubscribed = try await subscriptionClient.checkIfSubscribed()
+        //     await send(.updateIsSubscribed(isSubscribed))
+        //   } catch {
+        //     await send(.showError(error.equatable))
+        //   }
+        //   for await isSubscribed in subscriptionClient.isSubscribedStream() {
+        //     await send(.updateIsSubscribed(isSubscribed))
+        //   }
+        // }
 
       case .updateInfo:
         updateInfo(state: &state)

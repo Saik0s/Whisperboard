@@ -39,10 +39,10 @@ struct PremiumFeaturesSection {
         return .run { send in
           let productID = "me.igortarasenko.Whisperboard.liveTranscription"
           let products = try await Product.products(for: [productID])
-          guard let product = products.first else { return }
+          let product = products.first 
           
           // Check initial purchase status
-          let isPurchased = await product.currentEntitlement != nil
+          let isPurchased = await product?.currentEntitlement != nil
           await send(.checkPurchaseStatus(isPurchased))
           
           // Subscribe to transaction updates
