@@ -175,31 +175,31 @@ struct InfoPopupView: View {
         .fontWeight(.bold)
 
       Text(
-        "Live Transcription transforms your speech into text instantly. Our cutting-edge AI models process audio in real-time, delivering highly accurate transcripts on the fly."
+        "Speak, and watch your words appear instantly! Our AI turns your voice into text in real-time."
       )
       .font(.body)
+      .fontWeight(.medium)
 
-      Text("How it works:")
+      Text("It's as easy as 1-2-3:")
         .font(.headline)
         .padding(.top, 8)
 
       VStack(alignment: .leading, spacing: 8) {
-        Text("1. Choose your preferred transcription model")
-        Text("2. Begin your audio recording")
-        Text("3. See your words materialize in real-time")
-        Text("4. Review, edit, or export your transcript")
+        Text("1. Pick your model")
+        Text("2. Hit record")
+        Text("3. Watch the magic happen")
       }
       .font(.body)
 
-      Text("Key Advantages:")
+      Text("Why you'll love it:")
         .font(.headline)
         .padding(.top, 8)
 
       VStack(alignment: .leading, spacing: 8) {
-        Text("• Immediate visual representation of your speech")
-        Text("• Effortlessly document and review spoken content")
-        Text("• Dramatically reduce time spent on manual transcription")
-        Text("• Seamless support for various languages")
+        Text("• See your speech, instantly")
+        Text("• Capture ideas effortlessly")
+        Text("• Save hours on transcription")
+        Text("• Speak in multiple languages")
       }
       .font(.body)
     }
