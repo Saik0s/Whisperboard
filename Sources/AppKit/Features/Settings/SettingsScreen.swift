@@ -17,6 +17,7 @@ struct SettingsScreen {
 
     var modelSelector: ModelSelector.State = .init()
     var subscriptionSection: SubscriptionSection.State = .init()
+    var premiumFeaturesSection: PremiumFeaturesSection.State = .init(isLiveTranscriptionPurchased: false)
 
     @Shared(.premiumFeatures) var premiumFeatures: PremiumFeaturesStatus
 
@@ -49,6 +50,7 @@ struct SettingsScreen {
 
     case modelSelector(ModelSelector.Action)
     case subscriptionSection(SubscriptionSection.Action)
+    case premiumFeaturesSection(PremiumFeaturesSection.Action)
 
     case deleteStorageTapped
     case deleteAllModelsTapped
@@ -80,6 +82,10 @@ struct SettingsScreen {
     }
 
     Scope(state: \.modelSelector, action: /Action.modelSelector) {
+      ModelSelector()
+    }
+
+    Scope(state: \.premiumFeaturesSection, action: /Action.premiumFeaturesSection) {
       ModelSelector()
     }
 
