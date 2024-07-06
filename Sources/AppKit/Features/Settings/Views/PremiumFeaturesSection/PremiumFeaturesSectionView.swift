@@ -64,27 +64,14 @@ struct PremiumFeaturesSectionView: View {
   var body: some View {
     WithPerceptionTracking {
       Section("Premium Features") {
-        HStack {
-          Label {
-            Text("Live Transcription")
-          } icon: {
-            Image(systemName: "waveform")
-              .foregroundColor(.white)
-              .padding(6)
-              .background(Color.DS.Background.accent)
-              .clipShape(Circle())
-          }
-          
-          Spacer()
-          
-          if store.isLiveTranscriptionPurchased {
-            Image(systemName: "checkmark.circle.fill")
-              .foregroundColor(.green)
-          } else {
-            Button("Buy") {
-              store.send(.buyLiveTranscriptionTapped)
-            }
-            .buttonStyle(.borderedProminent)
+        SettingsButton(
+          icon: .system(name: "waveform", background: Color.DS.Background.accent),
+          title: "Live Transcription",
+          trailingText: store.isLiveTranscriptionPurchased ? "Purchased" : "Not Purchased",
+          indicator: store.isLiveTranscriptionPurchased ? nil : .chevron
+        ) {
+          if !store.isLiveTranscriptionPurchased {
+            store.send(.buyLiveTranscriptionTapped)
           }
         }
       }
