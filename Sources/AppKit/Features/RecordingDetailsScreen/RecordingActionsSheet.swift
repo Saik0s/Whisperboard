@@ -125,7 +125,7 @@ struct RecordingActionsSheetView: View {
 
     var vttContent = "WEBVTT\n\n"
     for segment in transcription.segments {
-      vttContent += formatTiming(start: Float(segment.startTime), end: Float(segment.endTime), text: segment.text)
+      vttContent += formatTiming(start: Float(segment.startTimeMS) / 1000, end: Float(segment.endTimeMS) / 1000, text: segment.text)
     }
 
     let fileName = store.audioFileURL.deletingPathExtension().lastPathComponent
@@ -137,7 +137,7 @@ struct RecordingActionsSheetView: View {
 
     var srtContent = ""
     for (index, segment) in transcription.segments.enumerated() {
-      srtContent += formatSegment(index: index + 1, start: Float(segment.startTime), end: Float(segment.endTime), text: segment.text)
+      srtContent += formatSegment(index: index + 1, start: Float(segment.startTimeMS) / 1000, end: Float(segment.endTimeMS) / 1000, text: segment.text)
     }
 
     let fileName = store.audioFileURL.deletingPathExtension().lastPathComponent
@@ -152,7 +152,7 @@ struct RecordingActionsSheetView: View {
       try content.write(to: fileURL, atomically: true, encoding: .utf8)
       return fileURL
     } catch {
-      print("Error saving file: \(error)")
+      logs.error("Error saving file: \(error)")
       return nil
     }
   }

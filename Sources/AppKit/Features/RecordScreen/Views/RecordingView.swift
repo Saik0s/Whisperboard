@@ -196,8 +196,8 @@ struct Recording {
 extension TranscriptionSegment {
   var asSimpleSegment: Segment {
     Segment(
-      startTime: Int64(start),
-      endTime: Int64(end),
+      startTimeMS: Int64(start * 1000),
+      endTimeMS: Int64(end * 1000),
       text: text.trimmingCharacters(in: .whitespacesAndNewlines),
       tokens: tokens.enumerated().map { index, tokenID in
         Token(
@@ -207,7 +207,15 @@ extension TranscriptionSegment {
           speaker: nil
         )
       },
-      speaker: nil
+      speaker: nil,
+      words: words?.map {
+        WordData(
+          word: $0.word,
+          startTimeMS: Int64($0.start * 1000),
+          endTimeMS: Int64($0.end * 1000),
+          probability: Double($0.probability)
+        )
+      } ?? []
     )
   }
 }

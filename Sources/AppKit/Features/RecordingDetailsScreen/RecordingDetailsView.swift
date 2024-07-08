@@ -29,7 +29,7 @@ struct RecordingDetails {
 
     var timeline: [TimelineItem] {
       recordingCard.recording.transcription?.segments.map {
-        TimelineItem(text: $0.text, startTime: Duration.milliseconds($0.startTime), endTime: Duration.milliseconds($0.endTime))
+        TimelineItem(text: $0.text, startTime: Duration.milliseconds($0.startTimeMS), endTime: Duration.milliseconds($0.endTimeMS))
       } ?? []
     }
 
