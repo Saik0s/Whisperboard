@@ -11,7 +11,6 @@ public struct Transcription: Codable, Hashable, Identifiable {
   public var parameters: TranscriptionParameters
   public var model: String
   public var status: Status = .notStarted
-  public var words: [WordData]
   public var text: String
   public var timings: Timings
 
@@ -35,7 +34,6 @@ public struct Transcription: Codable, Hashable, Identifiable {
     parameters: TranscriptionParameters,
     model: String,
     status: Status = .notStarted,
-    words: [WordData] = [],
     text: String = "",
     timings: Timings = .init()
   ) {
@@ -46,7 +44,6 @@ public struct Transcription: Codable, Hashable, Identifiable {
     self.parameters = parameters
     self.model = model
     self.status = status
-    self.words = words
     self.text = text
     self.timings = timings
   }
@@ -85,25 +82,28 @@ public extension Transcription {
 // MARK: - Segment
 
 public struct Segment: Codable, Hashable, Identifiable {
-  public var id: Int64 { startTime }
-  public let startTime: Int64
-  public let endTime: Int64
+  public var id: Int64 { startTimeMS }
+  public let startTimeMS: Int64
+  public let endTimeMS: Int64
   public let text: String
   public let tokens: [Token]
   public let speaker: String?
+  public let words: [WordData]
 
   public init(
-    startTime: Int64,
-    endTime: Int64,
+    startTimeMS: Int64,
+    endTimeMS: Int64,
     text: String,
     tokens: [Token],
-    speaker: String? = nil
+    speaker: String? = nil,
+    words: [WordData] = []
   ) {
-    self.startTime = startTime
-    self.endTime = endTime
+    self.startTimeMS = startTimeMS
+    self.endTimeMS = endTimeMS
     self.text = text
     self.tokens = tokens
     self.speaker = speaker
+    self.words = words
   }
 }
 
@@ -132,19 +132,19 @@ public struct Token: Codable, Hashable, Identifiable {
 
 public struct WordData: Codable, Hashable {
   public let word: String
-  public let startTime: TimeInterval
-  public let endTime: TimeInterval
+  public let startTimeMS: Int64
+  public let endTimeMS: Int64
   public let probability: Double
 
   public init(
     word: String,
-    startTime: TimeInterval,
-    endTime: TimeInterval,
+    startTimeMS: Int64,
+    endTimeMS: Int64,
     probability: Double
   ) {
     self.word = word
-    self.startTime = startTime
-    self.endTime = endTime
+    self.startTimeMS = startTimeMS
+    self.endTimeMS = endTimeMS
     self.probability = probability
   }
 }
@@ -289,8 +289,8 @@ public extension Transcription.Status {
       startDate: Date(),
       segments: [
         Segment(
-          startTime: 0,
-          endTime: 0,
+          startTimeMS: 0,
+          endTimeMS: 0,
           text: "This is a random sentence.",
           tokens: [
             Token(
@@ -315,8 +315,8 @@ public extension Transcription.Status {
       startDate: Date(),
       segments: [
         Segment(
-          startTime: 0,
-          endTime: 0,
+          startTimeMS: 0,
+          endTimeMS: 0,
           text: "This is another random sentence. Here is a second sentence.",
           tokens: [
             Token(
@@ -341,8 +341,8 @@ public extension Transcription.Status {
       startDate: Date(),
       segments: [
         Segment(
-          startTime: 0,
-          endTime: 0,
+          startTimeMS: 0,
+          endTimeMS: 0,
           text: "Here is a random sentence. This is a second sentence. And a third one.",
           tokens: [
             Token(
