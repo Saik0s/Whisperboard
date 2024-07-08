@@ -22,7 +22,7 @@ struct RecordingDetails {
   @ObservableState
   struct State: Equatable {
     var recordingCard: RecordingCard.State
-    var displayMode: DisplayMode = .text
+    @Shared var displayMode: DisplayMode
 
     @Presents var alert: AlertState<Action.Alert>?
     @Presents var actionSheet: RecordingActionsSheet.State?
@@ -34,6 +34,11 @@ struct RecordingDetails {
     }
 
     var shareAudioFileURL: URL { recordingCard.recording.fileURL }
+    
+    init(recordingCard: RecordingCard.State, displayMode: DisplayMode = .text) {
+      self.recordingCard = recordingCard
+      self._displayMode = Shared(displayMode)
+    }
   }
 
   enum Action: Equatable, BindableAction {
@@ -92,14 +97,11 @@ struct RecordingDetails {
 
       case .presentActionSheet:
         state.actionSheet = RecordingActionsSheet.State(
-          displayMode: state.displayMode,
-          isTranscribing: state.recordingCard.recording.isTranscribing,
-          audioFileURL: state.recordingCard.recording.fileURL
+          displayMode: state.$displayMode,
+          isTranscribing: state.recordingCard.$recording.isTranscribing,
+          transcription: state.recordingCard.$recording.transcription,
+          audioFileURL: state.recordingCard.$recording.fileURL
         )
-        return .none
-
-      case .actionSheet(.presented(.toggleDisplayMode)):
-        state.displayMode = state.displayMode == .text ? .timeline : .text
         return .none
 
       case .actionSheet(.presented(.delete)):
@@ -107,11 +109,6 @@ struct RecordingDetails {
 
       case .actionSheet(.presented(.restartTranscription)):
         return .send(.recordingCard(.transcribeButtonTapped))
-
-      case .actionSheet(.presented(.copyText)):
-        return .run { [text = state.recordingCard.transcription] _ in
-          UIPasteboard.general.string = text
-        }
 
       case .actionSheet:
         return .none
