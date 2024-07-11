@@ -77,7 +77,7 @@ struct LiveTranscriptionModelSelectorView: View {
             onUpgradeTap: { store.send(.upgradeButtonTapped) }
           )
         } else {
-          VStack {
+          VStack(spacing: .grid(1)) {
             HStack {
               #if APPSTORE
                 LottieView(animation: AnimationAsset.wiredOutline2474SparklesGlitter.animation)
@@ -88,21 +88,20 @@ struct LiveTranscriptionModelSelectorView: View {
               #endif
 
               Text("Live Transcription")
-                .textStyle(.body)
+                .textStyle(.bodyBold)
 
               Spacer()
 
               Button(action: { store.send(.set(\.showInfoPopup, true)) }) {
                 Image(systemName: "info.circle")
-                  .foregroundColor(.DS.Text.base)
-                  .font(.body)
+                  .textStyle(.bodyBold)
               }
             }
 
             VStack(alignment: .leading, spacing: .grid(2)) {
               Toggle(isOn: $store.settings.isLiveTranscriptionEnabled) {
                 Label("Enable Live Transcription", systemImage: "text.viewfinder")
-                  .textStyle(.label)
+                  .textStyle(.body)
               }
 
               LabeledContent {
@@ -117,7 +116,7 @@ struct LiveTranscriptionModelSelectorView: View {
                 .foregroundColor(.DS.Text.subdued)
               } label: {
                 Label("Selected model", systemImage: "brain")
-                  .textStyle(.label)
+                  .textStyle(.body)
               }
               .disabled(store.settings.isLiveTranscriptionEnabled == false)
 
