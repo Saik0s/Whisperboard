@@ -15,8 +15,8 @@ import WhisperKit
 struct TranscriptionWorker: Reducer {
   @ObservableState
   struct State: Equatable {
-    @Shared(.transcriptionTasks) var taskQueue: [TranscriptionTask] = []
-    @Shared(.recordings) var recordings: [RecordingInfo] = []
+    @Shared(.transcriptionTasks) var taskQueue: IdentifiedArrayOf<TranscriptionTask>
+    @Shared(.recordings) var recordings: IdentifiedArrayOf<RecordingInfo>
     fileprivate var backgroundTask: UIBackgroundTaskIdentifier = .invalid
 
     var isProcessing: Bool {

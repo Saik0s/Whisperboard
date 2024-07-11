@@ -191,13 +191,13 @@ struct Root {
 
   func uploadNewRecordingsToICloudIfNeeded() async throws {
     @Shared(.settings) var settings: Settings
-    @Shared(.recordings) var recordings: [RecordingInfo]
+    @Shared(.recordings) var recordings: IdentifiedArrayOf<RecordingInfo>
     @Shared(.isICloudSyncInProgress) var isICloudSyncInProgress: Bool
 
     if settings.isICloudSyncEnabled {
       $isICloudSyncInProgress.withLock { $0 = true }
       defer { $isICloudSyncInProgress.withLock { $0 = false } }
-      try await storage.uploadRecordingsToICloud(reset: false, recordings: recordings)
+      try await storage.uploadRecordingsToICloud(reset: false, recordings: recordings.elements)
     }
   }
 }

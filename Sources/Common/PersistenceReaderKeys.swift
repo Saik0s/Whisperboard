@@ -1,12 +1,13 @@
+import Foundation
 import ComposableArchitecture
 
-public extension PersistenceReaderKey where Self == PersistenceKeyDefault<FileStorageKey<[RecordingInfo]>> {
+public extension PersistenceReaderKey where Self == PersistenceKeyDefault<FileStorageKey<IdentifiedArrayOf<RecordingInfo>>> {
   static var recordings: Self {
     PersistenceKeyDefault(.fileStorage(.documentsDirectory.appending(component: "recordings.json")), [])
   }
 }
 
-public extension PersistenceReaderKey where Self == PersistenceKeyDefault<InMemoryKey<[TranscriptionTask]>> {
+public extension PersistenceReaderKey where Self == PersistenceKeyDefault<InMemoryKey<IdentifiedArrayOf<TranscriptionTask>>> {
   static var transcriptionTasks: Self {
     PersistenceKeyDefault(.inMemory(#function), [])
   }

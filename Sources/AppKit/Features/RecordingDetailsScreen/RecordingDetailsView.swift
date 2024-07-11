@@ -264,7 +264,7 @@ struct RecordingDetailsHeaderView: View {
           axis: .vertical
         )
         .focused($focusedField, equals: .title)
-        .textStyle(.headline)
+        .textStyle(.navigationTitle)
         .foregroundColor(.DS.Text.base)
 
         Text(store.recordingCard.recording.date.formatted(date: .abbreviated, time: .shortened))
@@ -291,12 +291,11 @@ struct RecordingDetailsHeaderView: View {
         if let error = store.recordingCard.recording.transcription?.status.errorMessage {
           Text("Last transcription failed")
             .textStyle(.error)
-            .foregroundColor(.DS.Text.error)
+          
           Text(error)
             .textStyle(.error)
-            .foregroundColor(.DS.Text.error)
         } else {
-          TranscriptionControlsView(store: store.scope(state: \.recordingCard, action: \.recordingCard))
+          TranscriptionControlsView(store: store.scope(state: \.recordingCard, action: \.recordingCard), queueInfo: nil)
         }
       }
       .padding(.horizontal, .grid(4))

@@ -13,7 +13,8 @@ import SwiftUIIntrospect
 struct RecordingListScreen {
   @ObservableState
   struct State: Equatable {
-    @Shared(.recordings) var recordings: [RecordingInfo]
+    @Shared(.recordings) var recordings: IdentifiedArrayOf<RecordingInfo>
+    @Shared(.transcriptionTasks) var transcriptionTasks: IdentifiedArrayOf<TranscriptionTask>
 
     var recordingCards: IdentifiedArrayOf<RecordingCard.State> = []
     var editMode: EditMode = .inactive
@@ -62,9 +63,9 @@ struct RecordingListScreen {
         state.recordingCards = createCards(for: state)
 
         return .run { [recordings = state.$recordings] send in
-          await send(.didSyncRecordings(TaskResult { try await storage.sync(recordings.wrappedValue) }))
+          await send(.didSyncRecordings(TaskResult { try await storage.sync(recordings.wrappedValue.elements) }))
           for await _ in await didBecomeActive() {
-            await send(.didSyncRecordings(TaskResult { try await storage.sync(recordings.wrappedValue) }))
+            await send(.didSyncRecordings(TaskResult { try await storage.sync(recordings.wrappedValue.elements) }))
           }
         }.merge(with: .run { [recordings = state.$recordings] send in
           for await _ in recordings.publisher.map(\.count).removeDuplicates().values {
@@ -121,7 +122,7 @@ struct RecordingListScreen {
         return .none
 
       case let .didSyncRecordings(.success(recordings)):
-        state.recordings = recordings
+        state.recordings = recordings.identifiedArray
         return .none
 
       case let .didSyncRecordings(.failure(error)):
@@ -142,12 +143,10 @@ struct RecordingListScreen {
   }
 
   private func createCards(for state: State) -> IdentifiedArrayOf<RecordingCard.State> {
-    @SharedReader(.transcriptionTasks) var taskQueue: [TranscriptionTask]
-    return state.$recordings.elements
+    state.$recordings.elements
       .map { recording in
         state.recordingCards[id: recording.id] ?? RecordingCard.State(
-          recording: recording,
-          queueInfo: $taskQueue.identifiedArray.elements[recordingInfoID: recording.id]
+          recording: recording
         )
       }
       .sorted(by: { $0.recording.date > $1.recording.date })
@@ -195,15 +194,24 @@ struct RecordingListScreenView: View {
   private var content: some View {
     List {
       ForEach(store.scope(state: \.recordingCards, action: \.recordingCard)) { cardStore in
-//          makeRecordingCard(store: store)
-
         Button {
           store.send(.delegate(.recordingCardTapped(cardStore.state)))
         } label: {
-          RecordingCardView(store: cardStore)
+          RecordingCardView(
+            store: cardStore,
+            queueInfo: store.transcriptionTasks.firstIndex { $0.recordingInfoID == cardStore.id }
+              .flatMap { RecordingCard.QueueInfo(position: $0, total: store.transcriptionTasks.count) }
+          )
         }
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+          Button(role: .destructive) {
+            store.send(.deleteSwipeActionTapped(cardStore.id))
+          } label: {
+            Label("Delete", systemImage: "trash")
+          }
+        }
       }
     }
     .background(Color.DS.Background.primary)

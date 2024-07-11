@@ -17,16 +17,13 @@ struct RecordingCard {
     var id: String { recording.id }
 
     @Shared var recording: RecordingInfo
-    @SharedReader var queueInfo: QueueInfo?
     var playerControls: PlayerControls.State
 
-    var isInQueue: Bool { queueInfo != nil }
     var transcription: String { recording.text }
 
-    init(recording: Shared<RecordingInfo>, queueInfo: SharedReader<QueueInfo?>) {
+    init(recording: Shared<RecordingInfo>) {
       _recording = recording
       playerControls = .init(recording: recording)
-      _queueInfo = queueInfo
     }
   }
 

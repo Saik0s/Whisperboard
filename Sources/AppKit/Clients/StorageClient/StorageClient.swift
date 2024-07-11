@@ -133,13 +133,13 @@ extension StorageClient: DependencyKey {
       try FileManager.default.removeItem(at: item)
     }
 
-    @Shared(.recordings) var recordings: [RecordingInfo]
+    @Shared(.recordings) var recordings: IdentifiedArrayOf<RecordingInfo>
     _recordings.withLock { value in
       value.removeAll()
     }
     let newRecordings = try await storage.sync(recordings: [])
     _recordings.withLock { value in
-      value = newRecordings
+      value = newRecordings.identifiedArray
     }
   }
 }
