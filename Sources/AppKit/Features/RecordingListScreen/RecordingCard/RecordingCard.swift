@@ -23,7 +23,7 @@ struct RecordingCard {
 
     init(recording: Shared<RecordingInfo>) {
       _recording = recording
-      playerControls = .init(recording: recording)
+      playerControls = .init(recording: recording.wrappedValue)
     }
   }
 
