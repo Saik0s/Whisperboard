@@ -170,7 +170,7 @@ struct RecordingDetailsView: View {
     WaveformProgressView(
       store: store.scope(
         state: \.recordingCard.playerControls.waveform,
-        action: \.recordingCard.playerControls.view.waveform
+        action: \.recordingCard.playerControls.waveform
       )
     )
     .padding(.horizontal, .grid(4))
@@ -178,7 +178,7 @@ struct RecordingDetailsView: View {
 
   private var playButtonView: some View {
     PlayButton(isPlaying: store.recordingCard.playerControls.isPlaying) {
-      store.send(.recordingCard(.playerControls(.view(.playButtonTapped))), animation: .spring())
+      store.send(.recordingCard(.playerControls(.playButtonTapped)), animation: .bouncy)
     }
   }
 
@@ -264,8 +264,7 @@ struct RecordingDetailsHeaderView: View {
           axis: .vertical
         )
         .focused($focusedField, equals: .title)
-        .textStyle(.navigationTitle)
-        .foregroundColor(.DS.Text.base)
+        .textStyle(.body)
 
         Text(store.recordingCard.recording.date.formatted(date: .abbreviated, time: .shortened))
           .textStyle(.caption)

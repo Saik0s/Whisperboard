@@ -15,7 +15,6 @@ struct PlayerControls {
       case paused(progress: Double)
     }
 
-    @Shared var recording: RecordingInfo
     var mode = Mode.idle
     var waveform: WaveformProgress.State
 
@@ -30,35 +29,33 @@ struct PlayerControls {
       }
     }
 
-    var dateString: String {
-      recording.date.formatted(date: .abbreviated, time: .shortened)
-    }
+    var title: String
+    var dateString: String
+    var duration: TimeInterval
+    var audioFileURL: URL { waveform.audioFileURL }
 
     var currentTimeString: String {
-      let currentTime = progress.map { $0 * recording.duration } ?? recording.duration
+      let currentTime = progress.map { $0 * duration } ?? duration
       return dateComponentsFormatter.string(from: currentTime.isNaN ? 0 : currentTime) ?? ""
     }
 
-    init(recording: Shared<RecordingInfo>) {
-      _recording = recording
+    init(recording: RecordingInfo) {
+      title = recording.title
+      dateString = recording.date.formatted(date: .abbreviated, time: .shortened)
+      duration = recording.duration
       waveform = .init(
-        audioFileURL: recording.wrappedValue.fileURL,
-        waveformImageURL: recording.wrappedValue.waveformImageURL,
-        duration: recording.wrappedValue.duration
+        audioFileURL: recording.fileURL,
+        waveformImageURL: recording.waveformImageURL,
+        duration: recording.duration
       )
     }
   }
 
-  enum Action: ViewAction, Equatable {
-    case view(View)
-
-    @CasePathable
-    enum View: BindableAction, Sendable, Equatable {
+  enum Action: BindableAction, Equatable {
       case binding(BindingAction<State>)
       case waveform(WaveformProgress.Action)
       case playButtonTapped
       case playbackUpdated(PlaybackState)
-    }
   }
 
   @Dependency(\.audioPlayer) var audioPlayer: AudioPlayerClient
@@ -67,19 +64,13 @@ struct PlayerControls {
   private struct PlayID: Hashable {}
 
   var body: some Reducer<State, Action> {
-    Scope(state: \.self, action: \.view) {
-      viewBody
-    }
-  }
-
-  @ReducerBuilder<State, Action.View> var viewBody: some Reducer<State, Action.View> {
     BindingReducer()
 
     Scope(state: \.waveform, action: \.waveform) {
       WaveformProgress()
     }
 
-    Reduce<State, Action.View> { state, action in
+    Reduce<State, Action> { state, action in
       switch action {
       case .binding:
         return .none
@@ -98,19 +89,19 @@ struct PlayerControls {
         case .idle:
           state.mode = .playing(progress: 0)
           updateWaveform(state: &state)
-          return .run { [url = state.recording.fileURL] send in
+          return .run { [url = state.audioFileURL] send in
             for await playback in audioPlayer.play(url) {
               await send(.playbackUpdated(playback))
             }
 
-            await send(.playbackUpdated(.stop))
+            await audioPlayer.stop()
           }
           .cancellable(id: PlayID(), cancelInFlight: true)
 
         case .playing:
           return .run { send in
             //            await audioPlayer.pause()
-            await send(.playbackUpdated(.stop))
+            await audioPlayer.stop()
           }
 
         case .paused:
@@ -172,7 +163,6 @@ struct PlayerControls {
 
 // MARK: - PlayerControlsView
 
-@ViewAction(for: PlayerControls.self)
 struct PlayerControlsView: View {
   @Perception.Bindable var store: StoreOf<PlayerControls>
 
@@ -181,16 +171,16 @@ struct PlayerControlsView: View {
       VStack(spacing: .grid(2)) {
         HStack(spacing: .grid(2)) {
           PlayButton(isPlaying: store.isPlaying) {
-            send(.playButtonTapped)
+            store.send(.playButtonTapped)
           }
 
           VStack(alignment: .leading, spacing: .grid(1)) {
-            if store.recording.title.isEmpty {
+            if store.title.isEmpty {
               Text("Untitled")
                 .textStyle(.bodyBold)
                 .opacity(0.5)
             } else {
-              Text(store.recording.title)
+              Text(store.title)
                 .textStyle(.bodyBold)
                 .lineLimit(1)
             }
@@ -212,7 +202,7 @@ struct PlayerControlsView: View {
         .padding([.horizontal, .top], .grid(2))
 
         if store.isPlaying {
-          WaveformProgressView(store: store.scope(state: \.waveform, action: \.view.waveform))
+          WaveformProgressView(store: store.scope(state: \.waveform, action: \.waveform))
             .transition(.scale.combined(with: .opacity))
             .padding(.horizontal, .grid(2))
         }

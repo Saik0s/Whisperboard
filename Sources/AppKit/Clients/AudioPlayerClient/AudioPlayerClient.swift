@@ -33,11 +33,16 @@ extension AudioPlayerClient: DependencyKey {
     return AudioPlayerClient(
       play: { url in
         @Dependency(\.audioSession) var audioSession: AudioSessionClient
+        
+        if let audioPlayer = context.audioPlayer, audioPlayer.player.isPlaying {
+          audioPlayer.player.stop()
+          context.continuation?.yield(.stop)
+        }
 
         let stream = AsyncStream<PlaybackState> { continuation in
           do {
             context.continuation = continuation
-            context.audioPlayer = try AudioPlayer(
+            let audioPlayer = try AudioPlayer(
               url: url,
               didFinishPlaying: { successful in
                 try? audioSession.disable(.playback, true)
@@ -50,32 +55,32 @@ extension AudioPlayerClient: DependencyKey {
                 continuation.finish()
               }
             )
+            context.audioPlayer = audioPlayer
 
             try audioSession.enable(.playback, true)
-            context.audioPlayer?.player.play()
+            audioPlayer.player.play()
             let timerTask = Task {
               let clock = ContinuousClock()
               let lastPosition = PlaybackPosition(currentTime: 0, duration: 0)
-              for await _ in clock.timer(interval: .milliseconds(100)) {
-                guard let audioPlayer = context.audioPlayer else { continue }
-
+              for await _ in clock.timer(interval: .seconds(0.5)) {
                 let position = PlaybackPosition(
-                  currentTime: context.audioPlayer?.player.currentTime ?? 0,
-                  duration: context.audioPlayer?.player.duration ?? 0
+                  currentTime: audioPlayer.player.currentTime,
+                  duration: audioPlayer.player.duration
                 )
                 guard lastPosition != position else { continue }
-                if context.audioPlayer?.player.isPlaying == true {
-                  context.continuation?.yield(.playing(position))
+                if audioPlayer.player.isPlaying == true {
+                  continuation.yield(.playing(position))
                 } else {
-                  context.continuation?.yield(.pause(position))
+                  continuation.yield(.pause(position))
                 }
               }
             }
             continuation.onTermination = { _ in
-              context.audioPlayer?.player.stop()
+              audioPlayer.player.stop()
               timerTask.cancel()
             }
           } catch {
+            context.audioPlayer?.player.stop()
             continuation.yield(.error(error.equatable))
             continuation.finish()
           }
@@ -86,25 +91,25 @@ extension AudioPlayerClient: DependencyKey {
         if let player = context.audioPlayer?.player {
           let time = player.duration * progress
           player.currentTime = time
-          context.continuation?.yield(.playing(PlaybackPosition(
-            currentTime: context.audioPlayer?.player.currentTime ?? 0,
-            duration: context.audioPlayer?.player.duration ?? 0
-          )))
+//          context.continuation?.yield(.playing(PlaybackPosition(
+//            currentTime: context.audioPlayer?.player.currentTime ?? 0,
+//            duration: context.audioPlayer?.player.duration ?? 0
+//          )))
         }
       },
       pause: {
         context.audioPlayer?.player.pause()
-        context.continuation?.yield(.pause(PlaybackPosition(
-          currentTime: context.audioPlayer?.player.currentTime ?? 0,
-          duration: context.audioPlayer?.player.duration ?? 0
-        )))
+//        context.continuation?.yield(.pause(PlaybackPosition(
+//          currentTime: context.audioPlayer?.player.currentTime ?? 0,
+//          duration: context.audioPlayer?.player.duration ?? 0
+//        )))
       },
       resume: {
         context.audioPlayer?.player.play()
-        context.continuation?.yield(.playing(PlaybackPosition(
-          currentTime: context.audioPlayer?.player.currentTime ?? 0,
-          duration: context.audioPlayer?.player.duration ?? 0
-        )))
+//        context.continuation?.yield(.playing(PlaybackPosition(
+//          currentTime: context.audioPlayer?.player.currentTime ?? 0,
+//          duration: context.audioPlayer?.player.duration ?? 0
+//        )))
       },
       stop: {
         context.audioPlayer?.player.stop()
