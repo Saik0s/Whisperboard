@@ -33,11 +33,13 @@ struct WaveformProgress {
     var isPlaying = false
     var isSeeking = false
     var isImageCreated = false
+    var duration: TimeInterval = 0
     @Shared var waveformImage: UIImage?
 
-    init(audioFileURL: URL, waveformImageURL: URL) {
+    init(audioFileURL: URL, waveformImageURL: URL, duration: TimeInterval) {
       self.audioFileURL = audioFileURL
       self.waveformImageURL = waveformImageURL
+      self.duration = duration
       _waveformImage = Shared(nil)
     }
   }
@@ -102,11 +104,14 @@ struct WaveformProgressView: View {
 
   var body: some View {
     WithPerceptionTracking {
-      ZStack {
+      HStack(spacing: .grid(2)) {
+        Text(Duration.seconds(store.duration * store.progress).formatted(.time(pattern: .minuteSecond)))
+          .textStyle(.footnote)
+          .monospaced()
+
         waveImageView()
           .frame(height: 50)
           .frame(maxWidth: .infinity)
-          .padding(.horizontal, .grid(1))
           .animation(.linear(duration: 0.1), value: store.progress)
           .readSize { imageSize = $0 }
           .gesture(
@@ -124,6 +129,11 @@ struct WaveformProgressView: View {
                 $store.isSeeking.wrappedValue = false
               }
           )
+          .frame(maxWidth: .infinity)
+
+          Text(Duration.seconds(store.duration).formatted(.time(pattern: .minuteSecond)))
+          .textStyle(.footnote)
+            .monospaced()
       }
       .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 20), value: store.isImageCreated)
       .task { await store.send(.onTask).finish() }
@@ -151,7 +161,7 @@ struct WaveformProgressView: View {
             .mask(alignment: .leading) {
               Image(uiImage: image)
                 .resizable()
-                .scaledToFill()
+                .scaledToFit()
             }
         }
       }
@@ -164,7 +174,7 @@ struct WaveformProgressView: View {
     static var previews: some View {
       NavigationView {
         WaveformProgressView(
-          store: Store(initialState: WaveformProgress.State(audioFileURL: .documentsDirectory, waveformImageURL: .documentsDirectory)) {
+          store: Store(initialState: WaveformProgress.State(audioFileURL: .documentsDirectory, waveformImageURL: .documentsDirectory, duration: 10)) {
             WaveformProgress()
           }
         )

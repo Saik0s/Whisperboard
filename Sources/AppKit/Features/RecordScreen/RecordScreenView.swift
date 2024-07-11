@@ -105,7 +105,8 @@ struct RecordScreenView: View {
 
         RecordingControlsView(store: store.scope(state: \.recordingControls, action: \.recordingControls))
       }
-      .padding(.grid(6))
+      .padding(.grid(4))
+      .padding(.horizontal, .grid(2))
       .alert($store.scope(state: \.alert, action: \.alert))
     }
   }

@@ -34,10 +34,10 @@ struct RecordingDetails {
     }
 
     var shareAudioFileURL: URL { recordingCard.recording.fileURL }
-    
+
     init(recordingCard: RecordingCard.State, displayMode: DisplayMode = .text) {
       self.recordingCard = recordingCard
-      self._displayMode = Shared(displayMode)
+      _displayMode = Shared(displayMode)
     }
   }
 
@@ -133,13 +133,12 @@ struct RecordingDetailsView: View {
 
   var body: some View {
     WithPerceptionTracking {
-      VStack(spacing: .grid(2)) {
+      VStack(spacing: .grid(4)) {
         headerView
         transcriptionView
         waveformProgressView
         playButtonView
       }
-      .padding(.vertical, .grid(4))
       .background(Color.DS.Background.primary)
       .toolbar {
         ToolbarItem(placement: .keyboard) {
@@ -165,7 +164,6 @@ struct RecordingDetailsView: View {
       focusedField: _focusedField
     )
     .frame(maxWidth: .infinity, alignment: .topLeading)
-    .padding(.horizontal, .grid(4))
   }
 
   private var waveformProgressView: some View {
@@ -175,15 +173,13 @@ struct RecordingDetailsView: View {
         action: \.recordingCard.playerControls.view.waveform
       )
     )
-    .padding(.horizontal, .grid(8))
-    .padding(.vertical, .grid(4))
+    .padding(.horizontal, .grid(4))
   }
 
   private var playButtonView: some View {
     PlayButton(isPlaying: store.recordingCard.playerControls.isPlaying) {
       store.send(.recordingCard(.playerControls(.view(.playButtonTapped))), animation: .spring())
     }
-    .padding(.horizontal, .grid(4))
   }
 
   private var doneButton: some View {
@@ -205,7 +201,6 @@ struct RecordingDetailsView: View {
     }
     .scrollAnchor(id: 1, valueToTrack: store.recordingCard.transcription, anchor: store.recordingCard.recording.isTranscribing ? .bottom : .zero)
     .applyVerticalEdgeSofteningMask()
-    .offset(x: 0, y: -8)
   }
 
   private var textTranscriptionView: some View {
@@ -276,32 +271,32 @@ struct RecordingDetailsHeaderView: View {
           .textStyle(.caption)
           .frame(maxWidth: .infinity, alignment: .leading)
 
-        if let timings = store.recordingCard.recording.transcription?.timings {
-          VStack(alignment: .leading, spacing: .grid(1)) {
-            LabeledContent {
-              Text(String(format: "%.2f", timings.tokensPerSecond))
-            } label: {
-              Label("Tokens/Second", systemImage: "speedometer")
-            }
+        // if let timings = store.recordingCard.recording.transcription?.timings {
+        //   VStack(alignment: .leading, spacing: .grid(1)) {
+        //     LabeledContent {
+        //       Text(String(format: "%.2f", timings.tokensPerSecond))
+        //     } label: {
+        //       Label("Tokens/Second", systemImage: "speedometer")
+        //     }
 
-            LabeledContent {
-              Text(String(format: "%.2f", timings.fullPipeline))
-            } label: {
-              Label("Full Pipeline (s)", systemImage: "clock")
-            }
-          }
-          .textStyle(.footnote)
-        }
+        //     LabeledContent {
+        //       Text(String(format: "%.2f", timings.fullPipeline))
+        //     } label: {
+        //       Label("Full Pipeline (s)", systemImage: "clock")
+        //     }
+        //   }
+        //   .textStyle(.footnote)
+        // }
 
-        if store.recordingCard.recording.isTranscribing || store.recordingCard.queueInfo != nil || !store.recordingCard.recording.isTranscribed {
-          TranscriptionControlsView(store: store.scope(state: \.recordingCard, action: \.recordingCard))
-        } else if let error = store.recordingCard.recording.transcription?.status.errorMessage {
+        if let error = store.recordingCard.recording.transcription?.status.errorMessage {
           Text("Last transcription failed")
             .textStyle(.error)
             .foregroundColor(.DS.Text.error)
           Text(error)
             .textStyle(.error)
             .foregroundColor(.DS.Text.error)
+        } else {
+          TranscriptionControlsView(store: store.scope(state: \.recordingCard, action: \.recordingCard))
         }
       }
       .padding(.horizontal, .grid(4))

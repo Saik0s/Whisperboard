@@ -157,7 +157,6 @@ struct LiveTranscriptionModelSelectorView: View {
             .padding(.grid(4))
             .cardStyle()
           }
-          .padding(.horizontal, .grid(4))
         }
       }
       .popover(

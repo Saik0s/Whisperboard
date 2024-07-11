@@ -35,9 +35,14 @@ struct RecordingListScreen {
     case reloadCards
     case deleteSwipeActionTapped(RecordingInfo.ID)
     case didSyncRecordings(TaskResult<[RecordingInfo]>)
+    case delegate(Delegate)
 
-    enum Alert: Hashable {
+    enum Alert: Equatable {
       case deleteDialogConfirmed(id: RecordingInfo.ID)
+    }
+    
+    enum Delegate: Equatable {
+      case recordingCardTapped(RecordingCard.State)
     }
   }
 
@@ -122,6 +127,9 @@ struct RecordingListScreen {
       case let .didSyncRecordings(.failure(error)):
         logs.error("Failed to sync recordings: \(error)")
         return .none
+        
+      case .delegate:
+        return .none
 
       default:
         return .none
@@ -186,10 +194,14 @@ struct RecordingListScreenView: View {
 
   private var content: some View {
     List {
-      ForEach(store.scope(state: \.recordingCards, action: \.recordingCard)) { store in
+      ForEach(store.scope(state: \.recordingCards, action: \.recordingCard)) { cardStore in
 //          makeRecordingCard(store: store)
 
-        RecordingCardView(store: store)
+        Button {
+          store.send(.delegate(.recordingCardTapped(cardStore.state)))
+        } label: {
+          RecordingCardView(store: cardStore)
+        }
           .listRowSeparator(.hidden)
           .listRowBackground(Color.clear)
       }
@@ -216,21 +228,21 @@ extension RecordingListScreenView {
     .secondaryIconButtonStyle()
   }
 
-  private func makeRecordingCard(store cardStore: StoreOf<RecordingCard>) -> some View {
-    WithPerceptionTracking {
-      RecordingCardView(store: cardStore)
-        .scaleEffect(store.editMode.isEditing ? 0.85 : 1, anchor: .trailing)
-        .background(alignment: .leading) {
-          if store.editMode.isEditing {
-            Button { store.send(.delete(id: cardStore.id)) } label: {
-              Image(systemName: "multiply.circle.fill")
-            }
-            .iconButtonStyle()
-          }
-        }
-        .animation(.hardShowHide(), value: store.editMode.isEditing)
-    }
-  }
+//  private func makeRecordingCard(store cardStore: StoreOf<RecordingCard>) -> some View {
+//    WithPerceptionTracking {
+//      RecordingCardView(store: cardStore)
+//        .scaleEffect(store.editMode.isEditing ? 0.85 : 1, anchor: .trailing)
+//        .background(alignment: .leading) {
+//          if store.editMode.isEditing {
+//            Button { store.send(.delete(id: cardStore.id)) } label: {
+//              Image(systemName: "multiply.circle.fill")
+//            }
+//            .iconButtonStyle()
+//          }
+//        }
+//        .animation(.hardShowHide(), value: store.editMode.isEditing)
+//    }
+//  }
 }
 
 // MARK: - EmptyStateView
