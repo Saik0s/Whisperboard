@@ -42,7 +42,6 @@ struct RecordingCard {
       case enqueueTaskForRecordingID(String)
       case cancelTaskForRecordingID(String)
       case resumeTask(TranscriptionTask)
-      case cardTapped
     }
   }
 

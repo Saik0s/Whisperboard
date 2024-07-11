@@ -14,10 +14,6 @@ struct RecordingCardView: View {
   var body: some View {
     WithPerceptionTracking {
       cardView
-        .onTapGesture {
-          // TODO: Finish card push
-          store.send(.delegate(.cardTapped))
-        }
     }
   }
 
@@ -80,12 +76,12 @@ struct TranscriptionControlsView: View {
 
   var body: some View {
     WithPerceptionTracking {
-      if store.recording.transcription?.status.isPaused == true {
+      if let queueInfo = store.queueInfo, queueInfo.position > 0 {
+        queueInfoView(queueInfo: queueInfo)
+      } else if store.recording.transcription?.status.isPaused == true {
         pausedTranscriptionView
       } else if store.recording.isTranscribing {
         transcribingView
-      } else if let queueInfo = store.queueInfo, queueInfo.position > 0 {
-        queueInfoView(queueInfo: queueInfo)
       } else if !store.recording.isTranscribed {
         notTranscribedView
       }

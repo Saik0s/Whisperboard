@@ -41,7 +41,7 @@ struct PlayerControls {
     
     init(recording: Shared<RecordingInfo>) {
       _recording = recording
-      waveform = .init(audioFileURL: recording.wrappedValue.fileURL, waveformImageURL: recording.wrappedValue.waveformImageURL)
+      waveform = .init(audioFileURL: recording.wrappedValue.fileURL, waveformImageURL: recording.wrappedValue.waveformImageURL, duration: recording.wrappedValue.duration)
     }
   }
   

@@ -262,7 +262,9 @@ struct RecordingView: View {
   @ViewBuilder
   private func liveTranscriptionView() -> some View {
     VStack(spacing: .grid(2)) {
-      modelLoadingView(progress: store.liveTranscriptionState?.modelProgress ?? 1.0)
+      if let progress = store.liveTranscriptionState?.modelProgress {
+        modelLoadingView(progress: progress)
+      }
       transcribingView(recording: store.state)
 
       Spacer()
@@ -296,14 +298,14 @@ struct RecordingView: View {
           }
         }
 
-        if let tokensPerSecond = store.recordingInfo.transcription?.timings.tokensPerSecond {
-          LabeledContent {
-            Text(String(format: "%.2f", tokensPerSecond))
-          } label: {
-            Label("Tokens/Second", systemImage: "speedometer")
-          }
-          .textStyle(.footnote)
-        }
+        // if let tokensPerSecond = store.recordingInfo.transcription?.timings.tokensPerSecond {
+        //   LabeledContent {
+        //     Text(String(format: "%.2f", tokensPerSecond))
+        //   } label: {
+        //     Label("Tokens/Second", systemImage: "speedometer")
+        //   }
+        //   .textStyle(.footnote)
+        // }
       }
     }
     .padding(.grid(4))

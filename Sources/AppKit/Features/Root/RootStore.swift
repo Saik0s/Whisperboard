@@ -108,6 +108,10 @@ struct Root {
         return .run { send in
           await send(.didCompleteICloudSync(TaskResult { try await uploadNewRecordingsToICloudIfNeeded() }))
         }
+        
+      case let .recordingListScreen(.delegate(.recordingCardTapped(cardState))):
+        state.path.append(.details(RecordingDetails.State(recordingCard: cardState)))
+        return .none
 
       // Inserts a new recording into the recording list and enqueues a transcription task if auto-transcription is enabled
       case let .recordScreen(.delegate(.newRecordingCreated(recordingInfo))):
