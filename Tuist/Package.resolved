@@ -1,5 +1,5 @@
 {
-  "originHash" : "4e95f9a38d793c11532a9fb0a39001c543008253752726eebc4100d74204904e",
+  "originHash" : "1eecc445e5fd6e7051faa7fc9b9a6272354a0225b2d237c17c96e7782d585c1f",
   "pins" : [
     {
       "identity" : "audiokit",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "2ebd422855e4645d3169f83d1765d1c8196b4f46",
         "version" : "5.6.4"
+      }
+    },
+    {
+      "identity" : "cocoalumberjack",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/CocoaLumberjack/CocoaLumberjack.git",
+      "state" : {
+        "revision" : "4b8714a7fb84d42393314ce897127b3939885ec3",
+        "version" : "3.8.5"
       }
     },
     {
@@ -107,6 +116,15 @@
       "state" : {
         "revision" : "7280e980b71a1267099e7751a900fd1e67b7f4bb",
         "version" : "4.0.1"
+      }
+    },
+    {
+      "identity" : "rollbar-apple",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/rollbar/rollbar-apple",
+      "state" : {
+        "revision" : "2dce6849ca1ecb2154578eed87c48709edd502ff",
+        "version" : "3.3.0"
       }
     },
     {

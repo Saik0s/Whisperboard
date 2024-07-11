@@ -360,7 +360,7 @@ struct ModelInfoView: View {
         Text(model.size)
           .textStyle(.sublabel)
 
-        Text(model.isMultilingual ? "Multilingual" : "English")
+        Text(model.isMultilingual && !model.isDistilled ? "Multilingual" : "English")
           .font(.DS.footnote)
           .foregroundStyle(Color.DS.neutral01100)
           .opacity(0.8)
@@ -368,8 +368,8 @@ struct ModelInfoView: View {
           .padding(.vertical, 1)
           .background(
             RoundedRectangle(cornerRadius: 2)
-              .stroke(model.isMultilingual ? Color.DS.primary02 : Color.DS.code02, lineWidth: 1)
-              .shadow(color: model.isMultilingual ? Color.DS.code05.opacity(0.8) : Color.DS.code02.opacity(0.8), radius: 4, x: 0, y: 0)
+              .stroke(Color.DS.code02, lineWidth: 1)
+              .shadow(color: Color.DS.code02.opacity(0.8), radius: 4, x: 0, y: 0)
           )
           .scaleEffect(0.9)
 

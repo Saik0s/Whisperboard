@@ -93,22 +93,19 @@ struct RecordScreenView: View {
 
   var body: some View {
     WithPerceptionTracking {
-      VStack(spacing: .grid(2)) {
+      VStack(spacing: .grid(6)) {
         MicSelectorView(store: store.scope(state: \.micSelector, action: \.micSelector))
 
-        if store.state.recordingControls.recording == nil {
+        if store.state.recordingControls.recording == nil, store.state.liveTranscriptionSelector.premiumFeatures.isProductFound == true {
           LiveTranscriptionModelSelectorView(store: store.scope(state: \.liveTranscriptionSelector, action: \.liveTranscriptionSelector))
-            .transition(.movingParts.blur)
+            .transition(.movingParts.blur.combined(with: .opacity))
         }
 
         Spacer()
 
         RecordingControlsView(store: store.scope(state: \.recordingControls, action: \.recordingControls))
       }
-      .padding(.top, .grid(4))
-      .padding(.horizontal, .grid(4))
-      .padding(.bottom, .grid(8))
-      .ignoresSafeArea(edges: .bottom)
+      .padding(.grid(6))
       .alert($store.scope(state: \.alert, action: \.alert))
     }
   }

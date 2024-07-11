@@ -1,6 +1,7 @@
 import Combine
 import Common
 import ComposableArchitecture
+import FluidGradient
 import Inject
 import NavigationTransitions
 import SwiftUI
@@ -10,37 +11,43 @@ import SwiftUI
 @MainActor
 struct RootView: View {
   @Perception.Bindable var store: StoreOf<Root>
-  @Perception.Bindable private var tabBarViewModel: TabBarViewModel
-  @Perception.Bindable private var recordButtonModel: RecordButtonModel
   @State var isGoToNewRecordingPopupPresented = false
 
   @Namespace private var namespace
 
-  init(store: StoreOf<Root>) {
-    self.store = store
-    tabBarViewModel = TabBarViewModel()
-    recordButtonModel = RecordButtonModel(isExpanded: true)
-  }
-
   var body: some View {
     WithPerceptionTracking {
-      TabBarContainerView(
-        selectedIndex: $store.selectedTab,
-        screen1: NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-          RecordingListScreenView(store: store.scope(state: \.recordingListScreen, action: \.recordingListScreen))
-        } destination: { store in
-          switch store.case {
-          case let .details(store):
-            RecordingDetailsView(store: store)
+      NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+        RecordScreenView(store: store.scope(state: \.recordScreen, action: \.recordScreen))
+          .background {
+            FluidGradient(
+              blobs: [Color(hexString: "#000040"), Color(hexString: "#000030"), Color(hexString: "#000020")],
+              highlights: [Color(hexString: "#1D004D"), Color(hexString: "#300055"), Color(hexString: "#100020")],
+              speed: 0.2,
+              blur: 0.75
+            )
+            .ignoresSafeArea()
           }
+          .background(Color.DS.Background.primary)
+          .toolbar {
+            ToolbarItem(placement: .bottomBar) {
+              bottomBar
+            }
+          }
+      } destination: { store in
+        switch store.case {
+        case .list:
+          RecordingListScreenView(store: self.store.scope(state: \.recordingListScreen, action: \.recordingListScreen))
+        case .settings:
+          SettingsScreenView(store: self.store.scope(state: \.settingsScreen, action: \.settingsScreen))
+        case let .details(store):
+          RecordingDetailsView(store: store)
         }
-        .navigationTransition(.slide),
-        screen2: RecordScreenView(store: store.scope(state: \.recordScreen, action: \.recordScreen)),
-        screen3: NavigationStack {
-          SettingsScreenView(store: store.scope(state: \.settingsScreen, action: \.settingsScreen))
-        }
-      )
+      }
+//      .navigationTransition(.slide.combined(with: .fade(.in)), interactivity: .pan)
+
       .accentColor(.white)
+
       .task {
         store.send(.task)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -49,19 +56,6 @@ struct RootView: View {
           store.send(.recordScreen(.micSelector(.task)))
           store.send(.settingsScreen(.premiumFeaturesSection(.onTask)))
         }
-      }
-      .environment(tabBarViewModel)
-      .environment(recordButtonModel)
-      .environment(NamespaceContainer(namespace: namespace))
-      .animation(.easeInOut(duration: 0.1), value: tabBarViewModel.isVisible)
-      .onAppear {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-          tabBarViewModel.isVisible = true
-        }
-      }
-      .onChange(of: store.path.isEmpty) { isEmpty in
-        // Don't show tab bar if not on the root screen
-        tabBarViewModel.isVisible = isEmpty
       }
       .popover(
         present: $isGoToNewRecordingPopupPresented,
@@ -97,15 +91,20 @@ struct RootView: View {
       }
     }
   }
-}
 
-// MARK: - NamespaceContainer
+  var bottomBar: some View {
+    HStack {
+      Button(action: { store.send(.recordingListButtonTapped) }) {
+        Image(systemName: "list.bullet")
+          .foregroundColor(.DS.Text.base)
+      }
 
-@Perceptible
-class NamespaceContainer {
-  var namespace: Namespace.ID
+      Spacer()
 
-  init(namespace: Namespace.ID) {
-    self.namespace = namespace
+      Button(action: { store.send(.settingsButtonTapped) }) {
+        Image(systemName: "gear")
+          .foregroundColor(.DS.Text.base)
+      }
+    }
   }
 }

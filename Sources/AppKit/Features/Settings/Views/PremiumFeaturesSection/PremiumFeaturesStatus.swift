@@ -4,6 +4,7 @@ import ComposableArchitecture
 
 public struct PremiumFeaturesStatus: Codable, Hashable {
   public var liveTranscriptionIsPurchased: Bool? = nil
+  public var isProductFound: Bool? = nil
 }
 
 // MARK: - PremiumFeaturesProductID

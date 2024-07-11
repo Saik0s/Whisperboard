@@ -20,6 +20,7 @@ struct PremiumFeaturesSection {
     case purchaseModal(PresentationAction<PurchaseLiveTranscriptionModal.Action>)
     case onTask
     case checkPurchaseStatus(Bool)
+    case productFound(Bool)
   }
 
   var body: some ReducerOf<Self> {
@@ -42,6 +43,7 @@ struct PremiumFeaturesSection {
         return .run { send in
           let products = try await Product.products(for: [PremiumFeaturesProductID.liveTranscription])
           let product = products.first
+          await send(.productFound(product != nil))
 
           // Check initial purchase status
           let isPurchased = await product?.currentEntitlement != nil
@@ -61,6 +63,10 @@ struct PremiumFeaturesSection {
 
       case let .checkPurchaseStatus(isPurchased):
         state.premiumFeatures.liveTranscriptionIsPurchased = isPurchased
+        return .none
+
+      case let .productFound(isFound):
+        state.premiumFeatures.isProductFound = isFound
         return .none
       }
     }
@@ -99,7 +105,6 @@ struct PremiumFeaturesSectionView: View {
       .listRowBackground(Color.DS.Background.secondary)
       .listRowSeparator(.hidden)
       .enableInjection()
-      .task { await store.send(.onTask).finish() }
     }
   }
 }
