@@ -9,8 +9,6 @@ import SwiftUI
 struct SettingsScreenView: View {
   @Perception.Bindable var store: StoreOf<SettingsScreen>
 
-  @Environment(TabBarViewModel.self) var tabBarViewModel: TabBarViewModel
-
   var body: some View {
     WithPerceptionTracking {
       List {
@@ -35,13 +33,11 @@ struct SettingsScreenView: View {
         FeedbackSectionView(store: store)
         FooterSectionView(store: store)
       }
-      .scrollContentBackground(.hidden)
-      .removeNavigationBackground()
+      .background(Color.DS.Background.primary)
       .navigationBarTitle("Settings")
       .navigationBarTitleDisplayMode(.inline)
       .alert($store.scope(state: \.alert, action: \.alert))
       .onAppear { store.send(.updateInfo) }
-      .applyTabBarContentInset()
     }
   }
 }

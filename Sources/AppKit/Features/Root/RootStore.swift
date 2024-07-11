@@ -9,10 +9,10 @@ import SwiftUI
 
 @Reducer
 struct Root {
-  enum Tab: Equatable { case list, record, settings }
-
   @Reducer(state: .equatable)
   public enum Path {
+    case list
+    case settings 
     case details(RecordingDetails)
   }
 
@@ -23,7 +23,6 @@ struct Root {
     var recordScreen = RecordScreen.State()
     var settingsScreen = SettingsScreen.State()
     var path = StackState<Path.State>()
-    var selectedTab: Tab = .record
     var isGoToNewRecordingPopupPresented = false
 
     @Presents var alert: AlertState<Action.Alert>?
@@ -45,6 +44,8 @@ struct Root {
     case didCompleteICloudSync(TaskResult<Void>)
     case registerForBGProcessingTasks(BGProcessingTask)
     case goToNewRecordingButtonTapped
+    case recordingListButtonTapped
+    case settingsButtonTapped
 
     enum Alert: Equatable {}
   }
@@ -80,12 +81,10 @@ struct Root {
 
     Scope(state: \.recordScreen, action: \.recordScreen) {
       RecordScreen()
-        ._printChanges(.swiftLog(withStateChanges: true))
     }
 
     Scope(state: \.settingsScreen, action: \.settingsScreen) {
       SettingsScreen()
-        ._printChanges(.swiftLog(withStateChanges: true))
     }
 
     Reduce { state, action in
@@ -166,9 +165,16 @@ struct Root {
 
       case .goToNewRecordingButtonTapped:
         if let recordingCard = state.recordingListScreen.recordingCards.first {
-          state.selectedTab = .list
           state.path.append(.details(RecordingDetails.State(recordingCard: recordingCard)))
         }
+        return .none
+
+      case .recordingListButtonTapped:
+        state.path.append(.list)
+        return .none
+
+      case .settingsButtonTapped:
+        state.path.append(.settings)
         return .none
 
       default:

@@ -72,7 +72,7 @@ struct LiveTranscriptionModelSelectorView: View {
         } else if store.state.premiumFeatures.liveTranscriptionIsPurchased == false {
           LockedFeatureView(
             title: "Live Transcription",
-            description: "Live Transcription: Real-time speech-to-text. Unlock now. Transform recording.",
+            description: "Real-time speech-to-text. Unlock now. Transform recording.",
             onInfoTap: { store.send(.set(\.showInfoPopup, !store.state.showInfoPopup)) },
             onUpgradeTap: { store.send(.upgradeButtonTapped) }
           )

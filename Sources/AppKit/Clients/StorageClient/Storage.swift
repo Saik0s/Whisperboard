@@ -54,14 +54,28 @@ final class Storage {
       let newInfo = try await createInfo(fileName: file)
       recordings.append(newInfo)
     }
+    
+    // Loop through recordings and delete files with < 1s duration
+    recordings = recordings.filter { recording in
+      if recording.duration < 1 {
+        do {
+          try FileManager.default.removeItem(at: recording.fileURL)
+          logs.info("Deleted recording \(recording.fileName) with duration < 1s")
+          return false
+        } catch {
+          logs.error("Error deleting recording \(recording.fileName): \(error)")
+          return true
+        }
+      }
+      return true
+    }
 
     return recordings.sorted { $0.date > $1.date }.identifiedArray
   }
 
   private func updateDurations(_ storedRecordings: [RecordingInfo]) async throws -> [RecordingInfo] {
     var updatedRecordings: [RecordingInfo] = storedRecordings
-    for index in updatedRecordings.indices {
-      guard updatedRecordings[index].duration == 0 else { continue }
+    for index in updatedRecordings.filter({ $0.duration < 1 }).indices {
       do {
         updatedRecordings[index].duration = try await getFileDuration(url: updatedRecordings[index].fileURL)
       } catch {

@@ -32,5 +32,6 @@ let package = Package(
     .package(url: "https://github.com/argmaxinc/WhisperKit.git", from: "0.7.2"),
     .package(url: "https://github.com/kean/PulseLogHandler.git", from: "4.0.1"),
     .package(url: "https://github.com/EmergeTools/Pow.git", from: "1.0.4"),
+    .package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0"),
   ]
 )

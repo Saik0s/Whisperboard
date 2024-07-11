@@ -154,7 +154,7 @@ let project = Project(
     )
   ),
 
-  packages: isAppStore ? [.package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0")] : [],
+  // packages: isAppStore ? [.package(url: "https://github.com/rollbar/rollbar-apple", from: "3.2.0")] : [],
 
   settings: .settings(
     base: [
@@ -306,7 +306,7 @@ let project = Project(
 
           .target(name: "Common"),
           .target(name: "AudioProcessing"),
-        ] + (isAppStore ? [.package(product: "RollbarNotifier")] : []),
+        ] + (isAppStore ? [.external(name: "RollbarNotifier")] : []),
         settings: .settings(
           base: [
             "SWIFT_OBJC_BRIDGING_HEADER": "$SRCROOT/Support/AppKit/Bridging.h",

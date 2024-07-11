@@ -45,7 +45,7 @@ struct WaveformProgress {
   enum Action: Equatable, BindableAction {
     case binding(BindingAction<State>)
     case onTask
-    case waveformImageCreated
+    case waveformImageCreated(UIImage?)
   }
 
   var body: some Reducer<State, Action> {
@@ -76,19 +76,16 @@ struct WaveformProgress {
           let data = try image.pngData().require()
           try data.write(to: state.waveformImageURL, options: .atomic)
 
-          await send(.waveformImageCreated)
+          await send(.waveformImageCreated(UIImage(data: data)))
         } catch: { error, send in
           logs.error("Failed to create waveform image: \(error)")
-          await send(.waveformImageCreated)
+          await send(.waveformImageCreated(nil))
         }
 
-      case .waveformImageCreated:
+      case let .waveformImageCreated(image):
         state.isImageCreated = true
-        return .run { [waveformImage = state.$waveformImage, path = state.waveformImageURL.path()] _ in
-          waveformImage.withLock { value in
-            value = UIImage(contentsOfFile: path)
-          }
-        }
+        state.waveformImage = image
+        return .none
       }
     }
   }

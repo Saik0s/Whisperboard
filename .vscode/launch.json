@@ -5,13 +5,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "xcode-lldb",
-      "name": "iOS: Run App & Debug",
-      "request": "launch",
-      "target": "app",
-      "isDebuggable": true
-    },
-    {
       "name": "Run",
       "type": "lightcode",
       "request": "launch",

@@ -121,7 +121,6 @@ struct RecordingControls {
 /// A view that provides controls for recording audio.
 struct RecordingControlsView: View {
   @Perception.Bindable var store: StoreOf<RecordingControls>
-  @Environment(NamespaceContainer.self) var namespace
 
   var body: some View {
     WithPerceptionTracking {
@@ -150,7 +149,6 @@ struct RecordingControlsView: View {
                 .overlay(Image(systemName: "pause.fill").textStyle(.headline))
             }
             .recordButtonStyle()
-            .matchedGeometryEffect(id: "mic", in: namespace.namespace)
           } else if store.recording?.mode == .paused {
             Button { store.send(.recording(.continueButtonTapped), animation: .showHide()) } label: {
               Circle()
@@ -158,7 +156,6 @@ struct RecordingControlsView: View {
                 .overlay(Image(systemName: "mic").textStyle(.headline))
             }
             .recordButtonStyle()
-            .matchedGeometryEffect(id: "mic", in: namespace.namespace)
           } else {
             RecordButton(permission: store.audioRecorderPermission) {
               store.send(.recordButtonTapped, animation: .showHide())

@@ -17,8 +17,8 @@ public struct AppView: View {
   @MainActor static let store = Store(initialState: Root.State()) {
     Root()
     #if DEV
-//      ._printChanges(.swiftLog(withStateChanges: true))
-//      .signpost("WhisperBoard_Root")
+      ._printChanges(.swiftLog(withStateChanges: true))
+      .signpost("WhisperBoard_Root")
     #endif
   } withDependencies: {
     if ProcessInfo.processInfo.environment["UITesting"] == "true" {

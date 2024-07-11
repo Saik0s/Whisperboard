@@ -2,17 +2,6 @@ import Common
 import ComposableArchitecture
 import SwiftUI
 
-// MARK: - RecordButtonModel
-
-@Perceptible
-class RecordButtonModel {
-  var isExpanded: Bool
-
-  init(isExpanded: Bool) {
-    self.isExpanded = isExpanded
-  }
-}
-
 // MARK: - RecordButton
 
 struct RecordButton: View {
@@ -20,13 +9,10 @@ struct RecordButton: View {
   let action: () -> Void
   let settingsAction: () -> Void
 
-  @Environment(RecordButtonModel.self) var model
-  @Environment(NamespaceContainer.self) var namespace
-
   var body: some View {
     WithPerceptionTracking {
       ZStack {
-        if model.isExpanded, permission != .denied {
+        if permission != .denied {
           Button(action: action) {
             Circle()
               .fill(RadialGradient.accent)
@@ -37,7 +23,6 @@ struct RecordButton: View {
           }
           .recordButtonStyle()
           .frame(width: 70, height: 70)
-          .matchedGeometryEffect(id: "mic", in: namespace.namespace)
           .opacity(permission == .denied ? 0.1 : 1)
           .disabled(permission == .denied)
           .zIndex(1)

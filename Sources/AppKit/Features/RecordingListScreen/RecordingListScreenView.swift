@@ -62,7 +62,7 @@ struct RecordingListScreen {
             await send(.didSyncRecordings(TaskResult { try await storage.sync(recordings.wrappedValue) }))
           }
         }.merge(with: .run { [recordings = state.$recordings] send in
-          for await _ in recordings.publisher.map({ $0.map(\.id) }).removeDuplicates().values {
+          for await _ in recordings.publisher.map({ $0.count }).removeDuplicates().values {
             await send(.reloadCards)
           }
         })
@@ -166,33 +166,43 @@ struct RecordingListScreenView: View {
 
   var body: some View {
     WithPerceptionTracking {
-      content
+      ZStack {
+        if store.recordingCards.isEmpty {
+          EmptyStateView()
+        } else {
+          content
+        }
+      }
+      .animation(.hardShowHide(), value: store.recordingCards.count)
+      .navigationTitle("Recordings")
+      .navigationBarItems(trailing: HStack {
+//        EditButton()
+        filePickerButton()
+      })
+//      .environment(\.editMode, $store.editMode)
+      .alert($store.scope(state: \.alert, action: \.alert))
     }
   }
 
   private var content: some View {
-    ScrollView {
-      cardsStack()
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-    .background {
-      if store.recordingCards.isEmpty {
-        EmptyStateView()
+    List {
+      ForEach(store.scope(state: \.recordingCards, action: \.recordingCard)) { store in
+//          makeRecordingCard(store: store)
+
+        RecordingCardView(store: store)
+          .listRowSeparator(.hidden)
+          .listRowBackground(Color.clear)
       }
     }
+    .background(Color.DS.Background.primary)
+    .listStyle(.plain)
+    .scrollContentBackground(.hidden)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .overlay {
       if store.isImportingFiles {
         Color.black.opacity(0.5).overlay(ProgressView())
       }
     }
-    .animation(.hardShowHide(), value: store.recordingCards.count)
-    .navigationTitle("Recordings")
-    .navigationBarTitleDisplayMode(.inline)
-    .navigationBarItems(leading: EditButton(), trailing: filePickerButton())
-    .removeNavigationBackground()
-    .environment(\.editMode, $store.editMode)
-    .alert($store.scope(state: \.alert, action: \.alert))
-    .applyTabBarContentInset()
   }
 }
 
@@ -206,31 +216,19 @@ extension RecordingListScreenView {
     .secondaryIconButtonStyle()
   }
 
-  private func cardsStack() -> some View {
-    LazyVStack {
-      ForEach(store.scope(state: \.recordingCards, action: \.recordingCard)) { store in
-        makeRecordingCard(store: store)
-      }
-      .removeClipToBounds()
-    }
-    .padding(.grid(4))
-  }
-
   private func makeRecordingCard(store cardStore: StoreOf<RecordingCard>) -> some View {
     WithPerceptionTracking {
-      HStack(spacing: .grid(4)) {
-        RecordingCardView(store: cardStore)
-          .scaleEffect(store.editMode.isEditing ? 0.85 : 1, anchor: .trailing)
-          .background(alignment: .leading) {
-            if store.editMode.isEditing {
-              Button { store.send(.delete(id: cardStore.id)) } label: {
-                Image(systemName: "multiply.circle.fill")
-              }
-              .iconButtonStyle()
+      RecordingCardView(store: cardStore)
+        .scaleEffect(store.editMode.isEditing ? 0.85 : 1, anchor: .trailing)
+        .background(alignment: .leading) {
+          if store.editMode.isEditing {
+            Button { store.send(.delete(id: cardStore.id)) } label: {
+              Image(systemName: "multiply.circle.fill")
             }
+            .iconButtonStyle()
           }
-      }
-      .animation(.hardShowHide(), value: store.editMode.isEditing)
+        }
+        .animation(.hardShowHide(), value: store.editMode.isEditing)
     }
   }
 }
@@ -260,6 +258,7 @@ struct EmptyStateView: View {
       }
     }
     .padding(.grid(4))
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 }
 

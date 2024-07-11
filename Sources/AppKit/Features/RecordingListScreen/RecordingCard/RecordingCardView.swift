@@ -13,9 +13,11 @@ struct RecordingCardView: View {
 
   var body: some View {
     WithPerceptionTracking {
-      NavigationLink(state: Root.Path.State.details(RecordingDetails.State(recordingCard: store.state))) {
-        cardView
-      }
+      cardView
+        .onTapGesture {
+          // TODO: Finish card push
+          store.send(.delegate(.cardTapped))
+        }
     }
   }
 
@@ -67,6 +69,7 @@ struct RecordingCardView: View {
         showItem = true
       }
     }
+    .onDisappear { showItem = false }
   }
 }
 
