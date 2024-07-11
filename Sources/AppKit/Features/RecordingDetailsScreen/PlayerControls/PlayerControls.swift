@@ -207,7 +207,7 @@ struct PlayerControlsView: View {
             .padding(.horizontal, .grid(2))
         }
       }
-      .animation(.spring(duration: 0.25, bounce: 0.5), value: store.mode)
+      .animation(.smooth, value: store.mode)
     }
   }
 }

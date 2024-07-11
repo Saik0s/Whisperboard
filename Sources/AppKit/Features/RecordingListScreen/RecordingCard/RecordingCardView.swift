@@ -58,7 +58,7 @@ struct RecordingCardView: View {
     .multilineTextAlignment(.leading)
     .padding(.grid(2))
     .cardStyle(isPrimary: store.playerControls.isPlaying)
-    .changeEffect(.glow(color: .DS.Background.accent, radius: 30), value: store.recording.text)
+//    .changeEffect(.glow(color: .DS.Background.accent, radius: 30), value: store.recording.text)
     .offset(y: showItem ? 0 : 200)
     .opacity(showItem ? 1 : 0)
     .onAppear {
@@ -78,7 +78,7 @@ struct TranscriptionControlsView: View {
 
   var body: some View {
     WithPerceptionTracking {
-      if let queueInfo = queueInfo, queueInfo.position > 0 {
+      if let queueInfo = queueInfo, queueInfo.position > 1 {
         queueInfoView(queueInfo: queueInfo)
       } else if store.recording.transcription?.status.isPaused == true {
         pausedTranscriptionView
