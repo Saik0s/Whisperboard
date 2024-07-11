@@ -116,6 +116,7 @@ struct TranscriptionWorker: Reducer {
         return .none
 
       case let .enqueueTaskForRecordingID(id, settings):
+        state.taskQueue.removeAll(where: { $0.recordingInfoID == id })
         let task = TranscriptionTask(recordingInfoID: id, settings: settings)
         state.taskQueue.append(task)
         return .send(.processTasks)

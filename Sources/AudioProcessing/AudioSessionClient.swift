@@ -42,7 +42,12 @@ extension AudioSessionClient: DependencyKey {
     var session: AVAudioSession { AVAudioSession.sharedInstance() }
 
     var microphones: [Microphone] {
-      session.availableInputs?.map(Microphone.init) ?? []
+      (session.availableInputs?.map(Microphone.init) ?? []).sorted { mic1, mic2 in
+        if mic1.isBuiltIn == mic2.isBuiltIn {
+          return mic1.port.portName < mic2.port.portName
+        }
+        return !mic1.isBuiltIn && mic2.isBuiltIn
+      }
     }
 
     @Sendable
@@ -65,7 +70,7 @@ extension AudioSessionClient: DependencyKey {
     var options: AVAudioSession.CategoryOptions {
       let shouldMixWithOthers = settings.shouldMixWithOtherAudio
       let options: AVAudioSession.CategoryOptions = shouldMixWithOthers
-        ? [.allowBluetooth, .mixWithOthers, .duckOthers, .defaultToSpeaker]
+        ? [.allowBluetooth, .mixWithOthers, .defaultToSpeaker]
         : [.allowBluetooth, .defaultToSpeaker]
       return options
     }

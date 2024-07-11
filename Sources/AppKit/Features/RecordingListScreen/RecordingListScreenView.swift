@@ -200,7 +200,7 @@ struct RecordingListScreenView: View {
           RecordingCardView(
             store: cardStore,
             queueInfo: store.transcriptionTasks.firstIndex { $0.recordingInfoID == cardStore.id }
-              .flatMap { RecordingCard.QueueInfo(position: $0, total: store.transcriptionTasks.count) }
+              .flatMap { RecordingCard.QueueInfo(position: $0 + 1, total: store.transcriptionTasks.count) }
           )
         }
         .listRowSeparator(.hidden)

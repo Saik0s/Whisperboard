@@ -46,13 +46,7 @@ struct ModelSelector {
     }
 
     var selectedModelLabel: String {
-      localModels.first(where: { $0.id == selectedModelID }).map { [
-        $0.title,
-        $0.isMultilingual ? "" : " En",
-        $0.isDistilled ? " Distilled" : "",
-        $0.isTurbo ? " Turbo" : "",
-      ].joined()
-      } ?? "None"
+      localModels.first(where: { $0.id == selectedModelID })?.title ?? "None"
     }
 
     var noLocalModels: Bool {
@@ -117,7 +111,8 @@ struct ModelSelector {
       case .reloadModels:
         return fetchModels()
 
-      case let .modelsResponse(.success(models)):
+      case let .modelsResponse(.success(newModels)):
+        let models = newModels.filter { $0.position <= 100 }
         @Shared(.availableModels) var _models
         _models = models
         state.localModels = models.filter { $0.model.isLocal && !$0.model.isDisabled }.identifiedArray
@@ -215,7 +210,7 @@ struct ModelSelectorView: View {
         List {
           DownloadedSection(store: store)
           AvailableSection(store: store)
-          NotSupportedSection(store: store)
+//          NotSupportedSection(store: store)
         }
         .onAppear { store.send(.reloadModels) }
         .alert($store.scope(state: \.alert, action: \.alert))
@@ -314,10 +309,10 @@ private struct ModelRow: View {
             }
           }
         }
+
         Text(model.info)
-          .textStyle(.captionBase)
-          .lineLimit(3)
-          .allowsTightening(true)
+          .textStyle(.body)
+          .lineLimit(5)
           .frame(maxWidth: .infinity, alignment: .leading)
 
         if let progress = store.loadingProgress, progress.id == model.id {
@@ -354,57 +349,58 @@ struct ModelInfoView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: .grid(1)) {
       Text(model.title)
-        .textStyle(.navigationTitle)
+        .textStyle(.bodyBold)
 
-      HStack {
-        Text(model.size)
-          .textStyle(.sublabel)
+      Text(model.size)
+        .textStyle(.sublabel)
 
-        Text(model.isMultilingual && !model.isDistilled ? "Multilingual" : "English")
-          .font(.DS.footnote)
-          .foregroundStyle(Color.DS.neutral01100)
-          .opacity(0.8)
-          .padding(.horizontal, 2)
-          .padding(.vertical, 1)
-          .background(
-            RoundedRectangle(cornerRadius: 2)
-              .stroke(Color.DS.code02, lineWidth: 1)
-              .shadow(color: Color.DS.code02.opacity(0.8), radius: 4, x: 0, y: 0)
-          )
-          .scaleEffect(0.9)
+//      HStack {
 
-        if model.isTurbo {
-          Text("Turbo")
-            .font(.DS.footnote)
-            .allowsTightening(true)
-            .foregroundStyle(Color.DS.code03)
-            .opacity(0.8)
-            .padding(.horizontal, 2)
-            .padding(.vertical, 1)
-            .background(
-              RoundedRectangle(cornerRadius: 2)
-                .stroke(Color.DS.code03, lineWidth: 1)
-                .shadow(color: Color.DS.code03.opacity(0.8), radius: 4, x: 0, y: 0)
-            )
-            .scaleEffect(0.9)
-        }
-
-        if model.isDistilled {
-          Text("Distilled")
-            .font(.DS.footnote)
-            .allowsTightening(true)
-            .foregroundStyle(Color.DS.code04)
-            .opacity(0.8)
-            .padding(.horizontal, 2)
-            .padding(.vertical, 1)
-            .background(
-              RoundedRectangle(cornerRadius: 2)
-                .stroke(Color.DS.code04, lineWidth: 1)
-                .shadow(color: Color.DS.code04.opacity(0.8), radius: 4, x: 0, y: 0)
-            )
-            .scaleEffect(0.9)
-        }
-      }
+//        Text(model.isMultilingual && !model.isDistilled ? "Multilingual" : "English")
+//          .font(.DS.footnote)
+//          .foregroundStyle(Color.DS.neutral01100)
+//          .opacity(0.8)
+//          .padding(.horizontal, 2)
+//          .padding(.vertical, 1)
+//          .background(
+//            RoundedRectangle(cornerRadius: 2)
+//              .stroke(Color.DS.code02, lineWidth: 1)
+//              .shadow(color: Color.DS.code02.opacity(0.8), radius: 4, x: 0, y: 0)
+//          )
+//          .scaleEffect(0.9)
+//
+//        if model.isTurbo {
+//          Text("Turbo")
+//            .font(.DS.footnote)
+//            .allowsTightening(true)
+//            .foregroundStyle(Color.DS.code03)
+//            .opacity(0.8)
+//            .padding(.horizontal, 2)
+//            .padding(.vertical, 1)
+//            .background(
+//              RoundedRectangle(cornerRadius: 2)
+//                .stroke(Color.DS.code03, lineWidth: 1)
+//                .shadow(color: Color.DS.code03.opacity(0.8), radius: 4, x: 0, y: 0)
+//            )
+//            .scaleEffect(0.9)
+//        }
+//
+//        if model.isDistilled {
+//          Text("Distilled")
+//            .font(.DS.footnote)
+//            .allowsTightening(true)
+//            .foregroundStyle(Color.DS.code04)
+//            .opacity(0.8)
+//            .padding(.horizontal, 2)
+//            .padding(.vertical, 1)
+//            .background(
+//              RoundedRectangle(cornerRadius: 2)
+//                .stroke(Color.DS.code04, lineWidth: 1)
+//                .shadow(color: Color.DS.code04.opacity(0.8), radius: 4, x: 0, y: 0)
+//            )
+//            .scaleEffect(0.9)
+//        }
+//      }
     }
     .accessibilityElement(children: .combine)
   }
@@ -446,83 +442,63 @@ private func modelAttributes(for model: Model) -> ModelSelector.State.ModelInfo 
   let isMultilingual = !model.name.contains(".en")
   let isTurbo = model.name.contains("turbo")
   let isDistilled = model.name.contains("distil")
+  let isEnglishOnly: Bool = !isMultilingual || isDistilled
   var size = model.name.range(of: "\\d+MB", options: .regularExpression).map { String(model.name[$0]).replacingOccurrences(of: "MB", with: " MB") }
-  let title: String
+  var title: String
   let info: String
   var position: Int
 
   switch model.name {
   case _ where model.name.contains("tiny"):
     title = "Tiny"
-    info = "Tiny is a compact powerhouse, perfect for lightweight tasks while maintaining efficiency."
     if size == nil { size = "75 MB" }
-    position = isMultilingual ? 10 : 11
+    position = isEnglishOnly ? 10 : 11
 
   case _ where model.name.contains("base"):
     title = "Base"
-    info = "Base strikes a balance between performance and efficiency, making it a reliable choice."
     if size == nil { size = "142 MB" }
-    position = isMultilingual ? 20 : 21
+    position = isEnglishOnly ? 20 : 21
 
   case _ where model.name.contains("small"):
     title = "Small"
-    info = "Small packs a punch for more demanding tasks without being too resource-intensive."
     if size == nil { size = "466 MB" }
-    position = isMultilingual ? 30 : 31
+    position = isEnglishOnly ? 30 : 31
 
   case _ where model.name.contains("medium"):
     title = "Medium"
-    info = "Medium offers a solid performance boost, ideal for handling more complex operations."
     if size == nil { size = "1.5 GB" }
-    position = isMultilingual ? 40 : 41
+    position = isEnglishOnly ? 40 : 41
 
   case _ where model.name.contains("large-v2"):
     title = "Large v2"
     if size == nil { size = "2.9 GB" }
-    position = isMultilingual ? 60 : 61
-    if isDistilled && isTurbo {
-      info = "Large v2 Distilled Turbo delivers exceptional performance in a compact English package."
-    } else if isDistilled {
-      info = "Large v2 Distilled is a leaner, faster English variant that still packs a serious punch."
-    } else if isTurbo {
-      info = "Large v2 Turbo cranks up the speed without compromising quality for time-sensitive tasks."
-    } else {
-      info = "Large v2 is an absolute workhorse, engineered to tackle the most demanding challenges."
-    }
+    position = isEnglishOnly ? 160 : 161
 
   case _ where model.name.contains("large-v3"):
     title = "Large v3"
-    if size == nil { size = "2.9 GB" }
-    position = isMultilingual ? 70 : 71
-    if isDistilled && isTurbo {
-      info = "Large v3 Distilled Turbo delivers top-tier performance and precision in a nimble package."
-    } else if isDistilled {
-      info = "Large v3 Distilled offers a streamlined, high-speed solution for exceptional results."
-    } else if isTurbo {
-      info = "Large v3 Turbo takes speed to the next level without sacrificing accuracy for real-time tasks."
-    } else {
-      info = "Large v3 is the ultimate powerhouse, purpose-built to conquer the most complex challenges."
-    }
+    if size == nil { size = isDistilled || isTurbo ? "-" : "2.9 GB" }
+    position = isEnglishOnly ? 70 : 71
 
   case _ where model.name.contains("large"):
     title = "Large"
     if size == nil { size = "2.9 GB" }
-    position = isMultilingual ? 50 : 51
-    if isDistilled && isTurbo {
-      info = "Large Distilled Turbo balances speed, accuracy, and efficiency in a robust English package."
-    } else if isDistilled {
-      info = "Large Distilled packs the core power of Large into a faster, leaner English variant."
-    } else if isTurbo {
-      info = "Large Turbo prioritizes speed without compromising accuracy for time-sensitive applications."
-    } else {
-      info = "Large delivers uncompromising performance, engineered to handle the toughest jobs."
-    }
+    position = isEnglishOnly ? 150 : 151
 
   default:
     title = model.name.capitalized
-    info = "This is a custom model. Please refer to the model details for more information."
     position = 100 // Default position for unknown models
   }
+  
+  if isEnglishOnly {
+    title += " English"
+  }
+  
+  if isTurbo {
+    title += " Turbo"
+  }
+
+  info =
+    "\(!isEnglishOnly ? "Supports Multiple Languages" : "English Only")\(isDistilled ? "\nAdditional improved" : "")\(isTurbo ? "\nTurbo Fast Optimization" : "")"
 
   position += isDistilled ? 2 : 0
 
@@ -533,7 +509,7 @@ private func modelAttributes(for model: Model) -> ModelSelector.State.ModelInfo 
     isMultilingual: isMultilingual,
     isTurbo: isTurbo,
     isDistilled: isDistilled,
-    size: size ?? "75 MB",
+    size: size ?? "-",
     position: position
   )
 }
