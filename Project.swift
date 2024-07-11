@@ -1,7 +1,7 @@
 import Foundation
 import ProjectDescription
 
-public let version = "1.13.0"
+public let version = "1.13.1"
 
 public let deploymentTargetString = "16.0"
 public let appDeploymentTargets: DeploymentTargets = .iOS(deploymentTargetString)
