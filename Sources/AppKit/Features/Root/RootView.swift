@@ -38,8 +38,10 @@ struct RootView: View {
         switch store.case {
         case .list:
           RecordingListScreenView(store: self.store.scope(state: \.recordingListScreen, action: \.recordingListScreen))
+
         case .settings:
           SettingsScreenView(store: self.store.scope(state: \.settingsScreen, action: \.settingsScreen))
+
         case let .details(store):
           RecordingDetailsView(store: store)
         }
@@ -47,7 +49,6 @@ struct RootView: View {
 //      .navigationTransition(.slide.combined(with: .fade(.in)), interactivity: .pan)
 
       .accentColor(.white)
-
       .task {
         store.send(.task)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

@@ -40,7 +40,7 @@ struct RecordingListScreen {
     enum Alert: Equatable {
       case deleteDialogConfirmed(id: RecordingInfo.ID)
     }
-    
+
     enum Delegate: Equatable {
       case recordingCardTapped(RecordingCard.State)
     }
@@ -67,7 +67,7 @@ struct RecordingListScreen {
             await send(.didSyncRecordings(TaskResult { try await storage.sync(recordings.wrappedValue) }))
           }
         }.merge(with: .run { [recordings = state.$recordings] send in
-          for await _ in recordings.publisher.map({ $0.count }).removeDuplicates().values {
+          for await _ in recordings.publisher.map(\.count).removeDuplicates().values {
             await send(.reloadCards)
           }
         })
@@ -127,7 +127,7 @@ struct RecordingListScreen {
       case let .didSyncRecordings(.failure(error)):
         logs.error("Failed to sync recordings: \(error)")
         return .none
-        
+
       case .delegate:
         return .none
 
@@ -202,8 +202,8 @@ struct RecordingListScreenView: View {
         } label: {
           RecordingCardView(store: cardStore)
         }
-          .listRowSeparator(.hidden)
-          .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
       }
     }
     .background(Color.DS.Background.primary)

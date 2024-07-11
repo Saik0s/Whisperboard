@@ -54,7 +54,7 @@ final class Storage {
       let newInfo = try await createInfo(fileName: file)
       recordings.append(newInfo)
     }
-    
+
     // Loop through recordings and delete files with < 1s duration
     recordings = recordings.filter { recording in
       if recording.duration < 1 {
