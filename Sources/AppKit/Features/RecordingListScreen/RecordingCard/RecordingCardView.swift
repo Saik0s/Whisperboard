@@ -8,6 +8,7 @@ import SwiftUI
 @MainActor
 struct RecordingCardView: View {
   @Perception.Bindable var store: StoreOf<RecordingCard>
+  let queueInfo: RecordingCard.QueueInfo?
 
   @State var showItem = false
 
@@ -42,13 +43,13 @@ struct RecordingCardView: View {
         }
         .padding([.horizontal, .bottom], .grid(2))
 
-        if store.recording.isTranscribing || store.queueInfo != nil || !store.recording.isTranscribed {
+        if store.recording.isTranscribing || queueInfo != nil || !store.recording.isTranscribed {
           ZStack {
             Rectangle()
               .fill(.ultraThinMaterial)
               .continuousCornerRadius(.grid(2))
 
-            TranscriptionControlsView(store: store)
+            TranscriptionControlsView(store: store, queueInfo: queueInfo)
           }
           .transition(.scale(scale: 0, anchor: .top).combined(with: .opacity).animation(.easeInOut(duration: 0.2)))
         }
@@ -73,10 +74,11 @@ struct RecordingCardView: View {
 
 struct TranscriptionControlsView: View {
   @Perception.Bindable var store: StoreOf<RecordingCard>
+  let queueInfo: RecordingCard.QueueInfo?
 
   var body: some View {
     WithPerceptionTracking {
-      if let queueInfo = store.queueInfo, queueInfo.position > 0 {
+      if let queueInfo = queueInfo, queueInfo.position > 0 {
         queueInfoView(queueInfo: queueInfo)
       } else if store.recording.transcription?.status.isPaused == true {
         pausedTranscriptionView
