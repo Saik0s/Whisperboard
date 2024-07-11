@@ -12,7 +12,7 @@ struct Root {
   @Reducer(state: .equatable)
   public enum Path {
     case list
-    case settings 
+    case settings
     case details(RecordingDetails)
   }
 
@@ -108,7 +108,7 @@ struct Root {
         return .run { send in
           await send(.didCompleteICloudSync(TaskResult { try await uploadNewRecordingsToICloudIfNeeded() }))
         }
-        
+
       case let .recordingListScreen(.delegate(.recordingCardTapped(cardState))):
         state.path.append(.details(RecordingDetails.State(recordingCard: cardState)))
         return .none

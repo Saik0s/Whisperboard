@@ -131,9 +131,9 @@ struct WaveformProgressView: View {
           )
           .frame(maxWidth: .infinity)
 
-          Text(Duration.seconds(store.duration).formatted(.time(pattern: .minuteSecond)))
+        Text(Duration.seconds(store.duration).formatted(.time(pattern: .minuteSecond)))
           .textStyle(.footnote)
-            .monospaced()
+          .monospaced()
       }
       .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 20), value: store.isImageCreated)
       .task { await store.send(.onTask).finish() }
