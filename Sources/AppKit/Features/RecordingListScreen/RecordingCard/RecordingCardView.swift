@@ -61,7 +61,7 @@ struct RecordingCardView: View {
     .offset(y: showItem ? 0 : 200)
     .opacity(showItem ? 1 : 0)
     .onAppear {
-      withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+      withAnimation(.smooth) {
         showItem = true
       }
     }

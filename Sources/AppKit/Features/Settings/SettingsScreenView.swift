@@ -34,8 +34,8 @@ struct SettingsScreenView: View {
         FooterSectionView(store: store)
       }
       .background(Color.DS.Background.primary)
+      .scrollContentBackground(.hidden)
       .navigationBarTitle("Settings")
-      .navigationBarTitleDisplayMode(.inline)
       .alert($store.scope(state: \.alert, action: \.alert))
       .onAppear { store.send(.updateInfo) }
     }
