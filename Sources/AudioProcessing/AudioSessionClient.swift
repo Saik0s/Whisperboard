@@ -89,10 +89,12 @@ extension AudioSessionClient: DependencyKey {
           isRecordActive.setValue(true)
         }
 
+        var category: AVAudioSession.Category { isRecordActive.value ? .playAndRecord : .playback }
+
         if session.category != .playAndRecord
           || session.mode != mode
           || session.categoryOptions != options {
-          try session.setCategory(.playAndRecord, mode: mode, options: options)
+          try session.setCategory(category, mode: mode, options: options)
         }
 
         if updateActivation {
@@ -101,7 +103,7 @@ extension AudioSessionClient: DependencyKey {
             var modifiedOptions = options
             modifiedOptions.remove(.allowBluetooth)
             modifiedOptions.insert(.allowBluetoothA2DP)
-            try session.setCategory(.playAndRecord, mode: mode, options: modifiedOptions)
+            try session.setCategory(category, mode: mode, options: modifiedOptions)
           }
 
           try session.setActive(true, options: .notifyOthersOnDeactivation)
@@ -109,6 +111,7 @@ extension AudioSessionClient: DependencyKey {
         }
       },
       disable: { type, updateActivation in
+        var category: AVAudioSession.Category { isRecordActive.value ? .playAndRecord : .playback }
         switch type {
         case .playback:
           isPlaybackActive.setValue(false)
@@ -118,7 +121,7 @@ extension AudioSessionClient: DependencyKey {
           if session.category != .playAndRecord
             || session.mode != mode
             || session.categoryOptions != options {
-            try session.setCategory(.playAndRecord, mode: mode, options: options)
+            try session.setCategory(category, mode: mode, options: options)
           }
 
         case .playAndRecord:

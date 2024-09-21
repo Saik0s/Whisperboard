@@ -199,7 +199,7 @@ struct RecordingDetailsView: View {
         timelineTranscriptionView
       }
     }
-    .scrollAnchor(id: 1, valueToTrack: store.recordingCard.transcription, anchor: store.recordingCard.recording.isTranscribing ? .bottom : .zero)
+    // .scrollAnchor(id: 1, valueToTrack: store.recordingCard.transcription, anchor: store.recordingCard.recording.isTranscribing ? .bottom : .zero)
     .applyVerticalEdgeSofteningMask()
   }
 
@@ -212,7 +212,7 @@ struct RecordingDetailsView: View {
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
       .padding(.vertical, .grid(2))
       .padding(.horizontal, .grid(4))
-      .id(1)
+      // .id(1)
   }
 
   private var timelineTranscriptionView: some View {
@@ -237,7 +237,7 @@ struct RecordingDetailsView: View {
       }
     }
     .padding(.horizontal, .grid(4))
-    .id(1)
+    // .id(1)
   }
 
   private var actionSheetButton: some View {

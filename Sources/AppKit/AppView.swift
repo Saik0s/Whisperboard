@@ -16,10 +16,10 @@ public let logs: Logging.Logger = Common.logs
 public struct AppView: View {
   @MainActor static let store = Store(initialState: Root.State()) {
     Root()
-    #if DEV
-//      ._printChanges(.swiftLog(withStateChanges: true))
-//      .signpost("WhisperBoard_Root")
-    #endif
+//    #if DEV
+      ._printChanges(.swiftLog(withStateChanges: true))
+      .signpost("WhisperBoard_Root")
+//    #endif
   } withDependencies: {
     if ProcessInfo.processInfo.environment["UITesting"] == "true" {
       $0.defaultFileStorage = .inMemory
