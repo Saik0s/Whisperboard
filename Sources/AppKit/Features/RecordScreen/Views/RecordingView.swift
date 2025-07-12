@@ -1,5 +1,5 @@
 import AudioProcessing
-import Common
+@preconcurrency import Common
 import ComposableArchitecture
 import Dependencies
 import DSWaveformImage

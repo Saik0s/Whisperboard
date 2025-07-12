@@ -82,7 +82,7 @@ struct TranscriptionWorker: Reducer {
         guard state.isProcessing else { return .none }
         return .run { send in
           let taskIdentifier = await UIApplication.shared.beginBackgroundTask {
-            Task { await send(.endBackgroundTask) }
+            Task { send(.endBackgroundTask) }
           }
           await send(.setBackgroundTask(taskIdentifier))
         }
