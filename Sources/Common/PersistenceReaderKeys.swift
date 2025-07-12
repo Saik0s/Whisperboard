@@ -3,7 +3,26 @@ import ComposableArchitecture
 
 public extension PersistenceReaderKey where Self == PersistenceKeyDefault<FileStorageKey<IdentifiedArrayOf<RecordingInfo>>> {
   static var recordings: Self {
-    PersistenceKeyDefault(.fileStorage(.documentsDirectory.appending(component: "recordings.json")), [])
+    let fileURL = FileManager.default
+          .urls(for: .documentDirectory, in: .userDomainMask)
+          .first!
+          .appendingPathComponent("recordings.json")
+
+    var fallbackValue: IdentifiedArrayOf<RecordingInfo> = []
+
+    if FileManager.default.fileExists(atPath: fileURL.path) {
+      do {
+        let data = try Data(contentsOf: fileURL)
+        fallbackValue = try JSONDecoder().decode(IdentifiedArrayOf<RecordingInfo>.self, from: data)
+      } catch {
+        try? FileManager.default.removeItem(at: fileURL)
+      }
+    }
+
+    return PersistenceKeyDefault(
+      .fileStorage(fileURL),
+      fallbackValue
+    )
   }
 }
 
