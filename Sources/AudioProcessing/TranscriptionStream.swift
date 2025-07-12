@@ -12,7 +12,7 @@ import WhisperKit
 public actor TranscriptionStream {
   public static let modelDirURL: URL = .documentsDirectory.appendingPathComponent("huggingface/models/argmaxinc/whisperkit-coreml")
 
-  public struct State {
+  public struct State: @unchecked Sendable {
     public var currentFallbacks: Int = 0
     public var lastBufferSize: Int = 0
     public var lastConfirmedSegmentEndSeconds: Float = 0
